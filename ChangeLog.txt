@@ -1,0 +1,74 @@
+[Change Log for Analysis Routines]
+
+30.3.2001 [ian] changed spikes to use full axis control. Added some help 
+options in vshelp.m, add to this file and call it.... Rowland, I don't  
+know what the best way to do the global Z axis thing is because Max will 
+depend on what the user has selected in the movie GUI.  So I don't have 
+access to it. Maybe we have a special measure without the plotting 
+stuff???
+
+09.04.2001 [Rowland] uploaded new version of HwHH: Now allows diagonal 
+tuning curves Have discovered that -dbitmap -dmeta arguments for the print 
+command are only for sending things to the clipboard: Hence the blank 
+files being created: Have removed the 'offending' options from the 
+program!
+
+25.04.2001 [ian] Updated Spikes to 1.52. Now the burst analysis is fully 
+integrated into the program, use measure o nit so you can do exactly as 
+you would to normal spike train. jigged UI a bit,added a red text box at 
+top tolet user know if data.psth is being measured(normal) or data.bpsth 
+(burst) Also added new program CFIT to measure several tuning curves.  
+Used for Weis drug analysis.
+
+20.5.2001 [ian] Added another program, SPlot, which plots individual  PSTH 
+figures, and additionally performs further analysis  on them. Called from 
+Spikes. Spikes also allow you to load  text files, this is a bit of a 
+quick fix until i come up with a better  solution as you need to put 
+cheat.mat in the root directory. Big changes will be happening soon 
+because we have a new  way to load spike data directly, a windows program 
+to load  .SMR files. The data format has changed a bit, and also  
+somethings are easier.
+
+13.7.2001 [Rowland] Added support for .txt and .smr file loading using vsx 
+to load smr files.  This change uses 3 new frogbit routines, which convert 
+output from .doc/txt/smr to a temporary file which has the same 
+correspondance between header line no. and variables for each file type. 
+Also 'streamlined' the juggling of variables where there are 3 independent 
+variables involved. Data structure now contains protocol info, filetype, 
+repeats and (for txt/smr files) cycles, modulation & trial times.
+
+16.7.2001 [Rowland] Also changed lsd to deal with the way that for the 
+last trial in numbered spike list file, VSX seems to fill  in incomplete 
+modulations with spike times that are before(!!!)  the last trial started.
+
+20.11.2001 [ian] I've fixed quite a few minor bugs in spikes and added a  
+few more programs for analysis, those notable being a difference  of 
+gaussian fitting program (dogfit), and 1D and 2D gaussian fitting 
+routines. Files have been cleaned up a bit....
+
+22.01.2002 [ian] Spikes up to 1.63. We have had a hard to track down bug 
+that has been making spikes unstable. Think it has been largely 
+erradicated.  However, had to stop the waitbar working and made a few 
+other changes. Spikes has also been updated to allow it to load single 
+modulation data.  other general changes to User has been made.
+
+05.04.2002 [ian] Spikes to V1.65. Lots of small bug fixes, and also dogfit 
+and the  gaussfit routines all working well. I've got FFT to work but 
+errorbars  a problem still. The big bug is still sometimes affecting 
+Spikes. I think  that matlab has a graphics routine error somewhere. It is 
+matlab and not  spikes related.   
+
+25.04.2002  [ian] Spikes to V1.666! Imporved the GUI, fixed the errorbar 
+on FFT and cleaned  stuff up generally. The big matlab crashing bug seems 
+to have died... 
+
+05.06.2002 [ian] Quickly did what i've been meaning to do for ages, move 
+the frogbitrun.exe into the user directory (frogbit subdirectory) to make 
+\user self contained. No need to install frogbit now, unless you want to 
+write new frogbit scripts. Don't need to do anything with path.
+
+06.06.2002 [ian] I've reduced the number of seperate global variable 
+passed to and from the GUI by using just one structure 'sv' in spikes 
+(data structure remains unchanged). This is a bit cleaner, as I've moved 
+all the main callbacks for the GUI into the GUI's .m file (ala Matlab 6 
+style) for easier editing.

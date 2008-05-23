@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>directcat_jack (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="directcat_jack">
+  <meta name="description" content="DIRECTCAT_JACK Direct method analysis to determine category-specific information with leave-one-out jackknife.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>directcat_jack</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>directcat_jack</h1>
+
+<!-- <p><a name="_name"></a>DIRECTCAT_JACK Direct method analysis to determine category-specific information with leave-one-out jackknife.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">DIRECTCAT_JACK Direct method analysis to determine category-specific information with leave-one-out jackknife.
+   [Y,JK] = DIRECTCAT_JACK(X,OPTS) performs a direct method
+   analysis on input data structure X. In addition to the typical
+   analysis, this function also does a leave-one-out jackknife. Y
+   is an output structure with the results of the typical analysis
+   and JK is an array of output structures with the results for each
+   jackknife trial. There are as many elements in JK as there are
+   spike trains in X. For information on the output structure, see
+   DIRECTCAT. 
+
+   For information on options and parameters see DIRECT.
+
+   [Y,JK] = DIRECTCAT_JACK(X) uses the default options and parameters.
+
+   [Y,JK,OPTS_USED] = DIRECTCAT_JACK(X) or [Y,JK,OPTS_USED] =
+   DIRECT_JACK(X,OPTS) additionally return the options used. 
+
+   See also <a href="directcat.html" class="code" title="function [out,opts_used]=directcat(X,opts)">DIRECTCAT</a>, <a href="directcat_shuf.html" class="code" title="function [out,shuf,opts_used]=directcat_shuf(X,opts,S)">DIRECTCAT_SHUF</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+<li><a href="directcat.html"><tt>directcat</tt></a> DIRECTCAT Direct method analysis to determine category-specific information.</li><li><a href="directcountcond.html"><tt>directcountcond</tt></a> DIRECTCOUNTCOND Count spike train words in each class and disregarding class.</li><li><a href="infocond.html"><tt>infocond</tt></a> INFOCOND Information and entropies from conditional and total</li></ul>
+This function is called by:
+<ul>
+</ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Tue 28-Nov-2006 11:37:58 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

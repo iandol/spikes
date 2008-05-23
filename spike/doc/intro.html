@@ -1,0 +1,153 @@
+<html>
+<head>
+<title>Spike Train Analysis Toolkit: Introduction</title>
+<link rel="stylesheet" type="text/css" href="style.css" title="default">
+</head>
+
+<body>
+
+<table>
+<tr>
+<td><a href="index.html"><img src="logo2.png"></a></td>
+<td><h1>Spike Train Analysis Toolkit<br>Introduction</h1></td>
+</tr>
+</table>
+
+<p>Information theoretic methods are now widely used for the analysis of spike train data. However, developing robust implementations of these methods can be tedious and time-consuming. In order to facilitate further adoption of these methods, we have developed the Spike Train Analysis Toolkit, a software package which implements several information-theoretic spike train analysis techniques. This implementation behaves like a typical Matlab toolbox, but the underlying computations are coded in C and optimized for efficiency.</p>
+
+<p>In describing the capabilities of the toolkit, we further distinguish between what we call <em>information methods</em> and <em>entropy methods</em>.
+
+<h2>Information methods</h2>
+
+<p>Information methods are those methods which estimate the mutual information between an ensemble of spike trains and some other experimental variable. We distinguish between <em>formal</em> and <em>attribute-specific</em> information, as proposed by <a href="http://jn.physiology.org/cgi/content/abstract/85/1/305">Reich et al. (2001)</a>. Formal information concerns all aspects of the response that depend on the stimulus. It is estimated from the difference between the entropy of responses to an ensemble of temporally rich stimuli and the entropy of responses to an ensemble of repeated stimuli. Attribute-specific information refers to the amount of information that responses convey about a particular experimental parameter. If the parameter describes one of several discrete categories, we refer to it as <em>category-specific information</em>.</p>
+
+<p>The current version contains implementations of three information methods:
+<dl>
+<dt>Direct method (formal and category-specific information)</dt><dd>Strong, S.P., Koberle, R., de Ruyter van Steveninck, R.R. and Bialek, W. (1998). <a href="http://dx.doi.org/10.1103/PhysRevLett.80.197">Entropy and Information in Neural Spike Trains.</a> <i>Physical Review Letters</i>. 80: 197-200.</dd>
+<dt>Metric space method (category-specific information)</dt><dd>Victor, J.D., and Purpura, K.P. (1997). <a href="http://dx.doi.org/10.1088/0954-898X/8/2/003">Metric-space analysis of spike trains: theory, algorithms and application</a>. <i>Network: Computation in Neural Systems</i>. 8: 127-164.<br>
+Aronov, D. (2003). <a href="http://dx.doi.org/10.1016/S0165-0270(03)00006-2">Fast algorithm for the metric-space analysis of simultaneous responses of multiple single neurons</a>. <i>Journal of Neuroscience Methods</i>, 124: 175-179.</dd>
+<dt>Binless method (category-specific information)</dt><dd>Victor, J.D. (2002). <a href="http://dx.doi.org/10.1103/PhysRevE.66.051903">Binless strategies for estimation of information from neural data</a>. <i>Physical Review E</i>. 66: 051903</dd>
+</dl>
+The implementations of the direct method and the metric space have extensions for the analysis of simultaneously recorded spike trains.</p>
+
+<h2>Entropy methods</h2>
+
+<p>Entropy methods are those methods that estimates entropy from a discrete histogram, a computation common to many information-theoretic methods. The toolkit includes a module that includes several entropy methods. Methods are chosen by included the appropriate code in the <code>entropy_estimation_method</code> option (more information on options and parameters <a href="opts_info.html">here</a> and <a href="opts_entropy.html">here</a>). The included methods are:
+<dl>
+
+<dt>Plug-in (<code>plugin</code>)</dt>
+<dd>The is the classical estimator, based on the entropy formula <span class="math"><i>H</i> = &Sigma;<sub><i>i</i></sub> <i>p</i><sub><i>i</i></sub> log<sub>2</sub><i>p</i><sub><i>i</i></sub></span>.</dd>
+
+<dt>Treves-Panzeri-Miller-Carlton (<code>tpmc</code>)</dt>
+<dd>Treves, A. and Panzeri, S. (1995). The Upward Bias in Measures of Information Derived from Limited Data Samples. <i>Neural Computation</i>, 7: 399-407.</dd>
+<dd>Miller, G.A. (1955). Note on the bias on information estimates. <i>Information Theory in Psychology, Problems and Methods</i>. II-B: 95-100.</dd>
+<dd>Carlton, A.G. (1969). On the bias of information estimates. <i>Psychological Bulletin</i>. 71: 108-109.</dd>
+
+<dt>Jackknife (<code>jack</code>)</dt>
+<dd>Efron, B. and Tibshirani, R.J. (1993). <i>An introduction to the bootstrap</i>. Chapman & Hall.</dd>
+
+<dt>Ma bound (<code>ma</code>)</dt>
+<dd>Ma, S. (1981). <a href="http://dx.doi.org/10.1007/BF01013169">Calculation of Entropy from Data of Motion</a>. <i>Journal of Statistical Physics</i>. 26: 221-240.<br>
+The version included in the toolkit is debiased, as presented in Strong et al. (1998).</dd>
+
+<dt>Best upper bound (<code>bub</code>)</dt>
+<dd>Paninski, L. (2003). <a href="http://neco.mitpress.org/cgi/content/abstract/15/6/1191">Estimation of Entropy and Mutual Information</a>. <i>Neural Computation</i>. 15: 1191-1253.</dd>
+
+<dt>Chao-Shen (<code>chaoshen</code>)</dt>
+<dd>Chao, A. and Shen, T.-J. (2003). <a href="http://dx.doi.org/10.1023/A:1026096204727">Nonparametric estimation of Shannon's index of diversity when there are unseen species in a sample</a>. <i>Environmental and Ecological Statistics</i>. 10: 429-443.
+
+<dt>Wolpert-Wolf&mdash;Bayesian with a Dirichlet prior (<code>ww</code>)</dt>
+<dd>Wolpert, D.H. and Wolf, D.R. (1995). <a href="http://dx.doi.org/10.1103/PhysRevE.52.6841">Estimating functions of probability from a finite set of samples</a>. <i>Physical Review E</i>. 52: 6841-6854.<br>
+<a href="http://dx.doi.org/10.1103/PhysRevE.54.6973.2">Erratum</a> in <i>Physical Review E</i>. 54: 6973.
+<dd>Wolpert, D.H. and Wolf, D.R. (1994). <a href="http://arxiv.org/abs/comp-gas/9403001">Estimating Functions of Probability Distributions from a Finite Set of Samples, Part 1: Bayes Estimators and the Shannon Entropy</a>. ar&chi;iv comp-gas/9403001.
+<dd>Wolpert, D.H. and Wolf, D.R. (1994). <a href="http://arxiv.org/abs/comp-gas/9403002">Estimating Functions of Distributions from A Finite Set of Samples, Part 2: Bayes Estimators for Mutual Information, Chi-Squared, Covariance and other Statistics</a>. ar&chi;iv comp-gas/9403002.
+</dl>
+
+<h3>Methods for estimating the variance of entropy estimates</h3>
+
+The toolkit also provides estimates of the variance of entropy estimates, which can in turn be used to compute confidence limits. These results can be obtained by setting the option <code>variance_estimation_method</code>. The implemented methods are:
+
+<dl>
+<dt>Jackknife (<code>jack</code>)
+<dt>Bootstrap (<code>boot</code>)
+</dl>
+
+While the above methods can be applied to any entropy estimate, the toolkit can also include variance estimates that are specific to a particular entropy estimate. However, no such methods are included at present.</p>
+
+<h2>Modular implementation of information methods</h2>
+
+<p>Each information method has a top level function which performs an analysis on an input data stucture. Each information method has been partitioned into modules corresponding to steps that provide useful intermediate results. They also include top-level functions for users that do not require flexibility. The table below depicts the four major information methods and the functions they call.</p>
+
+<p><table border="1">
+
+<tr valign="top">
+<th width="25%"><code>directformal</code></th>
+<th width="25%"><code>directcat</code></th>
+<th width="25%"><code>metric</code></th>
+<th width="25%"><code>binless</code></th>
+</tr>
+
+<tr valign="top">
+<td><code>directbin</code> Bin spike trains</td>
+<td><code>directbin</code> Bin spike trains</td>
+<td><code>metricopen</code> Prepare input data structure</td>
+<td><code>binlessopen</code> Prepare input data structure</td>
+</tr>
+
+<tr valign="top">
+<td><code>directcondformal</code> Condition data on both category and time slice</td>
+<td></td>
+<td><code>metricdist</code> Compute distances between sets of spike train pairs.</td>
+<td><code>binlesswarp</code> Warp spike times</td>
+</tr>
+
+<tr valign="top">
+<td><code>directcounttotal</code> Count spike train words disregarding class</td>
+<td><code>directcountcond</code> Count spike train words in each class and disregarding class</td>
+<td><code>metricclust</code> Cluster spike trains based on distance matrix.</td>
+<td><code>binlessembed</code> Embed the spike trains</td>
+</tr>
+
+<tr valign="top">
+<td></td>
+<td></td>
+<td><code>matrix2hist2d</code> Converts a 2-D matrix of counts to a 2-D histogram</td>
+<td></td>
+</tr>
+
+<tr valign="top">
+<td><code>infocond</code> Information and entropies from conditional and total histograms</td>
+<td><code>infocond</code> Information and entropies from conditional and total histograms</td>
+<td><code>info2d</code> Information and entropies from a 2-D histogram</td>
+<td><code>binlessinfo</code> Compute information components</td>
+</tr>
+
+</table></p>
+
+<p>All of the functions are documented in the <a href="function/index.html">function reference</a>.</p>
+
+<p>Included <a href="demo.html">demos</a> give examples of how the top-level functions can be used.</p>
+
+<h2>Inputs to the toolkit</h2>
+
+<p>We have developed a <a href="format.html">text-based input file format</a> for the toolkit that is easy to generate. Users also have the option of bypassing the text-based file format and using another means to read the data into the <a href="input_struct.html">Matlab input data structure</a>.</p>
+
+<p>Documentation fo the analysis options and parameters for <a href="opts_info.html">information methods</a> and <a href="opts_entropy.html">entropy methods</a> is available.</p>
+
+<h2>Outputs from the toolkit</h2>
+
+<p>Estimated quantities are packaged in data structures with auxillary information such as variance estimates. See <a href="output_struct.html">this page</a> for more information.</p>
+
+<h2>The future</h2>
+
+<p>This toolkit is one component of a larger endeavor in the field of computational neuroinformatics. We are in the process of integrating the toolkit with a <a href="http://neurodatabase.org">Neurodatabase.org</a> (a publicly-accessable neurophysiology database), developing a web-based analysis interface, and adapting the toolkit for a dedicated parallel cluster.</p>
+
+<p>We are also working with members of the computational neuroscience community to incorporate their information theoretic techniques, as well as looking beyond information theory to other methodologies for analyzing neuroscience data. Please contact us if you would like to contribute.</p>
+
+<hr noshade>
+
+<p align="center"><a href="index.html">Back to contents.</a></p>
+
+
+</body>
+</html>

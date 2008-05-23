@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<stylesheet_registry xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+   <stylesheet id="spikereport" transformtype="fo"><!--30-Nov-2005 18:00:56-->
+      <name>Default print stylesheet</name>
+      <description>Default print stylesheet</description>
+      <filename>$matlabroot/sys/namespace/docbook/v4/xsl/fo/docbook_rptgen.xsl</filename>
+      <xsl_code>
+         <xsl:param name="generate.toc">
+/appendix toc,title
+article/appendix nop
+/article toc,title
+book title,example,equation
+/chapter title
+part toc,title
+/preface toc,title
+qandadiv toc
+qandaset toc
+reference toc,title
+/sect1 nop
+/sect2 nop
+/sect3 nop
+/sect4 nop
+/sect5 nop
+/section nop
+set toc,title
+</xsl:param>
+         <xsl:variable name="show.comments" select="0"/>
+      </xsl_code>
+   </stylesheet>
+</stylesheet_registry>

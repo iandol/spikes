@@ -1,0 +1,53 @@
+h3.fancy {
+background-color: #eee;
+border-top: 1px solid black;
+}
+
+span.typ{
+color: #282;
+font-family: monospace;
+}
+
+span.var{
+color: #860;
+font-family: monospace;
+}
+
+.math{
+font-family: serif;
+}
+
+blockquote.example {
+background-color: #ffc;
+border: 1px dotted black;
+padding: 1em;
+}
+
+table.doctable, .doctable td, .doctable th {
+border-collapse: collapse;
+border: 1px solid black;
+}
+
+.doctable tr {
+vertical-align: top;
+}
+
+code {
+background-color: #ffc;
+border-bottom: 1px dotted black;
+}
+
+code a, a code {
+border-bottom: none;
+}
+
+blockquote code {
+border-bottom: none;
+}
+
+/* .alert {
+  color: #bf0000;
+} */
+.alert {
+  background-color: #fee;
+}

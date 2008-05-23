@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>metricopen (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="metricopen">
+  <meta name="description" content="METRICOPEN Prepare input data structure for metric space analysis.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>metricopen</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>metricopen</h1>
+
+<!-- <p><a name="_name"></a>METRICOPEN Prepare input data structure for metric space analysis.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">METRICOPEN Prepare input data structure for metric space analysis.
+   [CATEGORIES,TIMES,LABELS] = METRICOPEN(X,OPTS) opens input data
+   structure X and generates several useful matrices.
+
+   TIMES is an Px1 cell array of spike times where P is the number of
+   trials in the data set. Each member of the cell array consists of
+   spike times interleaved from simultaneous trials.
+
+   LABELS is a Px1 cell array with labels of the spikes in TIMES.
+
+   CATEGORIES is a vector that gives the category indices of spike
+   trains in TIMES.
+
+   The options and parameters for this function are:
+      OPTS.start_time: The start time of the analysis window. The
+         default is the maximum of all of the start times in X. 
+      OPTS.end_time: The end time of the analysis window. The
+         default is the minimum of all of the end times in X.
+
+   [CATEGORIES,TIMES,LABELS] = METRICOPEN(X) uses the default options
+   and parameters.
+
+   [CATEGORIES,TIMES,LABELS,OPTS_USED] = METRICOPEN(X) or
+   [CATEGORIES,TIMES,LABELS,OPTS_USED] = METRICOPEN(X,OPTS)
+   additionally return the options used.
+ 
+   See also <a href="metricdist.html" class="code" title="">METRICDIST</a>, <a href="metricclust.html" class="code" title="">METRICCLUST</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="metric.html"><tt>metric</tt></a> METRIC Metric space analysis</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Tue 28-Nov-2006 11:37:58 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

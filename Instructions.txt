@@ -1,0 +1,20 @@
+Essential Toolboxes:
+
+Statistics (for OPro and Drug Curve fitter)
+Optimisation (for DogFitter)
+Matlab Report Generator (for Spike Report)
+
+Useful:
+
+Curve Fitting
+Excel Link
+Spline Toolbox
+Neural Network
+Wavelet
+
+Essential Paths to Add:
+
+/user
+/user/Various
+/user/rowland2
+/user/Movie_Creator

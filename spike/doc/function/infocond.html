@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>infocond (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="infocond">
+  <meta name="description" content="INFOCOND Information and entropies from conditional and total">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>infocond</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>infocond</h1>
+
+<!-- <p><a name="_name"></a>INFOCOND Information and entropies from conditional and total</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">INFOCOND Information and entropies from conditional and total
+histograms.  
+   Y = INFOCOND(X,OPTS) takes a HISTCOND structure X and copies it to
+   Y, adding estimates of entropies and mutual
+   information. Y.INFORMATION is an ESTIMATE structure corresponding
+   to the mutual information. ESTIMATE structures corresponding to
+   entropies are added to Y.CLASS and Y.TOTAL.
+
+   The options and parameters for this function are:
+      OPTS.ENTROPY_ESTIMATION_METHOD
+      OPTS.BIAS_CORRECTION_METHOD: A cell array of bias correction
+         methods. 
+      OPTS.VARIANCE_ESTIMATION_METHOD: A cell array of variance
+      estimation methods.
+   Please see the Spike Train Analysis Toolkit documentation for
+   more information.
+         
+   Y = INFOCOND(X) does not perform any bias correction or variance
+      estimation. 
+
+   [Y,OPTS_USED] = INFOCOND(X,OPTS) copies OPTS into OPTS_USED.
+ 
+   See also <a href="matrix2hist2d.html" class="code" title="">MATRIX2HIST2D</a>, <a href="info2d.html" class="code" title="">INFO2D</a>, <a href="entropy1d.html" class="code" title="">ENTROPY1D</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="directcat.html"><tt>directcat</tt></a> DIRECTCAT Direct method analysis to determine category-specific information.</li><li><a href="directcat_jack.html"><tt>directcat_jack</tt></a> DIRECTCAT_JACK Direct method analysis to determine category-specific information with leave-one-out jackknife.</li><li><a href="directcat_shuf.html"><tt>directcat_shuf</tt></a> DIRECTCAT_SHUF Direct method analysis to determine category-specific information with shuffled inputs.</li><li><a href="directformal.html"><tt>directformal</tt></a> DIRECTFORMAL Direct method analysis to determine formal information.</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Tue 28-Nov-2006 11:37:58 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

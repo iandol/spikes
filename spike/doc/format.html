@@ -1,0 +1,131 @@
+<html>
+<head>
+<title>Spike Train Analysis Toolkit: Text-based input File Format</title>
+<link rel="stylesheet" type="text/css" href="style.css" title="default">
+</head>
+
+<body>
+
+<table>
+<tr>
+<td><a href="index.html"><img src="logo2.png"></a></td>
+<td><h1>Spike Train Analysis Toolkit<br>Text-based input File Format</h1></td>
+</tr>
+</table>
+
+<p>We have developed an easy-to-generate input file format for the Spike Train Analysis Toolkit. Each input data set is described by two files:
+<ul>
+<li>A <b>data file</b>, denoted by a <code>.stad</code> file extension (<a href="data/taste.stad">example</a>)
+<li>A <b>metadata file</b>, denoted by a <code>.stam</code> file extension (<a href="data/taste.stam">example</a>)
+</ul>
+The example uses data from <a href="http://dx.doi.org/10.1152/jn.00177.2003">Di Lorenzo &amp; Victor (2003)</a>.</p>
+
+<p><span class="alert">This file format can hold information about spike trains (&quot;episodic&quot; data) as well as regularly-sampled data (&quot;continuous&quot; data). This documentation focuses exclusively on spike train data.</span></p>
+
+<h2>Data file</h2>
+
+<p>The <b>data file</b> is a text file that consists of several lines, each line corresponding to a particular spike train. Each line consists of a list of spike times; the spike times are separated by spaces. The spike trains can be associated with several recording sites and stimulus categories.</p>
+
+<h2>Metadata file</h2>
+
+<p>The <b>metadata file</b> is a text file that describes the data in the data file. The metadata file provides information about four types of elements:
+<dl>
+<dt><code>datafile</code></dt><dd>Describes the file that contains the data.</dd>
+<dt><code>site</code></dt><dd>Describes the physical location(s) from which the data was obtained. In our framework, a data set should only contain multiple sites only if the sites were recorded simultaneously. Data from sites that were recorded sequentially should appear in separate file pairs.</dd>
+<dt><code>category</code></dt><dd>Describes the groups in which the spike trains are partitioned. This is required because the spike trains must be classified into discrete categories for use with the toolkit.</dd>
+<dt><code>trace</code></dt><dd>Describes the spike trains contained in the data file.</dd>
+</dl>
+The syntax of the metadata file is as follows:
+<ul>
+<li>The metadata file is essentially a collection of name/value pairs. A typical statement is of the form
+<blockquote class="example"><code>name=value;</code></blockquote>
+There should be no whitespace on either side of the equals sign. The semicolon is required at the end of all statements.
+<li>Using whitespace to separate the name/value pairs is optional.
+<li>Any line beginning with <code>#</code> (the &quot;pound sign&quot;) is taken to be a comment and is ignored.
+</ul>
+</p>
+
+<h3><code>datafile</code></h3>
+
+<p>The <code>datafile</code> consists of a name/value pair that gives the <b>absolute path</b> of the data file (i.e., not the path relative to working directory or the location of the metadata file).</p>
+
+<h4>Example</h4>
+
+<p><blockquote class="example"><code>datafile=/home/david/projects/cornell/data/rat/taste11.stad;</code></blockquote></p>
+
+<h3><code>site</code></h3>
+
+A <code>site</code> element consists of 5 name/value pairs:
+<dl>
+<dt><code>site</code></dt><dd>The unique index of the site. This index is used by <code>trace</code> elements to refer to the site. The first index is 1, not 0. This name/value pair must be given first.</dd>
+<dt><code>label</code></dt><dd>A text label that describes the site.</dd>
+<dt><code>recording_tag</code></dt><dd>Can be either <code>continuous</code> or <code>episodic</code>.</dd>
+<dt><code>time_scale</code></dt><dd>The scale factor required to convert the time mesurements in seconds. If time measurements were reported in milliseconds, then <code>time_scale=0.001</code>.</dd>
+<dt><code>time_resolution</code></dt><dd>The temporal resolution of the recording (prior to scaling by <code>time_scale</code>).</dd>
+</dl>
+
+<h4>Example</h4>
+<p>
+<blockquote class="example"><code>site=1; label=unit_001; recording_tag=episodic; time_scale=1; time_resolution=0.001;</code></blockquote>
+</p>
+
+<h3><code>category</code></h3>
+
+<p>A <code>category</code> element consists of 2 name/value pairs:
+<dl>
+<dt><code>category</code></dt><dd>The unique index of the category. This index is used by <code>trace</code> elements to refer to the category. The first index is 1, not 0. This name/value pair must be given first.</dd>
+<dt><code>label</code></dt><dd>A text label that describes the category.</dd>
+</dl>
+
+<h4>Example</h4>
+<p>
+<blockquote class="example"><code>
+category=1; label=NaCl;<br>
+category=2; label=Quinine HCl;<br>
+category=3; label=HCl;<br>
+category=4; label=Sucrose;
+</code></blockquote>
+</p>
+
+<h3><code>trace</code></h3>
+
+<p>A <code>trace</code> element consists of 6 name/value pairs: <!--There is a line-by-line correspondence between the <code>trace</code> metadata and the data file. Therefore, unlike the <code>site</code> and <code>category</code> elements, the relative ordering of the <code>trace</code> elements matters. The line that begins with <code>trace=1;</code> describes the first line of the data file and so on.-->
+<dl>
+<dt><code>trace</code></dt><dd>The unique index of the trace. The first index is 1, not 0. This name/value pair must be given first. This index gives the line number of the data file that is being described.</dd>
+<dt><code>catid</code></dt><dd>The index of the category that the trace belongs to.</dd>
+<dt><code>trialid</code></dt><dd>The position of the trace in the sequence of repeated trials.</dd>
+<dt><code>siteid</code></dt><dd>The index of the site the trace was recorded from. (Traces with the same <code>catid</code> and <code>trialid</code>, but differing <code>siteid</code>s are assumed to be simultaneously recorded.)</dd>
+<dt><code>start_time</code></dt><dd>The start time of the recording. This time is scaled by the site's <code>time_scale</code> to give the start time in seconds.</dd>
+<dt><code>end_time</code></dt><dd>The end time of the recording. This time is scaled by the site's <code>time_scale</code> to give the end time in seconds.</dd>
+</dl>
+
+<h4>Example</h4>
+<p>
+<blockquote class="example"><code>
+trace=1; catid=1; trialid=1; siteid=1; start_time=10.000; end_time=20.000;<br>
+trace=2; catid=1; trialid=2; siteid=1; start_time=10.000; end_time=20.000;<br>
+&nbsp;&nbsp;&nbsp;:<br>
+trace=16; catid=1; trialid=16; siteid=1; start_time=10.000; end_time=20.000;<br>
+trace=17; catid=2; trialid=1; siteid=1; start_time=10.000; end_time=20.000;<br>
+trace=18; catid=2; trialid=2; siteid=1; start_time=10.000; end_time=20.000;<br>
+&nbsp;&nbsp;&nbsp;:<br>
+trace=32; catid=2; trialid=16; siteid=1; start_time=10.000; end_time=20.000;<br>
+trace=33; catid=3; trialid=1; siteid=1; start_time=10.000; end_time=20.000;<br>
+trace=34; catid=3; trialid=2; siteid=1; start_time=10.000; end_time=20.000;<br>
+&nbsp;&nbsp;&nbsp;:<br>
+trace=48; catid=3; trialid=16; siteid=1; start_time=10.000; end_time=20.000;<br>
+trace=49; catid=4; trialid=1; siteid=1; start_time=10.000; end_time=20.000;<br>
+trace=50; catid=4; trialid=2; siteid=1; start_time=10.000; end_time=20.000;<br>
+&nbsp;&nbsp;&nbsp;:<br>
+trace=64; catid=4; trialid=16; siteid=1; start_time=10.000; end_time=20.000;
+</code></blockquote>
+</p>
+
+
+<hr noshade>
+
+<p align="center"><a href="index.html">Back to contents.</a></p>
+
+
+</body>
+</html>

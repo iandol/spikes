@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>directbin (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="directbin">
+  <meta name="description" content="DIRECTBIN Bin spike trains for direct method analysis.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>directbin</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>directbin</h1>
+
+<!-- <p><a name="_name"></a>DIRECTBIN Bin spike trains for direct method analysis.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">DIRECTBIN Bin spike trains for direct method analysis.
+   Y = DIRECTBIN(X,OPTS) returns a cell array Y with binned versions
+   of the spike trains in the input data structure X. Y has M rows
+   and N columns, where M is the number of categories and N is the
+   number of words per spike train. The rows of the members of Y
+   correspond to individual spike trains and the columns correspond
+   to time bins. The third dimension corresponds to individual
+   simultaneously recorded neurons.
+
+   The options and parameters for this function are:
+      OPTS.start_time: The start time of the analysis window. The
+         default is the maximum of all of the start times in X. 
+      OPTS.end_time: The end time of the analysis window. The
+         default is the minimum of all of the end times in X.
+      OPTS.counting_bin_size: The size of the counting bins in
+         seconds. The default is OPTS.end_time-OPTS.start_time.
+      OPTS.words_per_train: The number of words that the spike trains
+         will be divided into.
+      OPTS.sum_spike_trains: For data sets with simultaneously
+         recorded spike trains, this determines whether the
+         simultaneous spikes are summed across time bins.
+         OPTS.sum_spike_trains=0 means there is no summing.
+         OPTS.sum_spike_trains=1 means there is summing.
+         The default value is 0.
+      OPTS.permute_spike_trains: For data sets with simultaneously
+         recorded spike trains, this determines whether sets of
+         simultaneous spike trains that are permuted should be
+         considered identical.
+         OPTS.permute_spike_trains=0 means they are considered
+            distinct.
+         OPTS.permute_spike_trains=1 means they are considered
+            indentical.
+         The default value is 0.
+
+   Y = DIRECTBIN(X) uses the default options and parameters.
+
+   [Y,OPTS_USED] = DIRECTBIN(X) or [Y,OPTS_USED] =
+   DIRECTBIN(X,OPTS) additionally return the options used.
+ 
+   See also <a href="directcondcat.html" class="code" title="">DIRECTCONDCAT</a>, <a href="directcondtime.html" class="code" title="">DIRECTCONDTIME</a>, <a href="directcondformal.html" class="code" title="">DIRECTCONDFORMAL</a>,
+   <a href="directcountclass.html" class="code" title="">DIRECTCOUNTCLASS</a>, <a href="directcounttotal.html" class="code" title="">DIRECTCOUNTTOTAL</a>, <a href="directcountcond.html" class="code" title="">DIRECTCOUNTCOND</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="directcat.html"><tt>directcat</tt></a> DIRECTCAT Direct method analysis to determine category-specific information.</li><li><a href="directformal.html"><tt>directformal</tt></a> DIRECTFORMAL Direct method analysis to determine formal information.</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Tue 28-Nov-2006 11:37:58 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

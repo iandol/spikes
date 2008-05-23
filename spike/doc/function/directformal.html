@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>directformal (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="directformal">
+  <meta name="description" content="DIRECTFORMAL Direct method analysis to determine formal information.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>directformal</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>directformal</h1>
+
+<!-- <p><a name="_name"></a>DIRECTFORMAL Direct method analysis to determine formal information.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">DIRECTFORMAL Direct method analysis to determine formal information.
+   Y = DIRECTFORMAL(X_UNI,X_REP,OPTS) uses the direct method to
+   find the formal information. X_UNI is an input data structure
+   with spike trains obtained from distinct stimuli and is used to
+   estimate the &quot;total&quot; entropy. Each spike train is considered to
+   be in its own stimulus category. X_REP is an input data
+   structure with spike trains obtained from repitition of the
+   same stimulus. The results are stored in the structure Y.
+
+   The members of Y are:
+      Y.uni_binned: Binned versions of the spike trains in
+         X_UNI. See DIRECTBIN for details. 
+      Y.rep_binned: Binned versions of the spike trains in
+         X_REP. See DIRECTBIN for details.
+      Y.cond: A HISTCOND structure with word counts for total and
+         class-conditional histograms. See DIRECTCOUNTCOND and
+         INFOCOND for details. 
+
+   The options and parameters for this function are:
+      OPTS.start_time: The start time of the analysis window. The
+         default is the maximum of all of the start times in X. 
+      OPTS.end_time: The end time of the analysis window. The
+         default is the minimum of all of the end times in X.
+      OPTS.counting_bin_size: The size of the counting bins in
+         seconds. The default is OPTS.end_time-OPTS.start_time.
+      OPTS.words_per_train: The number of words that the spike trains
+         will be divided into.
+      OPTS.sum_spike_trains: For data sets with simultaneously
+         recorded spike trains, this determines whether the
+         simultaneous spikes are summed across time bins.
+         OPTS.sum_spike_trains=0 means there is no summing.
+         OPTS.sum_spike_trains=1 means there is summing.
+         The default value is 0.
+      OPTS.permute_spike_trains: For data sets with simultaneously
+         recorded spike trains, this determines whether sets of
+         simultaneous spike trains that are permuted should be
+         considered identical.
+         OPTS.permute_spike_trains=0 means they are considered
+            distinct.
+         OPTS.permute_spike_trains=1 means they are considered
+            indentical.
+         The default value is 0.
+
+   Y = DIRECTFORMAL(X_UNI,X_REP) uses the default options and parameters.
+
+   [Y,OPTS_USED] = DIRECTFORMAL(X_UNI,X_REP) or [Y,OPTS_USED] =
+   DIRECTFORMAL(X_UNI,X_REP,OPTS) additionally return the options
+   used.
+
+   See also <a href="directcat.html" class="code" title="function [out,opts_used]=directcat(X,opts)">DIRECTCAT</a>, <a href="directbin.html" class="code" title="">DIRECTBIN</a>, <a href="directcondtime.html" class="code" title="">DIRECTCONDTIME</a>,
+   <a href="directcondformal.html" class="code" title="">DIRECTCONDFORMAL</a>, <a href="directcountclass.html" class="code" title="">DIRECTCOUNTCLASS</a>, <a href="directcounttotal.html" class="code" title="">DIRECTCOUNTTOTAL</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+<li><a href="directbin.html"><tt>directbin</tt></a> DIRECTBIN Bin spike trains for direct method analysis.</li><li><a href="directcondformal.html"><tt>directcondformal</tt></a> DIRECTCONDFORMAL Condition data on both category and time slice.</li><li><a href="directcondtime.html"><tt>directcondtime</tt></a> DIRECTCONDTIME Condition data on time slice.</li><li><a href="directcountclass.html"><tt>directcountclass</tt></a> DIRECTCOUNTCLASS Count spike train words in each class.</li><li><a href="directcounttotal.html"><tt>directcounttotal</tt></a> DIRECTCOUNTTOTAL Count spike train words disregarding class.</li><li><a href="infocond.html"><tt>infocond</tt></a> INFOCOND Information and entropies from conditional and total</li></ul>
+This function is called by:
+<ul>
+</ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Tue 28-Nov-2006 11:37:58 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

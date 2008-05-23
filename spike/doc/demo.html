@@ -1,0 +1,81 @@
+<html>
+<head>
+<title>Spike Train Analysis Toolkit: Example datasets and toolkit demos</title>
+<link rel="stylesheet" type="text/css" href="style.css" title="default">
+</head>
+
+<body>
+
+<table>
+<tr>
+<td><a href="index.html"><img src="logo2.png"></a></td>
+<td><h1>Spike Train Analysis Toolkit<br>Example datasets and toolkit demos</h1></td>
+</tr>
+</table>
+
+<h2>Data files</h2>
+
+In the <code>data/</code> directory, there are five data sets:
+
+<dl>
+<dt><code>synth</code></dt><dd>Contains data like that described in <a href="http://dx.doi.org/10.1088/0954-898X/8/2/003">Victor &amp; Purpura (1997)</a>, Figure 5(E-H).</dd>
+<dt><code>taste</code></dt><dd>Contains the data from the experiment described in <a href="http://dx.doi.org/10.1152/jn.00177.2003">Di Lorenzo and Victor (2003)</a>. Specifically, it contains the data from &quot;cell 11&quot;, which is analyzed in Figure 6.</dd>
+<dt><code>drift</code></dt><dd>Contains the data from the experiment described in <a href="http://jn.physiology.org/cgi/content/abstract/85/1/305">Reich et al. (2001)</a>. Specifically, it contains the drifting grating responses from cell 44/9s, which are depicted in the lower right of Figure 2.</dd>
+<dt><code>phase</code></dt><dd>Contains the data from the experiment described in <a href="http://dx.doi.org/10.1152/jn.00826.2002">Aronov et al. (2003)</a>. Specifically, it contains the responses from cells 410106.s and 410106.t, which are depicted in Figure 1B. Because the full dataset depicted in the paper is large, only data corresponding to every fourth phase is included.</dd>
+<dt><code>inforate_uni</code> and <code>inforate_rep</code></dt><dd>These sets consist of synthetic data inspired by the experiment described in <a href="http://www.jneurosci.org/cgi/content/full/20/14/5392">Reinagel and Reid (2000)</a>. <code>inforate_uni</code> consists of unique Poisson spike trains with a rate of 40 spikes/s. <code>inforate_rep</code> consists of repeated spike trains, where each spike in the set is jittered according to a Gaussian distribution with a standard deviation of 0.6 ms.</dd>
+</dl>
+
+<h2>Demo scripts</h2>
+
+<p>The example m-file scripts can be found in the <code>demo/</code> directory. Links to images of the output figures are provided below so that you can verify that the toolkit is functioning properly. <span class="alert">The performance of entropy and information methods is data-dependent. The results depicted in these demos are specific to the datasets analyzed&mdash;no conclusions about the methods' performance on other datasets are implied or should be inferred.</span></p>
+
+<h3>Entropy method demo</h3>
+
+<p>The script <code>demo_entropy</code> demonstrates all of the entropy methods included in the toolkit on examples drawn from a binomial distribution with 10 bins. <a href="entropy.png">View the expected results</a>. <span class="alert">Dataset generation and bootstrap variance estimation make use of a pseudorandom number generation. Therefore, results may differ slightly from system to system.</span></p> 
+</p>
+
+<h3>Formal information demo</h3>
+
+<p>The script <code>demo_directformal</code> demostrates the use of the <code>directformal</code> function to compute the formal information rate on the <code>inforate_uni</code> and <code>inforate_rep</code> dataset. <a href="directformal.png">View the expected results</a>.</p> 
+
+<h3>Category-specific information demos</h3>
+
+There are three scripts that demonstrate how the toolkit quantifies the amount of information that an ensemble of spike trains conveys about a stimulus that can be characterized by discrete categories: <code>demo_directcat</code>, <code>demo_metric</code>, and <code>demo_binless</code>. When run, these scripts asks you to choose the <code>synth</code>, <code>taste</code> or <code>drift</code> datasets. To bypass this query, you may set the <code>dataset</code> variable (e.g., <code>dataset='synth'</code>) before running the scripts. (Note that you must clear this variable in order to receive the query again.) All of these demos can be run in succession with <code>phase</code> and <code>taste</code> datasets using the <code>demo_all</code> script. Analysis of the <code>drift</code> dataset can take a long time on some computers, and therefore is not included in the <code>demo_all</code> script.</p>
+
+<p>
+<table border="1">
+<tr>
+<th>Demo name</th><th>Description</th><th colspan="3">Expected results</th>
+</tr>
+<tr>
+<td><code>demo_directcat</code></td>
+<td>Direct method category-specific information demo</td>
+<td><a href="directcat_synth.png"><code>synth</code></a></td>
+<td><a href="directcat_taste.png"><code>taste</code></a></td>
+<td><a href="directcat_drift.png"><code>drift</code></a></td>
+</tr>
+<tr>
+<td><code>demo_metric</code></td>
+<td>Metric space method demo</td>
+<td><a href="metric_synth.png"><code>synth</code></a></td>
+<td><a href="metric_taste.png"><code>taste</code></a></td>
+<td><a href="metric_drift.png"><code>drift</code></a></td>
+</tr>
+<tr>
+<td><code>demo_binless</code></td><td>Binless method demo</td>
+<td><a href="binless_synth.png"><code>synth</code></a></td>
+<td><a href="binless_taste.png"><code>taste</code></a></td>
+<td><a href="binless_drift.png"><code>drift</code></a></td>
+</tr>
+</table>
+</p>
+
+<p>The script <code>demo_metric_multi</code> demonstrates the use of the metric space method on the  multineuron dataset <code>phase</code>. <a href="metric_phase.png">View the expected results</a>. <span class="alert">This demo is very memory intensive. If you have trouble running it, try reducing the size of the analysis window by changing the values of <code>opts.start_time</code> and <code>opts.end_time</code>.</span></p>
+
+<hr noshade>
+
+<p align="center"><a href="index.html">Back to contents.</a></p>
+
+
+</body>
+</html>

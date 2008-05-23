@@ -1,0 +1,134 @@
+<html>
+<head>
+<title>Spike Train Analysis Toolkit: Options and parameters for entropy methods</title>
+<link rel="stylesheet" type="text/css" href="style.css" title="default">
+<style type="text/css">
+.default {
+background-color: #eef;
+}
+.multi {
+background-color: #fee;
+}
+</style>
+</head>
+
+<body>
+
+<table>
+<tr>
+<td><a href="index.html"><img src="logo2.png"></a></td>
+<td><h1>Spike Train Analysis Toolkit<br>Options and parameters for entropy methods</h1></td>
+</tr>
+</table>
+
+<p>Options and parameters are passed to the toolkit functions by way of a specialized data structure. The members of this data structure are described below.</p>
+
+<h2>Options</h2>
+
+<p>Default selection in <span class="default">blue</span>.</p>
+
+<p><table class="doctable" width="100%">
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th colspan="2">Options</th>
+<th>Method(s)</th>
+</tr>
+
+<tr>
+<td rowspan="3"><code>tpmc_possible_words_strategy</code></td>
+<td rowspan="3">Strategy for computing the number of possible words</td>	
+<td class="default">0</td><td class="default">Use number of unique observed words</td>
+<td rowspan="3"><code>entropy_tpmc</code></td>
+</tr>
+<tr><td>1</td><td>Use total number of observed words</td></tr>
+<tr><td>2</td><td>Use maximum number of possible words</td></tr>
+
+<tr>
+<td rowspan="3"><code>bub_possible_words_strategy</code></td>
+<td rowspan="3">Strategy for computing the number of possible words</td>	
+<td>0</td><td>Use number of unique observed words</td>
+<td rowspan="3"><code>entropy_bub</code></td>
+</tr>
+<tr><td>1</td><td>Use total number of observed words</td></tr>
+<tr><td class="default">2</td><td class="default">Use maximum number of possible words</td></tr>
+
+<tr>
+<td rowspan="2"><code>bub_compat</code></td>
+<td rowspan="2">BUB compatibility parameter</td>	
+<td class="default">0</td><td class="default">Compatible with paper</td>
+<td rowspan="2"><code>entropy_bub</code></td>
+</tr>
+<tr><td>1</td><td>Compatible with posted code</td></tr>
+
+<tr>
+<td rowspan="3"><code>ww_possible_words_strategy</code></td>
+<td rowspan="3">Strategy for computing the number of possible words</td>	
+<td class="default">0</td><td class="default">Use number of unique observed words</td>
+<td rowspan="3"><code>entropy_ww</code></td>
+</tr>
+<tr><td>1</td><td>Use total number of observed words</td></tr>
+<tr><td>2</td><td>Use maximum number of possible words</td></tr>
+
+</table></p>
+
+<h2>Parameters</h2>
+
+<p><table class="doctable" width="100%">
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Type</th>
+<th>Range</th>
+<th>Default</th>
+<th>Method(s)</th>
+</tr>
+
+<tr>
+<td><code>bub_lambda_0</code></td>
+<td>Lagrange multiplier parameter &lambda;<sub>0</sub> for BUB</td>
+<td>double</td><td>&ge 0</td>
+<td>0</td>
+<td><code>entropy_bub</code></td>
+</tr>
+
+<tr>
+<td><code>bub_K</code></td>
+<td><i>K</i> parameter for BUB</td>
+<td>int</td><td>&ge 0</td>
+<td>11</td>
+<td><code>entropy_bub</code></td>
+</tr>
+
+<tr>
+<td><code>ww_beta</code></td>
+<td>&beta; parameter for Dirichlet prior</td>
+<td>double</td><td>&ge 0</td>
+<td>1</td>
+<td><code>entropy_ww</code></td>
+</tr>
+
+<tr>
+<td><code>boot_random_seed</code></td>
+<td>Seed for random number generation</td>
+<td>int</td><td>&mdash;</td>
+<td>1</td>
+<td><code>variance_boot</code></td>
+</tr>
+
+<tr>
+<td><code>boot_num_samples</code></td>
+<td>Number of bootstrap samples</td>
+<td>int</td><td>&gt; 0</td>
+<td>100</td>
+<td><code>variance_boot</code></td>
+</tr>
+
+</table></p>
+
+<hr noshade>
+
+<p align="center"><a href="index.html">Back to contents.</a></p>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<productinfo>
+
+<matlabrelease>13</matlabrelease>
+<name>Spikes</name>
+<type>toolbox</type>
+<icon>$toolbox/matlab/icons/matlabicon.gif</icon>
+
+<list>
+
+<listitem>
+<label>VS Applications Panel</label>
+<callback>vs</callback>
+<icon>$toolbox/matlab/icons/figureicon.gif</icon>
+</listitem>
+
+<listitem>
+<label>Spikes Analysis Package</label>
+<callback>spikes</callback>
+<icon>$toolbox/matlab/icons/figureicon.gif</icon>
+</listitem>
+
+<listitem>
+<label>DOGFit Model Fitting</label>
+<callback>dogfit</callback>
+<icon>$toolbox/matlab/icons/figureicon.gif</icon>
+</listitem>
+
+</list>
+</productinfo>

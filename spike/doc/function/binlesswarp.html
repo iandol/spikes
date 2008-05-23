@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>binlesswarp (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="binlesswarp">
+  <meta name="description" content="BINLESSWARP Warp spike times.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>binlesswarp</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>binlesswarp</h1>
+
+<!-- <p><a name="_name"></a>BINLESSWARP Warp spike times.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">BINLESSWARP Warp spike times.
+   Y = BINLESSWARP(X,OPTS) warps the spike trains in cell array X
+   to give spike trains in cell array Y. 
+
+   The options and parameters for this function are:
+      OPTS.start_warp: The lower limit of the warping. The default
+         is -1.  
+      OPTS.end_warp: The upper limit of the warping. The
+         default is 1. 
+      OPTS.warping_strategy: The strategy for warping. 
+         OPTS.warping_strategy=0 means the spike times in X are
+            linearly scaled to fall between OPTS.start_warp and
+            opts.end_warp.  
+         OPTS.warping_strategy=1 means the spike times are
+            uniformly spaced between OPTS.start_warp and
+            opts.end_warp.  
+         The default value is 1.
+
+   Y = BINLESSWARP(X) uses the default options and parameters.
+
+   [Y,OPTS_USED] = BINLESSWARP(X) or [Y,OPTS_USED] =
+   BINLESSWARP(X,OPTS) additionally return the options used.
+ 
+   See also <a href="binlessinfo.html" class="code" title="">BINLESSINFO</a>, <a href="binlessembed.html" class="code" title="">BINLESSEMBED</a>, <a href="binlessinfo.html" class="code" title="">BINLESSINFO</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="binless.html"><tt>binless</tt></a> BINLESS Binless method analysis.</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Tue 28-Nov-2006 11:37:58 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

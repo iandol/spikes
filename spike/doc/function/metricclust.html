@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>metricclust (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="metricclust">
+  <meta name="description" content="METRICCLUST Cluster spike trains based on distance matrix.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>metricclust</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>metricclust</h1>
+
+<!-- <p><a name="_name"></a>METRICCLUST Cluster spike trains based on distance matrix.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">METRICCLUST Cluster spike trains based on distance matrix.
+   CM = METRICCLUST(D,CATEGORIES,M,OPTS) uses a simple clustering
+   method to classify spike trains based on the distance matrix
+   D. CATEGORIES is a vector that gives the category indices of the
+   spike trains. M is the number of categories. CM is a square matrix
+   where the columns correspond to the actual classes and the rows
+   correspond to the assigned classes.
+
+   The options and parameters for this function are:
+      OPTS.clustering_exponent: A constant that controls the
+         clustering. Negative values emphasize smaller distances
+         and positive values emphasize larger distances. The
+         default is -2.
+
+   CM = METRICCLUST(D,CATEGORIES,M) uses the default options and parameters.
+
+   [CM,OPTS_USED] = METRICCLUST(D,CATEGORIES,M,OPTS) or
+   [CM,OPTS_USED] = METRICCLUST(D,CATEGORIES,M,OPTS) additionally
+   return the options used.
+ 
+   See also <a href="metricopen.html" class="code" title="">METRICOPEN</a>, <a href="metricdist.html" class="code" title="">METRICDIST</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="metric.html"><tt>metric</tt></a> METRIC Metric space analysis</li><li><a href="metric_jack.html"><tt>metric_jack</tt></a> METRIC_JACK Metric space analysis with leave-one-out jackknife.</li><li><a href="metric_shuf.html"><tt>metric_shuf</tt></a> METRIC_SHUF Metric space analysis with shuffled inputs.</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Tue 28-Nov-2006 11:37:58 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

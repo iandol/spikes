@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<stylesheet_registry xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+   <registry>
+<!--========= v1.x DSSSL STYLESHEETS =========-->
+
+      <fileentities>
+         <refname>PRINT</refname>
+         <filename>
+            <d>$MATLABroot$</d>
+            <d>sys</d>
+            <d>jade</d>
+            <d>docbook</d>
+            <d>print</d>
+            <f>docbook.dsl</f>
+         </filename>
+         <refname>HTML</refname>
+         <filename>
+            <d>$MATLABroot$</d>
+            <d>sys</d>
+            <d>jade</d>
+            <d>docbook</d>
+            <d>print</d>
+            <f>docbook.dsl</f>
+         </filename>
+      </fileentities>
+      <stylesheet><!--30-Nov-2005 18:02:03-->
+         <name>Standard Print</name>
+         <description>Displays titlepage, table of contents, list of titles</description>
+         <ID>spikereportdoc</ID>
+         <fileref>PRINT</fileref>
+         <validformats>
+            <format>$stdprint$</format>
+         </validformats>
+         <variables>
+            <varpair>
+               <varname>%generate-book-toc%</varname>
+               <varvalue>#f</varvalue>
+            </varpair>
+            <varpair>
+               <varname>%generate-part-toc%</varname>
+               <varvalue>#f</varvalue>
+            </varpair>
+            <varpair>
+               <varname>%generate-part-toc-on-titlepage%</varname>
+               <varvalue>#f</varvalue>
+            </varpair> 
+         </variables>
+      </stylesheet>
+   </registry>
+</stylesheet_registry>

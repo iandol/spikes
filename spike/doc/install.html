@@ -1,0 +1,122 @@
+<html>
+<head>
+<title>Spike Train Analysis Toolkit: Download and installation</title>
+<link rel="stylesheet" type="text/css" href="style.css" title="default">
+</head>
+
+<body>
+
+<table>
+<tr>
+<td><a href="index.html"><img src="logo2.png"></a></td>
+<td><h1>Spike Train Analysis Toolkit<br>Download and installation</h1></td>
+</tr>
+</table>
+
+<!-- <h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#sysreq">System Requirements</a>
+<li><a href="#download">Download</a>
+<li><a href="#mex">MEX Setup</a>
+<li><a href="#compile">Compilation</a>
+</ul> -->
+
+<h2><a name="sysreq"></a>System Requirements</h2>
+
+<p>The Spike Train Analysis Toolkit requires:
+<ul>
+<li><a href="http://www.mathworks.com/products/matlab/">Matlab</a>
+<li>A Matlab-supported C compiler (see the <a href="http://www.mathworks.com/support/tech-notes/1600/1601.html">Matlab compiler support policy</a>)
+<li><a href="http://gnuwin32.sourceforge.net/packages/gsl.htm">Gsl for Windows</a> (Windows) or <a href="http://www.gnu.org/software/gsl/">GNU Scientific Library</a> (Mac and Linux)
+</ul>
+</p>
+
+<p>The Toolkit has been tested on the following platforms:
+<ul>
+<li>Windows XP
+<ul>
+<li>Compiled with <a href="http://msdn.microsoft.com/howtobuy/visualc/default.aspx">Microsoft Visual C++ .NET 2003</a> (also known as Version 7.1 Professional). <a href="http://www.mathworks.com/support/tech-notes/1600/1601.html">This is the PC compiler fully supported by the Mathworks.</a>
+<li>Compiled with Microsoft Visual C++ Toolkit 2003, a free version of the compiler from Microsoft Visual C++ .NET 2003. For information on installing and configuring Microsoft Visual C++ Toolkit 2003 for use with Matlab and the Spike Train Analysis Toolkit, please see <a href="msvctk2003.html">this page</a>.</li>
+<li><b>Note:</b> <a href="http://www.cs.virginia.edu/~lcc-win32/">LCC</a>, which is included with Matlab, will <b>not</b> work, as it is not directly compatible with Gsl for Windows.
+</ul>
+<li>Mac OS 10.3. Compiled with GCC 3.3.3, which is included in <a href="http://www.apple.com/macosx/features/xcode/">Xcode</a>. Xcode is part of the <a href="http://www.apple.com/macosx/developertools/">Apple Developer Tools</a> and can be downloaded by members of <a href="http://developer.apple.com/">Apple Developer Connection</a> (membership is free).
+<li>Redhat Linux (2.4 kernel): compiled with GCC 3.2.3.
+</ul>
+</p>
+
+<h2><a name="download"></a>Download</h2>
+
+<ol>
+
+<li>Download the compressed archive from <a href="spike.zip"><code>neuroanalysis.org</code></a>.</li>
+
+<li>Move the archive to the location where you would like the toolkit files to reside. When the archive is uncompressed, a directory named <code>spike</code> will be created and all of files will reside there. For example, if you want your files to be located in <code>/home/username/spike/</code>, move the archive to <code>/home/username/</code>.
+
+<li>Uncompress the archive. 
+
+</ol>
+
+<h2><a name="mex"></a>MEX Setup</h2>
+
+Configure your MEX environment if you have never done so. This is done by starting Matlab and issuing the following command:
+<blockquote class="example"><code>&gt;&gt;&nbsp;mex -setup</code></blockquote>
+More detailed instructions are given at <a href="http://www.mathworks.com/support/tech-notes/1600/1605.html">the MathWorks site</a>.
+
+<h2><a name="gsl"></a>GNU Scientific Library Setup</h2>
+
+<h3>Windows</h3>
+
+<ol>
+<li>Download <a href="http://gnuwin32.sourceforge.net/packages/gsl.htm">Gsl for Windows</a> from <a href="http://gnuwin32.sourceforge.net/downlinks/gsl.php"><code>http://gnuwin32.sourceforge.net/downlinks/gsl.php</code></a>. This link will direct you to a local mirror.
+
+<li>Run the executable file. Make a note of the folder where Gsl has been installed (e.g., <code>C:\Program Files\GnuWin32</code>). For the remainder of the documentation, we will represent this folder as <code>&lt;gsl_folder&gt;</code>.
+
+<li>Go to <code>Start Menu &gt; Control Panel &gt; System</code>. Click on the <code>Advanced</code> tab. Click the button <code>Environment Variables</code> at the bottom of the tab. Add the following variables:
+
+<table border="1">
+<tr><td>Variable</td><td>Value</td>
+<tr><td><code>INCLUDE</code></td><td><code>&lt;gsl_folder&gt;\include</code></td></tr>
+<tr><td><code>LIB</code></td><td><code>&lt;gsl_folder&gt;\lib</code></td></tr>
+</table>
+
+If these variables already exist, append contents above after the existing contents. Be sure to separate the paths with a semicolon. If you replace the existing contents, some programs on your system may cease to work properly. You may make these modifications in the <code>user</code> or <code>system</code> depending on the desired scope of the installation.
+
+<li>Running the <code>mex -setup</code> command in Matlab will create a file called <code>mexopts.bat</code> in the user account's Matlab folder (e.g., <code>&lt;user&gt;\Application Data\Mathworks\MATLAB\R14\mexopts.bat</code>).
+<ol>
+<li>You must find this file and open it using a text editor such as WordPad.
+<li>Find the line that begins <code>set LINK_FILE</code>.
+<li>At the end of this line, append <code>libgsl.a libgslcblas.a</code>.
+</ol>
+<span class="alert">If you run <code>mex -setup</code> after you modify this file, this change will be overwritten and must be repeated.</span>
+
+</ol>
+
+<h3>Mac and Linux</h3>
+
+<ol>
+<li>Download the <a href="http://www.gnu.org/software/gsl/">GNU Scientific Library</a> from <a href="ftp://ftp.gnu.org/gnu/gsl/"><code>ftp://ftp.gnu.org/gnu/gsl/</code></a>.
+<li>Follow the included installation instructions. You may need root/administrator access in order to install GSL completely. If you do not have these privileges, have your system administrator perform the installation of GSL.
+<li>Depending on your environment, you may need to include the directory that contains the files <code>libgsl.so</code> and <code>libgslcblas.so</code> (e.g., <code>/usr/local/lib/</code>) in <code>LD_LIBRARY_PATH</code>.
+</ol>
+
+<h2><a name="compile"></a>Compilation</h2>
+
+<ol>
+<li>Start Matlab.
+<li>Set the working directory to be the toolkit directory. For example,
+<blockquote class="example"><code>&gt;&gt;&nbsp;cd /home/username/spike</code></blockquote>
+<li>Give the command to compile all of the files:
+<blockquote class="example"><code>&gt;&gt;&nbsp;make</code></blockquote>
+<li>The spike train analysis toolkit is ready to go. 
+</ol>
+
+<p>To verify that compilation was successful, run the <a href="demo.html">demo scripts</a>.</p>
+
+<hr noshade>
+
+<p align="center"><a href="index.html">Back to contents.</a></p>
+
+
+</body>
+</html>
