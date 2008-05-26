@@ -156,7 +156,11 @@ case 'Initialize'
 	if sv.usingmac==1
 		sv.matlabroot=matlabroot;
 		mpath=path;
-		sv.userroot=regexp(mpath,'([^:]+user):','tokens','once');
+		sv.userroot=regexpi(mpath,'([^:]+(Spikes|User)):','tokens','once');
+        if isempty(sv.userroot)
+            close(sv.uihandle);
+            error('Cannot find Spikes parent directory');
+        end
 		sv.userroot=sv.userroot{1};
 	else
 		sv.matlabroot=regexprep(matlabroot,'Program files','Progra~1','ignorecase');
