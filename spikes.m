@@ -159,6 +159,7 @@ case 'Initialize'
 		sv.userroot=regexpi(mpath,'([^:]+(Spikes|User)):','tokens','once');
         if isempty(sv.userroot)
             close(sv.uihandle);
+				errordlg('OS X: Cannot find Spikes parent directory');
             error('Cannot find Spikes parent directory');
         end
 		sv.userroot=sv.userroot{1};
