@@ -1,23 +1,49 @@
-function zs = zipspikes(varargin)
+classdef zipspikes
 % Spikes data ZIP read/write class
-switch nargin
-case 0
-  % No argument
-  zs.name='Zipspike file';
-  zs.path=uigetfile;
-  zs = class(zs,'zipspikes');
-case 1
-	if (isa(varargin{1},'zipspikes'))
-		display(varargin{1});
-	else
-		zs.name='Zipspike file';
-		zs.path=varargin{1};
-		zs = class(zs,'zipspikes');
-	end 
-case 2
-	zs.path=varargin{1};
-	zs.name=varargin{2};
-	zs = class(zs,'zipspikes');
-otherwise
-   error('Wrong number of input arguments')
+
+properties
+	name='Zipspike file';
+	path=uigetfile;
+end
+
+methods
+	function data = readfile(zs)
+		%Class method to read a Zipped spikes file and get out the data to pass to
+		%spikes
+
+		%set up OS parameters
+		if strcmp(getenv('OSTYPE'),'darwin8.0')
+			OS='mac';
+			tmp='/private/tmp/matlab/';
+		else
+			OS='win';
+			tmp=getenv('temp');
+		end
+
+
+		olddir=pwd;
+		[p,f,e]=fileparts(zs.path);
+		switch e
+			case '.zip'
+				cd(tmp);
+				mkdir(f);
+				cd(f);
+				unzip(zs.path);
+			case '.smr'
+			otherwise
+		end
+
+		cd(olddir)
+	end
+	function display(zs)
+		% COLOUR/DISPLAY
+		disp('ZipSpike Object');
+		disp(' ');
+		disp([inputname(1),' = '])
+		disp(' ');
+		disp(['Name: ' zs.name ' | Path: ' zs.path])
+		disp(' ');
+	end
+end
+
 end
