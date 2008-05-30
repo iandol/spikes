@@ -20,7 +20,6 @@ methods
 			tmp=getenv('temp');
 		end
 
-
 		olddir=pwd;
 		[p,f,e]=fileparts(zs.path);
 		switch e
@@ -30,6 +29,9 @@ methods
 				cd(f);
 				unzip(zs.path);
 			case '.smr'
+				
+			case '.txt.'
+				
 			otherwise
 		end
 
