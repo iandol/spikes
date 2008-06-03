@@ -58,7 +58,7 @@ case 'Initialize'
 	sv=[];
 	data=[];
 	rlist=[];
-	sv.version='SPIKES: V1.82b';
+	sv.version='SPIKES: V1.82c';
 	if strcmp(getenv('ARCH'),'maci')
 		sv.usingmac=1;
 		sv.historypath=['~' filesep];
