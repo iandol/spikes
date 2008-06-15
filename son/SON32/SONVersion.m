@@ -3,7 +3,7 @@ function Ver=SONVersion()
 %
 % Author:Malcolm Lidierth
 % Matlab SON library:
-% Copyright © The Author & King's College London 2005-2006
+% Copyright 2005 © King’s College London
 
 global Version;
 title='MATLAB SON Library';

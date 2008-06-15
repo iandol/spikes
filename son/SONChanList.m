@@ -10,6 +10,8 @@ function[ChanList]=SONChanList(fid)
 % Malcolm Lidierth 03/02
 % Updated 10/06 ML
 % Copyright © The Author & King's College London 2002-2006
+%
+% Revised 05.02.08 Get rid of empty struct initialization
 
 h=SONFileHeader(fid);
 
@@ -19,7 +21,8 @@ if isempty(h)
 end;
 
 AcChan=0;
-ChanList=struct();
+% Empty structure not supported in ML 6.5
+% ChanList=struct();
 for i=1:h.channels
     c=SONChannelInfo(fid,i);
     if(c.kind>0)                   % Only look at channels that are active
