@@ -28,7 +28,8 @@ function[data,header]=SONGetChannel(fid, chan, varargin)
 % See also SONIMPORT
 %
 % Malcolm Lidierth 02/02
-% Updated 03/06 ML
+% Updated 06/07 ML
+%       Error checking now allows Spike for Mac files to be loaded
 % Copyright © The Author & King's College London 2002-2006
 
 MatFlag=0;
@@ -50,8 +51,8 @@ end;
 
 
 [path, name, ext]=fileparts(fopen(fid));
-if strcmpi(ext,'.smr') ~=1
-    warning('SONGetChannel: file handle points to "%s". \nThis is not a valid SON file',fopen(fid));
+if strcmpi(ext,'.smr') ~=1 && strcmpi(ext,'.son') ~=1
+    warning('SONGetChannel: file handle points to "%s". \nThis is not a valid Spike file',fopen(fid));
     data=[];
     header=[];
     return;

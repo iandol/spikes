@@ -414,8 +414,11 @@ if MatFlag==1
     data=[];
     fclose(fh);
 else
-    h.min=min(data);
-    h.max=min(data);
+    % This will already have been done if ScaleData selected
+    if ScaleData==0
+     h.min=min(data);
+     h.max=max(data);% Bug Fix 27/6/07 min changed to max
+    end
 end
 
 
