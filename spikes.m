@@ -64,6 +64,9 @@ case 'Initialize'
 		sv.usingmac=1;
 		sv.historypath=['~' filesep 'MatlabFiles' filesep];
 	elseif ispc
+        if ~exist('c:\MatlabFiles','dir')
+            mkdir('c:\MatlabFiles')
+        end
 		sv.usingmac=0;
 		sv.historypath=['c:' filesep 'MatlabFiles' filesep];
 	end
@@ -2346,8 +2349,7 @@ case 'Exit'
 	end
 	if isfield(sv,'dataloadpath')
 		paths.dataloadpath=sv.dataloadpath;
-	end
-	clear data sv;
+    end
 	if ~isempty(gh('DataInfoBox'))
 		close(gh('DataInfoBox'));
 	end
@@ -2365,6 +2367,7 @@ case 'Exit'
 	end
 	if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end;
 	if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
+    clear data sv;
 	clear history shistory paths;
 	delete(gcf);
 
