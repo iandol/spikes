@@ -58,13 +58,18 @@ case 'Initialize'
 	sv=[];
 	data=[];
 	rlist=[];
+<<<<<<< TREE
+	sv.version='SPIKES: V1.82b';
+	sv.temppath=getenv('TEMP');
+	if ismac
+=======
 	sv.version='SPIKES: V1.82c';
-	if strcmp(getenv('ARCH'),'maci')
+>>>>>>> MERGE-SOURCE
 		sv.usingmac=1;
-		sv.historypath=['~' filesep];
-	else
+		sv.historypath=['~' filesep 'MatlabFiles' filesep];
+	elseif ispc
 		sv.usingmac=0;
-		sv.historypath=['c:' filesep];
+		sv.historypath=['c:' filesep 'MatlabFiles' filesep];
 	end
 	sv.uihandle=spikes_UI; %our GUI file
 	figpos(2);	%position the figure
@@ -282,7 +287,7 @@ case 'Load'
 				data.filetype = 'txt';
 			else
 				if isdir([p filesep basefilename]) %stops annoying "directory alread exists" messages
-					cd('c:\');
+					cd(sv.historypath);
 					disp('Deleted existing directory...');
 					rmdir([p filesep basefilename],'s');
 					cd(p);
@@ -956,7 +961,7 @@ case 'Load'
 	elseif ~strcmp(sv.auto,'report')
 		spikes('Data Info');
 	end
-	if exist('c:\data.mat','file');delete('c:\data.mat'); end;
+	if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
 
 	if ~isempty(data.error) && get(gh('SShowError'),'Value')==1 %show the possible	data errors
 		warndlg(cat(1,data.error,{' ';'If trials were removed for one variable, please re-run removing the last trial manually for all the data; this happens because VSX fails to tag some spikes properly.'}));
@@ -1418,7 +1423,7 @@ case 'Tuning Curves'
 			tune.data.ycurve=data.matrix(y,:);
 			tune.data.xcurveerror=data.errormat(:,x);
 			tune.data.ycurveerror=data.errormat(y,:);
-			save c:\tune.mat tune
+			save([sv.historypath 'tune.mat'], 'tune');
 	end
 
 	%-----------------------------Surround Suppression Measurement----------
@@ -1634,18 +1639,18 @@ case 'Burst Ratio'
 	if data.numvars==1
 		plot(data.xvalues,data.matrix,'k-');
 		hold on
-		[ax,h1,h2]=plotyy(data.xvalues,data.bmatrix,data.xvalues,ratio)
+		[ax,h1,h2]=plotyy(data.xvalues,data.bmatrix,data.xvalues,ratio);
 		hold off
 		sv.xlabelhandle=xlabel(data.xtitle);
 		axes(ax(1))
 		sv.ylabelhandle=ylabel('All Spikes (black) and Burst Spikes (blue)');
 		axes(ax(2))
-		sv.ylabelhandle=ylabel('Ratio of Burst to Total Spikes')
-		sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle])
+		sv.ylabelhandle=ylabel('Ratio of Burst to Total Spikes');
+		sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
 		set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 		data.ratio=ratio;
 		MR=mean(data.ratio);
-		save c:\ratio.txt ratio -ascii
+		save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
 	s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',ratio),sprintf('%0.6g\t',MR)];
 	clipboard('Copy',s);
 	else
@@ -1655,16 +1660,15 @@ case 'Burst Ratio'
 		caxis([0 1])
 		sv.xlabelhandle=xlabel(data.xtitle);
 		sv.ylabelhandle=ylabel(data.ytitle);
-		sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle])
+		sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
 		set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 		set(gca,'Tag','');
 		colorbar
-
 		Y=get(gh('YHoldMenu'),'value');
 		data.ratio=ratio;
 		R=data.ratio(Y,:);
 		MR=mean(R);
-		save c:\ratio.txt ratio -ascii
+		save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
 	s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',R),sprintf('%0.6g\t',MR)];
 	clipboard('Copy',s);
 	end
@@ -2185,8 +2189,7 @@ case 'Save MAT'
 		sv.matsavepath=pn;
 		if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('Returned with Error'), end;
         cd(pn);
-		x='data';
-		save(fn,x);
+		save(fn,'data');
         cd(oldpath);
 	else
 		errordlg('No Data has been Processed...');
@@ -2306,7 +2309,7 @@ case 'Load Text'
 	%-----------------------------------------------------------------------------------------
 
 	set(gh('LoadText'),'String','Text Load - Remember, you cannot ''reanalyse''.');
-	if exist('c:\data.mat','file');delete('c:\data.mat'); end;
+	if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
 	if ~exist([sv.matlabroot,'\user\various\cheat.mat'],'file')
 		errordlg('You need to put "Cheat.mat" in the "user\various" directory, or else this function will not work')
 		set(gh('LoadText'),'String','Text Load Cludge! Failed');
@@ -2354,7 +2357,7 @@ case 'Exit'
 	end
 	history=get(gh('spikehistory'),'String');
 	shistory=get(gh('SSliceHistory'),'String');
-	save('c:\shistory.mat','shistory');
+	save([sv.historypath 'shistory.mat'],'shistory');
 	hsize=20;
 	if size(history,1)>1
 		if size(history,1)>hsize
@@ -2362,10 +2365,10 @@ case 'Exit'
 		elseif strcmp(history(end),' ')
 			history=history(1:end-1); %removes dummy space
 		end
-		save 'c:\history.mat' history paths;
+		save([sv.historypath 'history.mat'],'history','paths');
 	end
-	if exist('c:\spiketemp','file');delete('c:\spiketemp'); end;
-	if exist('c:\data.mat','file');delete('c:\data.mat'); end;
+	if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end;
+	if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
 	clear history shistory paths;
 	delete(gcf);
 
@@ -3785,7 +3788,7 @@ function temporalanalysis(data)
 	reset(h);
 	title('Playing movie 3 times, then will save to c:\\movie.mat and plot individual frames in a new figure.');
     movie(M,3,8)
-    save c:\movie.mat M
+    save([sv.historypath 'movie.mat'], 'M');
     figure;
 	figpos(1,[600 600]);	%position the figure
     
