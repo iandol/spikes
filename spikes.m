@@ -58,13 +58,9 @@ case 'Initialize'
 	sv=[];
 	data=[];
 	rlist=[];
-<<<<<<< TREE
-	sv.version='SPIKES: V1.82b';
+	sv.version='SPIKES: V1.82c';
 	sv.temppath=getenv('TEMP');
 	if ismac
-=======
-	sv.version='SPIKES: V1.82c';
->>>>>>> MERGE-SOURCE
 		sv.usingmac=1;
 		sv.historypath=['~' filesep 'MatlabFiles' filesep];
 	elseif ispc
