@@ -173,7 +173,7 @@ case 'Initialize'
 			sv.matlabroot=regexprep(sv.matlabroot,'2006b','2007a');
 		end
 		mpath=path;
-		sv.userroot=regexp(mpath,'([^;]+user);','tokens','once');
+		sv.userroot=regexp(mpath,'([^;]+Spikes);','tokens','once');
 		sv.userroot=sv.userroot{1};
 	end
 	
