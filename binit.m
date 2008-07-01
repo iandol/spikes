@@ -1,4 +1,4 @@
-function [time,psth,rawspikes,sums,rawstruct]=binit(sd,binwidth,startmod,endmod,starttrial,endtrial,wrapped,cor)
+function [time,psth,rawspikes,sums,rawstruct]=binit(sd,binwidth,startmod,endmod,starttrial,endtrial,wrapped,cor,reset)
 
 % This function will take an lsd structure file and construct a
 % timebase and psth at a given binwidth, wrapped or unwrapped.
@@ -8,6 +8,8 @@ function [time,psth,rawspikes,sums,rawstruct]=binit(sd,binwidth,startmod,endmod,
 %
 % [time,psth]=binit(file,binwidth,startmod,endmod,wrapped);
 % where wrapped is 1 (yes) or 0(no)
+% reset allows other programs to use starttrial differently from spikes,
+% e.g. computefft
 %
 % Allowed raw spike times to be extracted
 
@@ -35,8 +37,11 @@ if isempty(starttrial) || starttrial<1 || starttrial>endtrial
 end
 
 if exist('cor','var')
-	global xdata
-	xcinuse=1;
+	if isempty(cor)
+	else
+		global xdata
+		xcinuse=1;
+	end
 end
 
 if (xcinuse==1)
@@ -62,7 +67,12 @@ end
 if wrapped==1 % Wrapped is ON
 	time=0:binwidth:modtime;
 	psth=zeros(1,size(time,2));
-	a=1; %we use this because lsd2 has already removed the trials, so we reset the index
+	
+	if exist('reset','var')
+		a=starttrial; 
+	else
+		a=1; %we use this because lsd2 has already removed the trials, so we reset the index
+	end
 	sloop=1;
 	for i=starttrial:endtrial
 		for j=startmod:endmod

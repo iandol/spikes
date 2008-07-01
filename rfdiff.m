@@ -25,7 +25,7 @@ case 'Initialize'
 	set(0,'DefaultAxesTickDir','out');
 	set(0,'DefaultAxesTickDirMode','manual');
 	rfd.fighandle=rfdiff_UI; %this is the GUI figure	
-	set(rfd.fighandle,'Name', 'RF Diff V0.84b');
+	set(rfd.fighandle,'Name', 'RF Diff V0.85a');
 	rfd.ax1pos=get(gh('RFDCell1Axis'),'Position');
 	rfd.ax2pos=get(gh('RFDCell2Axis'),'Position');
 	rfd.ax3pos=get(gh('RFDCell3Axis'),'Position');
@@ -37,6 +37,7 @@ case 'Load'
 	%-----------------------------------------------------------------------------------------	
 	set(gh('RFDOutputText'),'String','Please Wait...');
 	if rfd.reload==0
+		set(gh('RFDUseFFT'),'Value',0);
 		set(gh('RFDHideABC'),'Value',0);
 		set(gh('RFDYToggle'),'Value',0);
 		ax1=rfd.ax1pos;
@@ -64,6 +65,7 @@ case 'Load'
 		t=find(s1.data.filename=='/');
 		s1.data.filename=[s1.data.filename((t(end-2))+1:t(end)) ':' num2str(s1.data.cell)];
 		rfd.cell1=s1.data;
+		rfd.cell1.sumsorig=rfd.cell1.sums;
 		clear s1
 
 		[file path]=uigetfile('*.*','Load 2nd Processed Matrix:');
@@ -74,6 +76,7 @@ case 'Load'
 		t=find(s2.data.filename=='/');
 		s2.data.filename=[s2.data.filename((t(end-2))+1:t(end)) ':' num2str(s2.data.cell)];
 		rfd.cell2=s2.data;
+		rfd.cell2.sumsorig=rfd.cell2.sums;
 		clear s2
 
 		[file path]=uigetfile('*.*','Load 3rd Processed Matrix:');
@@ -88,6 +91,7 @@ case 'Load'
 			t=find(s3.data.filename=='/');
 			s3.data.filename=[s3.data.filename((t(end-2))+1:t(end)) ':' num2str(s3.data.cell)];
 			rfd.cell3=s3.data;
+			rfd.cell3.sumsorig=rfd.cell3.sums;
 			clear s3
 		end
 		switch rfd.cell1.numvars
@@ -141,9 +145,14 @@ case 'Load'
 		end
 	else
 		rfd.reload=0;
+		rfd.cell1.sums=rfd.cell1.sumsorig;
+		rfd.cell2.sums=rfd.cell2.sumsorig;
+		if rfd.ignorerecovery~=1;
+			rfd.cell3.sums=rfd.cell3.sumsorig;
+		end
 	end
     
-    zval1=1;
+   zval1=1;
 	zval2=1;
 	zval3=1;
 	yval1=1;
@@ -152,7 +161,7 @@ case 'Load'
 
 	rfd.cell1.numvars=rfd.cell2.numvars; %reset for when we lock y
 	
-    switch rfd.cell1.numvars
+   switch rfd.cell1.numvars
 	case 3
 		zval1 = get(gh('RFDZValue1'),'Value');
 		zval2 = get(gh('RFDZValue2'),'Value');
@@ -218,6 +227,15 @@ case 'Load'
 	end
 	
 	timemultiplier=1000/timeinf;
+	
+	if get(gh('RFDUseFFT'),'Value')==1
+		rfd.cell1.sums=rfd.cell1.fftsums;
+		rfd.cell2.sums=rfd.cell2.fftsums;
+		if rfd.ignorerecovery~=1;
+			rfd.cell3.sums=rfd.cell3.fftsums;
+		end
+		timemultiplier=1;
+	end
 	
 	axes(gh('RFDCell1Axis'));
 	cla reset

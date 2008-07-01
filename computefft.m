@@ -47,29 +47,31 @@ sf=1000/(data.raw{1}.numtrials*data.binwidth);  %for the data values
 sf2=1000/data.binwidth; %for the error values
 end
 
-%So later on we can use one loop to deal with 1variable data & 2variable data
-if data.numvars>1
-   ynum=data.yrange;
-else
-   ynum=1;
-end
+% %So later on we can use one loop to deal with 1variable data & 2variable data
+% if data.numvars>1
+%    ynum=data.yrange;
+% else
+%    ynum=1;
+% end
+
+data.fftsums=cell(data.yrange,data.xrange,data.zrange);
 
 time=(max(data.time{1})+data.binwidth)/1000; %time in seconds for the psths
 
-fftmatrix.fftvalue=zeros(ynum,data.xrange);  %preparing the matrix for fft values
-fftmatrix.errvalue=zeros(ynum,data.xrange);  %..and for error values
+fftmatrix.fftvalue=zeros(data.yrange,data.xrange,data.zrange);  %preparing the matrix for fft values
+fftmatrix.errvalue=zeros(data.yrange,data.xrange,data.zrange);  %..and for error values
 
 
 %Finding fft harmonics, or ratios of one to another
-for i=1:(data.xrange*ynum) 
+for i=1:(data.xrange*data.yrange*data.zrange) 
    if harmn2~=inf  %if we're calculating a ratio
       [a1,f1]=fftval(data.psth{i},time,harmn1,tempfreq);
       [a2,f2]=fftval(data.psth{i},time,harmn2,tempfreq);
-      if a1~=0 & a2==0 & infpoint~=inf     %if its x/0 and we have specified NaN/infinity points
+      if a1~=0 && a2==0 && infpoint~=inf     %if its x/0 and we have specified NaN/infinity points
          val=inf;
-      elseif a1==0 & a2==0 & infpoint~=inf %if its 0/0 and we have specified NaN/infinity points
+      elseif a1==0 && a2==0 && infpoint~=inf %#ok<AND2> %if its 0/0 and we have specified NaN/infinity points
          val=-1;
-      elseif a2~=0 | infpoint==inf         %if its x/y or 0/x or there's no NaN/infinity point set
+      elseif a2~=0 || infpoint==inf         %if its x/y or 0/x or there's no NaN/infinity point set
          val=a1/a2;
       end
       fftmatrix.fftvalue(i)=val;
@@ -89,15 +91,13 @@ else            %if we're calculating a single harmonic
    fftmatrix.freq=f;
 end
 
-
-
 %Finding error values
-for i=1:(data.xrange*ynum) 
+for i=1:(data.xrange*data.yrange*data.zrange) 
    for j=1:data.raw{i}.numtrials  
       if data.wrapped==1
          for k=1:data.raw{i}.nummods
             %get the psth for the kth modulation of the jth trial
-            [tmptime,tmppsth]=binit(data.raw{i},data.binwidth*10,k,k,j,j,1);
+            [tmptime,tmppsth]=binit(data.raw{i},data.binwidth*10,k,k,j,j,1,[],1);
             %find the fft harmonic/harmonic ratio for tmppsth, and store in matrix
             if harmn2~=inf
                [a1,f1]=fftval(tmppsth,time,harmn1,tempfreq);
@@ -114,8 +114,8 @@ for i=1:(data.xrange*ynum)
          end
       else
          %get the psth for the jth unwapped trial
-         [tmptime,tmppsth]=binit(data.raw{i},data.binwidth*10,StartMod,EndMod,j,j,1);
-         %find and store fft as before
+         [tmptime,tmppsth]=binit(data.raw{i},data.binwidth*10,StartMod,EndMod,j,j,1,[],1);
+         %find and store fft as befores
          if harmn2~=inf
             [a1,f1]=fftval(tmppsth,time,harmn1,tempfreq);
             [a2,f2]=fftval(tmppsth,time,harmn2,tempfreq);
@@ -132,6 +132,7 @@ for i=1:(data.xrange*ynum)
    end
    %find and resize the matrix of fft values so that errorfun can use it
    a=size(tmpfft);
+	data.fftsums{i}=reshape(shiftdim(tmpfft,1),a(1)*a(2),1);
    tmpfft=reshape(tmpfft,[1 a(1)*a(2)]);
    %get the error value and store it
    fftmatrix.errvalue(i)=errorfun(tmpfft,errortype);

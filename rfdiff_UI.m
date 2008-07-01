@@ -22,7 +22,7 @@ function varargout = rfdiff_UI(varargin)
 
 % Edit the above text to modify the response to help rfdiff_UI
 
-% Last Modified by GUIDE v2.5 04-Jul-2007 14:27:57
+% Last Modified by GUIDE v2.5 01-Jul-2008 22:55:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -793,5 +793,39 @@ function RFDHideABC_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of RFDHideABC
 
+
+
+
+
+% --- Executes on button press in RFDUseFFT.
+function RFDUseFFT_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDUseFFT (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RFDUseFFT
+
+
+
+function RFDFFTHarmonic_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDFFTHarmonic (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of RFDFFTHarmonic as text
+%        str2double(get(hObject,'String')) returns contents of RFDFFTHarmonic as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function RFDFFTHarmonic_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RFDFFTHarmonic (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
