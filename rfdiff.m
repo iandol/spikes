@@ -217,7 +217,11 @@ case 'Load'
 	index=findstr(':',timeinf);
 	switch rfd.cell1.numvars
 	case 0
-		timeinf=timeinf(index(end)+1:end-1);
+        if length(index)>2 %old files have different title format for 0 variable files
+            timeinf=timeinf(index(2)+1:index(3)-4);
+        else
+            timeinf=timeinf(index(end)+1:end-1);
+        end
 		index=findstr('-',timeinf);
 		timeinf=str2num(timeinf(index+1:end));
 	otherwise
