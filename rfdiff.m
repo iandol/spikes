@@ -80,7 +80,7 @@ case 'Load'
 		clear s2
 
 		[file path]=uigetfile('*.*','Load 3rd Processed Matrix:');
-		if file==0 
+		if file==0
 			rfd.ignorerecovery=1;
 			rfd.cell3=[];
 		else
@@ -150,9 +150,9 @@ case 'Load'
 		if rfd.ignorerecovery~=1;
 			rfd.cell3.sums=rfd.cell3.sumsorig;
 		end
-	end
+    end
     
-   zval1=1;
+	zval1=1;
 	zval2=1;
 	zval3=1;
 	yval1=1;
@@ -161,7 +161,7 @@ case 'Load'
 
 	rfd.cell1.numvars=rfd.cell2.numvars; %reset for when we lock y
 	
-   switch rfd.cell1.numvars
+	switch rfd.cell1.numvars
 	case 3
 		zval1 = get(gh('RFDZValue1'),'Value');
 		zval2 = get(gh('RFDZValue2'),'Value');
@@ -211,7 +211,7 @@ case 'Load'
 	if rfd.cell1.yvalues~=rfd.cell2.yvalues
 		errordlg('Sorry,the two cells seem to have different Variables');
 		error('Mismatch between cells');
-    end
+	end
 	
 	timeinf=rfd.cell1.matrixtitle;
 	index=findstr(':',timeinf);
@@ -233,6 +233,10 @@ case 'Load'
 	timemultiplier=1000/timeinf;
 	
 	if get(gh('RFDUseFFT'),'Value')==1
+        if ~isfield(rfd.cell1,'fftsums') || ~isfield(rfd.cell2,'fftsums')
+            errordlg('Sorry this data was not measured with the FFT yet, please reprocess in spikes and reload...')
+            error('Sorry this data was not measured with the FFT yet, please reprocess in spikes...');
+        end
 		rfd.cell1.sums=rfd.cell1.fftsums;
 		rfd.cell2.sums=rfd.cell2.fftsums;
 		if rfd.ignorerecovery~=1;
