@@ -173,7 +173,7 @@ case 'Initialize'
 			sv.matlabroot=regexprep(sv.matlabroot,'2006b','2007a');
 		end
 		mpath=path;
-		sv.userroot=regexp(mpath,'([^;]+[user|Spikes]);','tokens','once');
+		sv.userroot=regexpi(mpath,'([^;]+(user|Spikes));','tokens','once');
 		sv.userroot=sv.userroot{1};
 	end
 	
@@ -291,7 +291,8 @@ case 'Load'
 					rmdir([p filesep basefilename],'s');
 					cd(p);
 				end
-				dos(['"',sv.userroot,'\various\vsx\vsx.exe" "',pn,fn,'"']);
+				[s,w]=dos(['"',sv.userroot,'\various\vsx\vsx.exe" "',pn,fn,'"']);
+                if s>0; error(w); end
 				pn2 = fn(1:find(fn(:)=='.')-1);				
 				if ~exist([pn,pn2],'dir'); error('Sorry VSX cannot load the data!!! Make sure files do not have the read-only attribute set...'); end
 				data.filetype = 'smr';
@@ -3547,14 +3548,19 @@ case 'none'
 	case 1 %normal
 		areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],'k.-','MarkerSize',15);
 	case 2
-		mmpolar(pxvals,pvals,'ko-');
+		if strcmp (get(gcf,'Tag'),'SpikeFig') 
+			set(gca,'NextPlot','replacechildren');
+			set(gcf,'NextPlot','add');
+		end
+		polar(gh('SpikeFigMainAxes'),pxvals,pvals,'ko-');
 	case 3
-		p.RGridColor=[0.5 0.5 0.5];
-		p.TGridColor=p.RGridColor;
+		p.RGridColor=[0.7 0.7 0.7];
+		p.TGridColor=[0.7 0.7 0.7];
 		mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);
+		set(gca,'Tag','SpikeFigMainAxes')
 	case 4
-		p.TGridColor=[0.5 0.5 0.5];
-		p.TGridColor=p.TGridColor;
+		p.RGridColor=[0.7 0.7 0.7];
+		p.TGridColor=[0.7 0.7 0.7];
 		p.Style='compass';
 		p.Border='off';
 		mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);

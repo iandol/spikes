@@ -109,7 +109,7 @@ for i=1:(data.xrange*data.yrange*data.zrange)
                end
             else
                [a,f]=fftval(tmppsth,time,harmn1,tempfreq);
-               tmpfft(j,k)=sf2*a;
+               tmpfft(j,k)=sf2*a; %NOTE!!! Roland used sf2 here - why???? 
             end
          end
       else
@@ -131,8 +131,8 @@ for i=1:(data.xrange*data.yrange*data.zrange)
       end
    end
    %find and resize the matrix of fft values so that errorfun can use it
-   a=size(tmpfft);
-	data.fftsums{i}=reshape(shiftdim(tmpfft,1),a(1)*a(2),1);
+	a=size(tmpfft);
+    data.fftsums{i}=reshape(shiftdim(tmpfft,1),a(1)*a(2),1);
    tmpfft=reshape(tmpfft,[1 a(1)*a(2)]);
    %get the error value and store it
    fftmatrix.errvalue(i)=errorfun(tmpfft,errortype);

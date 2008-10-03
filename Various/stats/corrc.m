@@ -90,21 +90,21 @@ function [r,prob,CI_low,CI_high] = corrc(X1,X2,kind,iter,CI_level)
   end;
   alpha = 1 - CI_level;
 
-  if (kind<0 | kind>2 | ~isintegr(kind))
+  if (kind<0 || kind>2 || ~isintegr(kind))
     error('  CORR: kind-correlation flag out of range');
   end;
-  if (CI_level<0 | CI_level>1)
+  if (CI_level<0 || CI_level>1)
     error('  CORR: CI level out of range');
   end;
 
   [N1,P1] = size(X1);                        % If X1 or X2 is row vector,
-  if (N1==1 & P1>1)                          %   convert to column vector
+  if (N1==1 && P1>1)                          %   convert to column vector
     X1 = X1';
     [N1,P1] = size(X1);
   end;
   if (given_X2)
     [N2,P2] = size(X2);
-    if (N2==1 & P2>1)
+    if (N2==1 && P2>1)
       X2 = X2';
       [N2,P2] = size(X2);
     end;
@@ -137,7 +137,7 @@ function [r,prob,CI_low,CI_high] = corrc(X1,X2,kind,iter,CI_level)
   % ----- Replace missing values with means, by variable ----- %
 
   for j = 1:P1
-    indx = find(~finite(X1(:,j)));
+    indx = find(~isfinite(X1(:,j)));
     if (~isempty(indx))
       xj = X1(:,j);
       xj(indx) = [];
@@ -147,7 +147,7 @@ function [r,prob,CI_low,CI_high] = corrc(X1,X2,kind,iter,CI_level)
 
   if (given_X2)
     for j = 1:P2
-      indx = find(~finite(X2(:,j)));
+      indx = find(~isfinite(X2(:,j)));
       if (~isempty(indx))
         xj = X2(:,j);
         xj(indx) = [];
@@ -186,7 +186,7 @@ function [r,prob,CI_low,CI_high] = corrc(X1,X2,kind,iter,CI_level)
     end;
   end;
 
-  if (iter & (get_prob | get_CI))     % Randomized probs and CI intervals
+  if (iter && (get_prob || get_CI))     % Randomized probs and CI intervals
     procs = [0 0 0 1];                  % Set options
     if (get_prob)
       procs(2) = 1;
@@ -221,7 +221,7 @@ function [r,prob,CI_low,CI_high] = corrc(X1,X2,kind,iter,CI_level)
     end;
   end;
 
-  if (~given_X2 & P1==2)              % Single correlation for two vars
+  if (~given_X2 && P1==2)              % Single correlation for two vars
     r = r(1,2);
     if (get_prob)
       prob = prob(1,2);

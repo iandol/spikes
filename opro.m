@@ -61,7 +61,7 @@ case 'Load'
 	cd(path);
 	op=pwd;
 	[poo,poo2,ext]=fileparts(file);
-	if ext=='.txt' | ext=='.TXT' | ext=='.Txt'
+	if regexpi(ext,'.txt')
 		dos(['"C:\Program Files\Frogbit\frogbitrun.exe" "C:\Program Files\Frogbit\ostrip.FB" "' [path file] '"'])
 		cd('c:\');   %where frogbit saves the temporary info file
 		[header,var]=hdload('otemp');  % Loads the frogbit data file
@@ -80,7 +80,7 @@ case 'Load'
 		o.cell1.yvalues(a)=0;
 		o.cell1.xrange=length(o.cell1.xvalues);
 		o.cell1.yrange=length(o.cell1.yvalues);
-	elseif ext=='.mat' | ext=='.MAT' | ext=='.Mat'
+	elseif regexpi(ext,'.mat')
 		set(findobj('UserData','PSTH'),'Enable','On');
 		o.filetype='mat';
 		o.spiketype='none';
@@ -99,7 +99,7 @@ case 'Load'
 	if file==0; error('2nd File appears empty.'); end;
 	cd(path);
 	[poo,poo2,ext]=fileparts(file);
-	if ext=='.txt' | ext=='.TXT' | ext=='.Txt'
+	if regexpi(ext,'.txt')
 		dos(['"C:\Program Files\Frogbit\frogbitrun.exe" "C:\Program Files\Frogbit\ostrip.FB" "' [path file] '"'])
 		cd('c:\');   %where frogbit saves the temporary info file
 		[header,var]=hdload('otemp');  % Loads the frogbit data file
@@ -117,14 +117,14 @@ case 'Load'
 		o.cell2.yvalues(a)=0;
 		o.cell2.xrange=length(o.cell2.xvalues);
 		o.cell2.yrange=length(o.cell2.yvalues);
-	elseif ext=='.mat' | ext=='.MAT' | ext=='.Mat'
+	elseif regexpi(ext,'.mat')
 		set(findobj('UserData','PSTH'),'Enable','On');
 		if strcmp(o.filetype,'text');errordlg('Cannot Load Text and Mat together');error('Cannot Load Text and Mat together');end;
 		s2=load(file);
 		t=find(s2.data.filename=='/');
 		s2.data.filename=[s2.data.filename((t(end-2))+1:t(end)) ':' num2str(s2.data.cell)];
 		o.cell2=s2.data;
-		clear s2
+		clear s2;
 	else
 		error('Strange File type tried')
 		errordlg('Strange File Type, you can only load .txt files from VS or .mat file from Spikes');
@@ -147,11 +147,11 @@ case 'Load'
 		o.cell2.xindex=[1:o.cell2.xrange];
 	end
 	if ~isfield('o.cell1','yindex')
-		o.cell1.yindex=[1:o.cell1.yrange];
-		o.cell2.yindex=[1:o.cell2.yrange];
+		o.cell1.yindex=1:o.cell1.yrange;
+		o.cell2.yindex=1:o.cell2.yrange;
 	end
 	if ~isfield('o.cell2','yindex')
-		o.cell2.yindex=[1:o.cell2.yrange];
+		o.cell2.yindex=1:o.cell2.yrange;
 	end
 	
 	
@@ -446,9 +446,23 @@ case 'Measure'
 		o.cell1mat=(o.cell1mat/o.cell1.max)*100;
 		o.cell2mat=(o.cell2mat/o.cell2.max)*100;
 	end
+
+	o.cell1.matrixold=o.cell1.matrix;
+	o.cell2.matrixold=o.cell2.matrix;
+	if wrapped==1
+		o.cell1.matrix=o.cell1mat/length(o.cell1raw{1});
+		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.modtime/10));
+		o.cell2.matrix=o.cell2mat/length(o.cell2raw{1});
+		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.modtime/10));
+	else
+		o.cell1.matrix=o.cell1mat/length(o.cell1raw{1});
+		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.trialtime/10));
+		o.cell2.matrix=o.cell2mat/length(o.cell2raw{1});
+		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.trialtime/10));
+	end
 		
 	axes(gh('Cell1Axis'))
-	imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1mat);	
+	imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1mat);
 	set(gca,'Tag','Cell1Axis');
 	%if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
 	%if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
@@ -459,10 +473,11 @@ case 'Measure'
 	xlabel(o.cell1.xtitle);
 	ylabel(o.cell1.ytitle);
 	set(gca,'Position',o.ax1pos);
+   set(gca,'Tag','Cell1Axis');
 	
 	axes(gh('Cell2Axis'));
-	imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2mat);	
-	set(gca,'Tag','Cell2Axis');	
+	imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2mat);
+	set(gca,'Tag','Cell2Axis');
 	%if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
 	%if o.cell2.yvalues(1) > o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 	set(gca,'YDir','normal')
@@ -472,6 +487,7 @@ case 'Measure'
 	xlabel(o.cell2.xtitle);
 	ylabel(o.cell2.ytitle);
 	set(gca,'Position',o.ax2pos);
+	set(gca,'Tag','Cell2Axis');	
 	
 	axes(gh('OutputAxis'));
 	plot(0,0);
@@ -959,7 +975,11 @@ case 'OrbanizeIt'
 		t3=['Drug: ' o.cell2.filename ' (mean:' meanv '±' stderror ')'];
 		t4='';
 		t5=['Significance: p = ' sprintf('%0.4f',p)];
-		t6=['Can we reject the null hypothesis?: ' pp];
+		if exist('pp','var')
+			t6=['Can we reject the null hypothesis?: ' pp];
+		else
+			t6=[''];
+		end
 		t=[{t1};{t2};{t3};{t4};{t5};{t6}];
 		o.text=t;
 		set(gh('StatsText'),'String',t);
@@ -2320,7 +2340,7 @@ case 'Spawn'
 	xlabel('X Values')
 	ylabel('Y Values')
 	title('Control Receptive Field')
-	set(gca,'Tag','Cell1Axis');
+	set(gca,'Tag','Cell1AxisSpawn');
 	axis square
 	
 	figure
@@ -2332,7 +2352,7 @@ case 'Spawn'
 	xlabel('X Values')
 	ylabel('Y Values')
 	title('Drug Receptive Field')
-	set(gca,'Tag','Cell2Axis');
+	set(gca,'Tag','Cell2AxisSpawn');
 	axis square
 	a=get(gca,'Position');
 	
@@ -2344,6 +2364,7 @@ case 'Spawn'
 	set(gca,'Position',[0.1300    0.1100    0.6626    0.8150]);
 	colorbar
 	title('Statistical Result')
+    set(gca,'Tag','OutputAxisSpawn');
 	axis square
 	
 	%-----------------------------------------------------------------------------------------

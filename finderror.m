@@ -11,6 +11,9 @@ function errorval=finderror(x,type,mit,mxt,wrapped,burst)
 % wrapped = Whether the data is wrapped or not.
 % burst = whether to look through all spikes or just burst spikes
 
+if wrapped==0 %sometimes unwrapped is 0, elsewhere it is 2 so we need to check
+	wrapped=2;
+end
 
 mit=mit*10;   %need to define the limits
 mxt=mxt*10-1;

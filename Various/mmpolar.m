@@ -129,7 +129,12 @@ else % see if MMPOLAR axes is current axes
                   && strcmp(get(HFig,'nextplot'),'add');
             P=getappdata(HAxes,'MMPOLAR_Properties');
             Pfn=fieldnames(P);
-         else % no MMPOLAR axes exists
+			elseif strcmp (get(HAxes,'Tag'),'SpikeFigMainAxes') 
+				HAxes=[];
+            Pfn=fieldnames(local_getDefaults);
+            HoldIsON=false;
+            set(HAxes,'NextPlot','add') % hold off
+			else % no MMPOLAR axes exists
             HAxes=[];
             Pfn=fieldnames(local_getDefaults);
             HoldIsON=false;
@@ -282,7 +287,10 @@ if HoldIsON % a current held plot exists
    [P,D]=local_placeRTickLabel(HAxes,P,D,1);         % Add Rho Tick Lablels
       
 else % Hold is OFF
-   
+   if strcmp (get(gcf,'Tag'),'SpikeFig') 
+		set(gca,'NextPlot','replacechildren');
+		set(gcf,'NextPlot','add');
+	end
    try % the plot function should work now
       HAxes=newplot; % create axes
       D.HLines=plot(HAxes,varargin{:});

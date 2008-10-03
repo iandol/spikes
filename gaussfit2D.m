@@ -13,55 +13,55 @@ switch(action)
  case 'Initialize'
     
 	gdat=[];
-    gaussfit2D_UI;
-    
-    gdat.c1.mat=o.cell1.matrix;
-    gdat.c1.max=max(max(gdat.c1.mat));
-    gdat.c1.min=min(min(gdat.c1.mat));
-    gdat.c2.mat=o.cell2.matrix;
-    gdat.c2.max=max(max(gdat.c2.mat));
-    gdat.c2.min=min(min(gdat.c2.mat));
-    gdat.c1.name=o.cell1.filename;
-    gdat.c2.name=o.cell2.filename;
-    gdat.xvals=o.cell1.xvalues;
+	gaussfit2D_UI;
+
+	gdat.c1.mat=o.cell1.matrix;
+	gdat.c1.max=max(max(gdat.c1.mat));
+	gdat.c1.min=min(min(gdat.c1.mat));
+	gdat.c2.mat=o.cell2.matrix;
+	gdat.c2.max=max(max(gdat.c2.mat));
+	gdat.c2.min=min(min(gdat.c2.mat));
+	gdat.c1.name=o.cell1.filename;
+	gdat.c2.name=o.cell2.filename;
+	gdat.xvals=o.cell1.xvalues;
 	gdat.xvalsorig=o.cell1.xvalues;
-    gdat.yvals=o.cell1.yvalues;
-    gdat.yvalsorig=o.cell1.yvalues;
+	gdat.yvals=o.cell1.yvalues;
+	gdat.yvalsorig=o.cell1.yvalues;
 	gdat.xhold=o.xhold-ceil(o.cell1.xrange/2);
 	gdat.yhold=o.yhold-ceil(o.cell1.yrange/2);
-    gdat.normalise=0;
-    gdat.invert=0;
+	gdat.normalise=0;
+	gdat.invert=0;
 	gdat.firstfit=0;
 	gdat.testtrial=0;
-    
+
 	InterpolateMatrix(1);
 	InterpolateMatrix(2);
 	
 	%---------------------------------------------------------------------------------------------set defaults for each cell
 	
 	set(gh('C1Edit'),'String',num2str(max(max(gdat.c1.mat))));      %magnitude
-    set(gh('D1Edit'),'String',num2str(max(max(gdat.c2.mat))));
-	
+	set(gh('D1Edit'),'String',num2str(max(max(gdat.c2.mat))));
+
 	[a,b]=find(gdat.c1.mat==max(max(gdat.c1.mat)));	
 	t=gdat.xvals(b(1));
 	t2=gdat.yvals(a(1));
-    set(gh('C2Edit'),'String',t); %X position
+	set(gh('C2Edit'),'String',t); %X position
 	set(gh('C3Edit'),'String',t2); %Y position
 	[a,b]=find(gdat.c2.mat==max(max(gdat.c2.mat)));	
 	t=gdat.xvals(b(1));
 	t2=gdat.yvals(a(1));
-    set(gh('D2Edit'),'String',t); %X position
+	set(gh('D2Edit'),'String',t); %X position
 	set(gh('D3Edit'),'String',t2); %Y position
-	
-	
-    set(gh('C4Edit'),'String','1');      %width
-    set(gh('D4Edit'),'String','1');   
-	
-    set(gh('C5Edit'),'String',num2str(min(min(gdat.c1.mat))));      %spontaneous
-    set(gh('D5Edit'),'String',num2str(min(min(gdat.c2.mat))));      
-    
-    drawgauss(1);
-    drawgauss(2);    
+
+
+	set(gh('C4Edit'),'String','1');      %width
+	set(gh('D4Edit'),'String','1');   
+
+	set(gh('C5Edit'),'String',num2str(min(min(gdat.c1.mat))));      %spontaneous
+	set(gh('D5Edit'),'String',num2str(min(min(gdat.c2.mat))));      
+
+	drawgauss(1);
+	drawgauss(2);    
 	GetVector;
     
     %============================================================
@@ -75,22 +75,22 @@ case 'CPlot'
     %============================================================
 case 'DPlot'
     %============================================================
-    set(gh('REdit'),'String','Parameter for drug cell modified by user');
+	set(gh('REdit'),'String','Parameter for drug cell modified by user');
 	pause(0.1)	
-    drawgauss(2)
+	drawgauss(2)
 	GetVector;
     
     %============================================================
 case 'CFit'
     %============================================================
-    fitgauss(1);
+	fitgauss(1);
 	drawgauss(1);
 	GetVector;
     
     %============================================================
 case 'DFit'
     %============================================================
-    fitgauss(2);
+	fitgauss(2);
 	drawgauss(2);
 	GetVector;
     
@@ -141,14 +141,14 @@ case 'SpawnGaussLeft'
 	
 	axes(gh('CGAxis'));
 	h=gca;		
-    hnew=figure;
-    set(gcf,'Units','Normalized');
+	hnew=figure;
+	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-    c=copyobj(h,hnew);
+	c=copyobj(h,hnew);
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
-    set(c,'Tag','');
-    set(c,'UserData','');
+	set(c,'Tag','');
+	set(c,'UserData','');
 	xlabel('X Position (deg)');
 	ylabel('Y Position (deg)');
 	colorbar;
@@ -157,14 +157,14 @@ case 'SpawnGaussRight'
 	
 	axes(gh('DGAxis'));
 	h=gca;		
-    hnew=figure;
-    set(gcf,'Units','Normalized');
+	hnew=figure;
+	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-    c=copyobj(h,hnew);
+	c=copyobj(h,hnew);
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
-    set(c,'Tag','');
-    set(c,'UserData','');
+	set(c,'Tag','');
+	set(c,'UserData','');
 	xlabel('X Position (deg)');
 	ylabel('Y Position (deg)');
 	colorbar;		
@@ -186,18 +186,16 @@ case 1 %control
 	axval(2)=str2num(get(gh('GF2XMax1'),'String'));
 	axval(3)=str2num(get(gh('GF2YMin1'),'String'));
 	axval(4)=str2num(get(gh('GF2YMax1'),'String'));
-	
-	
-	
-    p(1)=str2num(get(gh('C1Edit'),'String')); 
-    p(2)=str2num(get(gh('C2Edit'),'String'));
-    p(3)=str2num(get(gh('C3Edit'),'String'));
-    p(4)=str2num(get(gh('C4Edit'),'String'));
-    p(5)=str2num(get(gh('C5Edit'),'String'));
-    
+
+	p(1)=str2num(get(gh('C1Edit'),'String')); 
+	p(2)=str2num(get(gh('C2Edit'),'String'));
+	p(3)=str2num(get(gh('C3Edit'),'String'));
+	p(4)=str2num(get(gh('C4Edit'),'String'));
+	p(5)=str2num(get(gh('C5Edit'),'String'));
+
 	gdat.c1.p=p;
 	clear xx yy
-	
+
 	if axval(1)~=axval(2) || axval(3)~=axval(4)
 		xx=linspace(axval(1),axval(2),60);
 		yy=linspace(axval(3),axval(4),60);
@@ -205,36 +203,33 @@ case 1 %control
 	else
 		gdat.c1.gauss=gauss(p,gdat.xvals,gdat.yvals); 
 	end
-	
-	
-    
-    axes(gh('CDAxis'));
+
+	axes(gh('CDAxis'));
 	pos=get(gh('CDAxis'),'Position');
-    pcolor(gdat.xvals,gdat.yvals,gdat.c1.mat);
+	pcolor(gdat.xvals,gdat.yvals,gdat.c1.mat);
 	axis square;
 	shading interp;
 	colorbar('south');
-    set(gca,'Tag','CDAxis');
-	
-	
+	set(gca,'Tag','CDAxis');
+
 	axes(gh('CGAxis'));
 	if exist('xx','var')
-		pcolor(xx,yy,gdat.c1.gauss);
+	pcolor(xx,yy,gdat.c1.gauss);
 	else
-		pcolor(gdat.xvals,gdat.yvals,gdat.c1.gauss);
+	pcolor(gdat.xvals,gdat.yvals,gdat.c1.gauss);
 	end
 	axis square;
 	shading interp;
 	colorbar('south');
-    set(gca,'Tag','CGAxis');
-	
+	set(gca,'Tag','CGAxis');
+
 	g=goodness2(gdat.c1.mat,gdat.c1.gauss,'m');
-    g2=goodness2(gdat.c1.mat,gdat.c1.gauss,num2str(p(5)));	
-    g3=goodness2(gdat.c1.mat,gdat.c1.gauss,'mfe');	
-    gdat.c1.g=[g,g3];
+	g2=goodness2(gdat.c1.mat,gdat.c1.gauss,num2str(p(5)));	
+	g3=goodness2(gdat.c1.mat,gdat.c1.gauss,'mfe');	
+	gdat.c1.g=[g,g3];
 	set(gh('CEdit'),'String',strvcat(['Mean: ' num2str(g) '%'],['Spont: ' num2str(g2) '%'],['MFE: ' num2str(g3)]));
-    t=['Control File:' gdat.c1.name ' Drug File: ' gdat.c2.name ']'];
-    set(gh('REdit'),'String',t);
+	t=['Control File:' gdat.c1.name ' Drug File: ' gdat.c2.name ']'];
+	set(gh('REdit'),'String',t);
     	    
 case 2 %drug
 	
@@ -263,25 +258,25 @@ case 2 %drug
 	end
     
 	clear xx yy;
-    if axval(1)~=axval(2) || axval(3)~=axval(4)
+	if axval(1)~=axval(2) || axval(3)~=axval(4)
 		xx=linspace(axval(1),axval(2),60);
 		yy=linspace(axval(3),axval(4),60);
 		gdat.c2.gauss=gauss(p,xx,yy); 
 	else
 		gdat.c2.gauss=gauss(p,gdat.xvals,gdat.yvals); 
 	end   
-    
-    axes(gh('DDAxis'));    
+
+	axes(gh('DDAxis'));    
 	cla    
-    pcolor(gdat.xvals,gdat.yvals,gdat.c2.mat);
+	pcolor(gdat.xvals,gdat.yvals,gdat.c2.mat);
 	axis square;
 	shading interp;
 	colorbar('south');
-    set(gca,'Tag','DDAxis');
-	
+	set(gca,'Tag','DDAxis');
+
 	axes(gh('DGAxis'));    
 	cla    
-    if exist('xx','var')
+	if exist('xx','var')
 		pcolor(xx,yy,gdat.c2.gauss);
 	else
 		pcolor(gdat.xvals,gdat.yvals,gdat.c2.gauss);
@@ -289,15 +284,15 @@ case 2 %drug
 	axis square;
 	shading interp;
 	colorbar('south');
-    set(gca,'Tag','DGAxis');
+	set(gca,'Tag','DGAxis');
 	
 	g=goodness2(gdat.c2.mat,gdat.c2.gauss,'m');
-    g2=goodness2(gdat.c2.mat,gdat.c2.gauss,num2str(p(5)));
-    g3=goodness2(gdat.c2.mat,gdat.c2.gauss,'mfe');
-    gdat.c2.g=[g,g3];
+	g2=goodness2(gdat.c2.mat,gdat.c2.gauss,num2str(p(5)));
+	g3=goodness2(gdat.c2.mat,gdat.c2.gauss,'mfe');
+	gdat.c2.g=[g,g3];
 	set(gh('DEdit'),'String',strvcat(['Mean: ' num2str(g) '%'],['Spont: ' num2str(g2) '%'],['MFE: ' num2str(g3)]));
-    t=['Control File:' gdat.c1.name ' Drug File: ' gdat.c2.name ']'];
-    set(gh('REdit'),'String',t);
+	t=['Control File:' gdat.c1.name ' Drug File: ' gdat.c2.name ']'];
+	set(gh('REdit'),'String',t);
 end
 
 if isfield(gdat.c1,'g')==1 && isfield(gdat.c2,'g')==1
@@ -372,21 +367,21 @@ case 1
 	
 	case 2
         
-	p(1)=str2num(get(gh('D1Edit'),'String'));	    
+		p(1)=str2num(get(gh('D1Edit'),'String'));	    
     p(2)=str2num(get(gh('D2Edit'),'String'));
     p(3)=str2num(get(gh('D3Edit'),'String'));
     p(4)=str2num(get(gh('D4Edit'),'String'));
     p(5)=str2num(get(gh('D5Edit'),'String'));
     
-     if get(gh('LockBox'),'Value')==1 && gdat.testtrial==0
-         lb=[str2num(get(gh('G2L1'),'String')) p(2) p(3) p(4) str2num(get(gh('G2L5'),'String'))];
-         ub=[str2num(get(gh('G2U1'),'String')) p(2) p(3) p(4) str2num(get(gh('G2U5'),'String'))];
+	if get(gh('LockBox'),'Value')==1 && gdat.testtrial==0
+		lb=[str2num(get(gh('G2L1'),'String')) p(2) p(3) p(4) str2num(get(gh('G2L5'),'String'))];
+		ub=[str2num(get(gh('G2U1'),'String')) p(2) p(3) p(4) str2num(get(gh('G2U5'),'String'))];
 		set(gh('REdit'),'String','Now Searching for the Optimal 2D Gaussian parameters, please wait...');	
-	 elseif gdat.testtrial==0
+	elseif gdat.testtrial==0
 		lb=[str2num(get(gh('G2L1'),'String')) str2num(get(gh('G2L2'),'String')) str2num(get(gh('G2L3'),'String')) str2num(get(gh('G2L4'),'String')) str2num(get(gh('G2L5'),'String'))];
 		ub=[str2num(get(gh('G2U1'),'String')) str2num(get(gh('G2U2'),'String')) str2num(get(gh('G2U3'),'String')) str2num(get(gh('G2U4'),'String')) str2num(get(gh('G2U5'),'String'))];
 		set(gh('REdit'),'String','Now Searching for the Optimal 2D Gaussian parameters, please wait...');
-	 else
+	else
 		lb=[max(max(gdat.c2.mat))-20 p(2)-xlim p(3)-ylim p(4)-wlim min(min(gdat.c2.mat))-10];
 		ub=[max(max(gdat.c2.mat))+20 p(2)+xlim p(3)+ylim p(4)+wlim min(min(gdat.c2.mat))+10];
 	 end
@@ -613,7 +608,7 @@ h=figure;
 switch scell
 	case 3
 		figpos(1,[800 800]);
-	otherwise
+		otherwise
 		figpos(1,[350 720]);
 end
 
@@ -635,6 +630,11 @@ for i=1:numtrials
 	switch scell
 		case 1
 			gdat.c1.mat=cell1trial(i).matrix;
+			if gdat.invert==1
+				gdat.c1.max=max(max(gdat.c1.mat));
+				gdat.c1.min=min(min(gdat.c1.mat));
+				gdat.c1.mat=100*(1-((gdat.c1.mat-gdat.c1.min)/(gdat.c1.max-gdat.c1.min)));
+			end
 			InterpolateMatrix(1);
 			fitgauss(1);
 			p=gdat.c1trial(i).p;	
@@ -667,6 +667,11 @@ for i=1:numtrials
 			
 		case 2
 			gdat.c2.mat=cell2trial(i).matrix;
+			if gdat.invert==1
+				gdat.c2.max=max(max(gdat.c2.mat));
+				gdat.c2.min=min(min(gdat.c2.mat));
+				gdat.c2.mat=100*(1-((gdat.c2.mat-gdat.c2.min)/(gdat.c2.max-gdat.c2.min)));
+			end
 			InterpolateMatrix(2);
 			fitgauss(2);
 			p=gdat.c2trial(i).p;	
@@ -697,9 +702,20 @@ for i=1:numtrials
 			
 		case 3
 			gdat.c1.mat=cell1trial(i).matrix;
+			if gdat.invert==1
+				gdat.c1.max=max(max(gdat.c1.mat));
+				gdat.c1.min=min(min(gdat.c1.mat));
+				gdat.c1.mat=100*(1-((gdat.c1.mat-gdat.c1.min)/(gdat.c1.max-gdat.c1.min)));
+			end
 			InterpolateMatrix(1);
 			fitgauss(1);
+			
 			gdat.c2.mat=cell2trial(i).matrix;
+			if gdat.invert==1
+				gdat.c2.max=max(max(gdat.c2.mat));
+				gdat.c2.min=min(min(gdat.c2.mat));
+				gdat.c2.mat=100*(1-((gdat.c2.mat-gdat.c2.min)/(gdat.c2.max-gdat.c2.min)));
+			end
 			InterpolateMatrix(2);
 			fitgauss(2);
 			p1=gdat.c1trial(i).p;	
@@ -752,7 +768,9 @@ for i=1:numtrials
 			xaxlim=xaxlim(2);
 			ylabel(num2str(g),'FontSize',8);
 			text(xcontrol,ycontrol,[num2str(xcontrol) '\newline' num2str(ycontrol)],'FontSize',7);
-			text((xaxlim+xaxlim/5),0,['V:' num2str(rho1zero(i)) '/' num2str(rho2zero(i)) '\newline A:' num2str(rad2ang(theta1zero(i),rectang,rotang)) '/' num2str(rad2ang(theta2zero(i),rectang,rotang))],'FontSize',7);
+			if max(ignoretrials==i)==0
+				text((xaxlim+xaxlim/5),0,['V:' num2str(rho1zero(i)) '/' num2str(rho2zero(i)) '\newline A:' num2str(rad2ang(theta1zero(i),rectang,rotang)) '/' num2str(rad2ang(theta2zero(i),rectang,rotang))],'FontSize',7);
+			end
 			shading interp;			
 			axis square;
 			
@@ -772,7 +790,9 @@ for i=1:numtrials
 			xaxlim=xaxlim(2);
 			ylabel(num2str(g),'FontSize',8);
 			text(xdrug,ydrug,[num2str(xdrug) '\newline' num2str(ydrug)],'FontSize',7);
-			text((xaxlim+xaxlim/5),0,['V:' num2str(rho(i)) '\newline A:' num2str(rad2ang(theta(i),rectang,rotang))],'FontSize',7);
+			if max(ignoretrials==i)==0
+				text((xaxlim+xaxlim/5),0,['V:' num2str(rho(i)) '\newline A:' num2str(rad2ang(theta(i),rectang,rotang))],'FontSize',7);
+			end
 			shading interp;
 			axis square;			
 	end
@@ -789,6 +809,7 @@ switch scell
 		gdat.c2.mat=gdat.originalmatrix2;
 end
 
+rho
 bootfun=get(gh('G2BootstrapType'),'Value');
 bootfuns=get(gh('G2BootstrapType'),'String');
 bootfuns=bootfuns{bootfun};
