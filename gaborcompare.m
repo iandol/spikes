@@ -10,7 +10,7 @@ function gaborcompare(action)
 %
 %***************************************************************
 
-global data
+%global data
 global gabc
 
 if nargin<1,
@@ -24,11 +24,12 @@ switch(action)
 case 'Initialize'
     %-------------------------------------------------------------------
 	
+	gabversion='1.6';
 	gabc=[];
 	gaborcompare_UI;
 	gabc.storeval=0;
 	gabc.storedp=[];
-    version=['GABOR-Compare V1.5a | Started on ', datestr(now)];
+    version=['GABOR-Compare V', gabversion, ' | Started on ', datestr(now)];
     set(0,'DefaultAxesLayer','top');
 	set(0,'DefaultAxesTickDir','out');
     set(gcf,'Name', version);
@@ -45,7 +46,7 @@ case 'RePlot'
     %-------------------------------------------------------------------
 
 	set(gh('GCoutputtext'),'String','Please wait...');
-    plotgaussian;
+	plotgaussian;
 	plotgabor;	
 	makeoutput;
 	comparefields;
@@ -55,10 +56,10 @@ case 'RePlot Gauss'
     %-------------------------------------------------------------------
 
 	set(gh('GCoutputtext'),'String','Please wait...');
-    plotgaussian;
+	plotgaussian;
 	makeoutput;
 	comparefields;
-	
+
     %-------------------------------------------------------------------
 case 'RePlot Gabor'
     %-------------------------------------------------------------------
@@ -108,7 +109,7 @@ case 'StoreIt'
 	gabc.store(gabc.storeval).steps=gabc.steps;
 	gabc.store(gabc.storeval).xpos=gabc.xpos;
 	gabc.store(gabc.storeval).ypos=gabc.ypos;
-	gabc.store(gabc.storeval).width=gabc.width;	
+	gabc.store(gabc.storeval).width=gabc.width;
 	gabc.store(gabc.storeval).spont=gabc.spont;
 	
 	newitem=[gabc.store(gabc.storeval).title];
@@ -117,7 +118,7 @@ case 'StoreIt'
 		history={history};
 	end
 	if gabc.storeval==1
-		newitems=[newitem];
+		newitems=newitem;
 	else
 		newitems=[history;newitem];
 	end
@@ -178,16 +179,16 @@ case 'Spawn'
 	h(2)=gca;
 	axes(gh('GCAxis3'));
 	h(3)=gca;
-	
-    hnew=figure;
+
+	hnew=figure;
 	whitebg(hnew);
-    set(gcf,'Units','Characters');
-    set(gcf,'Position',pos);
-    c=copyobj(h,hnew);
-    set(c,'Tag',' ');
-    set(c,'UserData','');
+	set(gcf,'Units','Characters');
+	set(gcf,'Position',pos);
+	c=copyobj(h,hnew);
+	set(c,'Tag',' ');
+	set(c,'UserData','');
 	colormap(map);
-    suplabel([gabc.string]);
+	suplabel([gabc.string]);
 	
     %-------------------------------------------------------------------
 case 'Spawn Gaussian'
@@ -195,7 +196,7 @@ case 'Spawn Gaussian'
 	
 	axes(gh('GCAxis1'));
 	h=gca;		
-    hnew=figure;
+	hnew=figure;
 	%whitebg(hnew,[1 1 1]);
 	docontour=get(gh('GCcontourplot'),'Value');
 	if docontour==0
@@ -211,13 +212,13 @@ case 'Spawn Gaussian'
 	else
 		colormap([0 0 0;0 0 0;0 0 0]);
 	end
-    set(gcf,'Units','Normalized');
+	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-    c=copyobj(h,hnew);
+	c=copyobj(h,hnew);
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
-    set(c,'Tag','');
-    set(c,'UserData','');
+	set(c,'Tag','');
+	set(c,'UserData','');
 	xlabel('X Position (deg)');
 	ylabel('Y Position (deg)');
 	colorbar;
@@ -229,15 +230,15 @@ case 'Spawn Output'
 	axes(gh('GCAxis3'));
 	cmap=colormap;
 	h=gca;		
-    hnew=figure;
+	hnew=figure;
 	whitebg(hnew,[1 1 1]);
-    set(gcf,'Units','Normalized');
+	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-    c=copyobj(h,hnew);
+	c=copyobj(h,hnew);
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
-    set(c,'Tag','');
-    set(c,'UserData','');
+	set(c,'Tag','');
+	set(c,'UserData','');
 	xlabel('X Position (deg)');
 	ylabel('Y Position (deg)');
 	colormap(cmap);
@@ -454,7 +455,7 @@ function comparefields(type)
 
 global gabc;
 
-[norm,rawdp]=dotproduct(gabc.gaussdata,gabc.gaussdata);
+[norm,rawdp]=dotproduct(gabc.gaussdata,gabc.gabordata);
 
 dp=rawdp/norm;
 gabc.currentdp=dp;

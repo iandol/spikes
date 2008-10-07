@@ -740,21 +740,21 @@ for i=1:numtrials
 				end
 				[theta(i),rho(i)]=GetVector(xcontrol,ycontrol,xdrug,ydrug); %vector between both cells
 				w1(i)=p1(4);
-				w2(i)=p2(4);	
-				if angcut==1; end				
+				w2(i)=p2(4);
+				if angcut==1; end	
 			end
 
-			gauss1=gauss(p1,gdat.xvals,gdat.yvals);  
-			gauss2=gauss(p2,gdat.xvals,gdat.yvals);  
+			gauss1=gauss(p1,gdat.xvals,gdat.yvals);
+			gauss2=gauss(p2,gdat.xvals,gdat.yvals);
 			
 			a=a+1;
 			subaxis(ceil(numtrials),4,a,'S',0,'P',0,'M',0);
 			set(gca,'FontSize',5);
-			pcolor(gdat.xvals,gdat.yvals,gdat.c1.mat)			
+			pcolor(gdat.xvals,gdat.yvals,gdat.c1.mat);	
 			if max(ignoretrials==i)==0
 				ylabel(['# ' num2str(i)],'FontSize',8);
 			else
-				ylabel(['CUT'],'FontSize',8);
+				ylabel('CUT','FontSize',8);
 			end
 			shading interp;
 			axis square;
