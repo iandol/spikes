@@ -325,10 +325,10 @@ pause(0.25)
 output
 output.message
 if exit>=0
-	t=['Computation Finished.  Optimal Parameters Found.'];
+	t='Computation Finished.  Optimal Parameters Found.';
 	set(gh('GFInfoText'),'String',t);  
 elseif exit<0
-	t=['Computation Finished.  Optimal Parameters Not Found.'];
+	t='Computation Finished.  Optimal Parameters Not Found.';
 	set(gh('GFInfoText'),'String',t);  
 end
 

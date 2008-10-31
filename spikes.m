@@ -143,7 +143,7 @@ case 'Initialize'
 	set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 	set(gh('SPlotMenu'),'Value',7);
 	set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-	set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
+	set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
 	set(gcf,'DefaultLineLineWidth',1.5);
 	set(gcf,'DefaultAxesLineWidth',1.5);
 	set(gcf,'defaultaxesfontname','Georgia');
@@ -2243,7 +2243,13 @@ case 'Data Info'
 		set(gh('DITextDisplay'),'String',out);
 		figure(gh('SpikeFig'));
 	end
-
+	
+	
+	%-----------------------------------------------------------------------------------------
+case 'Polar Diagonals'
+	%-----------------------------------------------------------------------------------------
+	polardiagonal;
+	
 	%-----------------------------------------------------------------------------------------
 case 'Metric Space'
 	%-----------------------------------------------------------------------------------------
@@ -2395,6 +2401,18 @@ end
 
 [a,b]=view;
 
+
+if strcmp (get(gcf,'Tag'),'SpikeFig') %stops errors coming from mmpolar plots
+	set(gca,'NextPlot','replacechildren');
+	set(gcf,'NextPlot','add');
+end
+
+if regexpi(sv.PlotType,'(Normal|Polar)') %stops errors coming from curve > surface plots
+	Value=get(gh('STypeMenu'),'Value');          
+	String=get(gh('STypeMenu'),'String');        
+	sv.PlotType=String{Value};
+end
+
 if strcmp(sv.PlotType,'Raw Data') %make sure we don't smooth raw data
 	sv.SmoothType='none';
 end
@@ -2478,7 +2496,7 @@ end
 
 cla reset;
 contourlevels=str2double(get(gh('SContourLevels'),'String'));
-
+	
 switch(sv.PlotType)	%For different plots
 
 case 'Raw Data'
@@ -3534,8 +3552,9 @@ if get(gh('PropBox'),'Value')==0 %use non proportional scale
 	xvals=1:length(xvals);
 end
 
-ax=gh('SpikeFigMainAxes');
-%used for polar plots
+if strcmp (get(gcf,'Tag'),'SpikeFig') 
+	ax=gh('SpikeFigMainAxes'); %used for polar plots
+end
 pvals=[data.matrix data.matrix(1)];
 pxvals = ang2rad([xvals xvals(1)]);		
 perrors=[data.errormat data.errormat(1)];
@@ -3849,3 +3868,49 @@ function temporalanalysis(data)
 		a=a+1;
 	end
 	suptitle(data.matrixtitle);
+	
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+%Get the diagonal from a surface and plot a polar plot from it
+%
+function polardiagonal
+
+	global data sv;
+	
+	if data.numvars < 2
+		errordlg('You need at least 2 variables to get a diagonal out!');
+		error('You need at least 2 variables to get a diagonal out!');
+	end
+	
+	diagonal=diag(data.matrix)';
+	diagonalerror=diag(data.errormat)';
+	
+	pvals=[diagonal diagonal(1)];
+	pxvals = ang2rad([data.xvalues data.xvalues(1)]);		
+	perrors=[diagonalerror diagonalerror(1)];
+	pmin=pvals-perrors;
+	pmax=pvals+perrors;
+	
+	figure;
+	
+	p.RGridColor=[0.7 0.7 0.7];
+	p.TGridColor=[0.7 0.7 0.7];
+	mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);
+	
+	MakeTitle('vector');
+	xlabel(data.xtitle);
+	switch sv.AnalysisMethod
+	case 4
+		ylabel('Total Spike Count');
+	case 6
+		data.matrixtitle=[data.matrixtitle,data.fftinfo];
+	otherwise
+		ylabel('Firing Rate (Hz)');
+	end
+	title([data.matrixtitle ' -- DIAGONAL!']);
+	
+	
+	
+		
