@@ -69,7 +69,7 @@ case 'CPlot'
     %============================================================
 	set(gh('REdit'),'String','Parameter for control cell modified by user');
 	pause(0.1)	
-    drawgauss(1);
+   drawgauss(1);
 	GetVector;
     
     %============================================================
@@ -295,7 +295,7 @@ case 2 %drug
 	set(gh('REdit'),'String',t);
 end
 
-if isfield(gdat.c1,'g')==1 && isfield(gdat.c2,'g')==1
+if isfield(gdat.c1,'g')==1 && isfield(gdat.c2,'g')==1  && isfield(gdat.c1,'p')==1 && isfield(gdat.c2,'p')==1
     t1=[gdat.c1.p,gdat.c1.g];
     t2=[gdat.c2.p,gdat.c2.g];
     s=[sprintf('%s\t',gdat.c1.name),sprintf('%0.6g\t',t1),sprintf('%s\t',gdat.c2.name),sprintf('%0.6g\t',t2)];
