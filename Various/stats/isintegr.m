@@ -21,7 +21,7 @@ function isint = isintegr(A,epsilon)
 
   A = abs(A(:));                  % Convert to column vector of abs values
 
-  indx = find(~finite(A));        % Remove NaN's and infinite values
+  indx = find(~isfinite(A));        % Remove NaN's and infinite values
   if (~isempty(indx))
     A(indx) = [];
   end;

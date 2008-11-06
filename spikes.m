@@ -3555,11 +3555,65 @@ end
 if strcmp (get(gcf,'Tag'),'SpikeFig') 
 	ax=gh('SpikeFigMainAxes'); %used for polar plots
 end
+
+%deal with angular data
+%now we need to transform the data to make values >180 wrap to get just
+%the axis out
+pvals=data.matrix;
+pxvals = xvals;		
+belowpiidx=find(pxvals<=180);
+abovepiidx=find(pxvals>180);
+pvalsbelow=pvals(belowpiidx);
+pvalsabove=pvals(abovepiidx);
+pxvalsbelow=pxvals(belowpiidx);
+pxvalsabove=pxvals(abovepiidx)-180;
+pvalsabove=fliplr(pvalsabove);
+
+bidx=1;
+aidx=1;
+for i=1:length(unique([pxvalsbelow pxvalsabove])) %loop through
+
+	if aidx>length(pxvalsabove)
+		pxvalsnew(i)=pxvalsbelow(bidx);
+		pvalsnew(i)=pvalsbelow(bidx);
+		bidx=bidx+1;
+	elseif bidx>length(pxvalsbelow)
+		pxvalsnew(i)=pxvalsabove(aidx);
+		pvalsnew(i)=pvalsabove(aidx);
+		aidx=aidx+1;
+	elseif pxvalsbelow(bidx)<pxvalsabove(aidx) || pxvalsbelow(bidx)>pxvalsabove(aidx)
+		pxvalsnew(i)=pxvalsbelow(bidx);
+		pvalsnew(i)=pvalsbelow(bidx);
+		bidx=bidx+1;
+	elseif pxvalsbelow(bidx)==pxvalsabove(aidx);
+		pxvalsnew(i)=pxvalsbelow(bidx);
+		pvalsnew(i)=pvalsbelow(bidx)+pvalsabove(aidx);
+		bidx=bidx+1;
+		aidx=aidx+1;
+	else
+		pxvalsnew(i)=pxvalsabove(aidx);
+		pvalsnew(i)=pvalsabove(aidx);
+		aidx=aidx+1;
+	end
+	
+end
+
+pxvalsnew=ang2rad(pxvalsnew);
+[mu2,ll2,ul2]=circ_mean(pxvalsnew,pvalsnew); %standard circular mean
+
 pvals=[data.matrix data.matrix(1)];
+if get(gh('SRemoveMean'),'Value')
+	pvals=pvals-geomean(pvals);
+	pvals(pvals<0)=0;
+end
+pvalsmax=ceil(max(pvals));
 pxvals = ang2rad([xvals xvals(1)]);		
 perrors=[data.errormat data.errormat(1)];
 pmin=pvals-perrors;
 pmax=pvals+perrors;
+%so we need to do both radial and axial circular means:
+[mu,ll,ul]=circ_mean(pxvals,pvals); %standard circular mean
+pval=circ_rtest(pxvals,pvals);
 
 switch sv.SmoothType
 case 'none'
@@ -3567,15 +3621,38 @@ case 'none'
 	case 1 %normal
 		areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],'k.-','MarkerSize',15);
 	case 2
-		if strcmp (get(gcf,'Tag'),'SpikeFig') 
+		if strcmp (get(gcf,'Tag'),'SpikeFig')
 			set(gca,'NextPlot','replacechildren');
 			set(gcf,'NextPlot','add');
 		end
-		polar(gh('SpikeFigMainAxes'),pxvals,pvals,'ko-');
+		h=polar(pxvals,pvals,'ko-');
+		set(h,'MarkerFaceColor',[0 0 0]);
+		set(h,'LineWidth',2);
+		hold on
+		h=polar(pxvalsnew,pvalsnew,'r-.');
+		set(h,'Color',[1 0.6 0.6]);
+		polar(pxvals,pmin,'k-.');
+		polar(pxvals,pmax,'k-.');
+		polar([mu2 mu2],[0 pvalsmax],'r-');
+		if ~isnan(ll2)
+			polar([ll2 ll2],[0 pvalsmax],'r-.');
+		end
+		if ~isnan(ul2)
+			polar([ul2 ul2],[0 pvalsmax],'r-.');
+		end
+		polar([mu mu],[0 pvalsmax],'b-');
+		if ~isnan(ll)
+			%polar([ll ll],[0 pvalsmax],'b-.');
+		end
+		if ~isnan(ul)
+			%polar([ul ul],[0 pvalsmax],'b-.');
+		end
+		hold off
 	case 3
-		p.RGridColor=[0.7 0.7 0.7];
-		p.TGridColor=[0.7 0.7 0.7];
-		mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);
+		mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:');
+		hold on
+		mmpolar([mu mu],[0 pvalsmax],'r-')
+		hold off
 		set(gca,'Tag','SpikeFigMainAxes')
 	case 4
 		p.RGridColor=[0.7 0.7 0.7];
@@ -3583,6 +3660,10 @@ case 'none'
 		p.Style='compass';
 		p.Border='off';
 		mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);
+		hold on
+		mmpolar([mu mu],[0 pvalsmax],'r-',p)
+		hold off
+		set(gca,'Tag','SpikeFigMainAxes')
 	end
 otherwise
 	[xax,dat] = fitdata(xvals,data.matrix','interpolated',sv.SmoothType);
@@ -3595,7 +3676,6 @@ end
 if get(gh('PropBox'),'Value')==0 %use non proportional scale
 	set(gca,'XTickLabel',num2str(data.xvalues'));
 end
-
 MakeTitle('vector');
 sv.xlabelhandle=xlabel(xname);
 switch sv.AnalysisMethod
@@ -3605,6 +3685,10 @@ case 6
 	data.matrixtitle=[data.matrixtitle,data.fftinfo];
 otherwise
 	sv.ylabelhandle=ylabel('Firing Rate (Hz)');
+end
+
+if get(gh('STypeMenu'),'Value')>1
+	data.matrixtitle=[data.matrixtitle '\newline Circ Mean= ' num2str(rad2ang(mu)) '[' num2str(rad2ang(ll)) ':' num2str(rad2ang(ul)) '] / Ax mean=' num2str(rad2ang(mu2)) '[' num2str(rad2ang(ll2)) ':' num2str(rad2ang(ul2)) '] p=' num2str(pval) ];
 end
 sv.titlehandle=title(data.matrixtitle);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
@@ -3691,6 +3775,7 @@ set(gca,'Tag','Spawnfigaxis');
 set(gcf,'Color',[1 1 1]);
 
 ChoosePlot;
+set(gca,'Tag','Spawnfigaxis');
 
 switch data.numvars
 case 0

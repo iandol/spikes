@@ -450,19 +450,19 @@ case 'Measure'
 	o.cell1.matrixold=o.cell1.matrix;
 	o.cell2.matrixold=o.cell2.matrix;
 	if wrapped==1
-		o.cell1.matrix=o.cell1mat/length(o.cell1raw{1});
+		o.cell1.matrix=o.cell1mat/length(o.cell1sums{1});
 		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.modtime/10));
-		o.cell2.matrix=o.cell2mat/length(o.cell2raw{1});
+		o.cell2.matrix=o.cell2mat/length(o.cell2sums{1});
 		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.modtime/10));
 	else
-		o.cell1.matrix=o.cell1mat/length(o.cell1raw{1});
+		o.cell1.matrix=o.cell1mat/length(o.cell1sums{1});
 		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.trialtime/10));
-		o.cell2.matrix=o.cell2mat/length(o.cell2raw{1});
+		o.cell2.matrix=o.cell2mat/length(o.cell2sums{1});
 		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.trialtime/10));
 	end
 		
 	axes(gh('Cell1Axis'))
-	imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1mat);
+	imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1.matrix);
 	set(gca,'Tag','Cell1Axis');
 	%if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
 	%if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
@@ -476,7 +476,7 @@ case 'Measure'
    set(gca,'Tag','Cell1Axis');
 	
 	axes(gh('Cell2Axis'));
-	imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2mat);
+	imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
 	set(gca,'Tag','Cell2Axis');
 	%if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
 	%if o.cell2.yvalues(1) > o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
@@ -498,7 +498,7 @@ case 'Measure'
 	
 	if get(gh('OPShowPlots'),'Value')==1 %plot histograms
 		set(gh('StatsText'),'String','Please wait, plotting additional info for each matrix point...');
-		h=figure;
+		figure;
 		set(gcf,'Position',[150 10 700 650]);
 		set(gcf,'Name','PSTH/ISI Plots for Control (black) and Drug (Red) Receptive Fields','NumberTitle','off');
 		x=1:(o.cell1.yrange*o.cell1.xrange);
@@ -510,13 +510,13 @@ case 'Measure'
 			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-');
 			set(gca,'FontSize',5);
 			axis tight;
-			if strcmp(o.spiketype,'psth') && (Normalise==2 | Normalise==3)
+			if strcmp(o.spiketype,'psth') && (Normalise==2 || Normalise==3)
 				axis([-inf inf 0 1]);
 			elseif strcmp(o.spiketype,'psth') && Normalise==1
 				axis([-inf inf 0 m]);
 			end
 		end
-		h=figure;
+		figure;
 		set(gcf,'Position',[150 10 700 650]);
 		set(gcf,'Name','CDF Plots for Control (Black) and Drug (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
@@ -540,7 +540,7 @@ case 'Measure'
 			ylabel('');
 			set(gca,'FontSize',4);			
 		end
-		h=figure;
+		figure;
 		set(gcf,'Position',[100 10 700 650]);
 		set(gcf,'Name','Spikes (y) per Trial (x) Plots for Control (Black) and Drug (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
@@ -588,14 +588,14 @@ case 'Spontaneous'
 	starttrial=get(gh('StartTrialMenu'),'Value');
 	endtrial=get(gh('EndTrialMenu'),'Value');
 	
-	if (sp1==-1 | sp2==-1)
+	if (sp1==-1 || sp2==-1)
 		t={'Will Measure Spontaneous at the location indicated by the Held X / Y Variable Position';'';'';'You Chose';['X = ' num2str(o.cell1.xvalues(xhold))];['Y = ' num2str(o.cell1.yvalues(yhold))]};
 		[t1,psth1]=binit(o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)},binwidth*10,1,inf,starttrial,endtrial,wrapped);
 		[t2,psth2]=binit(o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)},binwidth*10,1,inf,starttrial,endtrial,wrapped);
 		[mint,maxt]=measureq(t1,psth1,binwidth,psth2);
 	end
 	
-	if (sp1==-1 & sp2==-1) %only if nothing input
+	if (sp1==-1 && sp2==-1) %only if nothing input
 		switch o.spiketype
 			case 'raw'
 				spikes1=o.cell1sums{yhold,xhold};
@@ -658,7 +658,7 @@ case 'Spontaneous'
 				testvalue1=mean(o.cell1spike{i});
 				testvalue2=mean(o.cell2spike{i});
 				if testvalue1<=o.spontaneous1
-					o.cell1spike{i}=zeros(size(o.cell1spike{i}));;
+					o.cell1spike{i}=zeros(size(o.cell1spike{i}));
 					o.position1(i)=0;
 				end
 				if testvalue2<=o.spontaneous2
@@ -734,11 +734,11 @@ case 'OrbanizeIt'
 	v=get(gh('OPStatsMenu'),'Value');
 	plottype=get(gh('OPPlotMenu'),'Value');
 	drawnow;
-	if strcmp(o.filetype,'mat') & (strcmp(o.spiketype,'psth') | strcmp(o.spiketype,'isih'))
+	if strcmp(o.filetype,'mat') && (strcmp(o.spiketype,'psth') || strcmp(o.spiketype,'isih'))
 		if length(o.cell1spike{1})<10
-			h=helpdlg('Beware, you have less than 10 bins for each location, be aware you are working with a small sample. Try to increase the binwidth for more sample points.')
-			pause(1)
-			close(h)
+			h=helpdlg('Beware, you have less than 10 bins for each location, be aware you are working with a small sample. Try to increase the binwidth for more sample points.');
+			pause(1);
+			close(h);
 		end
 	end
 	
@@ -996,7 +996,7 @@ case 'OrbanizeIt'
 		elseif o.spontaneous==1;
 			a=1;
 			for i=1:o.cell1.xrange*o.cell1.yrange
-				if o.position1(i)>0 | o.position2(i)>0
+				if o.position1(i)>0 || o.position2(i)>0
 					d1(a)=o.cell1.matrix(i);
 					d2(a)=o.cell2.matrix(i);
 					a=a+1;
@@ -1487,31 +1487,31 @@ case 'OrbanizeIt'
 			
 		case 'l'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x=o.cell1.matrix(1:l,1);
 			y=o.cell2.matrix(1:l,1);
 			
 		case 'r'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x=o.cell1.matrix(1:l,end);
 			y=o.cell2.matrix(1:l,end);
 			
 		case 't'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x=o.cell1.matrix(1,1:l)';
 			y=o.cell2.matrix(1,1:l)';
 			
 		case 'b'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x=o.cell1.matrix(end,1:l)';
 			y=o.cell2.matrix(end,1:l)';
 			
 		case 'lr'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x1=o.cell1.matrix(1:l,1);
 			y1=o.cell2.matrix(1:l,1);
 			x2=o.cell1.matrix(1:l,end);
@@ -1525,7 +1525,7 @@ case 'OrbanizeIt'
 			
 		case 'lt'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x1=o.cell1.matrix(1:l,1);
 			y1=o.cell2.matrix(1:l,1);
 			x2=o.cell1.matrix(1,1:l)';
@@ -1539,7 +1539,7 @@ case 'OrbanizeIt'
 			
 		case 'lb'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x1=o.cell1.matrix(1:l,1);
 			y1=o.cell2.matrix(1:l,1);
 			x2=o.cell1.matrix(end,1:l)';
@@ -1553,7 +1553,7 @@ case 'OrbanizeIt'
 			
 		case 'tb'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x1=o.cell1.matrix(1,1:l)';
 			y1=o.cell2.matrix(1,1:l)';
 			x2=o.cell1.matrix(end,1:l)';
@@ -1567,7 +1567,7 @@ case 'OrbanizeIt'
 			
 		case 'tr'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x1=o.cell1.matrix(1,1:l)';
 			y1=o.cell2.matrix(1,1:l)';
 			x2=o.cell1.matrix(1:l,end);
@@ -1581,7 +1581,7 @@ case 'OrbanizeIt'
 			
 		case 'br'
 			
-			l=length(o.cell1.matrix)
+			l=length(o.cell1.matrix);
 			x1=o.cell1.matrix(end,1:l)';
 			y1=o.cell2.matrix(end,1:l)';
 			x2=o.cell1.matrix(1:l,end);
@@ -1595,8 +1595,8 @@ case 'OrbanizeIt'
 			
 		otherwise
 			
-			errordlg('Sorry, unrecognised input')
-			error
+			errordlg('Sorry, unrecognised input');
+			error('Sorry, unrecognised input!');
 			
 		end
 		[p]=signtest(x,y);

@@ -918,7 +918,7 @@ switch scell
 		tit=[tit '\newline alpha = ' num2str(alpha) ' | global/0 V CI: ' num2str(rrhodiffci(1)) ' <' num2str(rrhodiff) '> ' num2str(rrhodiffci(2)) ' | A CI: ' num2str(rthetadiffci(1)) ' <' num2str(rthetadiff) '> ' num2str(rthetadiffci(2))];
 		h=suptitle(tit);
 		clipboard('copy',tit);
-		set(h,'FontSize',8,'FontName','verdana');
+		set(h,'FontSize',7,'FontName','verdana');
 		gdat.testtrial=0;
 	otherwise		
 		switch bootfun
