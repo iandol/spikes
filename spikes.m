@@ -58,7 +58,7 @@ case 'Initialize'
 	sv=[];
 	data=[];
 	rlist=[];
-	sv.version='SPIKES: V1.82c';
+	sv.version='SPIKES: V1.82d';
 	sv.temppath=getenv('TEMP');
 	if ismac
 		sv.usingmac=1;
@@ -2894,7 +2894,7 @@ switch data.plottype
 		if data.numvars>2; sv.zlock=1; set(gh('ZHoldCheck'),'Value',1); end	
 	case 6 %tuning curve
 		if get(gh('STypeMenu'),'Value')>4; set(gh('STypeMenu'),'Value',1); end
-		set(gh('STypeMenu'),'String',{'Normal';'Polar (Cartesian)';'Polar+Error (Cartesian)';'Polar+Error (Compass)'});
+		set(gh('STypeMenu'),'String',{'Normal';'Polar+Means (Cartesian)';'Polar+Error (Cartesian)';'Polar+Error (Compass)'});
 		set(gh('STypeMenu'),'Enable','on');
 		if sv.xlock==1 && data.numvars==1
 			sv.xlock=0;
@@ -3971,18 +3971,100 @@ function polardiagonal
 	
 	diagonal=diag(data.matrix)';
 	diagonalerror=diag(data.errormat)';
-	
+
 	pvals=[diagonal diagonal(1)];
-	pxvals = ang2rad([data.xvalues data.xvalues(1)]);		
+	pvalsmax=ceil(max(pvals));
+	if length(data.xvalues) > length(data.yvalues)
+		pxvals = ang2rad([data.xvalues(1:length(data.yvalues)) data.xvalues(1)]);
+	else
+		pxvals = ang2rad([data.xvalues data.xvalues(1)]);
+	end
 	perrors=[diagonalerror diagonalerror(1)];
 	pmin=pvals-perrors;
 	pmax=pvals+perrors;
 	
+	%so we need to do both radial and axial circular means:
+	[mu,ll,ul]=circ_mean(pxvals,pvals); %standard circular mean
+	pval=circ_rtest(pxvals,pvals,mean(diff(pxvals(1:end-1))));
+	pval2=circ_vtest(pxvals,mu,pvals,mean(diff(pxvals(1:end-1))));
+	
+	if length(data.xvalues) > length(data.yvalues)
+		pxvals2 = [data.xvalues(1:length(data.yvalues)) data.xvalues(1)];
+	else
+		pxvals2 = [data.xvalues data.xvalues(1)];
+	end
+	belowpiidx=find(pxvals2<=180);
+	abovepiidx=find(pxvals2>180);
+	pvalsbelow=pvals(belowpiidx);
+	pvalsabove=pvals(abovepiidx);
+	pxvalsbelow=pxvals2(belowpiidx);
+	pxvalsabove=pxvals2(abovepiidx)-180;
+	pvalsabove=fliplr(pvalsabove);
+	
+	if isempty(pvalsabove)
+		pvalsabove=0;
+		pxvalsabove=0;
+	end
+
+	bidx=1;
+	aidx=1;
+	for i=1:length(unique([pxvalsbelow pxvalsabove])) %loop through
+
+		if aidx>length(pxvalsabove) && ~isempty(pxvalsabove)
+			pxvalsnew(i)=pxvalsbelow(bidx);
+			pvalsnew(i)=pvalsbelow(bidx);
+			bidx=bidx+1;
+		elseif bidx>length(pxvalsbelow)
+			pxvalsnew(i)=pxvalsabove(aidx);
+			pvalsnew(i)=pvalsabove(aidx);
+			aidx=aidx+1;
+		elseif pxvalsbelow(bidx)<pxvalsabove(aidx) || pxvalsbelow(bidx)>pxvalsabove(aidx)
+			pxvalsnew(i)=pxvalsbelow(bidx);
+			pvalsnew(i)=pvalsbelow(bidx);
+			bidx=bidx+1;
+		elseif pxvalsbelow(bidx)==pxvalsabove(aidx);
+			pxvalsnew(i)=pxvalsbelow(bidx);
+			pvalsnew(i)=pvalsbelow(bidx)+pvalsabove(aidx);
+			bidx=bidx+1;
+			aidx=aidx+1;
+		else
+			pxvalsnew(i)=pxvalsabove(aidx);
+			pvalsnew(i)=pvalsabove(aidx);
+			aidx=aidx+1;
+		end
+
+	end
+
+	pxvalsnew=ang2rad(pxvalsnew);
+	[mu2,ll2,ul2]=circ_mean(pxvalsnew,pvalsnew); %standard circular mean
+	
+	
 	figure;
 	
-	p.RGridColor=[0.7 0.7 0.7];
-	p.TGridColor=[0.7 0.7 0.7];
-	mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);
+	h=polar(pxvalsnew,pvalsnew,'ro-.');
+	set(h,'Color',[1 0.6 0.6]);
+	set(h,'MarkerFaceColor',[1 0.6 0.6]);
+	hold on
+	h=polar(pxvals,pvals,'ko-');
+	set(h,'MarkerFaceColor',[0 0 0]);
+	set(h,'LineWidth',2);
+	polar(pxvals,pmin,'k-.');
+	polar(pxvals,pmax,'k-.');
+	polar([mu mu],[0 pvalsmax],'b-');
+	if ~isnan(ll)
+		polar([ll ll],[0 pvalsmax],'b-.');
+	end
+	if ~isnan(ul)
+		polar([ul ul],[0 pvalsmax],'b-.');
+	end
+	polar([mu2 mu2],[0 pvalsmax],'r-');
+	if ~isnan(ll2)
+		polar([ll2 ll2],[0 pvalsmax],'r-.');
+	end
+	if ~isnan(ul2)
+		polar([ul2 ul2],[0 pvalsmax],'r-.');
+	end
+	hold off
 	
 	MakeTitle('vector');
 	xlabel(data.xtitle);
@@ -3994,7 +4076,7 @@ function polardiagonal
 	otherwise
 		ylabel('Firing Rate (Hz)');
 	end
-	title([data.matrixtitle ' -- DIAGONAL!']);
+	title([data.matrixtitle 'DIAGONAL -- CircMean=' num2str(rad2ang(mu)) '  AxialMean=' num2str(rad2ang(mu2)) '  pR=' num2str(pval) ' pV=' num2str(pval2) ]);
 	
 	
 	
