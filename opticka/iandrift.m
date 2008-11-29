@@ -1,4 +1,4 @@
-function ftimes=iandrift
+function iandrift
 % DriftDemo
 % ___________________________________________________________________
 %
@@ -28,6 +28,27 @@ function ftimes=iandrift
 %                     before first call to Screen('MakeTexture') in
 %                     preparation of future improvements to 'MakeTexture'.
 
+if (~isempty(daqfind))
+    stop(daqfind)
+end
+
+%analog input
+ai = analoginput('nidaq','Dev1');
+set(ai,'InputType','SingleEnded');
+set(ai,'TriggerType','Manual');
+set(ai,'SampleRate',2000);
+ActualRate = get(ai,'SampleRate');
+set(ai,'SamplesPerTrigger',inf);
+chans = addchannel(ai,0:1);
+
+%digital input/output
+dio = digitalio('nidaq','Dev1');
+out=daqhwinfo(dio)
+out.Port
+addline(dio,0:7,'out');
+dio.Line(1).LineName = 'TrigLine';
+putvalue(dio,[0 0 0 0 0 0 0 0]);
+
 movieDurationSecs=2;
 waitTime=0.5;
 angle=ang2rad(0);
@@ -36,7 +57,7 @@ angle2=ang2rad(angle+90);
 size=400;
 
 maskStimuli=1;
-gaus=size/2;
+gaus=size/4;
 
 sf=0.01;
 
@@ -77,11 +98,11 @@ try
 	w=Screen('OpenWindow',screenNumber, 0,[],32,2);
 	Screen('FillRect',w, gray);
 	Screen('Flip', w);
-	Screen('FillRect',w, gray);
+	%Screen('FillRect',w, gray);
     
 	% compute each frame of the movie and convert the those frames, stored in
 	% MATLAB matices, into Psychtoolbox OpenGL textures using 'MakeTexture';
-	numFrames=24; % temporal period, in frames, of the drifting grating
+	numFrames=60; % temporal period, in frames, of the drifting grating
 
 	timestamp=GetSecs;
 	for i=1:numFrames
@@ -114,34 +135,36 @@ try
 	if(frameRate==0)  %if MacOSX does not know the frame rate the 'FrameRate' will return 0. 
 	  frameRate=60;
 	end
+	
+	start(ai);
 
    movieDurationFrames=round(movieDurationSecs * frameRate);
 	movieFrameIndices=mod(0:(movieDurationFrames-1), numFrames) + 1;
 	priorityLevel=MaxPriority(w);
 	Priority(priorityLevel);
 
-	totaltime=GetSecs;
 	a=1;
 	ftimes=zeros(movieDurationFrames*length(angles),1);
 	
+	trigger(ai)
 	for j=1:length(angles)
+		timestamp=GetSecs;
 		for i=1:movieDurationFrames
-			%tic
-			timestamp=GetSecs;
+			putvalue(dio.Line(1),1);
 			Screen('DrawTexture', w, tex(movieFrameIndices(i)),[],[],angles(randindex(j)));
 			Screen('Flip', w);
-			ftimes(a)=GetSecs-timestamp;
-			%ftimes(a)=toc;
-			a=a+1;
+			putvalue(dio.Line(1),0);
+			ftimes(i)=GetSecs-timestamp;
+			timestamp=GetSecs;
 		end
 		Screen('FillRect',w, gray);
 		Screen('Flip', w);
 		WaitSecs(waitTime);
 	end
-	totaltime=GetSecs-totaltime
-	 
+	
 	Screen('FillRect',w, gray);
 	Screen('Flip', w);
+	stop(ai);
 	WaitSecs(2);
 
    Priority(0);
@@ -154,19 +177,40 @@ try
 catch
 	%this "catch" section executes in case of an error in the "try" section
 	%above.  Importantly, it closes the onscreen window if its open.
+	stop(ai);
+	delete(ai);
+	clear ai;
+
+	putvalue(dio,[0 0 0 0 0 0 0 0]);
+	delete(dio);
+	clear dio;
 	Priority(0);
 	Screen('CloseAll');
 	psychrethrow(psychlasterror);
 end %try..catch..
 
+stop(ai);
+ai;
+[data,time]=getdata(ai,ai.SamplesAvailable);
+
 clear tex;
 figure;
-subplot(211)
+subplot(311)
 plot(ftimes,'ko');
-subplot(212)
-hist(ftimes,[0.016:0.0001:0.019])
-[m,e]=stderr(ftimes)
+subplot(312)
+histfit(ftimes)
+[m,e]=stderr(ftimes);
 title(['Mean: ' num2str(m) '+-' num2str(e)])
+subplot(313)
+plot(time,data);
+axis tight
+
+delete(ai);
+clear ai;
+
+putvalue(dio,[0 0 0 0 0 0 0 0]);
+delete(dio);
+clear dio;
 
 
 
