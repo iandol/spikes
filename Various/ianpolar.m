@@ -1,5 +1,5 @@
 function hpol = ianpolar(varargin)
-%POLAR  Polar coordinate plot.
+%IANPOLAR  Polar coordinate plot.
 %   POLAR(THETA, RHO) makes a plot using polar coordinates of
 %   the angle THETA, in radians, versus the radius RHO.
 %   POLAR(THETA,RHO,S) uses the linestyle specified in string S.
@@ -14,9 +14,6 @@ function hpol = ianpolar(varargin)
 %      polar(t,sin(2*t).*cos(2*t),'--r')
 %
 %   See also PLOT, LOGLOG, SEMILOGX, SEMILOGY.
-
-%   Copyright 1984-2007 The MathWorks, Inc.
-%   $Revision: 5.22.4.9 $  $Date: 2007/08/27 17:06:52 $
 
 % Parse possible Axes input
 [cax,args,nargs] = axescheck(varargin{:});
@@ -41,7 +38,10 @@ elseif nargs == 2
         end
     else
         line_style = 'ko';
-    end
+	end
+	setting.scalesize=0;
+	settings.changecolour=0;
+	settings.filled=1;
 elseif nargs == 1
     theta = args{1};
     line_style = 'ko';
@@ -54,15 +54,22 @@ elseif nargs == 1
     else
         th = (1:mr)';
         theta = th(:,ones(1,nr));
-    end
+	end
+	settings.scalesize=0;
+	settings.changecolour=0;
+	settings.filled='filled';
 elseif nargs == 3 % nargs == 3
     [theta,rho,sizevals] = deal(args{1:3});
 	sizevals=(sizevals./max(sizevals))*100;
-	colorvals='k';
-elseif nargs == 4 % nargs == 3
+	colorvals=[0 0 0];
+	settings.scalesize=0;
+	settings.changecolour=0;
+	settings.filled='filled';
+elseif nargs == 4 % nargs == 4
     [theta,rho,sizevals,colorvals] = deal(args{1:4});
 	sizevals=(sizevals./max(sizevals))*100;
-	settings=struct('changecolour',0);
+	settings.changecolour=0;
+	settings.filled='filled';
 elseif nargs == 5
 	[theta,rho,sizevals,colorvals,settings] = deal(args{1:5});
 	if ~isfield(settings,'changecolour')
@@ -74,7 +81,7 @@ elseif nargs == 5
 		end
 	end
 	if ~isfield(settings,'filled')
-		settings=struct('filled',[]);
+		settings=struct('filled','filled');
 	end
 end
 
@@ -83,6 +90,10 @@ if ischar(theta) || ischar(rho)
 end
 if ~isequal(size(theta),size(rho))
     error('MATLAB:polar:InvalidInput', 'THETA and RHO must be the same size.');
+end
+
+if min(sizevals)<=0
+	sizevals(find(sizevals==0))=0.1;
 end
 
 if size(colorvals,2)==1 && settings.changecolour==1
@@ -221,6 +232,8 @@ xx = rho.*cos(theta);
 yy = rho.*sin(theta);
 
 q = scatter(xx,yy,sizevals,colorvals,settings.filled);
+
+set(get(gca,'Children'),'MarkerEdgeColor',[0 0 0])
 
 if nargout == 1
     hpol = q;

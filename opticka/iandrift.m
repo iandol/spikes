@@ -149,16 +149,16 @@ try
 	trigger(ai)
 	for j=1:length(angles)
 		timestamp=GetSecs;
+		putvalue(dio.Line(1),1);
 		for i=1:movieDurationFrames
-			putvalue(dio.Line(1),1);
 			Screen('DrawTexture', w, tex(movieFrameIndices(i)),[],[],angles(randindex(j)));
 			Screen('Flip', w);
-			putvalue(dio.Line(1),0);
 			ftimes(i)=GetSecs-timestamp;
 			timestamp=GetSecs;
 		end
 		Screen('FillRect',w, gray);
 		Screen('Flip', w);
+		putvalue(dio.Line(1),0);
 		WaitSecs(waitTime);
 	end
 	
