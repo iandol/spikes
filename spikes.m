@@ -3339,9 +3339,24 @@ case 1
 otherwise
 	xrange=length(data.xvalueso); %we'll ignore the subselection
 	yrange=length(data.yvalueso);
+	zrange=length(data.zvalueso);
+	
+	if data.numvars==3 %we need to correct the index for the third variable
+		if sv.zval==1
+			starti=1;
+			endi=xrange*yrange;
+		else 
+			starti=(xrange*yrange*(sv.zval-1))+1;
+			endi=xrange*yrange*(zrange*(sv.zval-1));
+		end
+	else
+		starti=1;
+		endi=xrange*yrange;
+	end
+	
 	if get(gh('PSTHEdit'),'String')=='0'
 		m=1; %this will find the max value out of all the PSTH's and scale by this
-		for i=1:xrange*yrange
+		for i=starti:endi
 			if m<=max(data.psth{i})
 				m=max(data.psth{i});
 			end
@@ -3355,11 +3370,12 @@ otherwise
 	%the problem is that our data is in rows, but subplot indexes in columns
 	%so we have to create an index that converts between the 2 as
 	%i want the data to look that same as it is loaded into the matrices
-	x=1:(data.yrange*data.xrange);
+	x=starti:endi;
 	y=reshape(x,data.yrange,data.xrange);
 	y=fliplr(y'); %order it so we can load our data to look like the surface plots
 	%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
-	for i=1:xrange*yrange
+	a=1;
+	for i=1:length(x)
 		subaxis(yrange,xrange,i,'S',0,'M',0.1,'P',0);
 		h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
 		hold on
@@ -3370,8 +3386,12 @@ otherwise
 		set(gca,'YTick',[]);
 		axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 		%text(5,(m-m/10), data.names{y(i)},'FontSize',5);
+		a=a+1;
 	end
 	t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+	if data.numvars==3
+		t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
+	end
 	[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
 	[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
 	[ax,h3]=suplabel(t ,'t');

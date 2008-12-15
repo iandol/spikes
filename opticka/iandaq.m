@@ -29,7 +29,7 @@ ylabel('Signal Level (Volts)');
 drawnow;
 
 loopt=1010;
-switchtime=0.04;
+switchtime=0.01;
 times=zeros(loopt,1);
 i=1;
 peeklimit=ai.SampleRate/5;

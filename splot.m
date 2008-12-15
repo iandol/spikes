@@ -10,6 +10,7 @@ function splot(action,varargin)
 % -------------------------------------------------------------------------
 
 global data		%global data structure from spikes
+global sv		%spikes ui structure
 global spdata 	%global structure to hold any splot specific data
 
 if nargin<1;
@@ -101,10 +102,11 @@ case 'Plot' %do da stuff
     
 	x=get(gh('XBox'),'Value');
 	y=get(gh('YBox'),'Value');
+	z=sv.zval;
 	
-	time=data.time{y,x};
-	psth=data.psth{y,x};
-	bpsth=data.bpsth{y,x};
+	time=data.time{y,x,z};
+	psth=data.psth{y,x,z};
+	bpsth=data.bpsth{y,x,z};
 	
 	datatype=get(gh('DataBox'),'Value');
 	plottype=get(gh('TypeBox'),'Value');
@@ -112,16 +114,16 @@ case 'Plot' %do da stuff
 	m=max(psth);%--------------------------works out firing rate
 	m=(m/data.binwidth)*1000;
 	if data.wrapped==0
-		m=m/data.raw{y,x}.numtrials;
+		m=m/data.raw{y,x,z}.numtrials;
 	else
-		m=m/(data.raw{y,x}.numtrials*data.raw{y,x}.nummods);
+		m=m/(data.raw{y,x,z}.numtrials*data.raw{y,x,z}.nummods);
 	end
 	mb=max(bpsth);
 	mb=(mb/data.binwidth)*1000;
 	if data.wrapped==0
-		mb=mb/data.raw{y,x}.numtrials;
+		mb=mb/data.raw{y,x,z}.numtrials;
 	else
-		mb=mb/(data.raw{y,x}.numtrials*data.raw{y,x}.nummods);
+		mb=mb/(data.raw{y,x,z}.numtrials*data.raw{y,x,z}.nummods);
 	end %---------------------------------------------------------
 	
 	switch(datatype)
@@ -344,10 +346,10 @@ case 'Get Spontaneous'
 	%this if loop selects where are data is (depends on whether it was smoothed etc)	
 	if datatype==2 %bursts
 		if plottype==1 | plottype==2 %no smoothing so just raw psths
-			time=data.time{y,x};
-			psth=data.psth{y,x};
+			time=data.time{y,x,z};
+			psth=data.psth{y,x,z};
 		elseif plottype==3
-			time=data.time{y,x};
+			time=data.time{y,x,z};
 			psth=spdata.psths;
 		elseif plottype==4
 			time=spdata.times;
@@ -355,10 +357,10 @@ case 'Get Spontaneous'
 		end
 	else %all spikes
 		if plottype==1 | plottype==2 %no smoothing so just raw psths
-			time=data.time{y,x};
-			psth=data.psth{y,x};
+			time=data.time{y,x,z};
+			psth=data.psth{y,x,z};
 		elseif plottype==3
-			time=data.time{y,x};
+			time=data.time{y,x,z};
 			psth=spdata.psths;
 		elseif plottype==4
 			time=spdata.times;
@@ -423,10 +425,10 @@ case 'Latency Analysis'
 	%this if loop selects where are data is (depends on whether it was smoothed etc)	
 	if datatype==2 %bursts
 		if plottype==1 || plottype==2 %no smoothing so just raw psths
-			time=data.time{y,x};
-			psth=data.psth{y,x};
+			time=data.time{y,x,z};
+			psth=data.psth{y,x,z};
 		elseif plottype==3
-			time=data.time{y,x};
+			time=data.time{y,x,z};
 			psth=spdata.psths;
 		elseif plottype==4
 			time=spdata.times;
@@ -434,10 +436,10 @@ case 'Latency Analysis'
 		end
 	else %all spikes
 		if plottype==1 || plottype==2 %no smoothing so just raw psths
-			time=data.time{y,x};
-			psth=data.psth{y,x};
+			time=data.time{y,x,z};
+			psth=data.psth{y,x,z};
 		elseif plottype==3
-			time=data.time{y,x};
+			time=data.time{y,x,z};
 			psth=spdata.psths;
 		elseif plottype==4
 			time=spdata.times;
@@ -522,7 +524,7 @@ case 'Linearity Test'
 	x=get(gh('XBox'),'Value');
 	y=get(gh('YBox'),'Value');
 	
-	rawspikes=data.rawspikes{y,x}/1000; %get raw spikes in seconds
+	rawspikes=data.rawspikes{y,x,z}/1000; %get raw spikes in seconds
 	spikesInStim=length(rawspikes);
 	
 	VS = (sqrt((sum(sin(2*pi*data.tempfreq*rawspikes)))^2 + (sum(cos(2*pi*data.tempfreq*rawspikes)))^2))/spikesInStim;
@@ -547,8 +549,8 @@ case 'FFT Power Spectrum'
 	x=get(gh('XBox'),'Value');
 	y=get(gh('YBox'),'Value');
 	maxtime=(max(data.time{1})+data.binwidth)/1000;
-	numtrials=data.raw{y,x}.numtrials;
-	nummods=data.raw{y,x}.nummods;
+	numtrials=data.raw{y,x,z}.numtrials;
+	nummods=data.raw{y,x,z}.nummods;
 	binwidth=data.binwidth;
 	if data.wrapped==1
 		trialmod=numtrials*nummods;
@@ -556,8 +558,8 @@ case 'FFT Power Spectrum'
 		trialmod=numtrials;
 	end
 	if data.numvars > 1;
-		time=(max(data.time{y,x})+data.binwidth)/1000;  %convert into seconds
-		psth=data.psth{y,x};
+		time=(max(data.time{y,x,z})+data.binwidth)/1000;  %convert into seconds
+		psth=data.psth{y,x,z};
 	else
 		time=(max(data.time{x})+data.binwidth)/1000;  %convert into seconds
 		psth=data.psth{x};

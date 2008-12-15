@@ -22,7 +22,7 @@ function varargout = opticka_ui(varargin)
 
 % Edit the above text to modify the response to help opticka_ui
 
-% Last Modified by GUIDE v2.5 09-Dec-2008 01:15:46
+% Last Modified by GUIDE v2.5 15-Dec-2008 12:07:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -502,7 +502,7 @@ function OKMenuPlaid_Callback(hObject, eventdata, handles)
 set(handles.OKPanelDot,'Visible','off')
 set(handles.OKPanelNoise,'Visible','off')
 set(handles.OKPanelGrating,'Visible','off')
-set(handles.OKPanelNoise,'Visible','off')
+set(handles.OKPanelBar,'Visible','off')
 set(handles.OKPanelPlaid,'Visible','on')
 
 % --------------------------------------------------------------------
@@ -510,21 +510,21 @@ function OKMenuDot_Callback(hObject, eventdata, handles)
 % hObject    handle to OKMenuDot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.OKPanelDot,'Visible','on')
 set(handles.OKPanelNoise,'Visible','off')
 set(handles.OKPanelGrating,'Visible','off')
-set(handles.OKPanelNoise,'Visible','off')
+set(handles.OKPanelBar,'Visible','off')
 set(handles.OKPanelPlaid,'Visible','off')
+set(handles.OKPanelDot,'Visible','on')
 % --------------------------------------------------------------------
 function OKMenuBar_Callback(hObject, eventdata, handles)
 % hObject    handle to OKMenuBar (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.OKPanelDot,'Visible','off')
-set(handles.OKPanelNoise,'Visible','on')
 set(handles.OKPanelGrating,'Visible','off')
-set(handles.OKPanelNoise,'Visible','off')
+set(handles.OKPanelBar,'Visible','off')
 set(handles.OKPanelPlaid,'Visible','off')
+set(handles.OKPanelNoise,'Visible','on')
 
 % --------------------------------------------------------------------
 function OKMenuGrating_Callback(hObject, eventdata, handles)
@@ -533,8 +533,9 @@ function OKMenuGrating_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.OKPanelDot,'Visible','off')
 set(handles.OKPanelNoise,'Visible','off')
-set(handles.OKPanelGrating,'Visible','on')
+set(handles.OKPanelBar,'Visible','off')
 set(handles.OKPanelPlaid,'Visible','off')
+set(handles.OKPanelGrating,'Visible','on')
 
 
 
@@ -1946,6 +1947,204 @@ function edit75_Callback(hObject, eventdata, handles)
 function edit75_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function OKMenuPreferences_Callback(hObject, eventdata, handles)
+
+
+function Untitled_19_Callback(hObject, eventdata, handles)
+
+
+function Untitled_20_Callback(hObject, eventdata, handles)
+
+
+function Untitled_21_Callback(hObject, eventdata, handles)
+
+
+function Untitled_17_Callback(hObject, eventdata, handles)
+
+
+function Untitled_16_Callback(hObject, eventdata, handles)
+
+
+function OKPanelGratingType_Callback(hObject, eventdata, handles)
+
+
+function OKPanelGratingType_CreateFcn(hObject, eventdata, handles)
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function OKPanelGratingXfill_Callback(hObject, eventdata, handles)
+
+
+function OKPanelGratingYFill_Callback(hObject, eventdata, handles)
+
+
+function pushbutton10_Callback(hObject, eventdata, handles)
+
+
+function pushbutton11_Callback(hObject, eventdata, handles)
+
+
+function pushbutton12_Callback(hObject, eventdata, handles)
+
+
+function pushbutton13_Callback(hObject, eventdata, handles)
+
+
+function OKPanelDotModulate_Callback(hObject, eventdata, handles)
+childlist=get(handles.OKPanelDotPanel,'Children');
+if get(hObject,'Value')==1
+	set(childlist,'Enable','on')
+else
+	set(childlist,'Enable','off')
+end
+
+
+function edit77_Callback(hObject, eventdata, handles)
+
+
+function edit77_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function pushbutton14_Callback(hObject, eventdata, handles)
+
+
+function edit76_Callback(hObject, eventdata, handles)
+
+
+function edit76_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function checkbox13_Callback(hObject, eventdata, handles)
+
+
+function edit78_Callback(hObject, eventdata, handles)
+
+
+function edit78_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function edit79_Callback(hObject, eventdata, handles)
+
+
+function edit79_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function checkbox15_Callback(hObject, eventdata, handles)
+
+
+function OKProtocolsList_Callback(hObject, eventdata, handles)
+
+
+function OKProtocolsList_CreateFcn(hObject, eventdata, handles)
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function pushbutton22_Callback(hObject, eventdata, handles)
+
+
+function OKHistoryList_Callback(hObject, eventdata, handles)
+
+
+function OKHistoryList_CreateFcn(hObject, eventdata, handles)
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function pushbutton23_Callback(hObject, eventdata, handles)
+
+
+function pushbutton15_Callback(hObject, eventdata, handles)
+
+
+function pushbutton16_Callback(hObject, eventdata, handles)
+
+
+function pushbutton17_Callback(hObject, eventdata, handles)
+
+
+function pushbutton18_Callback(hObject, eventdata, handles)
+
+
+function pushbutton19_Callback(hObject, eventdata, handles)
+
+
+function pushbutton20_Callback(hObject, eventdata, handles)
+
+
+function pushbutton21_Callback(hObject, eventdata, handles)
+
+
+function edit80_Callback(hObject, eventdata, handles)
+
+
+function edit80_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function pushbutton24_Callback(hObject, eventdata, handles)
+
+
+function checkbox17_Callback(hObject, eventdata, handles)
+
+
+function checkbox16_Callback(hObject, eventdata, handles)
+
+
+function popupmenu4_Callback(hObject, eventdata, handles)
+
+
+function popupmenu4_CreateFcn(hObject, eventdata, handles)
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
