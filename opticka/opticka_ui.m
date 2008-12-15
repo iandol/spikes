@@ -22,7 +22,7 @@ function varargout = opticka_ui(varargin)
 
 % Edit the above text to modify the response to help opticka_ui
 
-% Last Modified by GUIDE v2.5 15-Dec-2008 12:07:24
+% Last Modified by GUIDE v2.5 15-Dec-2008 22:41:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2150,4 +2150,12 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
+function OKPanelGratingModulate_Callback(hObject, eventdata, handles)
+childlist=get(handles.OKPanelGratingPanel,'Children');
+if get(hObject,'Value')==1
+	set(childlist,'Enable','on')
+else
+	set(childlist,'Enable','off')
+end
 
