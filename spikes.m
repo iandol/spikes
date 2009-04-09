@@ -2347,36 +2347,43 @@ case 'Load Text'
 	%-----------------------------------------------------------------------------------------
 case 'Exit'
 	%-----------------------------------------------------------------------------------------
-	paths.init='';
-	if isfield(sv,'matsavepath')
-		paths.matsavepath=sv.matsavepath;
-	end
-	if isfield(sv,'matloadpath')
-		paths.matloadpath=sv.matloadpath;
-	end
-	if isfield(sv,'dataloadpath')
-		paths.dataloadpath=sv.dataloadpath;
-    end
-	if ~isempty(gh('DataInfoBox'))
-		close(gh('DataInfoBox'));
-	end
-	history=get(gh('spikehistory'),'String');
-	shistory=get(gh('SSliceHistory'),'String');
-	save([sv.historypath 'shistory.mat'],'shistory');
-	hsize=20;
-	if size(history,1)>1
-		if size(history,1)>hsize
-			history=history(1:hsize); %prunes the history list
-		elseif strcmp(history(end),' ')
-			history=history(1:end-1); %removes dummy space
+	try
+		paths.init='';
+		if isfield(sv,'matsavepath')
+			paths.matsavepath=sv.matsavepath;
 		end
-		save([sv.historypath 'history.mat'],'history','paths');
+		if isfield(sv,'matloadpath')
+			paths.matloadpath=sv.matloadpath;
+		end
+		if isfield(sv,'dataloadpath')
+			paths.dataloadpath=sv.dataloadpath;
+		end
+		if ~isempty(gh('DataInfoBox'))
+			close(gh('DataInfoBox'));
+		end
+		history=get(gh('spikehistory'),'String');
+		shistory=get(gh('SSliceHistory'),'String');
+		save([sv.historypath 'shistory.mat'],'shistory');
+		hsize=20;
+		if size(history,1)>1
+			if size(history,1)>hsize
+				history=history(1:hsize); %prunes the history list
+			elseif strcmp(history(end),' ')
+				history=history(1:end-1); %removes dummy space
+			end
+			save([sv.historypath 'history.mat'],'history','paths');
+		end
+		if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end;
+		if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
+		clear data sv;
+		clear history shistory paths;
+		delete(gcf);
+	catch
+		clear data sv;
+		clear history shistory paths;
+		delete(gcf);
+		error('Couldn''t close down cleanly, history files not saved')
 	end
-	if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end;
-	if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
-    clear data sv;
-	clear history shistory paths;
-	delete(gcf);
 
 	%-----------------------------------------------------------------------------------------
 end  %end of spikes main program switch

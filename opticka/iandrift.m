@@ -1,6 +1,6 @@
 function iandrift
 
-movieDurationSecs=4;
+movieDurationSecs=2;
 waitTime=0.5;
 angle=ang2rad(45);
 angle2=angle+ang2rad(90);
@@ -51,7 +51,7 @@ try
 	
 	% Open a double buffered fullscreen window and draw a gray background 
 	% to front and back buffers:
-	w=Screen('OpenWindow',screenNumber, 0,[0 0 800 800],[],2,[],1);
+	w=Screen('OpenWindow',screenNumber, 0,[],[],2,[],1);
 	Screen('FillRect',w, gray);
 	Screen('Flip', w);
 	Screen('FillRect',w, gray);
