@@ -2202,8 +2202,16 @@ case 'Save WK1'
 	if ~isempty(data);
 		[fn,pn]=uiputfile('*.csv','Save the Current Surface Numerically as .CSV ');
 		if isequal(fn,0)||isequal(pn,0);errordlg('Sorry, no file selected');error('No file selected');end
-		dlmwrite([pn,fn],data.matrix,'delimiter',',');
-		dlmwrite([pn,fn],data.errormat,'delimiter',',','-append','roffset', 1);
+		if data.plottype == 4 %PSTH needed
+			mytitle=regexprep(data.matrixtitle,'\\newline',' ');
+			mytitle=regexprep(mytitle,'\\pm','+-');
+			dlmwrite([pn,fn],mytitle,'delimiter','');
+			myout=[data.time{sv.yval,sv.xval,sv.zval}',data.psth{sv.yval,sv.xval,sv.zval}'];
+			dlmwrite([pn,fn],myout,'delimiter',',','-append');
+		else
+			dlmwrite([pn,fn],data.matrix,'delimiter',',');
+			dlmwrite([pn,fn],data.errormat,'delimiter',',','-append','roffset', 1);
+		end
 	else
 		errordlg('No Data has been Plotted Yet...');
 	end
