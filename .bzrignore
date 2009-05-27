@@ -1,3 +1,4 @@
 *.asv
 *~
 *.tmp
+.DS_Store
