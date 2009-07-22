@@ -52,8 +52,7 @@ end;
 
 if nargin<2
     % Speed of grating in cycles per second:
-    cyclespersecond=2
-	;
+    cyclespersecond=2;
 end;
 
 if nargin<1

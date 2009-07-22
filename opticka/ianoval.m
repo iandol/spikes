@@ -3,19 +3,30 @@ try
 	% Disable synctests for this quick demo:
 	oldSyncLevel = Screen('Preference', 'SkipSyncTests', 0);
 	oldLevel = Screen('Preference', 'VisualDebugLevel', 1 );
+	
+	%This allows a funky overlay mode for single screen debugging - screws
+	%timing!
+% 	Screen('Preference', 'ConserveVRAM', 16384);
+% 	Screen('Preference', 'SkipSyncTests', 2);
+% 	Screen('Preference', 'VBLTimestampingMode', -1);
+% 	Screen('Preference', 'WindowShieldingLevel', 1250);
+
 	scrn = max(Screen('Screens'));
 	
-	[ptr rect]=Screen('OpenWindow',scrn,128);
-	Screen('BlendFunction', ptr, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-	%Screen('BlendFunction', ptr, 'GL_ONE', 'GL_ONE');
-	
-	%PsychImaging('PrepareConfiguration');
-	%PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
+	PsychImaging('PrepareConfiguration');
+	PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
 	%[ptr rect] = PsychImaging('OpenWindow', scrn, [128 128 128]);
 	%Screen('BlendFunction', ptr, 'GL_ONE', 'GL_ONE');
 	%Screen('BlendFunction', ptr, 'GL_SRC_ALPHA','GL_ONE_MINUS_SRC_ALPHA');
 	
-	nobjs=4000;
+	[ptr rect]=Screen('OpenWindow',scrn,128);
+	
+	[oldmaximumvalue oldclampcolors] = Screen('ColorRange', ptr, 1);
+	
+	Screen('BlendFunction', ptr, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+	%Screen('BlendFunction', ptr, 'GL_ONE', 'GL_ONE');
+	
+	nobjs=40;
 	pos = ones(2,nobjs)*mean([rect(3) rect(4)])/2;
 	col = round(rand(4,nobjs)*255);
 	col(end,:)=50;
@@ -55,8 +66,8 @@ try
 		Screen('DrawDots',ptr,pos,32,col,[],1)
 		Screen('gluDisk', ptr, [255,255,255,128]', x1, y1, 50);
 		Screen('glPoint', ptr, [255,255,255,128]', x2, y2, 100);
-		%Screen('DrawTexture', ptr, gabortex, [], [x1 y1 x1+300 y1+300], [], [], [], [], [], 0, [phase, freq/2, sc, contrast, aspectratio, 0, 0, 0]);
-		% Screen('DrawTexture', ptr, gabortex, [], [x2 y2 x2+100 y2+100], [], [], [], [], [], 0, [phase, freq/8, sc, contrast, aspectratio, 0, 0, 0]);
+		Screen('DrawTexture', ptr, gabortex, [], [x1 y1 x1+300 y1+300], [], [], [], [], [], 0, [phase, freq/2, sc, contrast, aspectratio, 0, 0, 0]);
+		Screen('DrawTexture', ptr, gabortex, [], [x2 y2 x2+100 y2+100], [], [], [], [], [], 0, [phase, freq/8, sc, contrast, aspectratio, 0, 0, 0]);
 
 		Screen('DrawingFinished', ptr);
 		
