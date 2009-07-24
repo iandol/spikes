@@ -1,5 +1,5 @@
 function DriftDemo6(angle, cyclespersecond, f)
-% function DriftDemo6(angle, cyclespersecond, f)
+% function DriftDemo6(angle, cyclespersecond, f) (with a gap)
 % ___________________________________________________________________
 %
 % This demo demonstrates how to use Screen('DrawTexture') in combination
