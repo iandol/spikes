@@ -29,7 +29,10 @@ classdef baseStimulus < handle
 			end
 		end
 		function salutation(obj,in)
-			fprintf(['\nHello from ' obj.type ' stimulus ' in '\n\n']);
+			if ~exist('in','var')
+				in = 'random user';
+			end
+			fprintf(['\nHello from ' obj.type ' stimulus, ' in '\n\n']);
 		end
    end
 end

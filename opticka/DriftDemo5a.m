@@ -156,8 +156,6 @@ try
     dst2Rect=[0 0 visible2size visible2size];
     dst2Rect=CenterRect(dst2Rect, screenRect);
 
-
-
     % Query duration of monitor refresh interval:
     ifi=Screen('GetFlipInterval', w);
 
@@ -172,7 +170,7 @@ try
     % into a shift value in "pixels per frame", assuming given
     % waitduration: This is the amount of pixels to shift our "aperture" at
     % each redraw:
-    shiftperframe= cyclespersecond * p * waitduration;
+    shiftperframe = cyclespersecond * p * waitduration;
 
     % Perform initial Flip to sync us to the VBL and for getting an initial
     % VBL-Timestamp for our "WaitBlanking" emulation:
