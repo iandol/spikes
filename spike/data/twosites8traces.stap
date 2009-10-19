@@ -1,0 +1,20 @@
+# Data filename
+datafile=DATAFILE_FULL_PATH;
+#
+# Site metadata
+site=1; label=label_1; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000100;
+site=2; label=label_2; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000100;
+#
+# Category metadata
+category=1; label=label_1;
+category=2; label=label_2;
+#
+# Trace metadata
+trace=1; catid=1; trialid=1; siteid=1; start_time=0.0; end_time=100.0;
+trace=2; catid=1; trialid=2; siteid=1; start_time=0.0; end_time=100.0;
+trace=3; catid=2; trialid=1; siteid=1; start_time=0.0; end_time=100.0;
+trace=4; catid=2; trialid=2; siteid=1; start_time=0.0; end_time=100.0;
+trace=5; catid=1; trialid=1; siteid=2; start_time=0.0; end_time=100.0;
+trace=6; catid=1; trialid=2; siteid=2; start_time=0.0; end_time=100.0;
+trace=7; catid=2; trialid=1; siteid=2; start_time=0.0; end_time=100.0;
+trace=8; catid=2; trialid=2; siteid=2; start_time=0.0; end_time=100.0;

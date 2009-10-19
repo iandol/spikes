@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -32,8 +32,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   in = ReadHist2D(plhs[0],opts);
 
   status = Info2DComp(in,opts);
-  if(status==EXIT_FAILURE)
-    mexErrMsgIdAndTxt("STAToolkit:info2d:failure","info2d failed.");
+  if(status!=EXIT_SUCCESS)
+    mexWarnMsgIdAndTxt("STAToolkit:info2d:failure","Function info2d returned with errors. Please check messages.");
 
   /* Augment the mx histogram with the new info */
   WriteHist2DAgain(in,plhs[0]);

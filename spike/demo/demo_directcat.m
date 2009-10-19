@@ -1,5 +1,3 @@
-global data sv
-
 path(path,'..');
 
 if(~exist('dataset','var'))
@@ -7,46 +5,37 @@ if(~exist('dataset','var'))
 end
 
 opts.words_per_train = 1;
-opts.tpmc_possible_words_strategy = 0;
-olddir=pwd;
-newdir=strcat(getenv('START_DIRECTORY'),filesep,'user',filesep,'spike');
-cd(newdir);
+opts.possible_words = 'unique';
+opts.legacy_binning = 0;
+opts.letter_cap = Inf;
 
 if (strcmp(dataset,'drift'))
   opts.start_time=0;
   opts.end_time=0.475;
   Delta_vec = 2.^(-4:-1);
   
-  X=staread(strrep('data/drift.stam','/',filesep));
+  X=staread(strrep('../data/drift.stam','/',filesep));
 
 elseif (strcmp(dataset,'synth'))
   opts.start_time=0;
   opts.end_time=1;
   Delta_vec = 2.^(-4:1);
   
-  X=staread(strrep('data/synth.stam','/',filesep));
+  X=staread(strrep('../data/synth.stam','/',filesep));
 
 elseif (strcmp(dataset,'taste'))
   opts.start_time=10;
   opts.end_time=12;
   Delta_vec = 2.^(-4:1);
 
-  X=staread(strrep('data/taste.stam','/',filesep));
+  X=staread(strrep('../data/taste.stam','/',filesep));
 
 else
-	Delta_vec = 2.^(-4:1);
-  opts.start_time = 0;
-  if data.wrapped==1
-	  opts.end_time = data.modtime/10000;
-	  X=makemetric(data,sv);
-  else
-	  opts.end_time = data.trialtime/10000;
-	  X=makemetric(data,sv);
-  end
+  clear dataset;
+  error('Invalid label');
   
 end
-
-cd(olddir);
+ 
 Delta_frac = 1./Delta_vec;
 
 clear out out_unshuf shuf out_unjk jk;
@@ -129,4 +118,4 @@ xlabel('Inverse bin size (1/sec)');
 ylabel('Information (bits)');
 legend('Original data (\pm 2 SE via Jackknife)','Shuffled data (\pm 2 SD)',4);
 
-clear dataset
+scalefig(gcf,1.5);

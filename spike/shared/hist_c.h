@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -21,7 +21,7 @@ struct hist2d{
 };
 
 struct histcond{
-  struct hist1dvec *class;
+  struct hist1dvec *classcond;
   struct hist1d *total;
   struct estimate *information;
 };

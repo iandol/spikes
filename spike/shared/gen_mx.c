@@ -1,11 +1,20 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Supports toolkit-wide gateway routines.
+ * This file contains C code that supports MEX-file gateway
+ * routines, but which is not directly compiled. The functions
+ * herein are useful for processing strings and allocating memory
+ * for multidimensional arrays.
+ */
+
 #include "toolkit_c.h"
 #include "toolkit_mx.h"
 
@@ -22,6 +31,12 @@ char **mxMatrixChar(int M,int N)
   return out;
 }
 
+/**
+ * @brief Allocate memory for a matrix of integers.
+ * This function allocates memory for a Matlab-managed M-by-N matrix
+ * of integers, and returns a pointer to an array of M pointers,
+ * which each refer to a (consecutive) block of N integers.
+ */
 int **mxMatrixInt(int M,int N)
 {
   int **out;
@@ -256,7 +271,70 @@ mxArray *mxCreateEmptyStruct(void)
   return out;
 }
 
-int ReadOptionsDoubleMember(const mxArray *in,char *field_name,double *member)
+/**
+ * @brief Read in the option possible_words.
+ * Reads the option possible_words, converting string data into its numerical
+ * representation, and returning a flag to indicate the status.
+ */
+int ReadOptionPossibleWords(const mxArray *in,const char *field_name,double *member)
+{
+  /* declare local variables */
+  mxArray *tmp;
+  double num;
+  int stringLength, flag, i;
+  char *str;
+
+  tmp = mxGetField(in,0,field_name);
+  if(tmp==NULL) /* field is empty */
+    flag = 0;
+  else
+  {
+    if(mxIsChar(tmp)) /* field is string */
+    {
+      /* copy string and set to lowercase */
+      stringLength = mxGetNumberOfElements(tmp) + 1;
+      str = mxCalloc(stringLength,sizeof(char));
+      if(mxGetString(tmp,str,stringLength)!=0)
+        mexErrMsgIdAndTxt("STAToolkit:ReadOptionPossibleWords:invalidValue","Could not convert string data.");
+      for(i=0;str[i];i++)
+        str[i] = tolower(str[i]);
+
+      /* use string to set member value */
+      flag = 1;
+      if(strcmp(str,"recommended")==0)
+        *member = (double)(-1.0);
+      else if(strcmp(str,"unique")==0)
+        *member = (double)(-2.0);
+      else if(strcmp(str,"total")==0)
+        *member = (double)(-3.0);
+      else if(strcmp(str,"possible")==0)
+        *member = (double)(-4.0);
+      else if(strcmp(str,"min_tot_pos")==0)
+        *member = (double)(-5.0);
+      else if(strcmp(str,"min_lim_tot_pos")==0)
+        *member = (double)(-6.0);
+      else
+      {
+        mexWarnMsgIdAndTxt("STAToolkit:ReadOptionPossibleWords:invalidValue","Unrecognized option \"%s\" for possible_words. Using default \"recommended\".",str);
+        *member = (double)(-1.0);
+      }
+    }
+    else /* field is scalar */
+    {
+      flag = 2;
+      num = mxGetScalar(tmp);
+      if(num==mxGetInf())
+        *member = (double)(0.0);
+      else if((num<1.0) || (fmod(num,1.0)>mxGetEps()))
+        mexErrMsgIdAndTxt("STAToolkit:ReadOptionPossibleWords:invalidValue","possible_words must be a positive integer. Current value is %f.",num);
+      else
+        *member = num;
+    }
+  }
+  return flag;
+}
+
+int ReadOptionsDoubleMember(const mxArray *in,const char *field_name,double *member)
 {
   mxArray *tmp;
   int flag;
@@ -272,7 +350,7 @@ int ReadOptionsDoubleMember(const mxArray *in,char *field_name,double *member)
   return flag;
 }
 
-int ReadOptionsIntMember(const mxArray *in,char *field_name,int *member)
+int ReadOptionsIntMember(const mxArray *in,const char *field_name,int *member)
 {
   mxArray *tmp;
   int flag;
@@ -288,14 +366,50 @@ int ReadOptionsIntMember(const mxArray *in,char *field_name,int *member)
   return flag;
 }
 
-void WriteOptionsDoubleMember(mxArray *out,char *field_name,double member,int flag)
+/**
+ * @brief Write the option possible_words.
+ * Writes the option possible_words, converting from certain numerical
+ * representations to their corresponding strings.
+ */
+void WriteOptionPossibleWords(mxArray *out,const char *field_name,double member,int flag)
 {
   if(flag)
-    mxAddAndSetField(out,0,field_name,mxCreateScalarDouble(member));
+    switch((int)member) /* use value to set string */
+    {
+      case 0:
+        mxAddAndSetField(out,0,field_name,mxCreateDoubleScalar(mxGetInf()));
+        break;
+      case -1:
+        mxAddAndSetField(out,0,field_name,mxCreateString("recommended"));
+        break;
+      case -2:
+        mxAddAndSetField(out,0,field_name,mxCreateString("unique"));
+        break;
+      case -3:
+        mxAddAndSetField(out,0,field_name,mxCreateString("total"));
+        break;
+      case -4:
+        mxAddAndSetField(out,0,field_name,mxCreateString("possible"));
+        break;
+      case -5:
+        mxAddAndSetField(out,0,field_name,mxCreateString("min_tot_pos"));
+        break;
+      case -6:
+        mxAddAndSetField(out,0,field_name,mxCreateString("min_lim_tot_pos"));
+        break;
+      default:
+        mxAddAndSetField(out,0,field_name,mxCreateDoubleScalar(member));
+    }
 }
 
-void WriteOptionsIntMember(mxArray *out,char *field_name,int member,int flag)
+void WriteOptionsDoubleMember(mxArray *out,const char *field_name,double member,int flag)
 {
   if(flag)
-    mxAddAndSetField(out,0,field_name,mxCreateScalarDouble((double)member));
+    mxAddAndSetField(out,0,field_name,mxCreateDoubleScalar(member));
+}
+
+void WriteOptionsIntMember(mxArray *out,const char *field_name,int member,int flag)
+{
+  if(flag)
+    mxAddAndSetField(out,0,field_name,mxCreateDoubleScalar((double)member));
 }

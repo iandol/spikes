@@ -2,18 +2,31 @@ classdef manageSpikes < handle
 	properties
 		action='check'
 		branch='main'
-		installLocation='/Users/Shard/Code/spikes'
-		bzrLocation='/usr/local/bin'
+		installLocation='/Users/Shared/Code/spikes/'
+		bzrLocation='/usr/local/bin/'
 	end
 	properties (SetAccess = private, GetAccess = private)
 		hasBzr = 0;
 		isInstalled = 0
-		arch = 'MACI'
+		arch = 'OSX'
 		allowedProperties = '(action|branch|installLocation|bzrLocation)'
 	end
 	methods
 		%%%CONSTRUCTOR%%%
 		function obj = manageSpikes(args)
+			if regexp(computer,'(MACI|MACI64)')
+				obj.arch='OSX';
+			else
+				obj.arch='WIN';
+			end
+			switch obj.arch
+				case 'OSX'
+					obj.installLocation='/Users/Shared/Code/spikes';
+					obj.bzrLocation='/usr/local/bin/';
+				case 'WIN'
+					obj.installLocation='c:\Code\spikes\';
+					obj.bzrLocation='c:\bzr\';
+			end
 			%Initialise for superclass, stops a noargs error
 			if nargin == 0
 				args.action = 'check';
@@ -23,11 +36,12 @@ classdef manageSpikes < handle
 				fnames = fieldnames(args); %find our argument names
 				for i=1:length(fnames);
 					if regexp(fnames{i},obj.allowedProperties) %only set if allowed property
-						obj.salutation(fnames{i});
+						obj.salutation(['Adding ' fnames{i} '|' args.(fnames{i}) ' command...']);
 						obj.(fnames{i})=args.(fnames{i}); %we set up the properies from the arguments as a structure
 					end
 				end
 			elseif ischar(args)
+				obj.action = args;
 				switch args
 					case 'install'
 						obj.install('installLocation')
@@ -43,54 +57,48 @@ classdef manageSpikes < handle
 					obj.check('Hello')
 				case 'info'
 			end
-			obj.salutation('startup');
+			obj.salutation('Finished running manageSpikes...');
 		end
-		
+
 		%%%Check if things are installed or not%%%
 		function check(obj,~)
-			if regexp(computer,'(MACI|MACI64)')
-				obj.arch='OSX';
-			else
-				obj.arch='WIN';
-			end
-			switch obj.arch
-				case 'OSX'
-					obj.installLocation='/Users/Shared/Code/spikes';
-					obj.bzrLocation='/usr/local/bin/';
-					
-				case 'WIN'
-					obj.installLocation='c:\Code\spikes\';
-					obj.bzrLocation='c:\bzr\';
-			end
-			
-			[status,~]=unix([obj.bzrLocation filesep 'bzr']);
+			[status,~]=system([obj.bzrLocation filesep 'bzr']);
 			if status == 0
 				obj.hasBzr = 1;
 			end
-			
 			if exist(obj.installLocation,'dir')
 				obj.isInstalled = 1;
 			end
-			
 			if obj.hasBzr && obj.isInstalled
-				sprintf('\n\nWe have found an installed Spikes and you have Bzr able to update this install...\n')
+				obj.salutation('We have found an installed Spikes and you have Bzr able to update this install...');
 			elseif obj.hasBzr
-				sprintf('\n\nCouldn''t find install dir!!!\n')
+				obj.salutation('Spikes directory hasn''t been found. Run manageSpikes(''Install'') to install Spikes into Matlab.');
 			elseif obj.isInstalled
-				sprintf('\n\nCouldn''t find BZR, please install it!!!\n')
+				obj.salutation('Couldn''t find BZR, please install it!!!');
 			else
-				sprintf('\n\nCouldn''t find anything!!!\n')
+				obj.salutation('Couldn''t find anything!!!');
 			end
-			
-			
+		end
+
+		function install(obj,~)
+			obj.check();
+			if obj.hasBzr && obj.isInstalled %%%We need to upgrade
+				cd(obj.installLocation);
+				[status,values]=system([obj.bzrLocation 'bzr log -r -1']);
+				obj.salutation(values);
+			elseif obj.hasBzr
+				[status,values]=system([obj.bzrLocation 'bzr branch sftp://amscode@144.82.131.18/Code/user ' obj.installLocation]);
+				obj.salutation(values)
+			end
 		end
 		
 		%%%Salutation%%%
 		function salutation(obj,in)
 			if ~exist('in','var')
-				in = 'random user';
+				
+			else
+				disp(sprintf('---> %s',in));
 			end
-			fprintf(['\nHello from ' in '\n\n']);
 		end
 	end
 end

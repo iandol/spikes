@@ -1,0 +1,27 @@
+body {
+  background: white;
+  color: black;
+}
+
+div.fragment { 
+	background-color: #e7ebf7;
+	padding: 10px;
+}
+
+div.box { 
+	background-color: #e7ebf7;
+}
+
+h1 {
+	color: #003333;
+	font-family: arial,sans-serif;
+}
+
+h2 {
+	color: #003333;
+	font-family: arial,sans-serif;
+}
+
+tt {
+font-family: monospace;
+}

@@ -1,11 +1,17 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Sorting routines for C-style arrays.
+ * This file contains C code used to sort C-style arrays of numbers.
+ */
+
 #include "toolkit_c.h"
 
 /* Defines for dgsort() */
@@ -13,6 +19,11 @@
 #define THRESH 7
 #define NSTACK 50
 
+/**
+ * @brief Checks whether an array of doubles is sorted.
+ * Returns an integer to indicate whether an array of doubles is (1) or is not
+ * (0) sorted from greatest to least.
+ */
 int IsSortedDouble(int M,double *in)
 {
   int m,out;
@@ -75,6 +86,21 @@ int CountSortedInt(int M,int *sorted,int *sort_idx,int *uni_list,int *uni_i,int 
   return u;
 }
 
+/**
+ * @brief Returns the number of unique rows in an array.
+ * Uses a sorting algorithm to determine the number of unique rows in the array
+ * list, and places the list in uni_list. Also sets the sort indexes uni_i and
+ * uni_j, and the row counts in cnt.
+ * @param[in] M The number of rows in sorted.
+ * @param[in] N The number of columns in sorted.
+ * @param[in] list The array in which to count the unique rows.
+ * @param[out] uni_list An array containing the unique rows of list.
+ * @param[out] uni_i An index to relate uni_list to list (i.e.,
+ * uni_list[i]==unsorted[uni_i[i]]).
+ * @param[out] uni_j An index to relate list to uni_list (i.e.,
+ * unsorted[i]==uni_list[uni_j[i]]).
+ * @param[out] cnt An array of the row counts.
+ */
 int UniqueRowsInt(int M,int N,int **list,int **uni_list,int *uni_i,int *uni_j,int *cnt)
 {
   int **sorted;
@@ -96,6 +122,24 @@ int UniqueRowsInt(int M,int N,int **list,int **uni_list,int *uni_i,int *uni_j,in
   return u;
 }
 
+/**
+ * @brief Count the unique rows in a sorted array.
+ * Returns the number of unique rows in the array sorted, and places the list
+ * of unique rows in uni_list. Also sets the sort indexes uni_i and uni_j, and
+ * the row counts in cnt.
+ * @param[in] M The number of rows in sorted.
+ * @param[in] N The number of columns in sorted.
+ * @param[in] sorted The sorted array in which to count the unique rows.
+ * @param[in] sort_idx The sorting index that specifies from which row of the
+ * unsorted array each row of sorted derives (i.e.,
+ * sorted[i]==unsorted[sort_idx[i]]).
+ * @param[out] uni_list An array containing the unique rows of sorted.
+ * @param[out] uni_i An index to relate uni_list to the unsorted array (i.e.,
+ * uni_list[i]==unsorted[uni_i[i]]).
+ * @param[out] uni_j An index to relate the unsorted array to uni_list (i.e.,
+ * unsorted[i]==uni_list[uni_j[i]]).
+ * @param[out] cnt An array of the row counts.
+ */
 int CountSortedRowsInt(int M,int N,int **sorted,int *sort_idx,int **uni_list,int *uni_i,int *uni_j,int *cnt)
 {
   int m,u,n1,n;
@@ -382,6 +426,20 @@ void SortInt(int N, int *A, int *C, int *idx)
   free(run_length);
 }
 
+/**
+ * @brief Returns the number of unique doubles in a list.
+ * Uses a sorting algorithm to determine the number of unique doubles in the
+ * list list, and places the list in uni_list. Also sets the sort indexes uni_i
+ * and uni_j, and the counts in cnt.
+ * @param[in] M The number of rows in list.
+ * @param[in] list The list in which to count the unique doubles.
+ * @param[out] uni_list A list containing the unique doubles of list.
+ * @param[out] uni_i An index to relate uni_list to list (i.e.,
+ * uni_list[i]==unsorted[uni_i[i]]).
+ * @param[out] uni_j An index to relate list to uni_list (i.e.,
+ * unsorted[i]==uni_list[uni_j[i]]).
+ * @param[out] cnt An array of the counts.
+ */
 int UniqueDouble(int M,double *list,double *uni_list,int *uni_i,int *uni_j,int *cnt)
 {
   double *sorted;

@@ -1,17 +1,37 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Bin spike trains for direct method analysis.
+ * This file contains C code that is compiled into the MEX-file
+ * directbin.mex*. Its functionality may be accessed in Matlab
+ * by calling the function directbin. Additional documentation
+ * resides in directbin.m, and can be found by typing "help
+ * directbin" at the Matlab command prompt.
+ * @see DirectBinComp.c.
+ */
+
 #include "../../shared/toolkit_c.h"
 #include "../../shared/toolkit_mx.h"
-#include "direct.h"
+#include "direct_c.h"
+#include "direct_mx.h"
 
+/**
+ * @brief Interfaces C and Matlab data.
+ * This function is the MEX-file gateway routine. Please see the Matlab
+ * MEX-file documentation (http://www.mathworks.com/access/helpdesk/help/techdoc/matlab_external/f43721.html)
+ * for more information.
+ */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
+
+  /* allocate variables */
   struct input *X;
   struct options_direct *opts;
   int m,p,n,z;
@@ -24,6 +44,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   int status;
   int temp_N;
 
+  /* check number of inputs (nargin) and outputs (nargout) */
   if((nrhs<1) | (nrhs>2))
     mexErrMsgIdAndTxt("STAToolkit:directbin:numArgs","1 or 2 input arguments required.");
   if((nlhs<1) | (nlhs>2))
@@ -31,6 +52,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   X = ReadInput(prhs[0]);
 
+  /* get or set options */
   if(nrhs<2)
     opts = ReadOptionsDirect(mxCreateEmptyStruct());
   else if(mxIsEmpty(prhs[1]))
@@ -41,6 +63,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   /* Read in time range */
   ReadOptionsDirectTimeRange(opts,X);
   
+  /* check options */
   if(opts->Delta_flag==0)
     {
       opts[0].Delta = (*opts).t_end-(*opts).t_start;
@@ -49,7 +72,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
   
   if(opts->Delta <= 0)
-    mexWarnMsgIdAndTxt("STAToolkit:directbin:invalidValue","counting_bin_size must be positive. It is currently set to %f.\n",opts[0].Delta);
+    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","counting_bin_size must be positive. It is currently set to %f.\n",opts[0].Delta);
 
   if(opts->words_per_train_flag==0)
     {
@@ -58,8 +81,28 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       mexWarnMsgIdAndTxt("STAToolkit:directbin:missingParameter","Missing parameter words_per_train. Using default value %d.\n",opts[0].words_per_train);
     }
 
-  if(opts->Delta <= 0)
-    mexWarnMsgIdAndTxt("STAToolkit:directbin:invalidValue","words_per_train must be positive. It is currently set to %d.\n",opts[0].words_per_train);
+  if(opts->words_per_train <= 0)
+    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","words_per_train must be positive. It is currently set to %d.\n",opts[0].words_per_train);
+
+ if(opts->legacy_binning_flag==0)
+    {
+      opts[0].legacy_binning = (int)DEFAULT_LEGACY_BINNING;
+      opts[0].legacy_binning_flag=1;
+      mexWarnMsgIdAndTxt("STAToolkit:directbin:missingParameter","Missing parameter legacy_binning. Using default value %d.\n",opts[0].legacy_binning);
+    }
+
+  if((opts->legacy_binning!=0) & (opts->legacy_binning!=1))
+    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option legacy_binning set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",opts[0].legacy_binning);
+
+ if(opts->letter_cap_flag==0)
+    {
+      opts[0].letter_cap = (int)DEFAULT_LETTER_CAP;
+      opts[0].letter_cap_flag=1;
+      mexWarnMsgIdAndTxt("STAToolkit:directbin:missingParameter","Missing parameter letter_cap. Using default value %d.\n",opts[0].letter_cap);
+    }
+
+  if(opts->letter_cap<0)
+    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option letter_cap set to an invalid value. Must be a positive integer or Inf. It is currently set to %d.\n",opts[0].letter_cap);
 
   if((*X).N>1)
     {
@@ -70,8 +113,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	  mexWarnMsgIdAndTxt("STAToolkit:directbin:missingParameter","Missing parameter sum_spike_trains. Using default value %d.\n",opts[0].sum_spike_trains);
 	}
 
-      if((opts->sum_spike_trains < 0) | (opts->sum_spike_trains > 1))
-	mexWarnMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option sum_spike_trains set to an invalid value. Must be 0 or 1. Using default value %d.\n",(*opts).sum_spike_trains);
+      if((opts->sum_spike_trains!=0) & (opts->sum_spike_trains!=1))
+	mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option sum_spike_trains set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",(*opts).sum_spike_trains);
       
       if(opts->permute_spike_trains_flag==0)
 	{
@@ -80,8 +123,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	  mexWarnMsgIdAndTxt("STAToolkit:directbin:missingParameter","Missing parameter permute_spike_trains. Using default value %d.\n",opts[0].permute_spike_trains);
 	}
 
-      if((opts->permute_spike_trains < 0) | (opts->permute_spike_trains > 1))
-	mexWarnMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option permute_spike_trains set to an invalid value. Must be 0 or 1. Using default value %d.\n",(*opts).permute_spike_trains);
+      if((opts->permute_spike_trains!=0) & (opts->permute_spike_trains!=1))
+	mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option permute_spike_trains set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",(*opts).permute_spike_trains);
     }
 
   P_total = GetNumTrials(X);
@@ -130,6 +173,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	}
     }
 
+  /* output options used */
   if(nrhs<2)
     plhs[1] = WriteOptionsDirect(mxCreateEmptyStruct(),opts);
   else if(mxIsEmpty(prhs[1]))
@@ -137,6 +181,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   else
     plhs[1] = WriteOptionsDirect(prhs[1],opts);
 
+  /* free memory */
   mxFreeInput(X); 
   mxFreeMatrixInt(binned);
   mxFree(P_vec);

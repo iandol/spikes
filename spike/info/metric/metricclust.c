@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -8,7 +8,8 @@
  */
 #include "../../shared/toolkit_c.h"
 #include "../../shared/toolkit_mx.h"
-#include "metric.h"
+#include "metric_c.h"
+#include "metric_mx.h"
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {

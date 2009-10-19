@@ -1,13 +1,21 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Count spike train words disregarding class.
+ * This file contains the computational routines required by the
+ * MEX-file directcounttotal.c. 
+ * @see directcounttotal.c.
+ */
+
 #include "../../shared/toolkit_c.h"
-#include "direct.h"
+#include "direct_c.h"
 
 int DirectCountCondComp(int **binned,int P_total,int N,
 		     int *P_vec,int M,
@@ -26,7 +34,7 @@ int DirectCountCondComp(int **binned,int P_total,int N,
   sorted1 = MatrixInt(P_total,S);
   sort_idx1 = (int *)malloc(P_total*sizeof(int));
  
-  status = DirectCountClassComp(binned,hashed,P_total,N,S,P_vec,M,(*cond_hist).class,sorted1,sort_idx1);
+  status = DirectCountClassComp(binned,hashed,P_total,N,S,P_vec,M,(*cond_hist).classcond,sorted1,sort_idx1);
   status = DirectCountTotal2Comp(binned,P_total,N,S,P_vec,M,(*cond_hist).total,sorted1,sort_idx1);
 
   FreeMatrixInt(sorted1);
@@ -271,6 +279,13 @@ int DirectCountTotalComp(int **binned,int **hashed,int P_total,int N,int S,struc
   return EXIT_SUCCESS;
 }
 
+/**
+ * @brief Gets the base, subwords, and letters from binned data.
+ * This function gets the base (*B_ptr) of the words, number of subwords (*S_ptr)
+ * in a word, and number of letters (*L_ptr) in a subword, from binned data
+ * (**binned) whose dimension is determined from the total number of rows of data
+ * (P_total), and the number of columns (N).
+ */
 void GetBSL(int **binned,int P_total,int N,int *B_ptr,int *S_ptr,int *L_ptr)
 {
   int B,D,S,L;
@@ -289,6 +304,11 @@ void GetBSL(int **binned,int P_total,int N,int *B_ptr,int *S_ptr,int *L_ptr)
   *L_ptr = L;
 }
 
+/**
+ * @brief Parse binned data.
+ * This function parses data (**binned), based on dimensional parameters
+ * (P, N), and words (B, S, L), and gets the hashed result (**hashed).
+ */
 void HashWords(int **binned,int P,int N,int B,int S,int L,int **hashed)
 {
   int p,n,s,l;

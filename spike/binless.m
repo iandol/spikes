@@ -76,7 +76,7 @@ function [out,opts_used]=binless(X,opts)
 %   BINLESS_SHUF, BINLESS_JACK.
 
 %
-%  Copyright 2006, Weill Medical College of Cornell University
+%  Copyright 2009, Weill Medical College of Cornell University
 %  All rights reserved.
 %
 %  This software is distributed WITHOUT ANY WARRANTY
@@ -87,9 +87,38 @@ if(nargin<2)
   opts=[];
 end
 
+% Parameter checking necessary to avoid nonsensical options
+if(isfield(opts,'entropy_estimation_method') && ~isempty(strmatch('bub',opts.entropy_estimation_method,'exact')))
+  if(isfield(opts,'possible_words'))
+    if(strcmpi(opts.possible_words,'total') || strcmpi(opts.possible_words,'possible') || strcmpi(opts.possible_words,'min_tot_pos') || strcmpi(opts.possible_words,'min_lim_tot_pos'))
+      error('STAToolkit:binless:invalidArg',['opts.possible_words=''' opts.possible_words ''' should not be used with the binless method.']);
+    end
+  elseif(isfield(opts,'bub_possible_words_strategy') && (opts.bub_possible_words_strategy~=0))
+    error('STAToolkit:binless:invalidArg','Only opts.bub_possible_words_strategy=0 should be used with the binless method.');
+  end
+end
+if(isfield(opts,'entropy_estimation_method') && ~isempty(strmatch('tpmc',opts.entropy_estimation_method,'exact')))
+  if(isfield(opts,'possible_words'))
+    if(strcmpi(opts.possible_words,'total') || strcmpi(opts.possible_words,'possible') || strcmpi(opts.possible_words,'min_tot_pos') || strcmpi(opts.possible_words,'min_lim_tot_pos'))
+      error('STAToolkit:binless:invalidArg',['opts.possible_words=''' opts.possible_words ''' should not be used with the binless method.']);
+    end
+  elseif(isfield(opts,'tpmc_possible_words_strategy') && (opts.tpmc_possible_words_strategy~=0))
+    error('STAToolkit:binless:invalidArg','Only opts.tpmc_possible_words_strategy=0 should be used with the binless method.');
+  end
+end
+if(isfield(opts,'entropy_estimation_method') && ~isempty(strmatch('ww',opts.entropy_estimation_method,'exact')))
+  if(isfield(opts,'possible_words'))
+    if(strcmpi(opts.possible_words,'total') || strcmpi(opts.possible_words,'possible') || strcmpi(opts.possible_words,'min_tot_pos') || strcmpi(opts.possible_words,'min_lim_tot_pos'))
+      error('STAToolkit:binless:invalidArg',['opts.possible_words=''' opts.possible_words ''' should not be used with the binless method.']);
+    end
+  elseif(isfield(opts,'ww_possible_words_strategy') && (opts.ww_possible_words_strategy~=0))
+    error('STAToolkit:binless:invalidArg','Only opts.ww_possible_words_strategy=0 should be used with the binless method.');
+  end
+end
+
 [out.times,out.counts,out.categories,opts] = binlessopen(X,opts);
 [out.warped,opts] = binlesswarp(out.times,opts);
 [out.embedded,opts] = binlessembed(out.warped,opts);
 [out.I_part,out.I_cont,out.I_count,out.I_total,opts] = ...
-    binlessinfo(out.embedded,out.counts,out.categories,X.M,opts);
+  binlessinfo(out.embedded,out.counts,out.categories,X.M,opts);
 opts_used = opts;

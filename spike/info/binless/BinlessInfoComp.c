@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -7,7 +7,7 @@
  *  at http://neurodatabase.org/src/license.
  */
 #include "../../shared/toolkit_c.h"
-#include "binless.h"
+#include "binless_c.h"
 /* #define DEBUG */
 
 int BinlessInfoComp(struct options_binless *opts,
@@ -153,9 +153,10 @@ int BinlessInfoComp(struct options_binless *opts,
 	      N_Z_tot += N_Z[m];
 	      i++;
 	    }
+	  free(N_Z);
 
 	  /* Finally, the singletons */
-	  /* If we are ignoring singles, u will be 0 */
+	  /* If we are ignoring singletons, segfun sets u to 0 */
 	  for(single_idx=0;single_idx<u;single_idx++)
 	    {
 	      N_part[i] = N_G_a[single_idx];
@@ -165,57 +166,63 @@ int BinlessInfoComp(struct options_binless *opts,
 	  if(i>N_n[idx])
 	    printf("Warning! Badness!\n");
 
-	  N_cur = N_Z_tot+N_C+u; /* This is the number of rows in N_part */
-
-	  /* Convert N_part to double */
-	  N_part_double = MatrixDouble(C_flag+b+u,S);
-
-	  for(i=0;i<C_flag+b+u;i++)
-	    for(s=0;s<S;s++)
-	      N_part_double[i][s] = (double) N_part[i][s];
-	  
-	  free(N_part);
-	  free(N_Z);
-	  FreeMatrixInt(N_Z_a);
-	  FreeMatrixInt(N_G_a);
-	  
 	  /**********************************************************/
 	  /* Now, calculate I_partition, I_continuous, and I_timing */
 	  /**********************************************************/
 
-	  /* This is what changed. 3/3/05 */
-	  /* part_hist = CAllocHist2D(N_cur,1,opts); */
-	  part_hist = CAllocHist2D((C_flag+b+u)*S,1,opts_ent);
-	  
-	  cur_I_part = CAllocEst(opts_ent);
-	  if((N_C+N_Z_tot==0) & ((*opts).single_strat==0))
-	    ZeroEst(cur_I_part,opts_ent);
+	  /* N_cur is the number of spike trains under consideration */
+	  /* Takes into account any reduction due to ignorance of singletons */
+	  N_cur = N_C+N_Z_tot+u; 
 
+	  /* First, compute I_part */
+	  cur_I_part = CAllocEst(opts_ent);
+	  
+	  /* If there are not zero-distance subsets and there are no singletons, 
+	     then cur_I_part = 0 */
+
+	  if(b+u==0)
+	    ZeroEst(cur_I_part,opts_ent);
 	  else
 	    {
-	      MatrixToHist2DComp(N_part_double,C_flag+b+u,S,part_hist,opts_ent);
-	      Info2DComp(part_hist,opts_ent);
-	    }
-	  FreeMatrixDouble(N_part_double);
+	      /* Make part_hist */
 
-	  /* Scale I_part */
-	  ScaleEst((*part_hist).information,N_cur/(double)N,cur_I_part,opts_ent);
-	  CFreeHist2D(part_hist,opts_ent);
+	      /* Convert N_part to double */
+	      N_part_double = MatrixDouble(C_flag+b+u,S);
+
+	      for(i=0;i<C_flag+b+u;i++)
+		for(s=0;s<S;s++)
+		  N_part_double[i][s] = (double) N_part[i][s];
+
+	      part_hist = CAllocHist2D((C_flag+b+u)*S,1,opts_ent);
+	      MatrixToHist2DComp(N_part_double,C_flag+b+u,S,part_hist,opts_ent);
+	      FreeMatrixDouble(N_part_double);
+
+	      /* Compute the information */
+	      Info2DComp(part_hist,opts_ent);
+	      
+	      /* Scale I_part */
+	      ScaleEst((*part_hist).information,N_cur/(double)N,cur_I_part,opts_ent);
+	      CFreeHist2D(part_hist,opts_ent);
+	    }
+
 	  IncEst(I_part,cur_I_part,opts_ent);
 
 	  /* Compute I_continuous (Eq. 14) */
 	  cur_I_cont = I_cont_calc(C,N_C,R,C_a,N_C_a,S);
+
 	  /* Add I_cont into I_timing (with appropriate scaling) (Eq. 21) */
 	  *I_cont += (N_C/(double)N)*cur_I_cont;
 
-	  free(N_C_a);
-	  free(C_a);
-	  FreeMatrixDouble(C);
-	  
 #ifdef DEBUG
-	  printf("cur_I_part=%f cur_I_cont=%f\n",(*cur_I_part).value,cur_I_cont);
+	  printf("cur_I_part=%f cur_I_cont=%f\n",cur_I_part[0].value,cur_I_cont);
 #endif
 	  CFreeEst(cur_I_part,opts_ent);
+	  free(N_C_a);
+	  FreeMatrixInt(N_G_a);
+	  FreeMatrixInt(N_Z_a);
+	  free(N_part);
+	  free(C_a);
+	  FreeMatrixDouble(C);
 	} /* End "else the spike trains are nonempty" */
 
       N_alt += N_cur;

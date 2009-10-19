@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -7,7 +7,7 @@
  *  at http://neurodatabase.org/src/license.
  */
 #include "../../shared/toolkit_c.h"
-#include "metric.h"
+#include "metric_c.h"
 /* #define DEBUG */
 
 void MakeSubtrains(double *b,int *s,int N,int L,double **b_sub)
@@ -110,7 +110,7 @@ void MakeIndex(int prod_n,int L,int *n,int **j_mat,int **j_mat_sorted,int **j_pr
   /* Do the reverse lookup */
   for(j=0;j<prod_n;j++)
     for(w=0;w<L;w++)
-      if(j_prev_mat_sorted[j][w]>=0)
+      if(j_prev_mat_temp[j][w]>=0)
 	j_prev_mat_sorted[j][w] = lookup[j_prev_mat_temp[j][w]];
 
 #ifdef DEBUG

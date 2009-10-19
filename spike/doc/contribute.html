@@ -1,150 +1,98 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Spike Train Analysis Toolkit: Contributing to the toolkit</title>
-<link rel="stylesheet" type="text/css" href="style.css" title="default">
+	<meta name="generator" content="HTML Tidy for Linux/x86 (vers 7 December 2008), see www.w3.org" />
+	<title>Spike Train Analysis Toolkit: Contributing to the toolkit</title>
+	<link rel="stylesheet" type="text/css" href="style.css" title="default" />
 </head>
-
 <body>
-
-<table>
-<tr>
-<td><a href="index.html"><img src="logo2.png"></a></td>
-<td><h1>Spike Train Analysis Toolkit<br>Contributing to the toolkit</h1></td>
-</tr>
-</table>
-
-<h2>Introduction</h2>
-
-<p>The Spike Train Analyis Toolkit consists of several components:
-
-<ul>
-
-<li><b>Entropy methods</b> estimate the entropy of a random variable from a vector of word counts. Examples include plug-in, Treves-Panzeri-Miller-Carlton, jackknife, Ma bound, best upper bound, and Chao-Shen. Entropy methods are accompanied by <b>variance methods</b>, which can be used to generate confidence limits. Variance methods fall into two classes: <b>general variance methods</b>, which apply to all entropy methods, and <b>specific variance methods</b>, which apply to particular entropy methods.
-
-<li><b>Information methods</b> estimate the mutual information between an ensemble of spike train responses and a set of experimental conditions. An information method may consist of several calls to entropy methods. Examples include the direct method, the metric space method, and the binless embedding method.
-
-<li>Components for reading .stad/.stam files into the input data structure we have developed.
-
-<li>Components for manipulating histogram data structures that we have developed.
-
-<li>Various utilities for processing method options, allocating/freeing memory, and mathematical/sorting operations.
-
-</ul>
-
-Members of the community are invited to contribute information or entropy methods.</p>
-
-<h2>Use of Matlab and C</h2>
-
-<p>The Spike Train Analysis Toolkit is written in a combination of Matlab and C. The computational code is written in C, which was chosen because of its fast execution, the availability of free compilers, and the potential for porting to parallel clusters. The user interface to the toolkit is written in <a href="http://www.mathworks.com/products/matlab/">Matlab</a>, which was chosen for the ease with which data can be manipulated and visualized. The interface between the C code and the Matlab code is written in C using Matlab's <a href="http://www.mathworks.com/support/tech-notes/1600/1605.html">MEX API</a>.</p>
-
-<p>Members of the community have the option of contributing implementations in Matlab or in C/MEX. For each case, we provide guidelines that contributors should follow.</p>
-
-<h2>Information methods</h2>
-
-<p>In general, we recommend that information methods be divided into several modules which correspond to distinct steps and may return useful intermediate results.</p>
-
-<p>The preferred function format is 
-<blockquote class="example"><code>[out,opts_used]=<i>method</i>(in,opts)</code></blockquote>
-You may want to have the main function call modules that return intermediate results of interest. The modules will also consist of Matlab functions, although intermediate variables will be passed among the module functions.</p>
-
-<p>If the underlying computations are implemented in C/MEX, you must add the compilation commands to the file <code>make.m</code>. Also, we recommend creating a directory in the <code>info</code> directory and putting the associated files there. </p>
-
-<h2>Entropy methods</h2>
-
-<h3>An entropy method in Matlab</h3>
-
-<p>It is not possible to seamlessly integrate entropy methods into the toolkit without writing them in C and the MEX framework. We will me happy to work with you to adapt your method for integration with the toolkit.</p>
-
-<h3>An entropy method in C/MEX</h3>
-
-<p>For the remainder of this document, <code><i>quant</i></code> will refer to the quantity being estimated (i.e., <code>entropy</code> or <code>variance</code>) and <code><i>method</i></code> refers to the method name.</p>
-
-<ol>
-
-<li>Add <code><i>quant</i>_<i>method</i>_c.c</code> to the <code>entropy/</code> directory.
-	
-<li>In <code>entropy_c.h</code>:
-
-<ol>
-
-<li>Increment the value of <code>ENT_EST_METHS</code>, <code>SPEC_VAR_EST_METHS</code>, or <code>GEN_VAR_EST_METHS</code>.
-
-<li>Add your function declaration:
-
-<blockquote class="example"><code>extern double <i>quant</i>_<i>method</i>(struct hist1d *in,struct options_entropy *opts);</code></blockquote>
-
-</ol>
-
-<li>In <code>entropy_c.c</code>:
-
-<ol>
-
-<li>Add your method code name to either <code>ent_est_meth_list</code> or <code>var_est_meth_list</code>.
-
-<li>Add <code><i>quant</i>_<i>method</i></code> to the statements that define the elements of the <code>entropy_fun</code>, <code>specific_variance_fun</code>, or <code>general_variance_fun</code> function pointers.
-
-</ol>
-
-<li>In <code>make.m</code> add <code>entropy/<i>quant</i>_<i>method</i>_c.c</code> to the string <code>entropy_files</code>.
-
-</ol>
-
-<h4>If your entropy method does not require any options</h4>
-
-<ol>
-
-<li>In <code>entropy_mx.c</code>:
-
-<ol>
-
-<li>In <code>ReadOptionsEntropy()</code>, add <code>read_options_<i>quant</i>_null</code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.
-
-<li>In <code>WriteOptionsEntropy()</code>, add <code>write_options_<i>quant</i>_null</code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.
-
-</ol>
-
-</ol>
-
-<h4>If your entropy method requires options</h4>
-
-<ol>
-
-<li>Add <code><i>quant</i>_<i>method</i>_mx.c</code> to the <code>entropy/</code> directory.
-
-<li>In <code>entropy_c.h</code>:
-
-<ol>
-
-<li>Add the default parameter values to the <code>#define</code> statements
-
-<li>Add the options to the <code>options_entropy</code> structure.
-
-</ol>
-
-<li>In <code>entropy_mx.h</code>, add the read/write options function declarations:
-
-<blockquote class="example"><code>
-extern void read_options_<i>quant</i>_<i>method</i>(const mxArray *in,struct options_entropy *opts);<br>
-extern mxArray *write_options_<i>quant</i>_<i>method</i>(const mxArray *in,struct options_entropy *opts);</code></blockquote>
-
-<li>In <code>entropy_mx.c</code>:
-
-<ol>
-
-<li>In <code>ReadOptionsEntropy()</code>, add <code>read_options_<i>quant</i>_<i>method</i></code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.
-
-<li>In <code>WriteOptionsEntropy()</code>, add <code>write_options_<i>quant</i>_<i>method</i></code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.
-
-</ol>
-
-<li>In <code>make.m</code> add <code>entropy/<i>quant</i>_<i>method</i>_mx.c</code> to the string <code>entropy_files</code>.
-
-</ol>
-
-<hr noshade>
-
-<p align="center"><a href="index.html">Back to contents.</a></p>
-
+	<table>
+		<tr>
+			<td><a href="index.html"><img src="logo2.png" /></a></td>
+			<td>
+				<h1>Spike Train Analysis Toolkit<br />
+				Contributing to the toolkit</h1>
+			</td>
+		</tr>
+	</table>
+	<h2>Introduction</h2>
+	<p>The Spike Train Analyis Toolkit consists of several components:</p>
+	<ul>
+		<li><b>Entropy methods</b> estimate the entropy of a random variable from a vector of word counts. Examples include plug-in, Treves-Panzeri-Miller-Carlton, jackknife, Ma bound, best upper bound, and Chao-Shen. Entropy methods are accompanied by <b>variance methods</b>, which can be used to generate confidence limits. Variance methods fall into two classes: <b>general variance methods</b>, which apply to all entropy methods, and <b>specific variance methods</b>, which apply to particular entropy methods.</li>
+		<li><b>Information methods</b> estimate the mutual information between an ensemble of spike train responses and a set of experimental conditions. An information method may consist of several calls to entropy methods. Examples include the direct method, the metric space method, and the binless embedding method.</li>
+		<li>Components for reading .stad/.stam files into the input data structure we have developed.</li>
+		<li>Components for manipulating histogram data structures that we have developed.</li>
+		<li>Various utilities for processing method options, allocating/freeing memory, and mathematical/sorting operations.</li>
+	</ul>Members of the community are invited to contribute information or entropy methods.
+	<h2>Use of Matlab and C</h2>
+	<p>The Spike Train Analysis Toolkit is written in a combination of Matlab and C. The computational code is written in C, which was chosen because of its fast execution, the availability of free compilers, and the potential for porting to parallel clusters. The user interface to the toolkit is written in <a href="http://www.mathworks.com/products/matlab/">Matlab</a>, which was chosen for the ease with which data can be manipulated and visualized. The interface between the C code and the Matlab code is written in C using Matlab's <a href="http://www.mathworks.com/support/tech-notes/1600/1605.html">MEX API</a>.</p>
+	<p>Members of the community have the option of contributing implementations in Matlab or in C/MEX. For each case, we provide guidelines that contributors should follow.</p>
+	<h2>Information methods</h2>
+	<p>In general, we recommend that information methods be divided into several modules which correspond to distinct steps and may return useful intermediate results.</p>
+	<p>The preferred function format is</p>
+	<blockquote class="example">
+		<code>[out,opts_used]=<i>method</i>(in,opts)</code>
+	</blockquote>You may want to have the main function call modules that return intermediate results of interest. The modules will also consist of Matlab functions, although intermediate variables will be passed among the module functions.
+	<p>If the underlying computations are implemented in C/MEX, you must add the compilation commands to the file <code>make.m</code>. Also, we recommend creating a directory in the <code>info</code> directory and putting the associated files there.</p>
+	<h2>Entropy methods</h2>
+	<h3>An entropy method in Matlab</h3>
+	<p>It is not possible to seamlessly integrate entropy methods into the toolkit without writing them in C and the MEX framework. We will be happy to work with you to adapt your method for integration with the toolkit.</p>
+	<h3>An entropy method in C/MEX</h3>
+	<p>For the remainder of this document, <code><i>quant</i></code> will refer to the quantity being estimated (i.e., <code>entropy</code> or <code>variance</code>) and <code><i>method</i></code> refers to the method name.</p>
+	<ol>
+		<li>Add <code><i>quant</i>_<i>method</i>_c.c</code> to the <code>entropy/</code> directory.</li>
+		<li>In <code>entropy_c.h</code>:
+			<ol>
+				<li>Increment the value of <code>ENT_EST_METHS</code>, <code>SPEC_VAR_EST_METHS</code>, or <code>GEN_VAR_EST_METHS</code>.</li>
+				<li>Add your function declaration (where <code><i>struct_type</i></code> is <code>estimate</code> for <code>entropy</code> methods, and <code>nv_pair</code> for <code>variance</code> methods):
+					<blockquote class="example">
+						<code>extern int <i>quant</i>_<i>method</i>(struct hist1d *in,struct options_entropy *opts,struct <i>struct_type</i> *out);</code>
+					</blockquote>
+				</li>
+			</ol>
+		</li>
+		<li>In <code>entropy_c.c</code>:
+			<ol>
+				<li>Add your method code name to either <code>ent_est_meth_list</code> or <code>var_est_meth_list</code>.</li>
+				<li>Add <code><i>quant</i>_<i>method</i></code> to the statements that define the elements of the <code>entropy_fun</code>, <code>specific_variance_fun</code>, or <code>general_variance_fun</code> function pointers.</li>
+			</ol>
+		</li>
+		<li>In <code>make.m</code> add <code>entropy/<i>quant</i>_<i>method</i>_c.c</code> to the string <code>entropy_files</code>.</li>
+	</ol>
+	<h4>If your entropy method does not require any options</h4>
+	<ol>
+		<li>In <code>entropy_mx.c</code>:
+			<ol>
+				<li>In <code>ReadOptionsEntropy()</code>, add <code>read_options_<i>quant</i>_null</code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.</li>
+				<li>In <code>WriteOptionsEntropy()</code>, add <code>write_options_<i>quant</i>_null</code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.</li>
+			</ol>
+		</li>
+	</ol>
+	<h4>If your entropy method requires options</h4>
+	<ol>
+		<li>Add <code><i>quant</i>_<i>method</i>_mx.c</code> to the <code>entropy/</code> directory.</li>
+		<li>In <code>entropy_c.h</code>:
+			<ol>
+				<li>Add the default parameter values to the <code>#define</code> statements</li>
+				<li>Add the options to the <code>options_entropy</code> structure.</li>
+			</ol>
+		</li>
+		<li>In <code>entropy_mx.h</code>, add the read/write options function declarations:
+			<blockquote class="example">
+				<code>extern void read_options_<i>quant</i>_<i>method</i>(const mxArray *in,struct options_entropy *opts);<br />
+				extern mxArray *write_options_<i>quant</i>_<i>method</i>(const mxArray *in,struct options_entropy *opts);</code>
+			</blockquote>
+		</li>
+		<li>In <code>entropy_mx.c</code>:
+			<ol>
+				<li>In <code>ReadOptionsEntropy()</code>, add <code>read_options_<i>quant</i>_<i>method</i></code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.</li>
+				<li>In <code>WriteOptionsEntropy()</code>, add <code>write_options_<i>quant</i>_<i>method</i></code> to the statements that define the elements of the <code>entropy_fun</code> or <code>variance_fun</code> function pointers.</li>
+			</ol>
+		</li>
+		<li>In <code>make.m</code> add <code>entropy/<i>quant</i>_<i>method</i>_mx.c</code> to the string <code>entropy_files</code>.</li>
+	</ol>
+	<hr noshade="noshade" />
+	<p align="center"><a href="index.html">Back to contents.</a></p>
 </body>
-
 </html>

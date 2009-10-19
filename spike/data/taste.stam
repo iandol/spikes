@@ -1,5 +1,5 @@
 # Data filename
-datafile=C:\Documents and Settings\Hobbes Baby\My Documents\MATLAB\spike\data\taste.stad;
+datafile=/Users/iana/Desktop/spike/data/taste.stad;
 #
 # Site metadata
 site=1; label=unit_001; recording_tag=episodic; time_scale=1.000000; time_resolution=0.001000

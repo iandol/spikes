@@ -1,5 +1,9 @@
 path(path,'..');
 
+% Smaller dataset - use this to get results quickly
+% X=staread(strrep('../data/phase_small.stam','/',filesep));
+
+% Larger dataset
 X=staread(strrep('../data/phase.stam','/',filesep));
 
 AB_array = multisitearray(X);
@@ -30,6 +34,7 @@ opts.label_cost = k_vec2;
 out = metric(X,opts);
 
 for idx=1:length(opts.shift_cost)
+out(idx).table.information.value
   info_ab_vec(idx) = out(idx).table.information.value;
 end
  

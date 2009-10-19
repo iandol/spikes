@@ -1,12 +1,10 @@
-global data sv
-
 path(path,'..');
 
 if(~exist('dataset','var'))
   dataset = input('Enter dataset label (\"drift\", \"synth\", or \"taste\"): ','s');
 end
 
-opts.tpmc_possible_words_strategy = 0;
+opts.possible_words = 'unique';
 opts.start_warp = -1;
 opts.end_warp = 1;
 opts.min_embed_dim = 1;
@@ -17,37 +15,27 @@ opts.unoccupied_bins_strategy = 0;
 opts.warping_strategy=1;
 D_max_vec = 1:5;
 
-olddir=pwd;
-newdir=strcat(getenv('START_DIRECTORY'),filesep,'user',filesep,'spike');
-cd(newdir);
-
 if (strcmp(dataset,'drift'))
   opts.start_time = 0;
   opts.end_time = 0.475;
   
-  X=staread(strrep('data/drift.stam','/',filesep));
+  X=staread(strrep('../data/drift.stam','/',filesep));
 
 elseif (strcmp(dataset,'synth'))
   opts.start_time = 0;
   opts.end_time = 0.25;
   
-  X=staread(strrep('data/synth.stam','/',filesep));
+  X=staread(strrep('../data/synth.stam','/',filesep));
 
 elseif (strcmp(dataset,'taste'))
   opts.start_time = 10;
   opts.end_time = 12;
 
-  X=staread(strrep('data/taste.stam','/',filesep));
+  X=staread(strrep('../data/taste.stam','/',filesep));
   
 else
-  opts.start_time = 0;
-  if data.wrapped==1
-	  opts.end_time = data.modtime/10000;
-	  X=makemetric(data,sv);
-  else
-	  opts.end_time = data.trialtime/10000;
-	  X=makemetric(data,sv);
-  end
+  clear dataset;
+  error('Invalid label');
   
 end
 
@@ -166,3 +154,5 @@ xlabel('Maximal embedding dimension');
 ylabel('Information (bits)');
 legend('Original data (\pm 2 SE via Jackknife)','Shuffled data (\pm 2 SD)',...
        'location','best');
+
+scalefig(gcf,1.5);

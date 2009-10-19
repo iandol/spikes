@@ -1,11 +1,12 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
 #include "toolkit_c.h"
 
 extern char ent_est_meth_list[ENT_EST_METHS][MAXCHARS];
@@ -82,7 +83,7 @@ struct histcond *CAllocHistCond(int M,int P_total,int *P_vec,int N,struct option
 
   hist_c = (struct histcond *)malloc(sizeof(struct histcond));
 
-  (*hist_c).class = CAllocHist1DVec(M,P_vec,N,opts);
+  (*hist_c).classcond = CAllocHist1DVec(M,P_vec,N,opts);
   (*hist_c).total = CAllocHist1D(1,&P_total,N,opts);
   (*hist_c).information = CAllocEst(opts);
 
@@ -91,7 +92,7 @@ struct histcond *CAllocHistCond(int M,int P_total,int *P_vec,int N,struct option
 
 void CFreeHistCond(int M,struct histcond *hist_c,struct options_entropy *opts)
 {
-  CFreeHist1DVec(M,(*hist_c).class,opts);
+  CFreeHist1DVec(M,(*hist_c).classcond,opts);
   CFreeHist1D(1,(*hist_c).total,opts);
   CFreeEst((*hist_c).information,opts);
 
@@ -131,9 +132,21 @@ struct estimate *CAllocEst(struct options_entropy *opts)
   
   for(e=0;e<(*opts).E;e++)
     {
-      /* scroll through the variance estimate requests */
-      in[e].ve = (struct nv_pair *)malloc((*opts).V[e]*sizeof(struct nv_pair));
-      for(v=0;v<(*opts).V[e];v++)
+      strcpy(in[e].name,"temp");
+
+      /* add the messages structure */
+      in[e].messages = (struct message *)malloc(sizeof(struct message));
+      in[e].messages->i = in[e].messages->j = in[e].messages->k = 0;
+      in[e].messages->status = in[e].messages->warnings = in[e].messages->errors = NULL;
+
+      /* add the extras structure */
+      in[e].E = 0;
+      in[e].extras = NULL;
+
+      /* add the variance estimate structure */
+      in[e].V = opts->V[e];
+      in[e].ve = (struct nv_pair *)malloc(in[e].V*sizeof(struct nv_pair));
+      for(v=0;v<in[e].V;v++)
 	memcpy(in[e].ve[v].name,var_est_meth_list[(*opts).var_est_meth[e][v]-1],MAXCHARS*sizeof(char));
     }
 
@@ -146,7 +159,18 @@ void CFreeEst(struct estimate *in,struct options_entropy *opts)
 
   for(e=0;e<(*opts).E;e++)
     {
-      if((*opts).V[e]>0)
+      if(in[e].messages->i)
+        free(in[e].messages->status);
+      if(in[e].messages->j)
+        free(in[e].messages->warnings);
+      if(in[e].messages->k)
+        free(in[e].messages->errors);
+      free(in[e].messages);
+
+      if(in[e].E)
+	free(in[e].extras);
+
+      if(in[e].V)
 	free(in[e].ve);
     }
   

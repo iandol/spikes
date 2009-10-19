@@ -1,4 +1,3 @@
-global data sv
 
 path(path,'..');
 
@@ -6,45 +5,40 @@ if(~exist('dataset','var'))
   dataset = input('Enter dataset label (\"drift\", \"synth\", or \"taste\"): ','s');
 end
 
+tic
+
 opts.clustering_exponent = -2;
 opts.unoccupied_bins_strategy = 0;
 opts.metric_family = 0;
 opts.parallel = 1;
-opts.tpmc_possible_words_strategy = 0;
-olddir=pwd;
-newdir=strcat(getenv('START_DIRECTORY'),filesep,'user',filesep,'spike');
-cd(newdir);
+opts.possible_words = 'unique';
+
 if (strcmp(dataset,'drift'))
   opts.shift_cost = [0 2.^(-2:9)];
   opts.start_time = 0;
-  opts.end_time = 0.475;  
-  X=staread(strrep('data/drift.stam','/',filesep));
+  opts.end_time = 0.475;
+  
+  X=staread(strrep('../data/drift.stam','/',filesep));
 
 elseif (strcmp(dataset,'synth'))
   opts.shift_cost = [0 2.^(-2:9)];
   opts.start_time = 0;
-  opts.end_time = 1;  
-  X=staread(strrep('data/synth.stam','/',filesep));
+  opts.end_time = 1;
+  
+  X=staread(strrep('../data/synth.stam','/',filesep));
 
 elseif (strcmp(dataset,'taste'))
   opts.shift_cost = [0 2.^(-4:9)];
   opts.start_time = 10;
-  opts.end_time = 12;  
-  X=staread(strrep('data/taste.stam','/',filesep));
+  opts.end_time = 12;
+  
+  X=staread(strrep('../data/taste.stam','/',filesep));
   
 else
-  opts.shift_cost = [0 2.^(-4:9)];
-  opts.start_time = 0;
-  if data.wrapped==1
-	  opts.end_time = data.modtime/10000;
-	  X=makemetric(data,sv);
-  else
-	  opts.end_time = data.trialtime/10000;
-	  X=makemetric(data,sv);
-  end
+  clear dataset;
+  error('Invalid label');
+  
 end
-
-cd(olddir);
 
 clear out out_unshuf shuf out_unjk jk;
 clear info_plugin info_tpmc info_jack info_unshuf info_unjk;
@@ -84,7 +78,7 @@ hold off;
 set(gca,'xtick',1:length(opts.shift_cost));
 set(gca,'xticklabel',opts.shift_cost);
 set(gca,'xlim',[1 length(opts.shift_cost)]);
-set(gca,'ylim',[-0.5 4]);
+set(gca,'ylim',[-0.5 2.5]);
 xlabel('Temporal precision (1/sec)');
 ylabel('Information (bits)');
 legend('No correction','TPMC correction','Jackknife correction',...
@@ -120,6 +114,7 @@ end
 info_jk_sem = sqrt((P_total-1)*var(temp_info_jk,1,1));
 
 %%% Plot results
+toc
 
 subplot(224);
 errorbar(1:length(opts.shift_cost),info_unjk,2*info_jk_sem);
@@ -129,10 +124,10 @@ hold off;
 set(gca,'xtick',1:length(opts.shift_cost));
 set(gca,'xticklabel',opts.shift_cost);
 set(gca,'xlim',[1 length(opts.shift_cost)]);
-set(gca,'ylim',[-0.5 4]);
+set(gca,'ylim',[-0.5 2.5]);
 xlabel('Temporal precision (1/sec)');
 ylabel('Information (bits)');
 legend('Original data (\pm 2 SE via Jackknife)','Shuffled data (\pm 2 SD)',...
        'location','best');
 
-clear dataset
+scalefig(gcf,1.5);

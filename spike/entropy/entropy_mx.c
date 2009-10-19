@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -33,7 +33,9 @@ struct options_entropy *ReadOptionsEntropy(const mxArray *in)
 
   /*** Entropy estimation ***/
 
+  /* shared options */
   opts->useall_flag = ReadOptionsIntMember(in,"unoccupied_bins_strategy",&(opts->useall));
+  opts->possible_words_flag = ReadOptionPossibleWords(in,"possible_words",&(opts->possible_words));
 
   /* Which entropy estimate methods were requested? */
   ent_temp = mxGetField(in,0,"entropy_estimation_method");
@@ -162,10 +164,12 @@ struct options_entropy *ReadOptionsEntropy(const mxArray *in)
   entropy_fun[5] = read_options_entropy_bub;
   entropy_fun[6] = read_options_entropy_null;
   entropy_fun[7] = read_options_entropy_ww;
+  entropy_fun[8] = read_options_entropy_nsb;
 
-  variance_fun[0] = read_options_variance_null;
-  variance_fun[1] = read_options_variance_null;
-  variance_fun[2] = read_options_variance_boot;
+  variance_fun[0] = read_options_variance_null; /* unknown method */
+  variance_fun[1] = read_options_variance_null; /* nsb_var */
+  variance_fun[2] = read_options_variance_null; /* jack */
+  variance_fun[3] = read_options_variance_boot; /* boot */
 
   for(e=0;e<opts->E;e++)
     {
@@ -193,6 +197,7 @@ mxArray *WriteOptionsEntropy(const mxArray *in,struct options_entropy *opts)
 
   /* shared */
   WriteOptionsIntMember(out,"unoccupied_bins_strategy",opts->useall,opts->useall_flag);
+  WriteOptionPossibleWords(out,"possible_words",opts->possible_words,opts->possible_words_flag);
 
   /* entropy estimation */
   ent_temp = mxCreateCellMatrix(1,opts->E);
@@ -249,16 +254,19 @@ mxArray *WriteOptionsEntropy(const mxArray *in,struct options_entropy *opts)
   entropy_fun[5] = write_options_entropy_bub;
   entropy_fun[6] = write_options_entropy_null;
   entropy_fun[7] = write_options_entropy_ww;
+  entropy_fun[8] = write_options_entropy_nsb;
 
-  variance_fun[0] = write_options_variance_null;
-  variance_fun[1] = write_options_variance_null;
-  variance_fun[2] = write_options_variance_boot;
+  variance_fun[0] = write_options_variance_null; /* unknown method */
+  variance_fun[1] = write_options_variance_null; /* nsb_var */
+  variance_fun[2] = write_options_variance_null; /* jack */
+  variance_fun[3] = write_options_variance_boot; /* boot */
 
+  /* hand off option writing to each entropy and variance function in turn */
   for(e=0;e<opts->E;e++)
     {
-      out = entropy_fun[(*opts).ent_est_meth[e]](in,opts);
+      out = entropy_fun[(*opts).ent_est_meth[e]](out,opts);
       for(v=0;v<opts->V[e];v++)
-	out = variance_fun[(*opts).var_est_meth[e][v]](in,opts);
+        out = variance_fun[(*opts).var_est_meth[e][v]](out,opts);
     }
 
   if((opts->E)>0) 

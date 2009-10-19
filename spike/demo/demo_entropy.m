@@ -1,16 +1,20 @@
 path(path,'..');
+
+%Note: this usage has been deprecated but will be maintained as long as possible
+%to provide backwards compatibility. Use stream=RandStream.getDefaultStream; and
+%stream.reset; as a replacement but note that the stream does not reset to the
+%same state as dictated by the deprecated usage.
 rand('state',1);
 
-N_vec = round(logspace(1,3,5));
+N_vec = round(logspace(1,3,5)); % Vector of total words observed
 L = 100; % Number of trials for each value of N
 C = 10;  % Number of bins
 p = 0.5; % Binomial parameter
 
-opts1.entropy_estimation_method = {'plugin','tpmc','jack','chaoshen','ww'};
+opts1.entropy_estimation_method = {'plugin','tpmc','jack','chaoshen','ww','ma'};
 opts1.variance_estimation_method = {'jack','boot'};
-opts1.tpmc_possible_words_strategy=0;
+opts1.possible_words = 'unique';
 opts1.ww_beta=1;
-opts1.ww_possible_words_strategy=0;
 opts1.boot_random_seed=1;
 opts1.boot_num_samples=100;
 
@@ -18,20 +22,20 @@ opts2.entropy_estimation_method = {'bub'};
 opts2.bub_K = 11;
 opts2.bub_lambda_0=0;
 opts2.bub_compat=0;
-opts2.bub_possible_words_strategy=2;
+opts2.possible_words = 'min_lim_tot_pos';
 
-opts.entropy_estimation_method = [opts1.entropy_estimation_method opts2.entropy_estimation_method];
+entropy_methods = [opts1.entropy_estimation_method opts2.entropy_estimation_method];
 
-entropy = zeros(length(opts.entropy_estimation_method),L);
-variance_jack = zeros(length(opts.entropy_estimation_method),L);
-variance_boot = zeros(length(opts.entropy_estimation_method),L);
-cl_jack = zeros(length(opts.entropy_estimation_method),L);
-cl_boot = zeros(length(opts.entropy_estimation_method),L);
-mean_entropy = zeros(length(opts.entropy_estimation_method),length(N_vec));
-rms_stderr_jack = zeros(length(opts.entropy_estimation_method),length(N_vec));
-rms_stderr_boot = zeros(length(opts.entropy_estimation_method),length(N_vec));
-mean_cl_jack = zeros(length(opts.entropy_estimation_method),length(N_vec));
-mean_cl_boot = zeros(length(opts.entropy_estimation_method),length(N_vec));
+entropy = zeros(length(entropy_methods),L);
+variance_jack = zeros(length(entropy_methods),L);
+variance_boot = zeros(length(entropy_methods),L);
+cl_jack = zeros(length(entropy_methods),L);
+cl_boot = zeros(length(entropy_methods),L);
+mean_entropy = zeros(length(entropy_methods),length(N_vec));
+rms_stderr_jack = zeros(length(entropy_methods),length(N_vec));
+rms_stderr_boot = zeros(length(entropy_methods),length(N_vec));
+mean_cl_jack = zeros(length(entropy_methods),length(N_vec));
+mean_cl_boot = zeros(length(entropy_methods),length(N_vec));
 
 binom_dist=zeros(C,1);
 for y=0:C-1
@@ -40,7 +44,8 @@ end
 true_entropy = -sum(binom_dist.*log2(binom_dist));
 
 for N_idx = 1:length(N_vec)
-  N = N_vec(N_idx)
+  N = N_vec(N_idx);
+  disp(['Total words observed equals ' int2str(N)]);
   u1 = rand(N,L,C-1)<p;
   u = sum(u1,3);
 
@@ -79,15 +84,15 @@ for N_idx = 1:length(N_vec)
   end
 end
 
-figure;
-set(gcf,'name','Entropy method demo'); 
+colors = jet(length(entropy_methods));
+figure('Name','Entropy method demo','DefaultAxesColorOrder',colors); 
 
 subplot(231);
 semilogx(N_vec,mean_entropy');
 hold on;
 semilogx(N_vec,true_entropy*ones(size(N_vec)),'k--');
 hold off;
-legend(opts.entropy_estimation_method,4);
+legend(entropy_methods,4);
 xlabel('Total words observed');
 ylabel('Entropy (bits)');
 title('Entropy estimates');

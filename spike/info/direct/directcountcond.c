@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -8,7 +8,8 @@
  */
 #include "../../shared/toolkit_c.h"
 #include "../../shared/toolkit_mx.h"
-#include "direct.h"
+#include "direct_c.h"
+#include "direct_mx.h"
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
@@ -22,11 +23,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   int status;
   struct options_direct *opts;
 
+  /* Check nargin */
   if((nrhs<1) | (nrhs>2))
     mexErrMsgIdAndTxt("STAToolkit:directcountcond:numArgs","1 or 2 input arguments required.");
   if((nlhs<1) | (nlhs>2))
     mexErrMsgIdAndTxt("STAToolkit:directcountcond:numArgs","1 or 2 output argument required.");
 
+  /* Read options structure */
   if(nrhs<2)
     opts = ReadOptionsDirect(mxCreateEmptyStruct());
   else if(mxIsEmpty(prhs[1]))
@@ -34,10 +37,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   else
     opts = ReadOptionsDirect(prhs[1]);
 
+  /* Get input dimensions */
+  if(!mxIsCell(prhs[0]))
+    mexErrMsgIdAndTxt("STAToolkit:directcountcond:badInput","The input is not conditioned properly. It must be a column vector of cells.");
   M = mxGetM(prhs[0]);
   Z = mxGetN(prhs[0]); /* Number of words per train */
   if(Z>1)
-    mexErrMsgIdAndTxt("STAToolkit:directcountcond","The input is not conditioned properly. It must be a column vector of cells.");
+    mexErrMsgIdAndTxt("STAToolkit:directcountcond:badInput","The input is not conditioned properly. It must be a column vector of cells.");
   P_vec = (int *)mxMalloc(M*sizeof(int));
   P_total = 0;
   for(m=0;m<M;m++)

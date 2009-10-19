@@ -1,14 +1,30 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Entropy from a 1-D histogram.
+ * This file contains C code that is compiled into the MEX-file
+ * entropy1d.mex*. Its functionality may be accessed in Matlab
+ * by calling the function entropy1d. Additional documentation
+ * resides in entropy1d.m, and can be found by typing "help
+ * entropy1d" at the Matlab command prompt.
+ */
+
 #include "toolkit_c.h"
 #include "toolkit_mx.h"
 
+/**
+ * @brief Interfaces C and Matlab data.
+ * This function is the MEX-file gateway routine. Please see the Matlab
+ * MEX-file documentation (http://www.mathworks.com/access/helpdesk/help/techdoc/matlab_external/f43721.html)
+ * for more information.
+ */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   struct hist1d *in;
@@ -35,8 +51,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   in = ReadHist1D(M,plhs[0],opts);
 
   status = Entropy1DComp(M,in,opts);
-  if(status==EXIT_FAILURE)
-    mexErrMsgIdAndTxt("STAToolkit:entropy1d:failure","entropy1d failed.");
+  if(status!=EXIT_SUCCESS)
+    mexWarnMsgIdAndTxt("STAToolkit:entropy1d:failure","Function entropy1d returned with errors. Please check messages.");
 
   /* Augment the mx histogram with the new info */
   WriteHist1DAgain(M,in,plhs[0]);

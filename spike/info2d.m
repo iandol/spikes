@@ -8,8 +8,6 @@
 %
 %   The options and parameters for this function are:
 %      OPTS.ENTROPY_ESTIMATION_METHOD
-%      OPTS.BIAS_CORRECTION_METHOD: A cell array of bias correction
-%         methods. 
 %      OPTS.VARIANCE_ESTIMATION_METHOD: A cell array of variance
 %      estimation methods.
 %   Please see the Spike Train Analysis Toolkit documentation for

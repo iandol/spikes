@@ -1,5 +1,5 @@
 # Data filename
-datafile=C:\Documents and Settings\Hobbes Baby\My Documents\MATLAB\spike\data\inforate_rep.stad;
+datafile=/Users/iana/Desktop/spike/data/inforate_rep.stad;
 #
 # Site metadata
 site=1; label=only one cell; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000100;

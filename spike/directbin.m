@@ -31,6 +31,16 @@
 %         OPTS.permute_spike_trains=1 means they are considered
 %            indentical.
 %         The default value is 0.
+%      OPTS.legacy_binning: Allows binning to be done in a manner
+%         compatible with version 1.1 and earlier of the toolkit.
+%         These older versions created an extra (empty) bin when
+%         (OPTS.end_time-OPTS.start_time) is an integer multiple of
+%         (OPTS.words_per_train*OPTS.counting_bin_size).
+%         OPTS.legacy_binning=0 means use the current binning method.
+%         OPTS.legacy_binning=1 means use the legacy binning method.
+%         The default value is 0.
+%      OPTS.letter_cap: Places a cap on the maximum number of spikes
+%         to be counted in a bin. The default value is Inf.
 %
 %   Y = DIRECTBIN(X) uses the default options and parameters.
 %

@@ -14,7 +14,7 @@ function staraster(X,range,n)
 %   See also STAREAD.
 
 %
-%  Copyright 2006, Weill Medical College of Cornell University
+%  Copyright 2009, Weill Medical College of Cornell University
 %  All rights reserved.
 %
 %  This software is distributed WITHOUT ANY WARRANTY
@@ -61,17 +61,17 @@ for m=1:X.M
   for p = 1:X.categories(m).P 
     list = X.sites(n).time_scale*X.categories(m).trials(p,n).list; 
     h = plot(list,idx*ones(size(list)),'.');
-    set(h,'color',cur_color,'Marker','+','MarkerSize',2);
+    set(h,'color',cur_color);
     idx=idx+1;
   end
   cur_end = idx;
   h = text(((range(2)-range(1))/4)+range(1),(cur_start+cur_end)/2,X.categories(m).label);
-  set(h,'verticalalignment','middle','horizontalalignment','center','fontsize',7);
+  set(h,'verticalalignment','middle','horizontalalignment','center');
 end
 hold off;
 box on;
 xlabel('Time (sec)');
-ylabel('Trial per Variable');
+ylabel('Trial');
 title(strrep(X.sites(n).label,'_','\_'));
 set(gca,'ylim',[0 idx]);
 set(gca,'ydir','rev');

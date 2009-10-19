@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -7,7 +7,7 @@
  *  at http://neurodatabase.org/src/license.
  */
 #include "../../shared/toolkit_c.h"
-#include "metric.h"
+#include "metric_c.h"
 /* #define DEBUG */
 /* #define DEBUG1 */
 /* #define DEBUG2 */

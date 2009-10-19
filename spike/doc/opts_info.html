@@ -1,298 +1,368 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Spike Train Analysis Toolkit: Options and parameters for information methods</title>
-<link rel="stylesheet" type="text/css" href="style.css" title="default">
-<style type="text/css">
-.default {
-background-color: #eef;
-}
-.multi {
-background-color: #fee;
-}
-</style>
+	<meta name="generator" content="HTML Tidy for Linux/x86 (vers 7 December 2008), see www.w3.org" />
+	<title>Spike Train Analysis Toolkit: Options and parameters for information methods</title>
+	<link rel="stylesheet" type="text/css" href="style.css" title="default" />
+	<style type="text/css">
+		/*<![CDATA[*/
+			.default {background-color: #eef;}
+			.multi {background-color: #fee;}
+		/*]]>*/
+	</style>
 </head>
-
 <body>
-
-<table>
-<tr>
-<td><a href="index.html"><img src="logo2.png"></a></td>
-<td><h1>Spike Train Analysis Toolkit<br>Options and parameters for information methods</h1></td>
-</tr>
-</table>
-
-<p>Options and parameters are passed to the toolkit functions by way of a specialized data structure. The members of this data structure are described below. Items that only apply to multineuron analysis are in <span class="multi">pink</span>.</p>
-
-<h2>Options</h2>
-
-<p>Default selection in <span class="default">blue</span>.</p>
-
-<p><table class="doctable" width="100%">
-<tr>
-<th rowspan="2">Name</th>
-<th rowspan="2">Description</th>
-<th rowspan="2" colspan="2">Options</th>
-<th colspan="3">Method</th>
-</tr>
-<tr>
-<th>direct</th>
-<th>metric</th>
-<th>binless</th>
-</tr>
-
-<tr>
-<td rowspan="7"><code>entropy_estimation_method</code></td>
-<td rowspan="7">Array of entropy estimation methods</td>
-<td class="default"><code>plugin</code></td><td class="default">Plug-in</td>
-<td rowspan="7"align="center">&times;</td>
-<td rowspan="7"align="center">&times;</td>
-<td rowspan="7"align="center">&times;</td>
-</tr>
-<tr><td><code>tpmc</code></td><td>Treves-Panzeri-Miller-Carlton</td></tr>
-<tr><td><code>jack</code></td><td>Jackknife</td></tr>
-<tr><td><code>ma</code></td><td>Debiased Ma bound</td></tr>
-<tr><td><code>bub</code></td><td>Best upper bound</td></tr>
-<tr><td><code>chaoshen</code></td><td>Chao-Shen</td></tr>
-<tr><td><code>ww</code></td><td>Wolpert-Wolf</td></tr>
-
-<!-- <tr>
-<td rowspan="2"><code>bias_correction_method</code></td>
-<td rowspan="2">Array of bias correction methods</td>
-<td rowspan="2">Optional</td>
-<td><code>tmpc</code></td><td>Treves-Panzeri-Miller-Carlton</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&times;</td>
-</tr>
-<tr><td><code>jack</code></td><td>Jackknife</td></tr> -->
-
-<tr>
-<td rowspan="2"><code>variance_estimation_method</code></td>
-<td rowspan="2">Array of variance estimation methods</td>	
-<td><code>jack</code></td><td>Jackknife</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&times;</td>
-</tr>
-<tr><td><code>boot</code></td><td>Bootstrap</td></tr>
-
-<tr>
-<td rowspan="3"><code>unoccupied_bin_strategy</code><br><small>See <a href="function/matrix2hist2d.html"><code>matrix2hist2d</code></a> for description of options.</small></td>
-<td rowspan="3">Strategy for dealing with unoccupied bins</td>
-<td class="default">-1</td><td class="default">Ignore unoccupied bins</td>
-<td rowspan="3"></td>
-<td align="center" rowspan="3">&times;</td>
-<td align="center" rowspan="3">&times;</td>
-</tr>
-<tr><td>0</td><td>Use an unoccupied bin only if its row and column are occupied</td></tr>
-<tr><td>1</td><td>Use all bins</td></tr>
-
-<tr>
-<td class="multi" rowspan="2"><code>sum_spike_trains</code><br><small>See <a href="function/directbin.html"><code>directbin</code></a> for description of options.</small></td>
-<td rowspan="2">Should simultaneous spike trains be summed?</td>	
-<td class="default">0</td><td class="default">Do not sum across trials</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-</tr>
-<tr><td>1</td><td>Sum across trials</td></tr>
-
-<tr>
-<td class="multi" rowspan="2"><code>permute_spike_trains</code><br><small>See <a href="function/directbin.html"><code>directbin</code></a> for description of options.</small></td>
-<td rowspan="2">Should permuted versions of simultaneous spike trains be considered identical?</td>	
-<td class="default">0</td><td class="default">Take into account spike train origin</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-</tr>
-<tr><td>1</td><td>Disregard spike train origin</td></tr>
-
-<tr>
-<td rowspan="2"><code>metric_family</code><br><small>See <a href="function/metricdist.html"><code>metricdist</code></a> for description of options.</small></td>
-<td rowspan="2">Which family of metrics to use</td>
-<td class="default">0</td><td class="default">D<sup>spike</sup></td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-</tr>
-<tr><td>1</td><td>D<sup>interval</sup></td></tr>
-
-<tr>
-<td rowspan="2"><code>parallel</code><br><small>See <a href="function/metricdist.html"><code>metricdist</code></a> for description of options.</small></td>
-<td rowspan="2">Whether or not to use the &quot;all-parameter&quot; method</td>
-<td>0</td><td>Single parameter (default if <code>shift_cost</code> only has one element)</td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&times;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-</tr>
-<tr><td>1</td><td>All parameter (default if <code>shift_cost</code> has multiple elements)</td></tr>
-
-<tr>
-<td rowspan="2"><code>warping_strategy</code><br><small>See <a href="function/binlesswarp.html"><code>binlesswarp</code></a> for description of options.</small></td>
-<td rowspan="2">Warping strategy</td>
-<td>0</td><td>Linear scaling</td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&times;</td>
-</tr>
-<tr><td class="default">1</td><td class="default">Uniform spacing</td></tr>
-
-<tr>
-<td rowspan="3"><code>stratification_strategy</code><br><small>See <a href="function/binlessinfo.html"><code>binlessinfo</code></a> for description of options.</small></td>
-<td rowspan="3">Stratification strategy</td>
-<td>0</td><td>Single stratum</td>
-<td rowspan="3" align="center">&nbsp;</td>
-<td rowspan="3" align="center">&nbsp;</td>
-<td rowspan="3" align="center">&times;</td>
-</tr>
-<tr><td>1</td><td>Stratum for each spike count</td></tr>
-<tr><td class="default">2</td><td class="default">Stratum for each spike count; all spike trains with more than <code>embed_dim_max</code>-<code>embed_dim_min</code> spikes go into a single stratum</td></tr>
-
-<tr>
-<td rowspan="2"><code>singleton_strategy</code><br><small>See <a href="function/binlessinfo.html"><code>binlessinfo</code></a> for description of options.</small></td>
-<td rowspan="2">Singleton counting strategy</td>
-<td class="default">0</td><td class="default">Ignore</td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&nbsp;</td>
-<td rowspan="2" align="center">&times;</td>
-</tr>
-<tr><td>1</td><td>Include</td></tr>
-
-</table></p>
-
-<h2>Parameters</h2>
-
-<p><table class="doctable" width="100%">
-
-<tr>
-<th rowspan="2">Name</th>
-<th rowspan="2">Description</th>
-<th rowspan="2">Type</th>
-<th rowspan="2">Range</th>
-<th rowspan="2">Default</th>
-<th colspan="3">Method</th>
-</tr>
-
-<tr>
-<th>direct</th>
-<th>metric</th>
-<th>binless</th>
-</tr>
-
-<tr>
-<td><code>start_time</code></td>
-<td>Starting time for analysis in seconds</td>
-<td>double</td><td>&lt; <code>end_time</code></td>
-<td>max of all spike train start times</td>
-<td align="center">&times;</td>
-<td align="center">&times;</td>
-<td align="center">&times;</td>
-</tr>
-
-<tr>
-<td><code>end_time</code></td>
-<td>Ending time for analysis in seconds</td>	
-<td>double</td><td>&gt; <code>start_time</code></td>
-<td>min of all spike train end times</td>
-<td align="center">&times;</td>
-<td align="center">&times;</td>
-<td align="center">&times;</td>
-</tr>
-
-<tr>
-<td><code>counting_bin_size</code></td>
-<td>Counting bin size in seconds</td>	
-<td>double</td><td>&gt; 0</td>
-<td><code>end_time</code>-<code>start_time</code></td>
-<td align="center">&times;</td>
-<td align="center">&nbsp;</td>
-<td align="center">&nbsp;</td>
-</tr>
-
-<tr>
-<td><code>words_per_trial</code></td>
-<td>Number of words per trial</td>	
-<td>integer</td><td>&gt; 0</td>
-<td>1</td>
-<td align="center">&times;</td>
-<td align="center">&nbsp;</td>
-<td align="center">&nbsp;</td>
-</tr>
-
-<tr>
-<td><code>shift_cost</code></td>
-<td>Cost metric in 1/seconds</td>
-<td>double</td><td>&ge; 0</td>
-<td>1/(<code>end_time</code>-<code>start_time</code>)</td>
-<td align="center">&nbsp;</td>
-<td align="center">&times;</td>
-<td align="center">&nbsp;</td>
-</tr>
-
-<tr>
-<td class="multi"><code>label_cost</code></td>
-<td>Cost of changing a spike label</td>
-<td>double</td><td>&ge; 0 and &le; 2</td>
-<td>0</td>
-<td align="center">&nbsp;</td>
-<td align="center">&times;</td>
-<td align="center">&nbsp;</td>
-</tr>
-
-<tr>
-<td><code>clustering_exponent</code></td>
-<td>Clustering exponent</td>
-<td>double</td>
-<td>&mdash;</td><td>-2</td>
-<td align="center">&nbsp;</td>
-<td align="center">&times;</td>
-<td align="center">&nbsp;</td>
-</tr>
-<tr>
-
-<td><code>start_warp</code></td>
-<td>Starting time for warped spike trains</td>
-<td>double</td><td>&lt; <code>end_warp</code></td>
-<td>-1</td>
-<td align="center">&nbsp;</td>
-<td align="center">&nbsp;</td>
-<td align="center">&times;</td>
-</tr>
-
-<tr>
-<td><code>end_warp</code></td>
-<td>Ending time for warped spike trains</td>
-<td>double</td><td>&gt; <code>start_warp</code></td>
-<td>1</td>
-<td align="center">&nbsp;</td>
-<td align="center">&nbsp;</td>
-<td align="center">&times;</td>
-</tr>
-
-<tr>
-<td><code>min_embed_dim</code></td>
-<td>Minimal embedding dimension</td>
-<td>integer</td><td>&le; <code>max_embed_dim</code></td>
-<td>1</td>
-<td align="center">&nbsp;</td>
-<td align="center">&nbsp;</td>
-<td align="center">&times;</td>
-</tr>
-
-<tr>
-<td><code>max_embed_dim</code></td>
-<td>Maximal embedding dimension</td>	
-<td>integer</td><td>&ge; <code>max_embed_dim</code></td>
-<td>2</td>
-<td align="center">&nbsp;</td>
-<td align="center">&nbsp;</td>
-<td align="center">&times;</td>
-</tr>
-</table></p>
-
-<hr noshade>
-
-<p align="center"><a href="index.html">Back to contents.</a></p>
-
+	<table>
+		<tr>
+			<td><a href="index.html"><img src="logo2.png" /></a></td>
+			<td>
+				<h1>Spike Train Analysis Toolkit<br />
+				Options and parameters for information methods</h1>
+			</td>
+		</tr>
+	</table>
+	<p>Options and parameters are passed to the toolkit functions by way of a specialized data structure. The members of this data structure are described below. Items that only apply to multineuron analysis are in <span class="multi">pink</span>.</p>
+	<h2>Options</h2>
+	<p>Default selection in <span class="default">blue</span>.</p>
+	<table class="doctable" width="100%">
+		<tr>
+			<th rowspan="2">Name</th>
+			<th rowspan="2">Description</th>
+			<th rowspan="2" colspan="2">Options</th>
+			<th colspan="3">Method</th>
+		</tr>
+		<tr>
+			<th>direct</th>
+			<th>metric</th>
+			<th>binless</th>
+		</tr>
+		<tr>
+			<td rowspan="8"><code>entropy_estimation_method</code></td>
+			<td rowspan="8">Array of entropy estimation methods</td>
+			<td class="default"><code>plugin</code></td>
+			<td class="default">Plug-in</td>
+			<td rowspan="8" align="center">&times;</td>
+			<td rowspan="8" align="center">&times;</td>
+			<td rowspan="8" align="center">&times;</td>
+		</tr>
+		<tr>
+			<td><code>tpmc</code></td>
+			<td>Treves-Panzeri-Miller-Carlton</td>
+		</tr>
+		<tr>
+			<td><code>jack</code></td>
+			<td>Jackknife</td>
+		</tr>
+		<tr>
+			<td><code>ma</code></td>
+			<td>Debiased Ma bound</td>
+		</tr>
+		<tr>
+			<td><code>bub</code></td>
+			<td>Best upper bound</td>
+		</tr>
+		<tr>
+			<td><code>chaoshen</code></td>
+			<td>Chao-Shen</td>
+		</tr>
+		<tr>
+			<td><code>ww</code></td>
+			<td>Wolpert-Wolf</td>
+		</tr>
+		<tr>
+			<td><code>nsb</code></td>
+			<td>Nemenman-Shafee-Bialek</td>
+		</tr>
+		<tr>
+			<td rowspan="3"><code>variance_estimation_method</code></td>
+			<td rowspan="3">Array of variance estimation methods</td>
+			<td><code>nsb_var</code></td>
+			<td>Variance in the NSB estimate</td>
+			<td rowspan="3" align="center">&times;</td>
+			<td rowspan="3" align="center">&times;</td>
+			<td rowspan="3" align="center">&times;</td>
+		</tr>
+		<tr>
+			<td><code>jack</code></td>
+			<td>Jackknife</td>
+		</tr>
+		<tr>
+			<td><code>boot</code></td>
+			<td>Bootstrap</td>
+		</tr>
+		<tr>
+			<td rowspan="3"><code>unoccupied_bins_strategy</code><br />
+			<small>See <a href="function/matrix2hist2d.html"><code>matrix2hist2d</code></a> for description of options.</small></td>
+			<td rowspan="3">Strategy for dealing with unoccupied bins</td>
+			<td class="default">-1</td>
+			<td class="default">Ignore unoccupied bins</td>
+			<td rowspan="3"></td>
+			<td align="center" rowspan="3">&times;</td>
+			<td align="center" rowspan="3">&times;</td>
+		</tr>
+		<tr>
+			<td>0</td>
+			<td>Use an unoccupied bin only if its row and column are occupied</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>Use all bins</td>
+		</tr>
+		<tr>
+			<td class="multi" rowspan="2"><code>sum_spike_trains</code><br />
+			<small>See <a href="function/directbin.html"><code>directbin</code></a> for description of options.</small></td>
+			<td rowspan="2">Should simultaneous spike trains be summed?</td>
+			<td class="default">0</td>
+			<td class="default">Do not sum across trials</td>
+			<td rowspan="2" align="center">&times;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>Sum across trials</td>
+		</tr>
+		<tr>
+			<td class="multi" rowspan="2"><code>permute_spike_trains</code><br />
+			<small>See <a href="function/directbin.html"><code>directbin</code></a> for description of options.</small></td>
+			<td rowspan="2">Should permuted versions of simultaneous spike trains be considered identical?</td>
+			<td class="default">0</td>
+			<td class="default">Take into account spike train origin</td>
+			<td rowspan="2" align="center">&times;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>Disregard spike train origin</td>
+		</tr>
+		<tr>
+			<td rowspan="2"><code>metric_family</code><br />
+			<small>See <a href="function/metricdist.html"><code>metricdist</code></a> for description of options.</small></td>
+			<td rowspan="2">Which family of metrics to use</td>
+			<td class="default">0</td>
+			<td class="default">D<sup>spike</sup></td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&times;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>D<sup>interval</sup></td>
+		</tr>
+		<tr>
+			<td rowspan="2"><code>parallel</code><br />
+			<small>See <a href="function/metricdist.html"><code>metricdist</code></a> for description of options.</small></td>
+			<td rowspan="2">Whether or not to use the "all-parameter" method</td>
+			<td>0</td>
+			<td>Single parameter (default if <code>shift_cost</code> only has one element)</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&times;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>All parameter (default if <code>shift_cost</code> has multiple elements)</td>
+		</tr>
+		<tr>
+			<td rowspan="2"><code>warping_strategy</code><br />
+			<small>See <a href="function/binlesswarp.html"><code>binlesswarp</code></a> for description of options.</small></td>
+			<td rowspan="2">Warping strategy</td>
+			<td>0</td>
+			<td>Linear scaling</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&times;</td>
+		</tr>
+		<tr>
+			<td class="default">1</td>
+			<td class="default">Uniform spacing</td>
+		</tr>
+		<tr>
+			<td rowspan="3"><code>stratification_strategy</code><br />
+			<small>See <a href="function/binlessinfo.html"><code>binlessinfo</code></a> for description of options.</small></td>
+			<td rowspan="3">Stratification strategy</td>
+			<td>0</td>
+			<td>Single stratum</td>
+			<td rowspan="3" align="center">&nbsp;</td>
+			<td rowspan="3" align="center">&nbsp;</td>
+			<td rowspan="3" align="center">&times;</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>Stratum for each spike count</td>
+		</tr>
+		<tr>
+			<td class="default">2</td>
+			<td class="default">Stratum for each spike count; all spike trains with more than <code>embed_dim_max</code>-<code>embed_dim_min</code> spikes go into a single stratum</td>
+		</tr>
+		<tr>
+			<td rowspan="2"><code>singleton_strategy</code><br />
+			<small>See <a href="function/binlessinfo.html"><code>binlessinfo</code></a> for description of options.</small></td>
+			<td rowspan="2">Singleton counting strategy</td>
+			<td class="default">0</td>
+			<td class="default">Ignore</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&times;</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>Include</td>
+		</tr>
+		<tr>
+			<td rowspan="2"><code>legacy_binning</code><br />
+			<small>See <a href="function/directbin.html"><code>directbin</code></a> for description of options.</small></td>
+			<td rowspan="2">Legacy binning flag</td>
+			<td class="default">0</td>
+			<td class="default">Use the current binning method.</td>
+			<td rowspan="2" align="center">&times;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+			<td rowspan="2" align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>Use the legacy binning method.</td>
+		</tr>
+	</table>
+	<h2>Parameters</h2>
+	<table class="doctable" width="100%">
+		<tr>
+			<th rowspan="2">Name</th>
+			<th rowspan="2">Description</th>
+			<th rowspan="2">Type</th>
+			<th rowspan="2">Range</th>
+			<th rowspan="2">Default</th>
+			<th colspan="3">Method</th>
+		</tr>
+		<tr>
+			<th>direct</th>
+			<th>metric</th>
+			<th>binless</th>
+		</tr>
+		<tr>
+			<td><code>start_time</code></td>
+			<td>Starting time for analysis in seconds</td>
+			<td>double</td>
+			<td>&lt; <code>end_time</code></td>
+			<td>max of all spike train start times</td>
+			<td align="center">&times;</td>
+			<td align="center">&times;</td>
+			<td align="center">&times;</td>
+		</tr>
+		<tr>
+			<td><code>end_time</code></td>
+			<td>Ending time for analysis in seconds</td>
+			<td>double</td>
+			<td>&gt; <code>start_time</code></td>
+			<td>min of all spike train end times</td>
+			<td align="center">&times;</td>
+			<td align="center">&times;</td>
+			<td align="center">&times;</td>
+		</tr>
+		<tr>
+			<td><code>counting_bin_size</code></td>
+			<td>Counting bin size in seconds</td>
+			<td>double</td>
+			<td>&gt; 0</td>
+			<td><code>end_time</code>-<code>start_time</code></td>
+			<td align="center">&times;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><code>words_per_train</code></td>
+			<td>Number of words per spike train in each trial</td>
+			<td>integer</td>
+			<td>&gt; 0</td>
+			<td>1</td>
+			<td align="center">&times;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><code>letter_cap</code></td>
+			<td>Cap the maximum letter allowed in a bin</td>
+			<td>integer</td>
+			<td>&gt; 0</td>
+			<td>&infin;</td>
+			<td align="center">&times;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><code>shift_cost</code></td>
+			<td>Cost metric in 1/seconds</td>
+			<td>double</td>
+			<td>&ge; 0</td>
+			<td>1/(<code>end_time</code>-<code>start_time</code>)</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&times;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="multi"><code>label_cost</code></td>
+			<td>Cost of changing a spike label</td>
+			<td>double</td>
+			<td>&ge; 0 and &le; 2</td>
+			<td>0</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&times;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><code>clustering_exponent</code></td>
+			<td>Clustering exponent</td>
+			<td>double</td>
+			<td>&mdash;</td>
+			<td>-2</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&times;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td><code>start_warp</code></td>
+			<td>Starting time for warped spike trains</td>
+			<td>double</td>
+			<td>&lt; <code>end_warp</code></td>
+			<td>-1</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&times;</td>
+		</tr>
+		<tr>
+			<td><code>end_warp</code></td>
+			<td>Ending time for warped spike trains</td>
+			<td>double</td>
+			<td>&gt; <code>start_warp</code></td>
+			<td>1</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&times;</td>
+		</tr>
+		<tr>
+			<td><code>min_embed_dim</code></td>
+			<td>Minimal embedding dimension</td>
+			<td>integer</td>
+			<td>&le; <code>max_embed_dim</code></td>
+			<td>1</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&times;</td>
+		</tr>
+		<tr>
+			<td><code>max_embed_dim</code></td>
+			<td>Maximal embedding dimension</td>
+			<td>integer</td>
+			<td>&ge; <code>max_embed_dim</code></td>
+			<td>2</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&times;</td>
+		</tr>
+	</table>
+	<hr noshade="noshade" />
+	<p align="center"><a href="index.html">Back to contents.</a></p>
 </body>
 </html>

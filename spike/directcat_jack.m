@@ -19,7 +19,7 @@ function [out,jk,opts_used]=directcat_jack(X,opts)
 %   See also DIRECTCAT, DIRECTCAT_SHUF.
 
 %
-%  Copyright 2006, Weill Medical College of Cornell University
+%  Copyright 2009, Weill Medical College of Cornell University
 %  All rights reserved.
 %
 %  This software is distributed WITHOUT ANY WARRANTY

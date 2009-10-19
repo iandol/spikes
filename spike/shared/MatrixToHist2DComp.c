@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -117,7 +117,7 @@ int MatrixToHist2DComp(double **in,
 		    }
 	    
 		/* is n in uni_col_list? */
-		for(c=0;c<(*row_ptr).C;c++)
+		for(c=0;c<(*col_ptr).C;c++)
 		  if((*col_ptr).wordlist[c][0]==n)
 		    {
 		      col_flag=1;
@@ -150,6 +150,17 @@ int MatrixToHist2DComp(double **in,
   return EXIT_SUCCESS;
 }
 
+/**
+ * @brief Returns the word list and word count from an array of words.
+ * Uses a sorting algorithm to grab the unique words from an array whose rows
+ * are words, and places the list in wordlist and the counts in wordcnt.
+ * @param[in] C_in The number of rows in list.
+ * @param[in] N The number of columns in list.
+ * @param[in] list The array of words.
+ * @param[in] cnt The list of counts.
+ * @param[out] wordlist The unique words.
+ * @param[out] wordcnt The word counts.
+ */
 int MarginalProc(int C_in,int N,int **list,double *cnt,int **wordlist,double *wordcnt)
 {
   int c;

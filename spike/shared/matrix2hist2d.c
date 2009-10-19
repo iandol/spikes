@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -60,8 +60,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   plhs[0] = AllocHist2D(out,M*N,1);
 
   status = MatrixToHist2DComp(in_in,M,N,out,opts);
-  if(status==EXIT_FAILURE)
-    mexErrMsgIdAndTxt("STAToolkit:matrix2hist2d:failure","matrix2hist2d failed.");
+  if(status!=EXIT_SUCCESS)
+    mexWarnMsgIdAndTxt("STAToolkit:matrix2hist2d:failure","Function matrix2hist2d returned with errors. Please check messages.");
 
   WriteHist2D(out,plhs[0]);
 

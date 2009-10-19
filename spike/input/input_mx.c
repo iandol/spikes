@@ -1,18 +1,26 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Contains code for processing the input data structure.
+ * This file contains C code to read from and write to a Matlab
+ * input data structure.
+ * @see staread.c.
+ */
+
 #include "../shared/toolkit_c.h"
 #include "../shared/toolkit_mx.h"
 /* #define DEBUG */
 
-/* ReadInput:
-   Reads in an mxArray structure and stores it in a input
-   structure */
+/**
+ * @brief Reads in an mxArray structure and stores it in a C input structure.
+ */
 struct input *ReadInput(const mxArray *in)
 {
   mxArray *in_sites,*in_categories,*in_trials;
@@ -189,8 +197,9 @@ void mxFreeInput(struct input *X)
   mxFree(X);
 }
 
-/* WriteInput:
-   Reads in a input structure and writes it to an mxArray structure */
+/**
+ * @brief Reads in a C input structure and writes it to an mxArray structure.
+ */
 mxArray *WriteInput(struct input *X, int L)
 {
   mxArray *out,*mx_sites,*mx_categories,*mx_trials,*mx_list;

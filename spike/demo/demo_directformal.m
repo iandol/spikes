@@ -1,9 +1,10 @@
 path(path,'..');
 
 opts.counting_bin_size = 6e-4;
+opts.legacy_binning = 0;
+opts.letter_cap = Inf;
 opts.entropy_estimation_method = {'plugin','tpmc','jack','ma'};
-opts.tpmc_possible_words_strategy=0;
-opts.bub_possible_words_strategy=2;
+opts.possible_words = 'recommended';
 opts.start_time = 0;
 opts.end_time = 8;
 orig_end_time = opts.end_time;

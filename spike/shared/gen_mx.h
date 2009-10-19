@@ -1,5 +1,5 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -34,8 +34,10 @@ extern void mxAddAndSetField(mxArray *in,int n,const char *field_name,mxArray *v
 extern mxArray *mxCreateEmptyStruct(void);
 extern struct options_entropy *ReadOptionsEntropy(const mxArray *in);
 extern mxArray *WriteOptionsEntropy(const mxArray *in,struct options_entropy *opts);
-extern int ReadOptionsIntMember(const mxArray *in,char *field_name,int *member);
-extern int ReadOptionsDoubleMember(const mxArray *in,char *field_name,double *member);
-extern void WriteOptionsDoubleMember(mxArray *out,char *field_name,double member,int flag);
-extern void WriteOptionsIntMember(mxArray *out,char *field_name,int member,int flag);
+extern int ReadOptionPossibleWords(const mxArray *in,const char *field_name,double *member);
+extern int ReadOptionsDoubleMember(const mxArray *in,const char *field_name,double *member);
+extern int ReadOptionsIntMember(const mxArray *in,const char *field_name,int *member);
+extern void WriteOptionPossibleWords(mxArray *out,const char *field_name,double member,int flag);
+extern void WriteOptionsDoubleMember(mxArray *out,const char *field_name,double member,int flag);
+extern void WriteOptionsIntMember(mxArray *out,const char *field_name,int member,int flag);
 

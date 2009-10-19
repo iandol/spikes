@@ -1,5 +1,5 @@
-# Data filename
-datafile=/home/david/projects/cornell/svn/toolkit/trunk/data/taste.stad;
+# Data filename (replace DATAFILE_FULL_PATH with the actual path)
+datafile=DATAFILE_FULL_PATH;
 #
 # Site metadata
 site=1; label=unit_001; recording_tag=episodic; time_scale=1.000000; time_resolution=0.001000

@@ -1,27 +1,48 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Condition data on both category and time slice.
+ * This file contains C code that is compiled into the MEX-file
+ * directcondformal.mex*. Its functionality may be accessed in
+ * Matlab by calling the function directcondformal. Additional
+ * documentation resides in directcondformal.m, and can be found
+ * by typing "help directcondformal" at the Matlab command prompt.
+ */
+
 #include "../../shared/toolkit_c.h"
 #include "../../shared/toolkit_mx.h"
-#include "direct.h"
+#include "direct_c.h"
+#include "direct_mx.h"
 
+/**
+ * @brief Interfaces C and Matlab data.
+ * This function is the MEX-file gateway routine. Please see the Matlab
+ * MEX-file documentation (http://www.mathworks.com/access/helpdesk/help/techdoc/matlab_external/f43721.html)
+ * for more information.
+ */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
+
+  /* allocate variables */
   int m,z;
   int M,Z;
   mxArray *mxbinned_in,*mxbinned_out;
   struct options_direct *opts;
 
+  /* check number of inputs (nargin) and outputs (nargout) */
   if((nrhs<1) | (nrhs>2))
     mexErrMsgIdAndTxt("STAToolkit:directcondformal:numArgs","1 or 2 input arguments required.");
   if((nlhs<1) | (nlhs>2))
     mexErrMsgIdAndTxt("STAToolkit:directcondformal:numArgs","1 or 2 output argument required.");
 
+  /* get or set options */
   if(nrhs<2)
     opts = ReadOptionsDirect(mxCreateEmptyStruct());
   else if(mxIsEmpty(prhs[1]))
@@ -29,7 +50,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   else
     opts = ReadOptionsDirect(prhs[1]);
 
-  M = mxGetM(prhs[0]);
+  M = mxGetM(prhs[0]); /* number of stimulus classes */
   Z = mxGetN(prhs[0]); /* Number of words per train */
 
   /* Read in binned cell array */

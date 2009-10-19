@@ -41,7 +41,8 @@ function [out,opts_used]=metric(X,opts)
 %             concurrently. When many parameters sets are being
 %             analyzed, this method can provide considerable
 %             computational savings. 
-%         The default value is 1.
+%         The default value is 0 if OPTS.shift_cost has one element
+%             and 1 if OPTS.shift_cost has multiple elements.
 %      OPTS.clustering_exponent: A constant that controls the
 %         clustering. Negative values emphasize smaller distances
 %         and positive values emphasize larger distances. The
@@ -56,7 +57,7 @@ function [out,opts_used]=metric(X,opts)
 %   METRIC_JACK.
 
 %
-%  Copyright 2006, Weill Medical College of Cornell University
+%  Copyright 2009, Weill Medical College of Cornell University
 %  All rights reserved.
 %
 %  This software is distributed WITHOUT ANY WARRANTY
@@ -65,6 +66,35 @@ function [out,opts_used]=metric(X,opts)
 %
 if(nargin<2)
   opts=[];
+end
+
+% Parameter checking necessary to avoid nonsensical options
+if(isfield(opts,'entropy_estimation_method') && ~isempty(strmatch('bub',opts.entropy_estimation_method,'exact')))
+  if(isfield(opts,'possible_words'))
+    if(strcmpi(opts.possible_words,'total') || strcmpi(opts.possible_words,'possible') || strcmpi(opts.possible_words,'min_tot_pos') || strcmpi(opts.possible_words,'min_lim_tot_pos'))
+      error('STAToolkit:metric:invalidArg',['opts.possible_words=''' opts.possible_words ''' should not be used with the metric space method.']);
+    end
+  elseif(isfield(opts,'bub_possible_words_strategy') && (opts.bub_possible_words_strategy~=0))
+    error('STAToolkit:metric:invalidArg','Only opts.bub_possible_words_strategy=0 should be used with the metric space method.');
+  end
+end
+if(isfield(opts,'entropy_estimation_method') && ~isempty(strmatch('tpmc',opts.entropy_estimation_method,'exact')))
+  if(isfield(opts,'possible_words'))
+    if(strcmpi(opts.possible_words,'total') || strcmpi(opts.possible_words,'possible') || strcmpi(opts.possible_words,'min_tot_pos') || strcmpi(opts.possible_words,'min_lim_tot_pos'))
+      error('STAToolkit:metric:invalidArg',['opts.possible_words=''' opts.possible_words ''' should not be used with the metric space method.']);
+    end
+  elseif(isfield(opts,'tpmc_possible_words_strategy') && (opts.tpmc_possible_words_strategy~=0))
+    error('STAToolkit:metric:invalidArg','Only opts.tpmc_possible_words_strategy=0 should be used with the metric space method.');
+  end
+end
+if(isfield(opts,'entropy_estimation_method') && ~isempty(strmatch('ww',opts.entropy_estimation_method,'exact')))
+  if(isfield(opts,'possible_words'))
+    if(strcmpi(opts.possible_words,'total') || strcmpi(opts.possible_words,'possible') || strcmpi(opts.possible_words,'min_tot_pos') || strcmpi(opts.possible_words,'min_lim_tot_pos'))
+      error('STAToolkit:metric:invalidArg',['opts.possible_words=''' opts.possible_words ''' should not be used with the metric space method.']);
+    end
+  elseif(isfield(opts,'ww_possible_words_strategy') && (opts.ww_possible_words_strategy~=0))
+    error('STAToolkit:metric:invalidArg','Only opts.ww_possible_words_strategy=0 should be used with the metric space method.');
+  end
 end
 
 [categories,times,labels,opts]=metricopen(X,opts);

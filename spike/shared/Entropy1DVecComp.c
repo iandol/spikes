@@ -1,11 +1,19 @@
 /*
- *  Copyright 2006, Weill Medical College of Cornell University
+ *  Copyright 2009, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
+/** @file
+ * @brief Entropy from a vector of 1-D histograms.
+ * This file contains the computational routines required by the
+ * MEX-file entropy1dvec.c. 
+ * @see entropy1dvec.c.
+ */
+
 #include "toolkit_c.h"
 
 int Entropy1DVecComp(struct hist1dvec *in,struct options_entropy *opts)
@@ -30,6 +38,6 @@ int Entropy1DVecComp(struct hist1dvec *in,struct options_entropy *opts)
   
   CFreeEst(temp2,opts);
 
-  return EXIT_SUCCESS;
+  return status;
 }
 

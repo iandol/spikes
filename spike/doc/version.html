@@ -1,81 +1,141 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Spike Train Analysis Toolkit: Version history and release notes</title>
-<link rel="stylesheet" type="text/css" href="style.css" title="default">
+	<meta name="generator" content="HTML Tidy for Linux/x86 (vers 7 December 2008), see www.w3.org" />
+	<title>Spike Train Analysis Toolkit: Version history and release notes</title>
+	<link rel="stylesheet" type="text/css" href="style.css" title="default" />
 </head>
-
 <body>
-
-<table>
-<tr>
-<td><a href="index.html"><img src="logo2.png"></a></td>
-<td><h1>Spike Train Analysis Toolkit<br>Version history and release notes</h1></td>
-</tr>
-</table>
-
-<p>
-<table border="1">
-<tr><th>Number</th><th>Date</th><th>Description</th></tr>
-
-<tr><td>Version 0.1</td><td>June 23, 2005</td><td>Initial release</td></tr>
-
-<tr><td>Version 0.2</td><td>March 3, 2006</td><td>Added multineuron capabilities to direct and metric space methods</td></tr>
-
-<tr><td>Version 0.2.1</td><td>March 27, 2006</td><td>Inclusion of functions for calculation of formal information rate with the direct method</td></tr>
-
-<tr valign="top"><td>Version 0.9</td>
-<td>June 22, 2006</td>
-<td>
-<p>Improvements and new features:<ul>
-<li>Eliminated <tt>directhash</tt> function (now internal to <tt>directcount</tt> functions)
-<li>Added Ma entropy estimate
-<li>Added bootstrap variance estimate
-<li>Made shuffling and jackknifing scripts more efficient
-<li>Added <tt>staversion</tt> function
-<li>Added D<sup>interval</sup>[q] in metric space method
-</ul></p>
-<p>There are few incompatibilities with earlier releases:
-<ul><li>The option <tt>variance_estimate_method</tt> is now called <tt>variance_estimation_method</tt>.
-<li>The &quot;single q&quot; and &quot;all q&quot; metric space method functions have been combined. The single q/all q choice is now specified with the option <tt>parallel</tt>.
-<li>Function <tt>metric</tt>'s output structure has been modifed. The member <tt>m_list</tt> is now called <tt>categories</tt>.
-</ul>
-</p>
-</td>
-</tr>
-
-<tr valign="top"><td>Version 0.9.1</td>
-<td>September 15, 2006</td>
-<td>
-<ul>
-<li>Now requires the GNU Scientific Library
-<li>Added Best Upper Bounds method to entropy estimation methods
-<li>Fixed bug that was suppressing diagnostic messages on Windows and Mac
-</ul>
-</td>
-</tr>
-
-<tr valign="top"><td>Version 1.0 Beta</td>
-<td>November 28, 2006</td>
-<td>
-<ul>
-<li>Explicit bias correction methods eliminated, now listed as separate entropy estimation methods
-<li>Introduced general and method-specific variance estimation methods
-<li>In earlier versions, the jackknife and bootstrap variance estimates in all estimate structures were obtained using the plug-in method instead of the method named in the estimate structure. This has been fixed.
-<li>Added Chao-Shen entropy estimation method
-<li>Added Wolpert-Wolf entropy estimation method
-<li>Code reorganized to facilitate external contributions
-<li>Contribution instructions added
-</ul>
-</td>
-</tr>
-
-</table>
-</p>
-
-<hr noshade>
-
-<p align="center"><a href="index.html">Back to contents.</a></p>
-
-
+	<table>
+		<tr>
+			<td><a href="index.html"><img src="logo2.png" /></a></td>
+			<td>
+				<h1>Spike Train Analysis Toolkit<br />
+				Version history and release notes</h1>
+			</td>
+		</tr>
+	</table>
+	<table border="1">
+		<tr>
+			<th>Number</th>
+			<th>Date</th>
+			<th>Description</th>
+		</tr>
+		<tr>
+			<td>Version 0.1</td>
+			<td>June 23, 2005</td>
+			<td>Initial release</td>
+		</tr>
+		<tr>
+			<td>Version 0.2</td>
+			<td>March 3, 2006</td>
+			<td>Added multineuron capabilities to direct and metric space methods</td>
+		</tr>
+		<tr>
+			<td>Version 0.2.1</td>
+			<td>March 27, 2006</td>
+			<td>Inclusion of functions for calculation of formal information rate with the direct method</td>
+		</tr>
+		<tr valign="top">
+			<td>Version 0.9</td>
+			<td>June 22, 2006</td>
+			<td>
+				<p>Improvements and new features:</p>
+				<ul>
+					<li>Eliminated <code>directhash</code> function (now internal to <code>directcount</code> functions)</li>
+					<li>Added Ma entropy estimate</li>
+					<li>Added bootstrap variance estimate</li>
+					<li>Made shuffling and jackknifing scripts more efficient</li>
+					<li>Added <code>staversion</code> function</li>
+					<li>Added D<sup>interval</sup>[q] in metric space method</li>
+				</ul>
+				<p>There are few incompatibilities with earlier releases:</p>
+				<ul>
+					<li>The option <code>variance_estimate_method</code> is now called <code>variance_estimation_method</code>.</li>
+					<li>The "single q" and "all q" metric space method functions have been combined. The single q/all q choice is now specified with the option <code>parallel</code>.</li>
+					<li>Function <code>metric</code>'s output structure has been modifed. The member <code>m_list</code> is now called <code>categories</code>.</li>
+				</ul>
+			</td>
+		</tr>
+		<tr valign="top">
+			<td>Version 0.9.1</td>
+			<td>September 15, 2006</td>
+			<td>
+				<ul>
+					<li>Now requires the GNU Scientific Library</li>
+					<li>Added Best Upper Bounds method to entropy estimation methods</li>
+					<li>Fixed bug that was suppressing diagnostic messages on Windows and Mac</li>
+				</ul>
+			</td>
+		</tr>
+		<tr valign="top">
+			<td>Version 1.0 Beta</td>
+			<td>November 28, 2006</td>
+			<td>
+				<ul>
+					<li>Explicit bias correction methods eliminated, now listed as separate entropy estimation methods</li>
+					<li>Introduced general and method-specific variance estimation methods</li>
+					<li>In earlier versions, the jackknife and bootstrap variance estimates in all estimate structures were obtained using the plug-in method instead of the method named in the estimate structure. This has been fixed.</li>
+					<li>Added Chao-Shen entropy estimation method</li>
+					<li>Added Wolpert-Wolf entropy estimation method</li>
+					<li>Code reorganized to facilitate external contributions</li>
+					<li>Contribution instructions added</li>
+				</ul>
+			</td>
+		</tr>
+		<tr valign="top">
+			<td>Version 1.0 Gamma</td>
+			<td>December 8, 2006</td>
+			<td>
+				<ul>
+					<li>Minor bug fixes</li>
+					<li>Addition of <code>staverify</code>.</li>
+				</ul>
+			</td>
+		</tr>
+		<tr valign="top">
+			<td>Version 1.1</td>
+			<td>April 29, 2009</td>
+			<td>
+				<ul>
+					<li>Minor bug fixes</li>
+					<li>Minor corrections to the project repository</li>
+				</ul>
+			</td>
+		</tr>
+		<tr valign="top">
+			<td>Version 1.2 r8036</td>
+			<td>August 26, 2009</td>
+			<td>
+				<p>New features:</p>
+				<ul>
+					<li>Added NSB entropy estimate, related parameter <code>nsb_precision</code>, and its specific variance method <code>nsb_var</code>.</li>
+					<li>Added global entropy option <code>possible_words</code>, which applies to methods <code>bub</code>, <code>nsb</code>, <code>tpmc</code>, and <code>ww</code>, and supercedes options <code>bub_possible_words_strategy</code>, <code>tpmc_possible_words_strategy</code>, and <code>ww_possible_words_strategy</code> (these latter three options are now deprecated).</li>
+					<li>Added error checking to <code>metric.m</code> and <code>binless.m</code> to prevent bug in deprecated options (i.e., <code>*_possible_words_strategy</code> as noted above).</li>
+					<li>Added additional output to the entropy <code>estimate</code> field in the output <code>hist1d</code> data structure.</li>
+					<li>Added information parameter <code>letter_cap</code>.</li>
+				</ul>
+				<p>Bug fixes:</p>
+				<ul>
+					<li>Fixed bug in <code>Matrix2Hist2DComp.c</code> in which the joint histogram in the output <code>hist2d</code> structure was miscalculated for some matrices when <code>unoccupied_bins_strategy=0</code>. This error effected any matrix in which the number of occupied columns is greater than the number of occupied rows.</li>
+					<li>Fixed bug in <code>DirectBinComp.c</code> that added an extra bin to all binned data when <code>n*(words_per_train*counting_bin_size)=(end_time-start_time)</code> for any positive integer <code>n</code>. This resulted in an incorrect value of <code>N</code> (number of sub-words or letters) in the output <code>hist1d</code> structure. In certain situations, this bug may slightly alter entropy calculations in which the options <code>bub_possible_words_strategy</code>, <code>tpmc_possible_words_strategy</code>, or <code>ww_possible_words_strategy</code> depend upon the value of <code>N</code>. An option <code>legacy_binning</code> was added to recover this functionality, if desired.</li>
+					<li>Fixed bug in <code>directbin.c</code> that permitted invalid values of <code>words_per_train</code>, and improved error checking.</li>
+					<li>Fixed bug in <code>entropy_bub_mx.c</code> that resulted in parameter <code>bub_lambda_0</code> being passed to the output options structure as an integer, rather than a double. This did not effect the calculation itself, but could lead to a misrepresentation of its value in user results.</li>
+					<li>Fixed bug in <code>entropy_ww_mx.c</code> that resulted in parameter <code>ww_beta</code> being passed to the output options structure as an integer, rather than a double. This did not effect the calculation itself, but could lead to a misrepresentation of its value in user results.</li>
+					<li>Fixed bug in <code>DirectBinComp.c</code> that caused a segmentation violation when options <code>permute_spike_trains=sum_spike_trains=1</code>.</li>
+					<li>Fixed bug in <code>entropy_mx.c</code> that prevented writing options to the output structure correctly when the value was changed internally. This bug had no outwardly noticeable effect.</li>
+				</ul>
+				<p>Minor improvements and changes:</p>
+				<ul>
+					<li>Improved argument checking in <code>hist_mx.c</code>, <code>directcountcond.c</code>, and <code>infocond.c</code>.</li>
+					<li>Made modifications to allow for integration of C++ code.</li>
+					<li>Improved <code>make.m</code> to compile files only when necessary (in the style of a true makefile), and provide additional options.</li>
+					<li>Updated documentation, demos, and related files to fix typos and reflect the aforementioned changes.</li>
+				</ul>
+			</td>
+		</tr>
+	</table>
+	<hr noshade="noshade" />
+	<p align="center"><a href="index.html">Back to contents.</a></p>
 </body>
 </html>
