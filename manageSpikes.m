@@ -2,14 +2,18 @@ classdef manageSpikes < handle
 	properties
 		action='check'
 		branch='main'
-		installLocation='/Users/Shared/Code/spikes/'
+		installLocation='/Users/Shared/Code/'
+		directoryName='spikes'
+		update='yes'
+		checkoutCommand='branch'
 		bzrLocation='/usr/local/bin/'
+		codeSource='http://144.82.131.18/user'
 	end
 	properties (SetAccess = private, GetAccess = private)
 		hasBzr = 0;
 		isInstalled = 0
 		arch = 'OSX'
-		allowedProperties = '(action|branch|installLocation|bzrLocation)'
+		allowedProperties = '(action|branch|installLocation|checkoutCommand|update|directoryName|bzrLocation|codeSource)'
 	end
 	methods
 		%%%CONSTRUCTOR%%%
@@ -21,7 +25,7 @@ classdef manageSpikes < handle
 			end
 			switch obj.arch
 				case 'OSX'
-					obj.installLocation='/Users/Shared/Code/spikes';
+					obj.installLocation='/Users/Shared/Code/';
 					obj.bzrLocation='/usr/local/bin/';
 				case 'WIN'
 					obj.installLocation='c:\Code\spikes\';
@@ -62,36 +66,55 @@ classdef manageSpikes < handle
 
 		%%%Check if things are installed or not%%%
 		function check(obj,~)
-			[status,~]=system([obj.bzrLocation filesep 'bzr']);
+			[status,~]=system([obj.bzrLocation filesep 'bzr']); 
 			if status == 0
 				obj.hasBzr = 1;
 			end
 			if exist(obj.installLocation,'dir')
 				obj.isInstalled = 1;
+				cd(obj.installLocation);
+				[status,values]=system([obj.bzrLocation 'bzr log -r -1']);
 			end
-			if obj.hasBzr && obj.isInstalled
+			if obj.hasBzr==1 && obj.isInstalled==1
 				obj.salutation('We have found an installed Spikes and you have Bzr able to update this install...');
-			elseif obj.hasBzr
-				obj.salutation('Spikes directory hasn''t been found. Run manageSpikes(''Install'') to install Spikes into Matlab.');
-			elseif obj.isInstalled
-				obj.salutation('Couldn''t find BZR, please install it!!!');
+			elseif obj.hasBzr==1 && obj.isInstalled~=1
+				if regexp(obj.action,'install');obj.salutation('Spikes directory hasn''t been found. Run manageSpikes(''Install'') to install Spikes into Matlab.');end;
+			elseif obj.hasBzr~=1 && obj.isInstalled==1
+				obj.salutation('Couldn''t find BZR, please install it first!!!');
 			else
 				obj.salutation('Couldn''t find anything!!!');
 			end
 		end
 
 		function install(obj,~)
-			obj.check();
-			if obj.hasBzr && obj.isInstalled %%%We need to upgrade
-				cd(obj.installLocation);
-				[status,values]=system([obj.bzrLocation 'bzr log -r -1']);
-				obj.salutation(values);
-			elseif obj.hasBzr
-				[status,values]=system([obj.bzrLocation 'bzr branch sftp://amscode@144.82.131.18/Code/user ' obj.installLocation]);
+			obj.check;
+			if obj.hasBzr && obj.isInstalled %%% We need to upgrade
+				out=input('Do you want to delete the previous install?','s');
+				if regexpi(out,'(yes|y)') %%% Clean install
+					cd(obj.installLocation);
+					[status,values]=system(['rm -rf ' obj.directoryName]);
+					if status ~= 0;obj.salutation(['Argh, couldn''t delete old install! - ' values]);end
+					[status,values]=system(['mkdir -p ' obj.installLocation]);
+					if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
+					[status,values]=system([obj.bzrLocation 'bzr ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
+					if status ~= 0;obj.salutation(['Argh, couldn''t branch! - ' values]);end
+				else
+					cd(obj.installLocation);
+					cd(obj.directoryName);
+					[status,values]=system([obj.bzrLocation 'bzr pull']);
+					if status ~= 0;obj.salutation(['Couldn''t update directory! - ' values]);end
+					obj.salutation(values);
+				end
+			elseif obj.hasBzr==1 && obj.isInstalled==0
+				[status,values]=system(['mkdir -p ' obj.installLocation]);
+				if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
+				[status,values]=system([obj.bzrLocation 'bzr ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
 				obj.salutation(values)
 			end
 		end
-		
+	end
+	
+	methods ( Access = private )
 		%%%Salutation%%%
 		function salutation(obj,in)
 			if ~exist('in','var')
