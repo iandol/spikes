@@ -35,7 +35,7 @@ classdef manageSpikes < handle
 					obj.installLocation='/Users/Shared/Code/';
 					obj.bzrLocation='/usr/local/bin/';
 				case 'WIN'
-					obj.installLocation='c:\Code\spikes\';
+					obj.installLocation='c:\Code\';
 					obj.bzrLocation='c:\bzr\';
 			end
 			%Initialise for superclass, stops a noargs error
@@ -72,6 +72,8 @@ classdef manageSpikes < handle
 						obj.check('callfromchar')
 					case 'info'
 						obj.info('callfromchar')
+					case 'help'
+						obj.help('callfromchar')
 				end
 			end
 			obj.salutation('Finished running manageSpikes...');
@@ -149,9 +151,12 @@ classdef manageSpikes < handle
 				cd(obj.directoryName);
 				[status,values]=system([obj.bzrLocation 'bzr pull ' obj.codeSource]);
 				if status ~= 0;obj.salutation(['Couldn''t update directory! - ' values]);end
-				obj.salutation(values);
+				if regexpi(values,'These branches have diverged')
+					obj.salutation('You will need to manually merge this local and remote tree''s, please ask Ian for more information!')
+				end
+				%obj.salutation(values);
 			end
-			obj.verbose=0;
+			%obj.verbose=0;
 			obj.check('afterupdate')
 		end
 		
@@ -160,6 +165,10 @@ classdef manageSpikes < handle
 			obj.verbose=1;
 			obj.check('callfromchar')
 			obj.path=obj.genpath(fullfile(obj.installLocation,obj.directoryName));
+		end
+		
+		function help(obj,~)
+			
 		end
 	end %---END PUBLIC METHODS---%
 	
@@ -174,18 +183,20 @@ classdef manageSpikes < handle
 		end
 		
 		function addpath(obj)
-			
+			addpath(obj.path,'-begin');
+			savepath;
 		end
 		
 		function removepath(obj)
-			
+			rmpath(obj.path);
+			savepath;
 		end
 		
 		function checkpath(obj)
 			
 		end
 		
-		function p=genpath(obj,d) %modified to allw exclusion of 
+		function p=genpath(obj,d) %modified to allow exclusion of 
 			exclstart = '^(\.|\.\.|@|+|\.bzr|\.svn|\.git)';
 			exclpath = '(VSX|VSS|c_sources|licence|private)';
 			p = '';
