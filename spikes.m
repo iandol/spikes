@@ -58,7 +58,7 @@ case 'Initialize'
 	sv=[];
 	data=[];
 	rlist=[];
-	sv.version='SPIKES: V1.82d';
+	sv.version='SPIKES: V1.82e';
 	sv.temppath=getenv('TEMP');
 	if ismac
 		sv.usingmac=1;
@@ -3006,7 +3006,8 @@ elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==1
 	if data.numvars==3
 		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xzval)) '/' data.ytitle '=' num2str(data.yvalues(sv.yval))];
 	elseif data.numvars==2
-		data.lockedtitle=[data.ytitle '=' num2str(data.yvalues(sv.yval))];
+        data.lockedtitle=' r ';
+		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xval))];
 	end
 	if data.plottype>6; data.plottype=6; set(gh('SPlotMenu'),'Value',data.plottype); end
 	xvals=data.yvalues;
@@ -3134,7 +3135,7 @@ switch data.numvars
 			case 5
 				PlotFanogram;
 			case 6
-				PlotVector;
+				PlotVector(xvals,xname);
 			otherwise
 				PlotDMatrix;
 		end
