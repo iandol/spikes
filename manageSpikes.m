@@ -153,6 +153,7 @@ classdef manageSpikes < handle
 				if status ~= 0;obj.salutation(['Couldn''t update directory! - ' values]);end
 				if regexpi(values,'These branches have diverged')
 					obj.salutation('You will need to manually merge this local and remote tree''s, please ask Ian for more information!')
+					system([obj.bzrLocation 'bzr explorer ']);
 				end
 				%obj.salutation(values);
 			end
