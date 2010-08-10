@@ -6,13 +6,14 @@ classdef baseStimulus < handle
 		type='sinusoid'
 		xPosition=0
 		yPosition=0
-		size=200
+		size=2
 		windowed='none'
+		color=[0.5 0.5 0.5 0]
 	end
 	properties (SetAccess = private, GetAccess = private)
 		display=0
 		texid
-		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|windowed)$'
+		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|windowed|color)$'
 	end
 	methods
 		function obj = baseStimulus(args)
@@ -22,7 +23,7 @@ classdef baseStimulus < handle
 					fnames = fieldnames(args); %find our argument names
 					for i=1:length(fnames);
 						if regexp(fnames{i},obj.allowedPropertiesBase) %only set if allowed property
-							obj.salutation(fnames{i});
+							obj.salutation(fnames{i},'Configuring setting in baseStimulus constructor');
 							obj.(fnames{i})=args.(fnames{i}); %we set up the properies from the arguments as a structure
 						end
 					end
@@ -34,11 +35,15 @@ classdef baseStimulus < handle
 				obj.yPosition=args{4};
 			end
 		end
-		function salutation(obj,in)
+		function salutation(obj,in,message)
 			if ~exist('in','var')
 				in = 'random user';
 			end
-			fprintf(['\nHello from ' obj.family ' stimulus, ' in '\n\n']);
+			if exist('message','var')
+				fprintf([message ' | ' in '\n']);
+			else
+				fprintf(['\nHello from ' obj.family ' stimulus, ' in '\n\n']);
+			end
 		end
 	end
 end

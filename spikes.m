@@ -58,17 +58,21 @@ case 'Initialize'
 	sv=[];
 	data=[];
 	rlist=[];
-	sv.version='SPIKES: V1.82d';
-	sv.temppath=getenv('TEMP');
+	sv.version='SPIKES: V1.82e';
 	if ismac
+		if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
+			mkdir(['~' filesep 'MatlabFiles' filesep]);
+		end
 		sv.usingmac=1;
 		sv.historypath=['~' filesep 'MatlabFiles' filesep];
+		sv.temppath=['/private/tmp/matlab/spikes/'];
 	elseif ispc
         if ~exist('c:\MatlabFiles','dir')
             mkdir('c:\MatlabFiles')
         end
 		sv.usingmac=0;
 		sv.historypath=['c:' filesep 'MatlabFiles' filesep];
+		sv.temppath=getenv('TEMP');
 	end
 	sv.uihandle=spikes_UI; %our GUI file
 	figpos(2);	%position the figure
@@ -280,20 +284,23 @@ case 'Load'
 		set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
 		automeasure=0;
 		
-		if regexpi(e,'\.smr') %raw SMR File so we need to run it through VSX first
+		if regexpi(e,'\.zip')
+			data.zipload=true;
+			zs=zipspikes(struct('action','load','sourcepath','~/test.zip'));
+		elseif regexpi(e,'\.smr') %raw SMR File so we need to run it through VSX first
 			if (strcmp(sv.auto,'report') || strcmp(sv.auto,'yes') ) && isdir([p filesep basefilename])
 				pn2=basefilename;
 				data.filetype = 'txt';
 			else
 				if isdir([p filesep basefilename]) %stops annoying "directory alread exists" messages
 					cd(sv.historypath);
-					disp('Deleted existing directory...');
+					disp('Deleting existing directory...');
 					rmdir([p filesep basefilename],'s');
 					cd(p);
 				end
 				[s,w]=dos(['"',sv.userroot,'\various\vsx\vsx.exe" "',pn,fn,'"']);
                 if s>0; error(w); end
-				pn2 = fn(1:find(fn(:)=='.')-1);				
+				pn2 = fn(1:find(fn(:)=='.')-1);
 				if ~exist([pn,pn2],'dir'); error('Sorry VSX cannot load the data!!! Make sure files do not have the read-only attribute set...'); end
 				data.filetype = 'smr';
 			end
