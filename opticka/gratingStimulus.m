@@ -1,15 +1,19 @@
 classdef gratingStimulus < baseStimulus
+%ANNULUSSTIMULUS Summary of this class goes here
+%   Detailed explanation goes here
    properties
-		sf=0.01
-		tf=0.01
 		method='procedural'
-		angle=0;
-		phase=0;
-		contrast=10;
-		texid=[];
+		sf=1
+		tf=2
+		angle=0
+		rotationMethod=1
+		phase=0
+		contrast=0.36
+		texid=[]
+		mask=1
 	end
 	properties (SetAccess = private, GetAccess = private)
-		allowedProperties='(sf|tf|method|angle|phase|contrast|texid)';
+		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|texid|mask)$';
 	end
    methods
 		function obj = gratingStimulus(args) %%%CONSTRUCTOR%%%
@@ -27,28 +31,22 @@ classdef gratingStimulus < baseStimulus
 				fnames = fieldnames(args); %find our argument names
 				for i=1:length(fnames);
 					if regexp(fnames{i},obj.allowedProperties) %only set if allowed property
-						obj.salutation(fnames{i});
+						obj.salutation(fnames{i},'Configuring setting in gratingStimulus constructor');
 						obj.(fnames{i})=args.(fnames{i}); %we set up the properies from the arguments as a structure
 					end
-					i=i+1;
 				end
-				%if isfield(args,'sf');obj.sf=args.sf;end
-				%if isfield(args,'tf');obj.tf=args.tf;end
-				%if isfield(args,'angle');obj.angle=args.angle;end
-				%if isfield(args,'phase');obj.phase=args.phase;end
-				%if isfield(args,'contrast');obj.contrast=args.contrast;end
 			end
-			obj.salutation('happy grating stimulus user');
+			obj.salutation('constructor','Grating Stimulus initialisation complete');
 		end
-% 		function obj = set.sf(obj,value)
-% 			if ~(value > 0)
-% 				value = 0.01;
-% 			end
-% 			obj.sf = value;
-% 			obj.salutation(['set.sf: ' num2str(value)])
-% 		end
+		function set.sf(obj,value)
+			if ~(value > 0)
+				value = 0.01;
+			end
+			obj.sf = value;
+			obj.salutation(['set sf: ' num2str(value)],'Custom set method')
+		end
 % 		function value = get.sf(obj)
-% 			obj.salutation(['get.sf: ' num2str(obj.sf)])
+% 			obj.salutation(['get sf: ' num2str(obj.sf)],'yay')
 % 		end
 	end
 end

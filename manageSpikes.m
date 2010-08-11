@@ -185,6 +185,16 @@ classdef manageSpikes < handle
 			[status,values]=system([obj.bzrLocation ' ' obj.directoryName]);
 			if status ~= 0;obj.salutation(['Argh, could not explore']);end
 		end
+		
+		function addpath(obj)
+			addpath(obj.spikespath,'-begin');
+			savepath;
+		end
+		
+		function removepath(obj)
+			rmpath(obj.spikespath);
+			savepath;
+		end
 	end %---END PUBLIC METHODS---%
 	
 	methods ( Access = private ) %----------PRIVATE METHODS---------%
@@ -195,16 +205,6 @@ classdef manageSpikes < handle
 			else
 				fprintf('---> %s\n',in);
 			end
-		end
-		
-		function addpath(obj)
-			addpath(obj.spikespath,'-begin');
-			savepath;
-		end
-		
-		function removepath(obj)
-			rmpath(obj.spikespath);
-			savepath;
 		end
 		
 		function checkpath(obj)
