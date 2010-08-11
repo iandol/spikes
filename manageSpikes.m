@@ -5,7 +5,7 @@ classdef manageSpikes < handle
 		installLocation='/Users/Shared/Code/'
 		directoryName='spikes'
 		checkoutCommand='branch'
-		bzrLocation='/usr/local/bin/'
+		bzrLocation='/usr/local/bin/bzr'
 		codeSource='http://144.82.131.18/spikes'
 		revNo=0
 		verbose=1
@@ -13,7 +13,7 @@ classdef manageSpikes < handle
 		revInfo=''
 		repInfo=''
 		bzrInfo=''
-		path=''
+		spikespath=''
 	end
 	properties (SetAccess = private, GetAccess = private) %---PRIVATE PROPERTIES---%
 		hasBzr = 0
@@ -33,10 +33,10 @@ classdef manageSpikes < handle
 			switch obj.arch
 				case 'OSX'
 					obj.installLocation='/Users/Shared/Code/';
-					obj.bzrLocation='/usr/local/bin/';
+					obj.bzrLocation='/usr/local/bin/bzr';
 				case 'WIN'
-					obj.installLocation='c:\Code\';
-					obj.bzrLocation='c:\bzr\';
+					obj.installLocation='C:\Users\Public\Code\';
+					obj.bzrLocation='bzr.exe';
 			end
 			%Initialise for superclass, stops a noargs error
 			if nargin == 0
@@ -81,15 +81,19 @@ classdef manageSpikes < handle
 
 		%====Check if things are installed or not====%
 		function check(obj,~) 
-			[status,obj.bzrInfo]=system([obj.bzrLocation filesep 'bzr version']); 
+			[status,obj.bzrInfo]=system([obj.bzrLocation ' version']); 
 			if status == 0
-				version=regexp(obj.bzrInfo,'^Bazaar \(bzr\) (\d+\.\d+\.\d+)','tokens');
-				obj.bzrVersion=version{1}{1};
+				version=regexp(obj.bzrInfo,'Bazaar \(bzr\) (?<value>[\d]\.[\d][\.\d\w]+)','names');
+				if ~isempty(version)
+					obj.bzrVersion=version.value;
+				else
+					obj.bzrVersion=['Couldn''t find version'];
+				end
 				obj.hasBzr = 1;
 			end
-			if exist(obj.installLocation,'dir')
+			if exist([obj.installLocation obj.directoryName],'dir')
 				cd([obj.installLocation obj.directoryName]);
-				[status,obj.revInfo]=system([obj.bzrLocation 'bzr log -r -1']);
+				[status,obj.revInfo]=system([obj.bzrLocation ' log -r -1']);
 				if status ~= 0
 					obj.salutation(['Bzr can''t find a managed source -- ' values]);
 					obj.isInstalled=0;
@@ -97,7 +101,7 @@ classdef manageSpikes < handle
 					obj.isInstalled = 1;
 					revNo=regexp(obj.revInfo,'revno: (\d)+','tokens'); %Get revision number 
 					obj.revNo=revNo{1}{1};
-					[~,obj.repInfo]=system([obj.bzrLocation 'bzr info -v']);
+					[~,obj.repInfo]=system([obj.bzrLocation ' info -v']);
 					if obj.verbose == 1
 						obj.salutation
 						obj.salutation(obj.revInfo);
@@ -108,10 +112,14 @@ classdef manageSpikes < handle
 				end
 			end
 			if obj.hasBzr==1 && obj.isInstalled==1 && obj.verbose==1
-				obj.salutation(['We have found an installed Spikes Revision: ' obj.revNo ' and you have Bzr able to update this install...']);
-			elseif obj.hasBzr==1 && obj.isInstalled~=1
+                if regexp(obj.action,'install');
+                    obj.salutation('We have both Bzr and a Spikes install, we will try to update it');
+                else
+                    obj.salutation(['We have found an installed Spikes Revision: ' obj.revNo ' and you have Bzr able to update this install...']);
+                end
+            elseif obj.hasBzr==1 && obj.isInstalled~=1
 				if regexp(obj.action,'install');
-					obj.salutation(['We will need to install a fresh copy into ' obj.installLocation obj.directoryName '.']);
+					obj.salutation(['We will install the latest version of Spikes into ' obj.installLocation obj.directoryName '.']);
 				else
 					obj.salutation('Spikes directory hasn''t been found. Run manageSpikes(''install'') if you wish to install Spikes into Matlab.');
 				end;
@@ -130,7 +138,7 @@ classdef manageSpikes < handle
 			elseif obj.hasBzr==1 && obj.isInstalled==0
 				[status,values]=system(['mkdir -p ' obj.installLocation]);
 				if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
-				[~,values]=system([obj.bzrLocation 'bzr ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
+				[~,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
 				obj.salutation(values)
 			end
 		end
@@ -144,16 +152,16 @@ classdef manageSpikes < handle
 				if status ~= 0;obj.salutation(['Argh, couldn''t delete old install! - ' values]);end
 				[status,values]=system(['mkdir -p ' obj.installLocation]);
 				if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
-				[status,values]=system([obj.bzrLocation 'bzr ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
+				[status,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
 				if status ~= 0;obj.salutation(['Argh, couldn''t branch! - ' values]);else obj.salutation(['Success: ' values]);end
 			else
 				cd(obj.installLocation);
 				cd(obj.directoryName);
-				[status,values]=system([obj.bzrLocation 'bzr pull ' obj.codeSource]);
+				[status,values]=system([obj.bzrLocation ' pull ' obj.codeSource]);
 				if status ~= 0;obj.salutation(['Couldn''t update directory! - ' values]);end
 				if regexpi(values,'These branches have diverged')
-					obj.salutation('You will need to manually merge this local and remote tree''s, please ask Ian for more information!')
-					system([obj.bzrLocation 'bzr explorer ']);
+					obj.salutation('You will need to manually merge this local and remote trees, please ask Ian for more information!')
+					system([obj.bzrLocation ' explorer ']);
 				end
 				%obj.salutation(values);
 			end
@@ -165,11 +173,17 @@ classdef manageSpikes < handle
 		function info(obj,~) %just a wrapper to a verbose check
 			obj.verbose=1;
 			obj.check('callfromchar')
-			obj.path=obj.genpath(fullfile(obj.installLocation,obj.directoryName));
+			obj.spikespath=obj.genpath(fullfile(obj.installLocation,obj.directoryName));
 		end
 		
 		function help(obj,~)
 			
+		end
+		
+		function explore(obj,~)
+			cd([obj.installLocation obj.directoryName]);
+			[status,values]=system([obj.bzrLocation ' ' obj.directoryName]);
+			if status ~= 0;obj.salutation(['Argh, could not explore']);end
 		end
 	end %---END PUBLIC METHODS---%
 	
@@ -184,16 +198,21 @@ classdef manageSpikes < handle
 		end
 		
 		function addpath(obj)
-			addpath(obj.path,'-begin');
+			addpath(obj.spikespath,'-begin');
 			savepath;
 		end
 		
 		function removepath(obj)
-			rmpath(obj.path);
+			rmpath(obj.spikespath);
 			savepath;
 		end
 		
 		function checkpath(obj)
+			
+		end
+		
+		function parsepath(obj) %
+			oldpath = path;
 			
 		end
 		
