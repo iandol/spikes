@@ -58,7 +58,7 @@ case 'Initialize'
 	sv=[];
 	data=[];
 	rlist=[];
-	sv.version='SPIKES: V1.82e';
+	sv.version='SPIKES: V1.83a';
 	if ismac
 		if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
 			mkdir(['~' filesep 'MatlabFiles' filesep]);
@@ -74,6 +74,8 @@ case 'Initialize'
 		sv.historypath=['c:' filesep 'MatlabFiles' filesep];
 		sv.temppath=getenv('TEMP');
 	end
+	javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
+	%javax.swing.UIManager.setLookAndFeel('com.jgoodies.looks.plastic.Plastic3DLookAndFeel')
 	sv.uihandle=spikes_UI; %our GUI file
 	figpos(2);	%position the figure
 	set(sv.uihandle,'Name', [sv.version ' | Started at ' datestr(now)]);
@@ -171,6 +173,7 @@ case 'Initialize'
             error('Cannot find Spikes parent directory');
         end
 		sv.userroot=sv.userroot{1};
+		javax.swing.UIManager.setLookAndFeel('com.apple.laf.AquaLookAndFeel');
 	else
 		sv.matlabroot=regexprep(matlabroot,'Program files','Progra~1','ignorecase');
 		if regexp(sv.matlabroot,'2006b')
@@ -179,6 +182,8 @@ case 'Initialize'
 		mpath=path;
 		sv.userroot=regexpi(mpath,'([^;]+(user|Spikes));','tokens','once');
 		sv.userroot=sv.userroot{1};
+		javax.swing.UIManager.setLookAndFeel('com.sun.java.swing.plaf.windows.WindowsLookAndFeel');
+		
 	end
 	
 	if isfield(paths,'matsavepath')

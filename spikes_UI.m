@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 06-Nov-2008 18:43:34
+% Last Modified by GUIDE v2.5 11-Aug-2010 00:30:58
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -877,5 +877,3 @@ function SRemoveMean_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of SRemoveMean
-
-
