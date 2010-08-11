@@ -6,7 +6,7 @@ classdef showStimulus < handle
 		distance=57.3 % rad2ang(2*(atan((0.5*1cm)/57.3cm))) equals 1deg
 		pixelsPerDegree
 		stimulus
-		screen=0
+		screen=1
 		maxScreen
 		windowed=1
 		debug=1
@@ -42,6 +42,8 @@ classdef showStimulus < handle
 		function showGrating(obj)
 			AssertOpenGL;
 			AssertOSX;
+			obj.openSerialPort
+			pause(1)
 			
 			try
 				if obj.debug==1
@@ -61,9 +63,9 @@ classdef showStimulus < handle
 				PsychImaging('AddTask', 'General', 'NormalizedHighresColorRange');
 				
 				if obj.windowed==1
-					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
+					[window, windowrect] = PsychImaging('OpenWindow', obj.maxScreen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				else
-					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
+					[window, windowrect] = PsychImaging('OpenWindow', obj.maxScreen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				end
 				
 % 				if obj.windowed==1
@@ -121,10 +123,15 @@ classdef showStimulus < handle
 				dstRect=[]
 				KbReleaseWait;
 				vbl = Screen('Flip', window);
-				
+				i=0;
 				while 1
 					if obj.gabor==0
-						Screen('DrawTexture', window, gratingTexture, [], dstRect, angle, [], [], [], [], rotateMode, [phase, spatialFrequency, amplitude, 0]);
+						if mod(i,100)
+							obj.setSerial(1);
+						else
+							obj.setSerial(0);
+							Screen('DrawTexture', window, gratingTexture, [], dstRect, angle, [], [], [], [], rotateMode, [phase, spatialFrequency, amplitude, 0]);
+						end
 					else
 						Screen('DrawTexture', window, gratingTexture, [], dstRect, [], [], [], [], [], kPsychDontDoRotation, [phase, spatialFrequency, 10, 10, 0.5, 0, 0, 0]);
 					end
@@ -134,7 +141,8 @@ classdef showStimulus < handle
 					if KbCheck || any(buttons) % break out of loop
 						break;
 					end;
-					%phase = phase + phaseincrement;
+					phase = phase + phaseincrement;
+					i=i+1;
 					%angle=angle+0.1;
 					% Show it at next retrace:
 					vbl = Screen('Flip', window, vbl + 0.5 * ifi);
@@ -142,14 +150,29 @@ classdef showStimulus < handle
 				
 				Priority(0);
 				ShowCursor;
+				obj.closeSerialPort;
 				Screen('CloseAll');
 			catch ME	
 				Screen('CloseAll');
 				Priority(0);
 				ShowCursor;
+				obj.closeSerialPort;
 				rethrow(ME)
 			end
 			
+		end
+		
+		function openSerialPort(obj)
+			USBTTL('open')
+		end
+		
+		function setSerial(obj,value)
+			USBTTL('set',value);
+		end
+		
+		function closeSerialPort(obj)
+			USBTTL('close')
+			IOPort CloseAll
 		end
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		function salutation(obj,in,message)

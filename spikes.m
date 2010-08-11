@@ -3018,7 +3018,8 @@ elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==1
 	if data.numvars==3
 		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xzval)) '/' data.ytitle '=' num2str(data.yvalues(sv.yval))];
 	elseif data.numvars==2
-		data.lockedtitle=[data.ytitle '=' num2str(data.yvalues(sv.yval))];
+        data.lockedtitle=' r ';
+		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xval))];
 	end
 	if data.plottype>6; data.plottype=6; set(gh('SPlotMenu'),'Value',data.plottype); end
 	xvals=data.yvalues;
@@ -3146,7 +3147,7 @@ switch data.numvars
 			case 5
 				PlotFanogram;
 			case 6
-				PlotVector;
+				PlotVector(xvals,xname);
 			otherwise
 				PlotDMatrix;
 		end
@@ -4124,7 +4125,3 @@ function polardiagonal
 		ylabel('Firing Rate (Hz)');
 	end
 	title([data.matrixtitle 'DIAGONAL -- CircMean=' num2str(rad2ang(mu)) '  AxialMean=' num2str(rad2ang(mu2)) '  pR=' num2str(pval) ' pV=' num2str(pval2) ]);
-	
-	
-	
-		

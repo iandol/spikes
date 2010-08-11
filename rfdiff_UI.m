@@ -22,7 +22,7 @@ function varargout = rfdiff_UI(varargin)
 
 % Edit the above text to modify the response to help rfdiff_UI
 
-% Last Modified by GUIDE v2.5 01-Jul-2008 22:55:16
+% Last Modified by GUIDE v2.5 26-Jan-2010 19:31:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -829,3 +829,111 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+% --- Executes on button press in RFDJOn.
+function RFDJOn_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDJOn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RFDJOn
+
+
+
+function RFDJX_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDJX (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of RFDJX as text
+%        str2double(get(hObject,'String')) returns contents of RFDJX as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function RFDJX_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RFDJX (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function RFDJY_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDJY (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of RFDJY as text
+%        str2double(get(hObject,'String')) returns contents of RFDJY as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function RFDJY_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RFDJY (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in RFDKOn.
+function RFDKOn_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDKOn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RFDKOn
+
+
+
+function RFDKX_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDKX (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of RFDKX as text
+%        str2double(get(hObject,'String')) returns contents of RFDKX as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function RFDKX_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RFDKX (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function RFDKY_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDKY (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of RFDKY as text
+%        str2double(get(hObject,'String')) returns contents of RFDKY as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function RFDKY_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RFDKY (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
