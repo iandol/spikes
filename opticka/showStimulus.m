@@ -13,6 +13,8 @@ classdef showStimulus < handle
 		doubleBuffer=1
 		antiAlias=[]
 		gabor=1
+		serialPortName='dummy'
+		serialP
 	end
 	properties (SetAccess = private, GetAccess = private)
 		black=0
@@ -20,30 +22,34 @@ classdef showStimulus < handle
 		allowedPropertiesBase='^(pixelsPerCm|distance|screen|windowed|stimulus|gabor|antiAlias|debug|windowed)$'
 	end
 	methods
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%CONSTRUCTOR
+		%==============CONSTRUCTOR============%
 		function obj = showStimulus(args)
-			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
-			obj.maxScreen=max(Screen('Screens'));
+			
 			if nargin>0 && isstruct(args) %user passed some settings, we will parse through them and set them up
 				if nargin>0 && isstruct(args)
 					fnames = fieldnames(args); %find our argument names
 					for i=1:length(fnames);
 						if regexp(fnames{i},obj.allowedPropertiesBase) %only set if allowed property
-							obj.salutation(fnames{i},'Configuring setting in showStimulus constructor');
+							obj.salutation(fnames{i},'Configuring property in showStimulus constructor');
 							obj.(fnames{i})=args.(fnames{i}); %we set up the properies from the arguments as a structure
 						end
 					end
 				end
-			elseif nargin>0 && iscell(args)
-				
 			end
+			
+			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
+			obj.maxScreen=max(Screen('Screens'));
+			if obj.screen > obj.maxScreen
+				obj.screen = obj.maxScreen;
+			end
+			
 		end
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		function showGrating(obj)
 			AssertOpenGL;
 			AssertOSX;
-			obj.openSerialPort
-			pause(1)
+			obj.serialP=sendSerial(struct('name',obj.serialPortName,'openNow',1));
+			obj.serialP.setDTR(0)
 			
 			try
 				if obj.debug==1
@@ -63,9 +69,9 @@ classdef showStimulus < handle
 				PsychImaging('AddTask', 'General', 'NormalizedHighresColorRange');
 				
 				if obj.windowed==1
-					[window, windowrect] = PsychImaging('OpenWindow', obj.maxScreen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
+					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				else
-					[window, windowrect] = PsychImaging('OpenWindow', obj.maxScreen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
+					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				end
 				
 % 				if obj.windowed==1
@@ -126,12 +132,7 @@ classdef showStimulus < handle
 				i=0;
 				while 1
 					if obj.gabor==0
-						if mod(i,100)
-							obj.setSerial(1);
-						else
-							obj.setSerial(0);
-							Screen('DrawTexture', window, gratingTexture, [], dstRect, angle, [], [], [], [], rotateMode, [phase, spatialFrequency, amplitude, 0]);
-						end
+						Screen('DrawTexture', window, gratingTexture, [], dstRect, angle, [], [], [], [], rotateMode, [phase, spatialFrequency, amplitude, 0]);
 					else
 						Screen('DrawTexture', window, gratingTexture, [], dstRect, [], [], [], [], [], kPsychDontDoRotation, [phase, spatialFrequency, 10, 10, 0.5, 0, 0, 0]);
 					end
@@ -150,13 +151,13 @@ classdef showStimulus < handle
 				
 				Priority(0);
 				ShowCursor;
-				obj.closeSerialPort;
+				obj.serialP.close;
 				Screen('CloseAll');
 			catch ME	
 				Screen('CloseAll');
 				Priority(0);
 				ShowCursor;
-				obj.closeSerialPort;
+				obj.serialP.close;
 				rethrow(ME)
 			end
 			
