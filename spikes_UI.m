@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 21-Oct-2009 16:26:03
+% Last Modified by GUIDE v2.5 11-Aug-2010 00:30:58
 
 if nargin == 0  % LAUNCH GUI
 	

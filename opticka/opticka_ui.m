@@ -22,7 +22,7 @@ function varargout = opticka_ui(varargin)
 
 % Edit the above text to modify the response to help opticka_ui
 
-% Last Modified by GUIDE v2.5 15-Dec-2008 22:41:44
+% Last Modified by GUIDE v2.5 02-Aug-2010 19:13:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2158,4 +2158,3 @@ if get(hObject,'Value')==1
 else
 	set(childlist,'Enable','off')
 end
-
