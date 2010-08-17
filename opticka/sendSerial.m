@@ -5,14 +5,14 @@ classdef sendSerial < handle
 		name='usbserial-A600drIC'
 		deviceID
 		baudRate=115200
-		silentMode=0
+		silentMode=0 %this allows us to be called even if no serial port is attached
 		portHandle
 		verbosity=4
-		openNow=0
+		openNow=0 %allows the constructor to run the open method immediately
 	end
 	properties (SetAccess = private, GetAccess = private)
-		allowedPropertiesBase='^(name|baudRate)$'
-		toggleRTS=0
+		allowedPropertiesBase='^(name|baudRate|silentMode|verbosity|openNow)$'
+		toggleRTS=0 %keep the state here to toggle on succesive calls
 		toggleDTR=0
 	end
 	methods%------------------PUBLIC METHODS--------------%
@@ -33,19 +33,22 @@ classdef sendSerial < handle
 				obj.name=args; %assume a name
 			end
 			obj.find; %find the full connection info
+			if isempty(obj.name) %we were deliberately passed an empty name, will re-specify default
+				obj.name='usbserial-A600drIC';
+			end
 			if obj.openNow==1
 				obj.open
 			end
 		end
 		
 		%===============OPEN PORT================%
-		function open(obj,name)
+		function open(obj)
 			if obj.silentMode==0
 				obj.portHandle=IOPort('OpenSerialport', obj.deviceID, sprintf(' BaudRate=%i',obj.baudRate));
 				IOPort('Verbosity', obj.verbosity);
 				if isempty(obj.portHandle)
 					disp('Couldn''t open Serial Port, try the open method with another name')
-					obj.silentMode=1
+					obj.silentMode=1;
 				end
 			end
 		end
@@ -120,7 +123,7 @@ classdef sendSerial < handle
 			if exist('message','var')
 				fprintf([message ' | ' in '\n']);
 			else
-				fprintf(['\nHello from sendSerial\n\n']);
+				fprintf(['\nHello from ' obj.name ' | sendSerial\n\n']);
 			end
 		end
 	end
