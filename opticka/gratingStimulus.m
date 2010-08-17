@@ -8,9 +8,10 @@ classdef gratingStimulus < baseStimulus
 		angle=0
 		rotationMethod=1
 		phase=0
-		contrast=0.36
+		contrast=0.75
 		texid=[]
 		mask=1
+		gabor=0
 	end
 	properties (SetAccess = private, GetAccess = private)
 		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|texid|mask)$';

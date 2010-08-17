@@ -1,19 +1,19 @@
 classdef baseStimulus < handle
-	%BASESTIMULUS Summary of this class goes here
-	%   Detailed explanation goes here
+	%BASESTIMULUS Superclass providing basic structure for all stimulus
+	%classes
+	%   Detailed explanation to come
 	properties
 		family='grating'
 		type='sinusoid'
 		xPosition=0
 		yPosition=0
 		size=2
-		windowed='none'
 		color=[0.5 0.5 0.5 0]
 	end
 	properties (SetAccess = private, GetAccess = private)
 		display=0
 		texid
-		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|windowed|color)$'
+		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|color)$'
 	end
 	methods
 		function obj = baseStimulus(args)

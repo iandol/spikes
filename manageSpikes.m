@@ -76,7 +76,7 @@ classdef manageSpikes < handle
 						obj.help('callfromchar')
 				end
 			end
-			obj.salutation('Finished running manageSpikes...');
+			obj.salutation('Finished initialising manageSpikes...');
 		end
 
 		%====Check if things are installed or not====%
@@ -140,6 +140,8 @@ classdef manageSpikes < handle
 				if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
 				[~,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
 				obj.salutation(values)
+				obj.genpath;
+				obj.addpath
 			end
 		end
 		
@@ -159,11 +161,11 @@ classdef manageSpikes < handle
 				cd(obj.directoryName);
 				[status,values]=system([obj.bzrLocation ' pull ' obj.codeSource]);
 				if status ~= 0;obj.salutation(['Couldn''t update directory! - ' values]);end
+				obj.salutation(values);
 				if regexpi(values,'These branches have diverged')
 					obj.salutation('You will need to manually merge this local and remote trees, please ask Ian for more information!')
 					system([obj.bzrLocation ' explorer ']);
 				end
-				%obj.salutation(values);
 			end
 			%obj.verbose=0;
 			obj.check('afterupdate')
@@ -176,24 +178,18 @@ classdef manageSpikes < handle
 			obj.spikespath=obj.genpath(fullfile(obj.installLocation,obj.directoryName));
 		end
 		
-		function help(obj,~)
-			
+		%=====Update toolbox======%		
+		function purge(obj,~)
+			out=input('---> Do you want to purge the path? -- ','s');
+			if regexpi(out,'(yes|y)') %%% Clean install
+				obj.purgepath
+			end
 		end
 		
 		function explore(obj,~)
 			cd([obj.installLocation obj.directoryName]);
 			[status,values]=system([obj.bzrLocation ' ' obj.directoryName]);
 			if status ~= 0;obj.salutation(['Argh, could not explore']);end
-		end
-		
-		function addpath(obj)
-			addpath(obj.spikespath,'-begin');
-			savepath;
-		end
-		
-		function removepath(obj)
-			rmpath(obj.spikespath);
-			savepath;
 		end
 	end %---END PUBLIC METHODS---%
 	
@@ -207,8 +203,30 @@ classdef manageSpikes < handle
 			end
 		end
 		
+		function addpath(obj)
+			addpath(obj.spikespath,'-begin');
+			savepath;
+		end
+		
+		function removepath(obj)
+			rmpath(obj.spikespath);
+			savepath;
+		end
+		
 		function checkpath(obj)
 			
+		end
+		
+		function purgepath(obj) %this will strip out anything that matches spikes in its path.
+			p = path;
+			fragment = regexp(p,'(?<spath>/[^:]*spikes[^:]*:)');
+			rmpth='';
+			for i=1:length(fragment)
+				rmpth=strcat(rmpth,fragment(i).spath);
+			end
+			if ~isempty(rmpth)
+				rmpath(rmpth);
+			end
 		end
 		
 		function parsepath(obj) %
