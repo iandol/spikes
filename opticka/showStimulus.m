@@ -8,11 +8,11 @@ classdef showStimulus < handle
 	%     >> ss.run
 	
 	properties
-		pixelsPerCm = 32 %MBP 1440x900 is 33.2x20.6cm so approx 44px/cm, Flexscan is 32px/cm
+		pixelsPerCm = 26 %MBP 1440x900 is 33.2x20.6cm so approx 44px/cm, Flexscan is 32px/cm @1280 26px/cm @ 1024
 		distance = 57.3 % rad2ang(2*(atan((0.5*1cm)/57.3cm))) equals 1deg
 		pixelsPerDegree %calculated from distance and pixelsPerCm
 		stimulus %stimulus class passed from gratingStulus and friends
-		screen = 1 %which screen to display on
+		screen = [] %which screen to display on
 		maxScreen %set automatically on construction
 		windowed = 1 % useful for debugging
 		debug = 1 % change the parameters for poor temporal fidelity during debugging
@@ -56,7 +56,7 @@ classdef showStimulus < handle
 			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
 			obj.maxScreen=max(Screen('Screens'));
 			
-			if obj.screen > obj.maxScreen
+			if isempty(obj.screen) || obj.screen > obj.maxScreen
 				obj.screen = obj.maxScreen;
 			end
 		end
@@ -72,7 +72,7 @@ classdef showStimulus < handle
 		%-------------------------Main Grating----------------------------%
 		function showGrating(obj)
 			
-			obj.timeLog=zeros(5,1);
+			obj.timeLog=zeros(10,1);
 			obj.timeLog(1)=GetSecs;
 			AssertOpenGL;
 			
@@ -83,11 +83,11 @@ classdef showStimulus < handle
 				if obj.debug==1
 					Screen('Preference', 'SkipSyncTests', 0);
 					Screen('Preference', 'VisualDebugLevel', 0);
-					Screen('Preference', 'Verbosity', 4); 
+					Screen('Preference', 'Verbosity', 3); 
 					Screen('Preference', 'SuppressAllWarnings', 0);
 				else
 					Screen('Preference', 'SkipSyncTests', 0);
-					Screen('Preference', 'VisualDebugLevel', 4);
+					Screen('Preference', 'VisualDebugLevel', 3);
 					Screen('Preference', 'Verbosity', 3); %errors and warnings
 					Screen('Preference', 'SuppressAllWarnings', 0);
 				end
@@ -102,11 +102,6 @@ classdef showStimulus < handle
 					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				end
 				obj.timeLog(2)=WaitSecs(1);
-% 				if obj.windowed==1
-% 					[window windowrect] = Screen('OpenWindow', obj.screen, 128, [1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
-% 				else
-% 					[window windowrect] = Screen('OpenWindow', obj.screen, 128, [], [], obj.doubleBuffer+1,[],obj.antiAlias);
-% 				end
 				
 				AssertGLSL;
 				
@@ -156,9 +151,10 @@ classdef showStimulus < handle
 				dstRect=Screen('Rect',gratingTexture);
 				%dstRect=ScaleRect(rect,(obj.stimulus.size/1),(obj.stimulus.size/1))
 				dstRect=CenterRectOnPoint(dstRect,center(1),center(2));
-				dstRect=OffsetRect(dstRect,obj.stimulus.xPosition*obj.pixelsPerDegree,obj.stimulus.yPosition*obj.pixelsPerDegree);
-				fixRect=CenterRectOnPoint([0 0 10 10],center(1),center(2));
-				photoDiodeRect=[windowrect(3)-200 windowrect(4)-200 windowrect(3) windowrect(4)];
+				dstRect=OffsetRect(dstRect,(obj.stimulus.xPosition*obj.pixelsPerDegree),(obj.stimulus.yPosition*obj.pixelsPerDegree));
+				fixRect=CenterRectOnPoint([0 0 6 6],center(1),center(2));
+				photoDiodeRect1=[0 0 100 100];
+				photoDiodeRect2=[windowrect(3)-150 windowrect(4)-150 windowrect(3) windowrect(4)];
 				
 				KbReleaseWait;
 				i=0;
@@ -177,7 +173,8 @@ classdef showStimulus < handle
 						Screen('FillOval',window,[1 1 1],fixRect);
 					end
 					if obj.photoDiode==1
-						Screen('FillRect',window,[1 1 1 0],photoDiodeRect);
+						Screen('FillRect',window,[1 1 1 0],photoDiodeRect1);
+						Screen('FillRect',window,[1 1 1 0],photoDiodeRect2);
 					end
 					Screen('DrawingFinished', window); % Tell PTB that no further drawing commands will follow before Screen('Flip')
 					
@@ -191,23 +188,30 @@ classdef showStimulus < handle
 					end
 					
 					% Show it at next retrace:
-					vbl = Screen('Flip', window, vbl + 0.5 * ifi);
+					[vbl,estimate,flip] = Screen('Flip', window, vbl + (0.5 * ifi));
 					if i==0
-						obj.timeLog(4)=GetSecs;
+						WaitSecs('UntilTime',estimate-0.005);
 						obj.serialP.toggleDTRLine;
-						obj.timeLog(5)=vbl-obj.timeLog(4);
+						obj.timeLog(4)=vbl;
+						obj.timeLog(5)=estimate;
+						obj.timeLog(6)=flip;
+						obj.timeLog(7)=vbl-GetSecs;
 					end
 					i=i+1;
 				end
-				vbl = Screen('Flip', window);
-				vbl = Screen('Flip', window);
-				obj.serialP.setDTR(0);
+				Screen('FillRect',window,obj.backgroundColor,[]);
+				[obj.timeLog(8),obj.timeLog(9),obj.timeLog(10)] = Screen('Flip', window);
+				WaitSecs('UntilTime',obj.timeLog(9));
+				obj.serialP.toggleDTRLine;
 				Priority(0);
 				ShowCursor;
 				Screen('Close');
+				obj.serialP.toggleDTRLine;
 				Screen('CloseAll');
 				obj.serialP.close;
-				plot(diff(obj.timeLog))
+				obj.timeLog=obj.timeLog*1000; %convert to ms
+				obj.timeLog
+				diff(obj.timeLog)
 			catch ME
 				Screen('Close');
 				Screen('CloseAll');
@@ -237,6 +241,15 @@ classdef showStimulus < handle
 				value = 57.3;
 			end
 			obj.distance = value;
+			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
+			obj.salutation(['set sf: ' num2str(value)],'Custom set method')
+		end 
+		%------------------Make sure pixelsPerDegree is also changed-----
+		function set.pixelsPerCm(obj,value)
+			if ~(value > 0)
+				value = 44;
+			end
+			obj.pixelsPerCm = value;
 			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
 			obj.salutation(['set sf: ' num2str(value)],'Custom set method')
 		end 
