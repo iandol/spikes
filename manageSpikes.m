@@ -141,7 +141,7 @@ classdef manageSpikes < handle
 				[~,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
 				obj.salutation(values)
 				obj.genpath;
-				obj.addpath
+				obj.addpath;
 			end
 		end
 		
@@ -156,6 +156,9 @@ classdef manageSpikes < handle
 				if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
 				[status,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
 				if status ~= 0;obj.salutation(['Argh, couldn''t branch! - ' values]);else obj.salutation(['Success: ' values]);end
+				obj.purgepath;
+				obj.genpath(fullfile(obj.installLocation,obj.directoryName));
+				obj.addpath;
 			else
 				cd(obj.installLocation);
 				cd(obj.directoryName);
@@ -166,7 +169,11 @@ classdef manageSpikes < handle
 					obj.salutation('You will need to manually merge this local and remote trees, please ask Ian for more information!')
 					system([obj.bzrLocation ' explorer ']);
 				end
+				obj.purgepath;
+				obj.genpath(fullfile(obj.installLocation,obj.directoryName));
+				obj.addpath;
 			end
+			
 			%obj.verbose=0;
 			obj.check('afterupdate')
 		end
@@ -179,10 +186,14 @@ classdef manageSpikes < handle
 		end
 		
 		%=====Update toolbox======%		
-		function purge(obj,~)
-			out=input('---> Do you want to purge the path? -- ','s');
-			if regexpi(out,'(yes|y)') %%% Clean install
+		function purge(obj,automatic)
+			if automatic
 				obj.purgepath
+			else
+				out=input('---> Do you want to purge the path? -- ','s');
+				if regexpi(out,'(yes|y)') %%% Clean install
+					obj.purgepath
+				end
 			end
 		end
 		
@@ -219,7 +230,7 @@ classdef manageSpikes < handle
 		
 		function purgepath(obj) %this will strip out anything that matches spikes in its path.
 			p = path;
-			fragment = regexp(p,'(?<spath>/[^:]*spikes[^:]*:)');
+			fragment = regexp(p,['(?<spath>/[^' pathsep ']*spikes[^' pathsep ']*' pathsep ')']);
 			rmpth='';
 			for i=1:length(fragment)
 				rmpth=strcat(rmpth,fragment(i).spath);

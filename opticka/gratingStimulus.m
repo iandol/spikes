@@ -1,22 +1,33 @@
 classdef gratingStimulus < baseStimulus
-%ANNULUSSTIMULUS Summary of this class goes here
-%   Detailed explanation goes here
-   properties
-		method='procedural'
-		sf=1
-		tf=2
-		angle=0
-		rotationMethod=1
-		phase=0
-		contrast=0.75
-		texid=[]
-		mask=1
-		gabor=0
+%GRATINGSTIMULUS single grating stimulus, inherits from baseStimulus
+%   The current properties are:
+%   sf = spatial frequency in degrees
+%   tf = temporal frequency
+%   angle = angle in degrees
+%   rotationMethod = do we rotate the grating texture (1) or the patch
+%   itself (0)
+%   phase = phase of grating
+%   contrast = contrast from 0 - 1
+%   mask = use circular mask (1) or not (0)
+%   gabor = use a gabor rather than grating
+
+   properties %--------------------PUBLIC PROPERTIES----------%
+		method = 'procedural'
+		sf = 1
+		tf = 2
+		angle = 0
+		rotationMethod = 1
+		phase = 0
+		contrast = 0.75
+		mask = 0
+		gabor = 0
 	end
+	
 	properties (SetAccess = private, GetAccess = private)
-		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|texid|mask)$';
+		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|mask|gabor)$';
 	end
-   methods
+	
+   methods %----------PUBLIC METHODS---------%
 		function obj = gratingStimulus(args) %%%CONSTRUCTOR%%%
 			%Initialise for superclass, stops a noargs error
 			if nargin == 0
@@ -39,6 +50,7 @@ classdef gratingStimulus < baseStimulus
 			end
 			obj.salutation('constructor','Grating Stimulus initialisation complete');
 		end
+		
 		function set.sf(obj,value)
 			if ~(value > 0)
 				value = 0.01;
@@ -46,8 +58,10 @@ classdef gratingStimulus < baseStimulus
 			obj.sf = value;
 			obj.salutation(['set sf: ' num2str(value)],'Custom set method')
 		end
-% 		function value = get.sf(obj)
-% 			obj.salutation(['get sf: ' num2str(obj.sf)],'yay')
-% 		end
+		
+	end %---END PUBLIC METHODS---%
+	
+	methods ( Access = private ) %----------PRIVATE METHODS---------%
+		
 	end
 end

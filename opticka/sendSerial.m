@@ -11,7 +11,7 @@ classdef sendSerial < handle
 		openNow=0 %allows the constructor to run the open method immediately
 	end
 	properties (SetAccess = private, GetAccess = private)
-		allowedPropertiesBase='^(name|baudRate)$'
+		allowedPropertiesBase='^(name|baudRate|silentMode|verbosity|openNow)$'
 		toggleRTS=0 %keep the state here to toggle on succesive calls
 		toggleDTR=0
 	end
@@ -33,6 +33,9 @@ classdef sendSerial < handle
 				obj.name=args; %assume a name
 			end
 			obj.find; %find the full connection info
+			if isempty(obj.name) %we were deliberately passed an empty name, will re-specify default
+				obj.name='usbserial-A600drIC';
+			end
 			if obj.openNow==1
 				obj.open
 			end

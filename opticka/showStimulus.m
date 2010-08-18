@@ -1,34 +1,44 @@
 classdef showStimulus < handle
-	%SHOWSTIMULUS Summary of this class goes here
-	%   Detailed explanation goes here
+	%SHOWSTIMULUS Displays a single stimulus, allowing settings to be passed
+	%to control display. 
+	%   stimulus must be a stimulus class, i.e. gratingStimulus and friends,
+	%   so for example: 
+	%     >> gs=gratingStimulus(struct('mask',1,'sf',0.01));
+	%     >> ss=showStimulus(struct('stimulus',gs,'windowed',1))
+	%     >> ss.run
+	
 	properties
-		pixelsPerCm=44 %MBP 1440x900 is 33.2x20.6cm so approx 44pixels per cm
-		distance=57.3 % rad2ang(2*(atan((0.5*1cm)/57.3cm))) equals 1deg
-		pixelsPerDegree
-		stimulus
-		screen=1
-		maxScreen
-		windowed=1
-		debug=1
-		doubleBuffer=1
-		antiAlias=[]
-		serialPortName='dummy'
-		serialP
-		backgroundColor
-		screenXOffset=0
-		screenYOffset=0
-		blend=1
-		srcMode='GL_SRC_ALPHA' %GL_ONE 
-		dstMode='GL_ONE_MINUS_SRC_ALPHA' %GL_ONE %
-		fixationPoint=1
+		pixelsPerCm = 32 %MBP 1440x900 is 33.2x20.6cm so approx 44px/cm, Flexscan is 32px/cm
+		distance = 57.3 % rad2ang(2*(atan((0.5*1cm)/57.3cm))) equals 1deg
+		pixelsPerDegree %calculated from distance and pixelsPerCm
+		stimulus %stimulus class passed from gratingStulus and friends
+		screen = 1 %which screen to display on
+		maxScreen %set automatically on construction
+		windowed = 1 % useful for debugging
+		debug = 1 % change the parameters for poor temporal fidelity during debugging
+		doubleBuffer = 1 %normally should be left at 1
+		antiAlias = [] %multisampling sent to the graphics card, try values []=disabled, 4, 8 and 16
+		serialPortName = 'dummy' %name of serial port to send TTL out on, if set to 'dummy' then ignore
+		serialP %serial port object opened
+		backgroundColor % background of display during stimulus presentation
+		screenXOffset = 0 %shunt screen center by X degrees
+		screenYOffset = 0 %shunt screen center by Y degrees
+		blend = 0 %use OpenGL blending mode
+		srcMode = 'GL_SRC_ALPHA' %GL_ONE %src mode
+		dstMode = 'GL_ONE_MINUS_SRC_ALPHA' %GL_ONE % dst mode
+		fixationPoint = 1 %show a fixation spot?
+		photoDiode = 1 %show a white square to trigger a photodiode attached to screen
 	end
+	
 	properties (SetAccess = private, GetAccess = private)
-		black=0
-		white=1
-		allowedPropertiesBase='^(pixelsPerCm|distance|screen|windowed|stimulus|gabor|antiAlias|debug|windowed)$'
+		black=0 %black index
+		white=1 %white index
+		allowedPropertiesBase='^(pixelsPerCm|distance|screen|windowed|stimulus|serialPortName|backgroundColor|screenXOffset|screenYOffset|blend|fixationPoint|srcMode|dstMode|antiAlias|debug|windowed|photoDiode)$'
+		timeLog %log times during display
 	end
+	
 	methods
-		%==============CONSTRUCTOR============%
+		%-------------------CONSTRUCTOR----------------------%
 		function obj = showStimulus(args)
 			
 			if nargin>0 && isstruct(args) %user passed some settings, we will parse through them and set them up
@@ -45,31 +55,35 @@ classdef showStimulus < handle
 			
 			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
 			obj.maxScreen=max(Screen('Screens'));
+			
 			if obj.screen > obj.maxScreen
 				obj.screen = obj.maxScreen;
 			end
-			
 		end
+		
+		%---------------CALLS THE RIGHT DISPLAY METHOD----------------%
 		function run(obj) %just a temporary alias
 			switch obj.stimulus.family
 				case 'grating'
 					obj.showGrating
 			end
 		end
-		%=======================Main Grating====================%
+		
+		%-------------------------Main Grating----------------------------%
 		function showGrating(obj)
 			
+			obj.timeLog=zeros(5,1);
+			obj.timeLog(1)=GetSecs;
 			AssertOpenGL;
-			AssertOSX;
 			
 			obj.serialP=sendSerial(struct('name',obj.serialPortName,'openNow',1));
-			obj.serialP.setDTR(0);
-
+			obj.serialP.toggleDTRLine;
+			
 			try
 				if obj.debug==1
-					Screen('Preference', 'SkipSyncTests', 2);
+					Screen('Preference', 'SkipSyncTests', 0);
 					Screen('Preference', 'VisualDebugLevel', 0);
-					Screen('Preference', 'Verbosity', 5); 
+					Screen('Preference', 'Verbosity', 4); 
 					Screen('Preference', 'SuppressAllWarnings', 0);
 				else
 					Screen('Preference', 'SkipSyncTests', 0);
@@ -79,7 +93,7 @@ classdef showStimulus < handle
 				end
 				
 				PsychImaging('PrepareConfiguration');
-				PsychImaging('AddTask', 'General', 'FloatingPoint16BitIfPossible');
+				PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
 				PsychImaging('AddTask', 'General', 'NormalizedHighresColorRange');
 				
 				if obj.windowed==1
@@ -87,7 +101,7 @@ classdef showStimulus < handle
 				else
 					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				end
-				
+				obj.timeLog(2)=WaitSecs(1);
 % 				if obj.windowed==1
 % 					[window windowrect] = Screen('OpenWindow', obj.screen, 128, [1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
 % 				else
@@ -101,8 +115,8 @@ classdef showStimulus < handle
 					Screen('BlendFunction', window, obj.srcMode, obj.dstMode);
 				end
 				[center(1), center(2)] = RectCenter(windowrect);
-				center(1)=center(1)+obj.screenXOffset
-				center(2)=center(2)+obj.screenYOffset
+				center(1)=center(1)+obj.screenXOffset;
+				center(2)=center(2)+obj.screenYOffset;
 				fps=Screen('FrameRate',window);      % frames per second
 				ifi=Screen('GetFlipInterval', window);
 				if fps==0
@@ -139,14 +153,17 @@ classdef showStimulus < handle
 					gratingTexture = CreateProceduralGabor(window, res(1), res(2), 1, obj.stimulus.color);
 				end
 				
-				dstRect=Screen('Rect',gratingTexture)
+				dstRect=Screen('Rect',gratingTexture);
 				%dstRect=ScaleRect(rect,(obj.stimulus.size/1),(obj.stimulus.size/1))
-				dstRect=CenterRectOnPoint(dstRect,center(1),center(2))
-				dstRect=OffsetRect(dstRect,obj.stimulus.xPosition*obj.pixelsPerDegree,obj.stimulus.yPosition*obj.pixelsPerDegree)
+				dstRect=CenterRectOnPoint(dstRect,center(1),center(2));
+				dstRect=OffsetRect(dstRect,obj.stimulus.xPosition*obj.pixelsPerDegree,obj.stimulus.yPosition*obj.pixelsPerDegree);
 				fixRect=CenterRectOnPoint([0 0 10 10],center(1),center(2));
+				photoDiodeRect=[windowrect(3)-200 windowrect(4)-200 windowrect(3) windowrect(4)];
+				
 				KbReleaseWait;
-				vbl = Screen('Flip', window);
 				i=0;
+				vbl = Screen('Flip', window);
+				obj.timeLog(3)=vbl;
 				while 1
 					if ~isempty(obj.backgroundColor)
 						Screen('FillRect',window,obj.backgroundColor,[]);
@@ -159,24 +176,40 @@ classdef showStimulus < handle
 					if obj.fixationPoint==1
 						Screen('FillOval',window,[1 1 1],fixRect);
 					end
+					if obj.photoDiode==1
+						Screen('FillRect',window,[1 1 1 0],photoDiodeRect);
+					end
 					Screen('DrawingFinished', window); % Tell PTB that no further drawing commands will follow before Screen('Flip')
 					
 					[~, ~, buttons]=GetMouse(obj.screen);
 					if KbCheck || any(buttons) % break out of loop
 						break;
 					end;
-					phase = phase + phaseincrement;
-					i=i+1;
-					%angle=angle+0.1;
+					
+					if obj.stimulus.tf>0
+						phase = phase + phaseincrement;
+					end
+					
 					% Show it at next retrace:
 					vbl = Screen('Flip', window, vbl + 0.5 * ifi);
+					if i==0
+						obj.timeLog(4)=GetSecs;
+						obj.serialP.toggleDTRLine;
+						obj.timeLog(5)=vbl-obj.timeLog(4);
+					end
+					i=i+1;
 				end
-				
+				vbl = Screen('Flip', window);
+				obj.serialP.setDTR(0);
 				Priority(0);
 				ShowCursor;
-				obj.serialP.close;
+				Screen('Close');
 				Screen('CloseAll');
+				obj.serialP.close;
+				%obj.timeLog=obj.timeLog*1000; %convert to ms
+				diff(obj.timeLog)
 			catch ME
+				Screen('Close');
 				Screen('CloseAll');
 				Priority(0);
 				ShowCursor;
@@ -186,21 +219,7 @@ classdef showStimulus < handle
 			
 		end
 		
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%Wrappers for Serial object
-		function openSerialPort(obj)
-			USBTTL('open')
-		end
-		
-		function setSerial(obj,value)
-			USBTTL('set',value);
-		end
-		
-		function closeSerialPort(obj)
-			USBTTL('close')
-			IOPort CloseAll
-		end
-		
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		%---------------------------------------------------------
 		function salutation(obj,in,message)
 			if ~exist('in','var')
 				in = 'random user';
@@ -212,7 +231,7 @@ classdef showStimulus < handle
 			end
 		end
 		
-		%%%%%%%%%%%%%%%%%%Make sure pixelsPerDegree is also changed
+		%------------------Make sure pixelsPerDegree is also changed-----
 		function set.distance(obj,value)
 			if ~(value > 0)
 				value = 57.3;
@@ -220,6 +239,19 @@ classdef showStimulus < handle
 			obj.distance = value;
 			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
 			obj.salutation(['set sf: ' num2str(value)],'Custom set method')
-		end
+		end 
+		%------------------Make sure pixelsPerDegree is also changed-----
+		function set.pixelsPerCm(obj,value)
+			if ~(value > 0)
+				value = 44;
+			end
+			obj.pixelsPerCm = value;
+			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
+			obj.salutation(['set sf: ' num2str(value)],'Custom set method')
+		end 
+	end %---END PUBLIC METHODS---%
+	
+	methods ( Access = private ) %----------PRIVATE METHODS---------%
+		
 	end
 end
