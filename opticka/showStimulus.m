@@ -135,7 +135,7 @@ classdef showStimulus < handle
 				end
 				
 				gratingSize=obj.pixelsPerDegree*obj.stimulus.size;
-				spatialFrequency=obj.stimulus.sf;
+				spatialFrequency=(obj.stimulus.sf/obj.pixelsPerDegree);
 				cyclesPerSecond=obj.stimulus.tf;
 				amplitude=obj.stimulus.contrast/2;
 				angle=obj.stimulus.angle;
@@ -216,29 +216,29 @@ classdef showStimulus < handle
 				rethrow(ME)
 			end
 			if obj.showLog==1
-				obj.timeLog
-				vbl=obj.timeLog.vbl(obj.timeLog.vbl>0)*1000;
+				obj.timeLog.vbl=obj.timeLog.vbl(obj.timeLog.vbl>0)*1000;
 				figure
-				plot(diff(vbl))
+				plot(diff(obj.timeLog.vbl))
 				title('VBL in ms')
-				show=obj.timeLog.show(obj.timeLog.show>0)*1000;
+				obj.timeLog.show=obj.timeLog.show(obj.timeLog.show>0)*1000;
 				figure
-				plot(diff(show))
+				plot(diff(obj.timeLog.show))
 				title('Showed in ms')
-				flip=obj.timeLog.flip(obj.timeLog.flip>0)*1000;
+				obj.timeLog.flip=obj.timeLog.flip(obj.timeLog.flip>0)*1000;
 				figure
-				plot(diff(flip))
+				plot(diff(obj.timeLog.flip))
 				title('Flip in ms')
-				index=min([length(vbl) length(flip) length(show)]);
+				index=min([length(obj.timeLog.vbl) length(obj.timeLog.flip) length(obj.timeLog.show)]);
 				figure
-				plot(show(1:index)-vbl(1:index))
+				plot(obj.timeLog.show(1:index)-obj.timeLog.vbl(1:index))
 				title('Show - VBL in ms')
 				figure
-				plot(show(1:index)-flip(1:index))
+				plot(obj.timeLog.show(1:index)-obj.timeLog.flip(1:index))
 				title('Show - Flip time in ms')
 				figure
-				plot(vbl(1:index)-flip(1:index))
+				plot(obj.timeLog.vbl(1:index)-obj.timeLog.flip(1:index))
 				title('VBL - Flip time in ms')
+				obj.timeLog
 			end
 		end
 		
