@@ -28,6 +28,7 @@ classdef showStimulus < handle
 		dstMode = 'GL_ONE_MINUS_SRC_ALPHA' %GL_ONE % dst mode
 		fixationPoint = 1 %show a fixation spot?
 		photoDiode = 1 %show a white square to trigger a photodiode attached to screen
+		showLog=1
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -72,12 +73,16 @@ classdef showStimulus < handle
 		%-------------------------Main Grating----------------------------%
 		function showGrating(obj)
 			
-			obj.timeLog=zeros(10,1);
-			obj.timeLog(1)=GetSecs;
+			obj.timeLog=[];
+			
+			obj.timeLog.vbl=zeros(10000,1);
+			obj.timeLog.show=zeros(10000,1);
+			obj.timeLog.flip=zeros(10000,1);
+			obj.timeLog.miss=zeros(10000,1);
 			AssertOpenGL;
 			
 			obj.serialP=sendSerial(struct('name',obj.serialPortName,'openNow',1));
-			obj.serialP.toggleDTRLine;
+			obj.serialP.setDTR(0);
 			
 			try
 				if obj.debug==1
@@ -96,12 +101,13 @@ classdef showStimulus < handle
 				PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
 				PsychImaging('AddTask', 'General', 'NormalizedHighresColorRange');
 				
+				obj.timeLog.preopen=GetSecs;
 				if obj.windowed==1
 					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				else
 					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				end
-				obj.timeLog(2)=WaitSecs(1);
+				obj.timeLog.postopen=WaitSecs(1);
 				
 				AssertGLSL;
 				
@@ -153,13 +159,12 @@ classdef showStimulus < handle
 				dstRect=CenterRectOnPoint(dstRect,center(1),center(2));
 				dstRect=OffsetRect(dstRect,(obj.stimulus.xPosition*obj.pixelsPerDegree),(obj.stimulus.yPosition*obj.pixelsPerDegree));
 				fixRect=CenterRectOnPoint([0 0 6 6],center(1),center(2));
-				photoDiodeRect1=[0 0 100 100];
-				photoDiodeRect2=[windowrect(3)-150 windowrect(4)-150 windowrect(3) windowrect(4)];
+				photoDiodeRect(:,1)=[0 0 100 100]';
+				photoDiodeRect(:,2)=[windowrect(3)-100 windowrect(4)-100 windowrect(3) windowrect(4)]';
 				
 				KbReleaseWait;
-				i=0;
-				vbl = Screen('Flip', window);
-				obj.timeLog(3)=vbl;
+				i=1;
+				[obj.timeLog.vbl(1),vbl.timeLog.show(1),obj.timeLog.flip(1),obj.timeLog.miss(1)] = Screen('Flip', window);
 				while 1
 					if ~isempty(obj.backgroundColor)
 						Screen('FillRect',window,obj.backgroundColor,[]);
@@ -170,11 +175,10 @@ classdef showStimulus < handle
 						Screen('DrawTexture', window, gratingTexture, [], dstRect, [], [], [], [], [], kPsychDontDoRotation, [phase, spatialFrequency, 10, 10, 0.5, 0, 0, 0]);
 					end
 					if obj.fixationPoint==1
-						Screen('FillOval',window,[1 1 1],fixRect);
+						Screen('gluDisk',window,[1 1 1],center(1),center(2),5);
 					end
 					if obj.photoDiode==1
-						Screen('FillRect',window,[1 1 1 0],photoDiodeRect1);
-						Screen('FillRect',window,[1 1 1 0],photoDiodeRect2);
+						Screen('FillRect',window,[1 1 1 0],photoDiodeRect);
 					end
 					Screen('DrawingFinished', window); % Tell PTB that no further drawing commands will follow before Screen('Flip')
 					
@@ -188,30 +192,21 @@ classdef showStimulus < handle
 					end
 					
 					% Show it at next retrace:
-					[vbl,estimate,flip] = Screen('Flip', window, vbl + (0.5 * ifi));
-					if i==0
-						WaitSecs('UntilTime',estimate-0.005);
-						obj.serialP.toggleDTRLine;
-						obj.timeLog(4)=vbl;
-						obj.timeLog(5)=estimate;
-						obj.timeLog(6)=flip;
-						obj.timeLog(7)=vbl-GetSecs;
+					[obj.timeLog.vbl(i+1),obj.timeLog.show(i+1),obj.timeLog.flip(i+1),obj.timeLog.miss(i+1)] = Screen('Flip', window, obj.timeLog.vbl(i) + (0.5 * ifi));
+					if i==1
+						WaitSecs('UntilTime',obj.timeLog.show(i+1));
+						obj.serialP.setDTR(1);
 					end
 					i=i+1;
 				end
-				Screen('FillRect',window,obj.backgroundColor,[]);
-				[obj.timeLog(8),obj.timeLog(9),obj.timeLog(10)] = Screen('Flip', window);
-				WaitSecs('UntilTime',obj.timeLog(9));
-				obj.serialP.toggleDTRLine;
+				Screen('FillRect',window,[0 0 0],[]);
+				Screen('Flip', window);
+				obj.serialP.setDTR(0);
 				Priority(0);
 				ShowCursor;
 				Screen('Close');
-				obj.serialP.toggleDTRLine;
 				Screen('CloseAll');
 				obj.serialP.close;
-				obj.timeLog=obj.timeLog*1000; %convert to ms
-				obj.timeLog
-				diff(obj.timeLog)
 			catch ME
 				Screen('Close');
 				Screen('CloseAll');
@@ -220,7 +215,31 @@ classdef showStimulus < handle
 				obj.serialP.close;
 				rethrow(ME)
 			end
-			
+			if obj.showLog==1
+				obj.timeLog
+				vbl=obj.timeLog.vbl(obj.timeLog.vbl>0)*1000;
+				figure
+				plot(diff(vbl))
+				title('VBL in ms')
+				show=obj.timeLog.show(obj.timeLog.show>0)*1000;
+				figure
+				plot(diff(show))
+				title('Showed in ms')
+				flip=obj.timeLog.flip(obj.timeLog.flip>0)*1000;
+				figure
+				plot(diff(flip))
+				title('Flip in ms')
+				index=min([length(vbl) length(flip) length(show)]);
+				figure
+				plot(show(1:index)-vbl(1:index))
+				title('Show - VBL in ms')
+				figure
+				plot(show(1:index)-flip(1:index))
+				title('Show - Flip time in ms')
+				figure
+				plot(vbl(1:index)-flip(1:index))
+				title('VBL - Flip time in ms')
+			end
 		end
 		
 		%---------------------------------------------------------
