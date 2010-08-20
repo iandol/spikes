@@ -21,10 +21,11 @@ classdef gratingStimulus < baseStimulus
 		contrast = 0.75
 		mask = 0
 		gabor = 0
+		driftDirection=1
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
-		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|mask|gabor)$';
+		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|mask|gabor|driftDirection)$';
 	end
 	
    methods %----------PUBLIC METHODS---------%
