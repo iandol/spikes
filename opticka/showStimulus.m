@@ -1,4 +1,4 @@
-classdef showStimulus < handle
+classdef showStimulus < dynamicprops
 	%SHOWSTIMULUS Displays a single stimulus, allowing settings to be passed
 	%to control display. 
 	%   stimulus must be a stimulus class, i.e. gratingStimulus and friends,
@@ -13,6 +13,7 @@ classdef showStimulus < handle
 		pixelsPerDegree %calculated from distance and pixelsPerCm
 		stimulus %stimulus class passed from gratingStulus and friends
 		screen = [] %which screen to display on
+		screenVals=struct('pixelsPerCm',44,'distance',57.3)
 		maxScreen %set automatically on construction
 		windowed = 0 % useful for debugging
 		debug = 1 % change the parameters for poor temporal fidelity during debugging
@@ -28,6 +29,9 @@ classdef showStimulus < handle
 		dstMode = 'GL_ONE_MINUS_SRC_ALPHA' %GL_ONE % dst mode
 		fixationPoint = 1 %show a fixation spot?
 		photoDiode = 1 %show a white square to trigger a photodiode attached to screen
+		showLog=1
+		oldGamma
+
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -61,6 +65,7 @@ classdef showStimulus < handle
 			end
 		end
 		
+		
 		%---------------CALLS THE RIGHT DISPLAY METHOD----------------%
 		function run(obj) %just a temporary alias
 			switch obj.stimulus.family
@@ -69,16 +74,27 @@ classdef showStimulus < handle
 			end
 		end
 		
+		
+		%---------------Calculates the screen dimensions in pixels----------------%
+		function prepareScreen(obj)
+			(1/p)*atan(p*devicePhysicalSize(2)/mglGetParam('devicePhysicalDistance'))/pi*180)
+		end
+		
+		
 		%-------------------------Main Grating----------------------------%
 		function showGrating(obj)
 			
-			obj.timeLog=zeros(10,1);
-			obj.timeLog(1)=GetSecs;
+			obj.timeLog=[];
+			
+			obj.timeLog.vbl=zeros(10000,1);
+			obj.timeLog.show=zeros(10000,1);
+			obj.timeLog.flip=zeros(10000,1);
+			obj.timeLog.miss=zeros(10000,1);
 			AssertOpenGL;
 			
-			oldgamma = Screen('LoadNormalizedGammaTable', 0, repmat([0.48 0.46 0.45], 256, 1));
+			obj.oldGamma = Screen('LoadNormalizedGammaTable', obj.screen, repmat([0.48 0.46 0.45], 256, 1));
 			obj.serialP=sendSerial(struct('name',obj.serialPortName,'openNow',1));
-			obj.serialP.toggleDTRLine;
+			obj.serialP.setDTR(0);
 			
 			try
 				if obj.debug==1
@@ -97,13 +113,15 @@ classdef showStimulus < handle
 				PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
 				PsychImaging('AddTask', 'General', 'NormalizedHighresColorRange');
 				
+				obj.timeLog.preopen=GetSecs;
 				if obj.windowed==1
 					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				else
 					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				end
-				Screen('LoadNormalizedGammaTable', 0, oldgamma);
+				Screen('LoadNormalizedGammaTable', obj.screen, obj.oldGamma);
 				obj.timeLog(2)=WaitSecs(1);
+
 				AssertGLSL;
 				
 				% Enable alpha blending with proper blend-function.
@@ -130,7 +148,7 @@ classdef showStimulus < handle
 				end
 				
 				gratingSize=obj.pixelsPerDegree*obj.stimulus.size;
-				spatialFrequency=obj.stimulus.sf;
+				spatialFrequency=(obj.stimulus.sf/obj.pixelsPerDegree);
 				cyclesPerSecond=obj.stimulus.tf;
 				amplitude=obj.stimulus.contrast/2;
 				angle=obj.stimulus.angle;
@@ -157,14 +175,14 @@ classdef showStimulus < handle
 				dstRect=CenterRectOnPoint(dstRect,center(1),center(2));
 				dstRect=OffsetRect(dstRect,(obj.stimulus.xPosition*obj.pixelsPerDegree),(obj.stimulus.yPosition*obj.pixelsPerDegree));
 				fixRect=CenterRectOnPoint([0 0 6 6],center(1),center(2));
-				photoDiodeRect1=[0 0 100 100];
-				photoDiodeRect2=[windowrect(3)-150 windowrect(4)-150 windowrect(3) windowrect(4)];
+				photoDiodeRect(:,1)=[0 0 100 100]';
+				photoDiodeRect(:,2)=[windowrect(3)-100 windowrect(4)-100 windowrect(3) windowrect(4)]';
 				
 				KbReleaseWait;
-				i=0;
-				
-				vbl = Screen('Flip', window);
-				obj.timeLog(3)=vbl;
+
+				i=1;
+				[obj.timeLog.vbl(1),vbl.timeLog.show(1),obj.timeLog.flip(1),obj.timeLog.miss(1)] = Screen('Flip', window);
+
 				while 1
 					if ~isempty(obj.backgroundColor)
 						Screen('FillRect',window,obj.backgroundColor,[]);
@@ -175,11 +193,10 @@ classdef showStimulus < handle
 						Screen('DrawTexture', window, gratingTexture, [], dstRect, [], [], [], [], [], kPsychDontDoRotation, [phase, spatialFrequency, 10, 10, 0.5, 0, 0, 0]);
 					end
 					if obj.fixationPoint==1
-						Screen('FillOval',window,[1 1 1],fixRect);
+						Screen('gluDisk',window,[1 1 1],center(1),center(2),5);
 					end
 					if obj.photoDiode==1
-						Screen('FillRect',window,[1 1 1 0],photoDiodeRect1);
-						Screen('FillRect',window,[1 1 1 0],photoDiodeRect2);
+						Screen('FillRect',window,[1 1 1 0],photoDiodeRect);
 					end
 					Screen('DrawingFinished', window); % Tell PTB that no further drawing commands will follow before Screen('Flip')
 					
@@ -193,31 +210,22 @@ classdef showStimulus < handle
 					end
 					
 					% Show it at next retrace:
-					[vbl,estimate,flip] = Screen('Flip', window, vbl + (0.5 * ifi));
-					if i==0
-						WaitSecs('UntilTime',estimate-0.005);
-						obj.serialP.toggleDTRLine;
-						obj.timeLog(4)=vbl;
-						obj.timeLog(5)=estimate;
-						obj.timeLog(6)=flip;
-						obj.timeLog(7)=vbl-GetSecs;
+					[obj.timeLog.vbl(i+1),obj.timeLog.show(i+1),obj.timeLog.flip(i+1),obj.timeLog.miss(i+1)] = Screen('Flip', window, obj.timeLog.vbl(i) + (0.5 * ifi));
+					if i==1
+						WaitSecs('UntilTime',obj.timeLog.show(i+1));
+						obj.serialP.setDTR(1);
 					end
 					i=i+1;
 				end
-				Screen('FillRect',window,obj.backgroundColor,[]);
-				[obj.timeLog(8),obj.timeLog(9),obj.timeLog(10)] = Screen('Flip', window);
-				WaitSecs('UntilTime',obj.timeLog(9));
-				obj.serialP.toggleDTRLine;
+				Screen('FillRect',window,[0 0 0],[]);
+				Screen('Flip', window);
+				obj.serialP.setDTR(0);
 				Priority(0);
 				ShowCursor;
 				Screen('Close');
-				obj.serialP.toggleDTRLine;
 				Screen('CloseAll');
 				obj.serialP.close;
 				Screen('LoadNormalizedGammaTable', 0, oldgamma);
-				obj.timeLog=obj.timeLog*1000; %convert to ms
-				obj.timeLog
-				diff(obj.timeLog)
 			catch ME
 				Screen('LoadNormalizedGammaTable', 0, oldgamma);
 				Screen('Close');
@@ -228,6 +236,9 @@ classdef showStimulus < handle
 				rethrow(ME)
 			end
 			
+			if obj.showLog==1
+				obj.printLog;
+			end
 		end
 		
 		%---------------------------------------------------------
@@ -263,6 +274,30 @@ classdef showStimulus < handle
 	end %---END PUBLIC METHODS---%
 	
 	methods ( Access = private ) %----------PRIVATE METHODS---------%
-		
+		function printLog(obj)
+			obj.timeLog.vbl=obj.timeLog.vbl(obj.timeLog.vbl>0)*1000;
+			figure
+			plot(diff(obj.timeLog.vbl))
+			title('VBL in ms')
+			obj.timeLog.show=obj.timeLog.show(obj.timeLog.show>0)*1000;
+			figure
+			plot(diff(obj.timeLog.show))
+			title('Showed in ms')
+			obj.timeLog.flip=obj.timeLog.flip(obj.timeLog.flip>0)*1000;
+			figure
+			plot(diff(obj.timeLog.flip))
+			title('Flip in ms')
+			index=min([length(obj.timeLog.vbl) length(obj.timeLog.flip) length(obj.timeLog.show)]);
+			figure
+			plot(obj.timeLog.show(1:index)-obj.timeLog.vbl(1:index))
+			title('Show - VBL in ms')
+			figure
+			plot(obj.timeLog.show(1:index)-obj.timeLog.flip(1:index))
+			title('Show - Flip time in ms')
+			figure
+			plot(obj.timeLog.vbl(1:index)-obj.timeLog.flip(1:index))
+			title('VBL - Flip time in ms')
+			obj.timeLog
+		end
 	end
 end
