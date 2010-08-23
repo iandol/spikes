@@ -1,15 +1,31 @@
-classdef stimulusSequence < handle
+classdef stimulusSequence < dynamicprops
 	properties
-		randomMode = 'normal'
-		numOfVariables = 1
-		numOfTrials = 5
+		randomise = 1
+		task
+		nVars = 0
+		inVars
+		nTrials = 5
+		nSegments = 1
 		blankTime = 1
+		verbose = 1
+		randomSeed
+		randomGenerator='mt19937ar' %mersenne twister default
+	end
+	properties (SetAccess = private, GetAccess = public)
+		oldStream
+		taskStream
+		minTrials
+		currentState
+		outValues
+		outVars
 	end
 	properties (SetAccess = private, GetAccess = private)
 		allowedPropertiesBase='^(randomMode|numOfVariables|numOfTrials|blankTime)$'
 	end
 	methods
-		function obj = stimulusSequence(args) % Constructor merhod
+		
+		%-------------------CONSTRUCTOR----------------------%
+		function obj = stimulusSequence(args) 
 			if nargin>0 && isstruct(args)
 				%if isfield(args,'family');obj.family=args.family;end
 				if nargin>0 && isstruct(args)
@@ -21,15 +37,83 @@ classdef stimulusSequence < handle
 						end
 					end
 				end
-			elseif nargin>0 && iscell(args)
-				obj.randomMode=args{1};
-				obj.numOfVariables=args{2};
-				obj.numOfTrials=args{3};
-				obj.yPosition=args{4};
+			end
+			obj.initialiseRandom();
+		end
+		
+		%-------------------set up the random number generator------------
+		function initialiseRandom(obj)
+			if isempty(obj.randomSeed)
+				obj.randomSeed=GetSecs;
+			end
+			obj.oldStream = RandStream.getDefaultStream;
+			obj.taskStream = RandStream.create(obj.randomGenerator,'Seed',obj.randomSeed);
+			RandStream.setDefaultStream(obj.taskStream);
+		end
+		
+		%------------------reset the random number generator-------------
+		function resetRandom(obj)
+			RandStream.setDefaultStream(obj.oldStream);
+		end
+		
+		%-------------------Do the randomisation-------------------------
+		function randomiseStimuli(obj)
+			
+			obj.nVars=length(obj.inVars);
+			
+			obj.currentState=obj.taskStream.State;
+			
+			nLevels = zeros(obj.nVars, 1);
+			for f = 1:obj.nVars
+				nLevels(f) = length(obj.inVars(f).values);
+			end
+			obj.minTrials = prod(nLevels);
+
+			% initialize cell array that will hold balanced variables
+			obj.outVars = cell(obj.nTrials, obj.nVars);
+			obj.outValues = [];
+
+			% the following initializes and runs the main loop in the function, which
+			% generates enough repetitions of each factor, ensuring a balanced design,
+			% and randomizes them
+			offset=0;
+			for i = 1:obj.nTrials
+				len1 = obj.minTrials;
+				len2 = 1;
+				[~, index] = sort(rand(obj.minTrials, 1));
+				for f = 1:obj.nVars
+					len1 = len1 / nLevels(f);
+					if size(obj.inVars(f).values, 1) ~= 1
+						% ensure that factor levels are arranged in one row
+						obj.inVars(f).values = reshape(obj.inVars(f).values, 1, numel(obj.inVars(1).values));
+					end
+					% this is the critical line: it ensures there are enough repetitions
+					% of the current factor in the correct order
+					obj.outVars{i,f} = repmat(reshape(repmat(obj.inVars(f).values, len1, len2), obj.minTrials, 1), obj.nVars, 1);
+					if obj.randomise
+						obj.outVars{i,f} = obj.outVars{i,f}(index);
+					end
+					len2 = len2 * nLevels(f);
+					mn=offset+1;
+					mx=i*obj.minTrials;
+					obj.outValues(mn:mx,f)=obj.outVars{i,f};
+				end
+				offset=offset+obj.minTrials;
 			end
 		end
-		function salutation(obj,in)
-			fprintf(['\nHello from ' obj.type ' stimulus ' in '\n\n']);
+		
+		%-------------------blah blah blah-----------------------------------
+		function salutation(obj,in,message)
+			if obj.verbose==1
+				if ~exist('in','var')
+					in = 'random user';
+				end
+				if exist('message','var')
+					fprintf([message ' | ' in '\n']);
+				else
+					fprintf(['\nHello from ' obj.screen ' stimulus, ' in '\n\n']);
+				end
+			end
 		end
 	end
 end

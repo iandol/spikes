@@ -1,4 +1,4 @@
-classdef baseStimulus < handle
+classdef baseStimulus < dynamicprops
 	%BASESTIMULUS Superclass providing basic structure for all stimulus
 	%classes
 	%   Detailed explanation to come
@@ -9,16 +9,16 @@ classdef baseStimulus < handle
 		yPosition=0
 		size=2
 		color=[0.5 0.5 0.5 0]
+		verbose=0
 	end
 	properties (SetAccess = private, GetAccess = private)
-		display=0
 		texid
-		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|color)$'
+		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|color|verbose)$'
 	end
 	methods
+		%-------------------CONSTRUCTOR----------------------%
 		function obj = baseStimulus(args)
 			if nargin>0 && isstruct(args)
-				%if isfield(args,'family');obj.family=args.family;end
 				if nargin>0 && isstruct(args)
 					fnames = fieldnames(args); %find our argument names
 					for i=1:length(fnames);
@@ -36,13 +36,15 @@ classdef baseStimulus < handle
 			end
 		end
 		function salutation(obj,in,message)
-			if ~exist('in','var')
-				in = 'random user';
-			end
-			if exist('message','var')
-				fprintf([message ' | ' in '\n']);
-			else
-				fprintf(['\nHello from ' obj.family ' stimulus, ' in '\n\n']);
+			if obj.verbose==1
+				if ~exist('in','var')
+					in = 'random user';
+				end
+				if exist('message','var')
+					fprintf([message ' | ' in '\n']);
+				else
+					fprintf(['\nHello from ' obj.family ' stimulus, ' in '\n\n']);
+				end
 			end
 		end
 	end

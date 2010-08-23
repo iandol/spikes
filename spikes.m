@@ -66,6 +66,8 @@ case 'Initialize'
 		sv.usingmac=1;
 		sv.historypath=['~' filesep 'MatlabFiles' filesep];
 		sv.temppath=['/private/tmp/matlab/spikes/'];
+		oldlook=javax.swing.UIManager.getLookAndFeel;
+		javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
 	elseif ispc
         if ~exist('c:\MatlabFiles','dir')
             mkdir('c:\MatlabFiles')
@@ -74,9 +76,10 @@ case 'Initialize'
 		sv.historypath=['c:' filesep 'MatlabFiles' filesep];
 		sv.temppath=getenv('TEMP');
 	end
-	javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
-	%javax.swing.UIManager.setLookAndFeel('com.jgoodies.looks.plastic.Plastic3DLookAndFeel')
 	sv.uihandle=spikes_UI; %our GUI file
+	if ismac
+		javax.swing.UIManager.setLookAndFeel(oldlook);
+	end
 	figpos(2);	%position the figure
 	set(sv.uihandle,'Name', [sv.version ' | Started at ' datestr(now)]);
 	colormap(jet(256)); %this gives us a much higher resolution colormap

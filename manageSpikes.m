@@ -13,7 +13,11 @@ classdef manageSpikes < handle
 		revInfo=''
 		repInfo=''
 		bzrInfo=''
-		spikespath=''
+		spikesPath=''
+		
+	end
+	properties (SetAccess = private, GetAccess = public) %---PROTECTED PROPERTIES---%
+		externalPath=''
 	end
 	properties (SetAccess = private, GetAccess = private) %---PRIVATE PROPERTIES---%
 		hasBzr = 0
@@ -140,6 +144,7 @@ classdef manageSpikes < handle
 				if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
 				[~,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.codeSource ' ' obj.installLocation obj.directoryName]);
 				obj.salutation(values)
+				obj.purgepath;
 				obj.genpath;
 				obj.addpath;
 			end
@@ -182,7 +187,7 @@ classdef manageSpikes < handle
 		function info(obj,~) %just a wrapper to a verbose check
 			obj.verbose=1;
 			obj.check('callfromchar')
-			obj.spikespath=obj.genpath(fullfile(obj.installLocation,obj.directoryName));
+			obj.spikesPath=obj.genpath(fullfile(obj.installLocation,obj.directoryName));
 		end
 		
 		%=====Update toolbox======%		
@@ -195,6 +200,18 @@ classdef manageSpikes < handle
 					obj.purgepath
 				end
 			end
+		end
+		
+		function addExternal(obj,d)
+			obj.externalPath='';
+			obj.externalPath=obj.genpath(d);
+			obj.addpath(obj.externalPath)
+		end
+		
+		function removeExteral(obj,d)
+			obj.externalPath='';
+			obj.externalPath=obj.genpath(d);
+			obj.removepath(obj.externalPath)
 		end
 		
 		function explore(obj,~)
@@ -214,13 +231,21 @@ classdef manageSpikes < handle
 			end
 		end
 		
-		function addpath(obj)
-			addpath(obj.spikespath,'-begin');
+		function addpath(obj,d)
+			if ~exist('d','var')				
+				addpath(obj.spikesPath,'-begin');
+			else
+				addpath(d,'-begin');
+			end
 			savepath;
 		end
 		
-		function removepath(obj)
-			rmpath(obj.spikespath);
+		function removepath(obj,d)
+			if ~exist('d','var')
+				rmpath(obj.spikesPath);
+			else
+				rmpath(d);
+			end
 			savepath;
 		end
 		
