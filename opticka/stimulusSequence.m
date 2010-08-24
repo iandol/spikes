@@ -2,11 +2,13 @@ classdef stimulusSequence < dynamicprops
 	properties
 		randomise = 1
 		nVars = 0
-		inVars
+		nVar
 		nTrials = 5
+		nTrial
 		nSegments = 1
 		nSegment
-		blankTime = 1
+		isTime = 1 %inter stimulus time
+		isStimulus %what do we show in the blank?
 		verbose = 1
 		randomSeed
 		randomGenerator='mt19937ar' %mersenne twister default
@@ -61,13 +63,13 @@ classdef stimulusSequence < dynamicprops
 		%-------------------Do the randomisation-------------------------
 		function randomiseStimuli(obj)
 			
-			obj.nVars=length(obj.inVars);
+			obj.nVars=length(obj.nVar);
 			
 			obj.currentState=obj.taskStream.State;
 			
 			nLevels = zeros(obj.nVars, 1);
 			for f = 1:obj.nVars
-				nLevels(f) = length(obj.inVars(f).values);
+				nLevels(f) = length(obj.nVar(f).values);
 			end
 			obj.minTrials = prod(nLevels);
 
@@ -85,13 +87,13 @@ classdef stimulusSequence < dynamicprops
 				[~, index] = sort(rand(obj.minTrials, 1));
 				for f = 1:obj.nVars
 					len1 = len1 / nLevels(f);
-					if size(obj.inVars(f).values, 1) ~= 1
+					if size(obj.nVar(f).values, 1) ~= 1
 						% ensure that factor levels are arranged in one row
-						obj.inVars(f).values = reshape(obj.inVars(f).values, 1, numel(obj.inVars(1).values));
+						obj.nVar(f).values = reshape(obj.nVar(f).values, 1, numel(obj.nVar(1).values));
 					end
 					% this is the critical line: it ensures there are enough repetitions
 					% of the current factor in the correct order
-					obj.outVars{i,f} = repmat(reshape(repmat(obj.inVars(f).values, len1, len2), obj.minTrials, 1), obj.nVars, 1);
+					obj.outVars{i,f} = repmat(reshape(repmat(obj.nVar(f).values, len1, len2), obj.minTrials, 1), obj.nVars, 1);
 					if obj.randomise
 						obj.outVars{i,f} = obj.outVars{i,f}(index);
 					end

@@ -8,11 +8,12 @@ function dogfit(action)
 %
 % [ian] 1.0 Initial release
 % [ian] 1.5 Updated for Matlab 9
-%
+% [ian] fix for two variable data properly
 %***************************************************************
 
 global data
 global fd
+global sv
 
 if nargin<1,
 	action='Initialize';
@@ -25,7 +26,7 @@ switch(action)
 	case 'Initialize'
 		%-------------------------------------------------------------------
 		
-		version=['DOG-Fit Model Fitting Routine V1.5 | Started on ', datestr(now)];
+		version=['DOG-Fit Model Fitting Routine V1.6 | Started on ', datestr(now)];
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
 		dogfitfig;
