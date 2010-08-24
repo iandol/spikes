@@ -1,16 +1,17 @@
 classdef stimulusSequence < dynamicprops
 	properties
 		randomise = 1
-		task
 		nVars = 0
 		inVars
 		nTrials = 5
 		nSegments = 1
+		nSegment
 		blankTime = 1
 		verbose = 1
 		randomSeed
 		randomGenerator='mt19937ar' %mersenne twister default
 	end
+	
 	properties (SetAccess = private, GetAccess = public)
 		oldStream
 		taskStream
@@ -19,11 +20,14 @@ classdef stimulusSequence < dynamicprops
 		outValues
 		outVars
 	end
+	
 	properties (SetAccess = private, GetAccess = private)
 		allowedPropertiesBase='^(randomMode|numOfVariables|numOfTrials|blankTime)$'
 	end
+	
 	methods
-		function obj = stimulusSequence(args) % Constructor merhod
+		%-------------------CONSTRUCTOR----------------------%
+		function obj = stimulusSequence(args) 
 			if nargin>0 && isstruct(args)
 				%if isfield(args,'family');obj.family=args.family;end
 				if nargin>0 && isstruct(args)
@@ -109,7 +113,7 @@ classdef stimulusSequence < dynamicprops
 				if exist('message','var')
 					fprintf([message ' | ' in '\n']);
 				else
-					fprintf(['\nHello from ' obj.screen ' stimulus, ' in '\n\n']);
+					fprintf(['\nHello from randomise, ' in '\n\n']);
 				end
 			end
 		end

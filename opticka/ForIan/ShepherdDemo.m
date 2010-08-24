@@ -4,9 +4,9 @@ try
     % ------------------------
     % set dot field parameters
     % ------------------------
-    nframes     = 30; % number of animation frames in loop
-    mon_width   = 32;   % horizontal dimension of viewable screen (cm)
-    v_dist      = 60;   % viewing distance (cm)
+    nframes     = 60; % number of animation frames in loop
+    mon_width   = 33.2;   % horizontal dimension of viewable screen (cm)
+    v_dist      = 57.3;   % viewing distance (cm)
     dot_speed   = 5;    % dot speed (deg/sec)
     ndots       = 2000; % number of dots
     max_d       = 10;   % maximum radius of  annulus (degrees)
@@ -14,7 +14,7 @@ try
     dot_w       = 0.2;  % width of dot (deg)
     fix_r       = 0.15; % radius of fixation point (deg)
     f_kill      = 0.2; % fraction of dots to kill each frame  (limited lifetime)
-    waitframes = 1;     % Show new dot-images at each waitframes'th  monitor refresh.
+    waitframes = 5;     % Show new dot-images at each waitframes'th  monitor refresh.
 
     % Experiment parameters
     trialsDesired      = 32;
@@ -37,7 +37,7 @@ try
     % Set up screen
     screens=Screen('Screens');
     screenNumber=max(screens);
-    [w, rect] = Screen('OpenWindow', screenNumber, 0,[],[], 2);
+    [w, rect] = Screen('OpenWindow', screenNumber, 0.5,[],[], 2);
     Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     [center(1), center(2)] = RectCenter(rect);
      fps=Screen('FrameRate',w);      % frames per second

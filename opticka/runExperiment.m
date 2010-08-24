@@ -1,21 +1,22 @@
-classdef showStimulus < dynamicprops
+classdef runExperiment < dynamicprops
 	%SHOWSTIMULUS Displays a single stimulus, allowing settings to be passed
 	%to control display. 
 	%   stimulus must be a stimulus class, i.e. gratingStimulus and friends,
 	%   so for example: 
 	%     >> gs=gratingStimulus(struct('mask',1,'sf',0.01));
-	%     >> ss=showStimulus(struct('stimulus',gs,'windowed',1))
+	%     >> ss=runExperiment(struct('stimulus',gs,'windowed',1))
 	%     >> ss.run
 	
 	properties
 		pixelsPerCm = 44 %MBP 1440x900 is 33.2x20.6cm so approx 44px/cm, Flexscan is 32px/cm @1280 26px/cm @ 1024
 		distance = 57.3 % rad2ang(2*(atan((0.5*1cm)/57.3cm))) equals 1deg
 		stimulus %stimulus class passed from gratingStulus and friends
+		task %the structure of the task, and any callbacks embedded
 		screen = [] %which screen to display on, [] means use max screen
-		windowed = 0 % useful for debugging
-		debug = 1 % change the parameters for poor temporal fidelity during debugging
+		windowed = 0 % if 1 useful for debugging, but remember timing will be poor
+		debug = 1 % change the parameters for poorer temporal fidelity during debugging
 		doubleBuffer = 1 %normally should be left at 1
-		antiAlias = [] %multisampling sent to the graphics card, try values []=disabled, 4, 8 and 16
+		antiAlias = 4 %multisampling sent to the graphics card, try values []=disabled, 4, 8 and 16
 		backgroundColor % background of display during stimulus presentation
 		screenXOffset = 0 %shunt screen center by X degrees
 		screenYOffset = 0 %shunt screen center by Y degrees
@@ -26,7 +27,7 @@ classdef showStimulus < dynamicprops
 		photoDiode = 1 %show a white square to trigger a photodiode attached to screen
 		serialPortName = 'dummy' %name of serial port to send TTL out on, if set to 'dummy' then ignore
 		showLog = 1 %show time log after stumlus presentation
-		blankFlash = 1 %hide the black flash as PTB tests it refresh timing.
+		hideFlash = 1 %hide the black flash as PTB tests it refresh timing.
 	end
 	
 	properties (SetAccess = private, GetAccess = public)
@@ -37,26 +38,29 @@ classdef showStimulus < dynamicprops
 		ptb %PTB info
 		screenVals %gamma tables and the like
 		timeLog %log times during display
+		sVals %calculated stimulus values
 	end
 	properties (SetAccess = private, GetAccess = private)
 		black=0 %black index
 		white=1 %white index
-		allowedPropertiesBase='^(pixelsPerCm|distance|screen|windowed|stimulus|serialPortName|backgroundColor|screenXOffset|screenYOffset|blend|fixationPoint|srcMode|dstMode|antiAlias|debug|windowed|photoDiode)$'
+		allowedPropertiesBase='^(pixelsPerCm|distance|screen|windowed|stimulus|task|serialPortName|backgroundColor|screenXOffset|screenYOffset|blend|fixationPoint|srcMode|dstMode|antiAlias|debug|photoDiode|showLog|hideFlash)$'
 		serialP %serial port object opened
 		xCenter
 		yCenter
+		win
+		winRect
 	end
 	
 	methods
 		%-------------------CONSTRUCTOR----------------------%
-		function obj = showStimulus(args)
+		function obj = runExperiment(args)
 			obj.timeLog.construct=GetSecs;
 			if nargin>0 && isstruct(args) %user passed some settings, we will parse through them and set them up
 				if nargin>0 && isstruct(args)
 					fnames = fieldnames(args); %find our argument names
 					for i=1:length(fnames);
 						if regexp(fnames{i},obj.allowedPropertiesBase) %only set if allowed property
-							obj.salutation(fnames{i},'Configuring property in showStimulus constructor');
+							obj.salutation(fnames{i},'Configuring property in runExperiment constructor');
 							obj.(fnames{i})=args.(fnames{i}); %we set up the properies from the arguments as a structure
 						end
 					end
@@ -65,18 +69,9 @@ classdef showStimulus < dynamicprops
 			obj.prepareScreen;
 		end
 		
-		
-		%---------------CALLS THE RIGHT DISPLAY METHOD----------------%
-		function run(obj) %just a temporary alias
-			switch obj.stimulus.family
-				case 'grating'
-					obj.showGrating
-			end
-		end
-		
 
 		%-------------------------Main Grating----------------------------%
-		function showGrating(obj)
+		function run(obj)
 			
 			%initialise timeLog for this run
 			obj.timeLog.start=GetSecs;
@@ -85,18 +80,18 @@ classdef showStimulus < dynamicprops
 			obj.timeLog.flip=zeros(10000,1);
 			obj.timeLog.miss=zeros(10000,1);
 			
-			HideCursor; %hide mouse
+			%HideCursor; %hide mouse
 			
-			if obj.blankFlash==1
+			if obj.hideFlash==1
 				obj.screenVals.oldGamma = Screen('LoadNormalizedGammaTable', obj.screen, repmat(obj.screenVals.gammaTable(128,:), 256, 1));
 			end
 			
-			obj.serialP=sendSerial(struct('name',obj.serialPortName,'openNow',1));
+			obj.serialP=sendSerial(struct('name',obj.serialPortName,'openNow',1,'verbosity',0));
 			obj.serialP.setDTR(0);
 			
 			try
-				if obj.debug==1
-					Screen('Preference', 'SkipSyncTests', 0);
+				if obj.debug==1 || obj.windowed==1
+					Screen('Preference', 'SkipSyncTests', 2);
 					Screen('Preference', 'VisualDebugLevel', 0);
 					Screen('Preference', 'Verbosity', 3); 
 					Screen('Preference', 'SuppressAllWarnings', 0);
@@ -113,113 +108,101 @@ classdef showStimulus < dynamicprops
 				
 				obj.timeLog.preOpenWindow=GetSecs;
 				if obj.windowed==1
-					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
+					[obj.win, obj.winRect] = PsychImaging('OpenWindow', obj.screen, 0.5,[1 1 801 601], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				else
-					[window, windowrect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
+					[obj.win, obj.winRect] = PsychImaging('OpenWindow', obj.screen, 0.5,[], [], obj.doubleBuffer+1,[],obj.antiAlias);
 				end
 				
-				Priority(MaxPriority(window)); %bump our priority to maximum allowed
+				Priority(MaxPriority(obj.win)); %bump our priority to maximum allowed
 				
 				obj.timeLog.postOpenWindow=GetSecs;
 				obj.timeLog.deltaOpenWindow=obj.timeLog.postOpenWindow-obj.timeLog.preOpenWindow;
 				
-				if obj.blankFlash==1
+				if obj.hideFlash==1
 					Screen('LoadNormalizedGammaTable', obj.screen, obj.screenVals.gammaTable);
 				end
 				
 				AssertGLSL;
 				
-				% Enable alpha blending with proper blend-function.
+				% Enable alpha blending.
 				if obj.blend==1
-					Screen('BlendFunction', window, obj.srcMode, obj.dstMode);
+					Screen('BlendFunction', obj.win, obj.srcMode, obj.dstMode);
 				end
 				
 				%get the center of our screen, along with user defined offsets
-				[obj.xCenter, obj.yCenter] = RectCenter(windowrect);
+				[obj.xCenter, obj.yCenter] = RectCenter(obj.winRect);
 				obj.xCenter=obj.xCenter+(obj.screenXOffset*obj.pixelsPerDegree);
 				obj.yCenter=obj.yCenter+(obj.screenYOffset*obj.pixelsPerDegree);
 				
 				%find our fps if not defined before  
-				ifi=Screen('GetFlipInterval', window);
+				obj.screenVals.ifi=Screen('GetFlipInterval', obj.win);
 				if obj.screenVals.fps==0
-					obj.screenVals.fps=1/ifi;
+					obj.screenVals.fps=1/obj.screenVals.ifi;
 				end;
 				
-				obj.black = BlackIndex(window);
-				obj.white = WhiteIndex(window);
+				obj.black = BlackIndex(obj.win);
+				obj.white = WhiteIndex(obj.win);
 				
-				if obj.stimulus.rotationMethod==1
-					rotateMode = kPsychUseTextureMatrixForRotation;
-				else
-					rotateMode = [];
+				obj.sVals=[];
+				for i=1:length(obj.stimulus) %calculate values for each stimulus
+					switch obj.stimulus(i).family
+						case 'grating'
+							obj.setupGrating(i);
+						case 'dots'
+							obj.setupDots(i);
+						case 'annulus'
+							obj.setupAnnulus(i);
+					end
 				end
 				
-				gratingSize=obj.pixelsPerDegree*obj.stimulus.size;
-				spatialFrequency=obj.stimulus.sf/obj.pixelsPerDegree;
-				cyclesPerSecond=obj.stimulus.tf;
-				amplitude=obj.stimulus.contrast/2;
-				angle=obj.stimulus.angle;
-				phase=obj.stimulus.phase;
-				phaseincrement = (cyclesPerSecond * 360) * ifi;
-				if obj.stimulus.driftDirection < 1
-					phaseincrement= -phaseincrement;
-				end
-				res = [gratingSize gratingSize];
-				if obj.stimulus.mask>0
-					obj.stimulus.mask = floor((obj.pixelsPerDegree*obj.stimulus.size)/2);
-				else
-					obj.stimulus.mask = [];
-				end
-				
-				if obj.stimulus.gabor==0
-					gratingTexture = CreateProceduralSineGrating(window, res(1), res(2),obj.stimulus.color, obj.stimulus.mask);
-				else
-					gratingTexture = CreateProceduralGabor(window, res(1), res(2), 1, obj.stimulus.color);
-				end
-				
-				dstRect=Screen('Rect',gratingTexture);
-				%dstRect=ScaleRect(rect,(obj.stimulus.size/1),(obj.stimulus.size/1))
-				dstRect=CenterRectOnPoint(dstRect,obj.xCenter,obj.yCenter);
-				dstRect=OffsetRect(dstRect,(obj.stimulus.xPosition*obj.pixelsPerDegree),(obj.stimulus.yPosition*obj.pixelsPerDegree));
-				fixRect=CenterRectOnPoint([0 0 5 5],obj.xCenter,obj.yCenter);
+				%fixRect=CenterRectOnPoint([0 0 5 5],obj.xCenter,obj.yCenter);
 				photoDiodeRect(:,1)=[0 0 100 100]';
-				photoDiodeRect(:,2)=[windowrect(3)-100 windowrect(4)-100 windowrect(3) windowrect(4)]';
+				photoDiodeRect(:,2)=[obj.winRect(3)-100 obj.winRect(4)-100 obj.winRect(3) obj.winRect(4)]';
 				
 				KbReleaseWait; %make sure keyboard keys are all released
 				
 				i=1;
 				
 				obj.timeLog.beforeDisplay=GetSecs;
-				[obj.timeLog.vbl(1),vbl.timeLog.show(1),obj.timeLog.flip(1),obj.timeLog.miss(1)] = Screen('Flip', window);
+				[obj.timeLog.vbl(1),vbl.timeLog.show(1),obj.timeLog.flip(1),obj.timeLog.miss(1)] = Screen('Flip', obj.win);
 				
 				while 1
 					if ~isempty(obj.backgroundColor)
-						Screen('FillRect',window,obj.backgroundColor,[]);
+						Screen('FillRect',obj.win,obj.backgroundColor,[]);
 					end
-					if obj.stimulus.gabor==0
-						Screen('DrawTexture', window, gratingTexture, [], dstRect, angle, [], [], [], [], rotateMode, [phase, spatialFrequency, amplitude, 0]);
-					else
-						Screen('DrawTexture', window, gratingTexture, [], dstRect, [], [], [], [], [], kPsychDontDoRotation, [phase, spatialFrequency, 10, 10, 0.5, 0, 0, 0]);
+					
+					for j=1:length(obj.sVals)
+						switch obj.stimulus(j).family
+							case 'grating'
+								obj.drawGrating(j);
+							case 'dots'
+								obj.drawDots(j);
+							case 'annulus'
+								obj.drawAnnulus(j);
+						end
 					end
+					
 					if obj.fixationPoint==1
-						Screen('gluDisk',window,[1 1 1],obj.xCenter,obj.yCenter,5);
+						Screen('gluDisk',obj.win,[1 1 0],obj.xCenter,obj.yCenter,5);
 					end
 					if obj.photoDiode==1
-						Screen('FillRect',window,[1 1 1 0],photoDiodeRect);
+						Screen('FillRect',obj.win,[1 1 1 0],photoDiodeRect);
 					end
-					Screen('DrawingFinished', window); % Tell PTB that no further drawing commands will follow before Screen('Flip')
+					Screen('DrawingFinished', obj.win); % Tell PTB that no further drawing commands will follow before Screen('Flip')
 					
 					[~, ~, buttons]=GetMouse(obj.screen);
 					if KbCheck || any(buttons) % break out of loop
 						break;
 					end;
 					
-					if obj.stimulus.tf>0
-						phase = phase + phaseincrement;
+					for j=1:length(obj.sVals)
+						if obj.sVals(j).tf>0
+							obj.sVals(j).phase = obj.sVals(j).phase + obj.sVals(j).phaseincrement;
+						end
 					end
 					
 					% Show it at next retrace:
-					[obj.timeLog.vbl(i+1),obj.timeLog.show(i+1),obj.timeLog.flip(i+1),obj.timeLog.miss(i+1)] = Screen('Flip', window, obj.timeLog.vbl(i) + (0.5 * ifi));
+					[obj.timeLog.vbl(i+1),obj.timeLog.show(i+1),obj.timeLog.flip(i+1),obj.timeLog.miss(i+1)] = Screen('Flip', obj.win, obj.timeLog.vbl(i) + (0.5 * obj.screenVals.ifi));
 					if i==1
 						WaitSecs('UntilTime',obj.timeLog.show(i+1));
 						obj.serialP.setDTR(1);
@@ -228,8 +211,8 @@ classdef showStimulus < dynamicprops
 				end
 				obj.timeLog.afterDisplay=GetSecs;
 				
-				Screen('FillRect',window,[1 0 0],[]);
-				Screen('Flip', window);
+				Screen('FillRect',obj.win,[1 0 0],[]);
+				Screen('Flip', obj.win);
 				obj.serialP.setDTR(0);
 				
 				obj.timeLog.deltaDispay=obj.timeLog.afterDisplay-obj.timeLog.beforeDisplay;
@@ -237,40 +220,32 @@ classdef showStimulus < dynamicprops
 				obj.timeLog.deltafirstVBL=obj.timeLog.vbl(1)-obj.timeLog.beforeDisplay;
 				
 				
-				obj.info = Screen('GetWindowInfo', window);
+				obj.info = Screen('GetWindowInfo', obj.win);
 				
 				Screen('Close');
 				Screen('CloseAll');
+				obj.win=[];
 				Priority(0);
 				ShowCursor;
 				obj.serialP.close;
 				
 			catch ME
-				if obj.blankFlash==1
-					Screen('LoadNormalizedGammaTable', 0, obj.screenVals.gammaTable);
+				
+				if obj.hideFlash==1
+					Screen('LoadNormalizedGammaTable', obj.screen, obj.screenVals.gammaTable);
 				end
 				Screen('Close');
 				Screen('CloseAll');
+				obj.win=[];
 				Priority(0);
 				ShowCursor;
 				obj.serialP.close;
 				rethrow(ME)
+				
 			end
 			
 			if obj.showLog==1
 				obj.printLog;
-			end
-		end
-		
-		%-------------------blah blah blah-----------------------------------
-		function salutation(obj,in,message)
-			if ~exist('in','var')
-				in = 'random user';
-			end
-			if exist('message','var')
-				fprintf([message ' | ' in '\n']);
-			else
-				fprintf(['\nHello from ' obj.screen ' stimulus, ' in '\n\n']);
 			end
 		end
 		
@@ -341,6 +316,59 @@ classdef showStimulus < dynamicprops
 			
 		end
 		
+		%--------------------Configure grating specific variables-----------%
+		function setupGrating(obj,i)
+			if obj.stimulus(i).rotationMethod==1
+				obj.sVals(i).rotateMode = kPsychUseTextureMatrixForRotation;
+			else
+				obj.sVals(i).rotateMode = [];
+			end
+			
+			obj.sVals(i).gratingSize = round(obj.pixelsPerDegree*obj.stimulus(i).size);
+			obj.sVals(i).sf = obj.stimulus(i).sf/obj.pixelsPerDegree;
+			obj.sVals(i).tf = obj.stimulus(i).tf;
+			obj.sVals(i).amplitude = obj.stimulus(i).contrast/2;
+			obj.sVals(i).angle = obj.stimulus(i).angle;
+			obj.sVals(i).phase = obj.stimulus(i).phase;
+			obj.sVals(i).phaseincrement = (obj.sVals(i).tf * 360) * obj.screenVals.ifi;
+			obj.sVals(i).color = obj.stimulus(i).color;
+			obj.sVals(i).xPosition = obj.stimulus(i).xPosition*obj.pixelsPerDegree;
+			obj.sVals(i).yPosition = obj.stimulus(i).xPosition*obj.pixelsPerDegree;
+			obj.sVals(i).gabor=obj.stimulus(i).gabor;
+			
+			if obj.stimulus(i).driftDirection < 1
+				obj.sVals(i).phaseincrement = -obj.sVals(i).phaseincrement;
+			end
+			
+			obj.sVals(i).res = [obj.sVals(i).gratingSize obj.sVals(i).gratingSize];
+			
+			if obj.stimulus(i).mask>0
+				obj.sVals(i).mask = floor((obj.pixelsPerDegree*obj.stimulus(i).size)/2);
+			else
+				obj.sVals(i).mask = [];
+			end
+			
+			if obj.stimulus(i).gabor==0
+				obj.sVals(i).gratingTexture = CreateProceduralSineGrating(obj.win, obj.sVals(i).res(1), obj.sVals(i).res(2),obj.sVals(i).color, obj.sVals(i).mask);
+			else
+				obj.sVals(i).gratingTexture = CreateProceduralGabor(obj.win, obj.sVals(i).res(1), obj.sVals(i).res(2), 1, obj.sVals(i).color);
+			end
+			
+			obj.sVals(i).dstRect=Screen('Rect',obj.sVals(i).gratingTexture);
+			%dstRect=ScaleRect(rect,(obj.stimulus.size/1),(obj.stimulus.size/1))
+			obj.sVals(i).dstRect=CenterRectOnPoint(obj.sVals(i).dstRect,obj.xCenter,obj.yCenter);
+			obj.sVals(i).dstRect=OffsetRect(obj.sVals(i).dstRect,obj.sVals(i).xPosition,obj.sVals(i).yPosition);
+		end
+		
+		%-------------------Draw the grating-------------------%
+		function drawGrating(obj,j)
+			if obj.sVals(j).gabor==0
+				Screen('DrawTexture', obj.win, obj.sVals(j).gratingTexture, [], obj.sVals(j).dstRect, obj.sVals(j).angle, [], [], [], [], obj.sVals(j).rotateMode, [obj.sVals(j).phase, obj.sVals(j).sf, obj.sVals(j).amplitude, 0]);
+			else
+				Screen('DrawTexture', obj.win, obj.sVals(j).gratingTexture, [], obj.sVals(j).dstRect, [], [], [], [], [], kPsychDontDoRotation, [obj.sVals(j).phase, obj.sVals(j).sf, 10, 10, 0.5, 0, 0, 0]);
+			end
+		end
+		
 		%--------------------Print time log-------------------%
 		function printLog(obj)
 			obj.timeLog.vbl=obj.timeLog.vbl(obj.timeLog.vbl>0)*1000;
@@ -364,7 +392,6 @@ classdef showStimulus < dynamicprops
 			title(t)
 			hold off
 			
-			
 			figure
 			hold on
 			plot(obj.timeLog.show(2:index)-obj.timeLog.vbl(2:index),'r')
@@ -372,6 +399,22 @@ classdef showStimulus < dynamicprops
 			plot(obj.timeLog.vbl(1:index)-obj.timeLog.flip(1:index),'b')
 			title('VBL - Flip time in ms')
 			legend('Show-VBL','Show-Flip','VBL-Flip')
+			
+			figure
+			plot(obj.timeLog.miss,'r.-')
+			title('Missed frames')
+		end
+		
+		%-------------------blah blah blah-----------------------------------
+		function salutation(obj,in,message)
+			if ~exist('in','var')
+				in = 'random user';
+			end
+			if exist('message','var')
+				fprintf([message ' | ' in '\n']);
+			else
+				fprintf(['\nHello from ' obj.screen ' stimulus, ' in '\n\n']);
+			end
 		end
 	end
 end

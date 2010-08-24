@@ -29,7 +29,8 @@ classdef gratingStimulus < baseStimulus
 	end
 	
    methods %----------PUBLIC METHODS---------%
-		function obj = gratingStimulus(args) %%%CONSTRUCTOR%%%
+		%-------------------CONSTRUCTOR----------------------%
+		function obj = gratingStimulus(args) 
 			%Initialise for superclass, stops a noargs error
 			if nargin == 0
 				args.family = 'grating';

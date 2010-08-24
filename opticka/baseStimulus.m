@@ -16,6 +16,7 @@ classdef baseStimulus < dynamicprops
 		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|color|verbose)$'
 	end
 	methods
+		%-------------------CONSTRUCTOR----------------------%
 		function obj = baseStimulus(args)
 			if nargin>0 && isstruct(args)
 				if nargin>0 && isstruct(args)
