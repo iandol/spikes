@@ -26,7 +26,7 @@ classdef runExperiment < dynamicprops
 		fixationPoint = 1 %show a fixation spot?
 		photoDiode = 1 %show a white square to trigger a photodiode attached to screen
 		serialPortName = 'dummy' %name of serial port to send TTL out on, if set to 'dummy' then ignore
-		showLog = 1 %show time log after stumlus presentation
+		verbose = 1 %show time log after stumlus presentation
 		hideFlash = 1 %hide the black flash as PTB tests it refresh timing.
 	end
 	
@@ -39,16 +39,18 @@ classdef runExperiment < dynamicprops
 		screenVals %gamma tables and the like
 		timeLog %log times during display
 		sVals %calculated stimulus values
+		taskLog %detailed info as the experiment runs
 	end
 	properties (SetAccess = private, GetAccess = private)
 		black=0 %black index
 		white=1 %white index
-		allowedPropertiesBase='^(pixelsPerCm|distance|screen|windowed|stimulus|task|serialPortName|backgroundColor|screenXOffset|screenYOffset|blend|fixationPoint|srcMode|dstMode|antiAlias|debug|photoDiode|showLog|hideFlash)$'
+		allowedPropertiesBase='^(pixelsPerCm|distance|screen|windowed|stimulus|task|serialPortName|backgroundColor|screenXOffset|screenYOffset|blend|fixationPoint|srcMode|dstMode|antiAlias|debug|photoDiode|verbose|hideFlash)$'
 		serialP %serial port object opened
 		xCenter
 		yCenter
 		win
 		winRect
+		photoDiodeRect
 	end
 	
 	methods
@@ -93,7 +95,7 @@ classdef runExperiment < dynamicprops
 				if obj.debug==1 || obj.windowed==1
 					Screen('Preference', 'SkipSyncTests', 2);
 					Screen('Preference', 'VisualDebugLevel', 0);
-					Screen('Preference', 'Verbosity', 3); 
+					Screen('Preference', 'Verbosity', 2); 
 					Screen('Preference', 'SuppressAllWarnings', 0);
 				else
 					Screen('Preference', 'SkipSyncTests', 0);
@@ -155,39 +157,52 @@ classdef runExperiment < dynamicprops
 					end
 				end
 				
-				%fixRect=CenterRectOnPoint([0 0 5 5],obj.xCenter,obj.yCenter);
-				photoDiodeRect(:,1)=[0 0 100 100]';
-				photoDiodeRect(:,2)=[obj.winRect(3)-100 obj.winRect(4)-100 obj.winRect(3) obj.winRect(4)]';
+				
+				obj.photoDiodeRect(:,1)=[0 0 25 25]';
+				%obj.photoDiodeRect(:,2)=[obj.winRect(3)-100 obj.winRect(4)-100 obj.winRect(3) obj.winRect(4)]';
 				
 				KbReleaseWait; %make sure keyboard keys are all released
 				
-				i=1;
+				
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				% Our main display loop
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				
+				obj.initialiseTask;
 				
 				obj.timeLog.beforeDisplay=GetSecs;
 				[obj.timeLog.vbl(1),vbl.timeLog.show(1),obj.timeLog.flip(1),obj.timeLog.miss(1)] = Screen('Flip', obj.win);
 				
-				while 1
-					if ~isempty(obj.backgroundColor)
-						Screen('FillRect',obj.win,obj.backgroundColor,[]);
-					end
+				
+				while obj.task.thisTrial <= obj.task.nTrials
 					
-					for j=1:length(obj.sVals)
-						switch obj.stimulus(j).family
-							case 'grating'
-								obj.drawGrating(j);
-							case 'dots'
-								obj.drawDots(j);
-							case 'annulus'
-								obj.drawAnnulus(j);
+					if obj.task.isBlank==1
+						%obj.drawBackground;
+					else
+						if ~isempty(obj.backgroundColor)
+							obj.drawBackground;
+						end
+						for j=1:length(obj.sVals)
+							switch obj.stimulus(j).family
+								case 'grating'
+									obj.drawGrating(j);
+								case 'dots'
+									obj.drawDots(j);
+								case 'annulus'
+									obj.drawAnnulus(j);
+							end
+						end
+						if obj.photoDiode==1
+							obj.drawPhotoDiodeSquare;
 						end
 					end
 					
 					if obj.fixationPoint==1
-						Screen('gluDisk',obj.win,[1 1 0],obj.xCenter,obj.yCenter,5);
+						obj.drawFixationPoint;
 					end
-					if obj.photoDiode==1
-						Screen('FillRect',obj.win,[1 1 1 0],photoDiodeRect);
-					end
+					
 					Screen('DrawingFinished', obj.win); % Tell PTB that no further drawing commands will follow before Screen('Flip')
 					
 					[~, ~, buttons]=GetMouse(obj.screen);
@@ -195,30 +210,30 @@ classdef runExperiment < dynamicprops
 						break;
 					end;
 					
-					for j=1:length(obj.sVals)
-						if obj.sVals(j).tf>0
-							obj.sVals(j).phase = obj.sVals(j).phase + obj.sVals(j).phaseincrement;
-						end
-					end
+					obj.updateTask(tick);
 					
 					% Show it at next retrace:
-					[obj.timeLog.vbl(i+1),obj.timeLog.show(i+1),obj.timeLog.flip(i+1),obj.timeLog.miss(i+1)] = Screen('Flip', obj.win, obj.timeLog.vbl(i) + (0.5 * obj.screenVals.ifi));
-					if i==1
-						WaitSecs('UntilTime',obj.timeLog.show(i+1));
+					[obj.timeLog.vbl(tick+1),obj.timeLog.show(tick+1),obj.timeLog.flip(tick+1),obj.timeLog.miss(tick+1)] = Screen('Flip', obj.win, obj.timeLog.vbl(tick) + (0.5 * obj.screenVals.ifi));
+					if tick==1
+						obj.timeLog.startflip=obj.timeLog.vbl(tick) + (0.5 * obj.screenVals.ifi);
+						obj.timeLog.start=obj.timeLog.show(tick+1);
+						%WaitSecs('UntilTime',obj.timeLog.show(thisRun+1));
 						obj.serialP.setDTR(1);
 					end
-					i=i+1;
+					
+					tick=tick+1;
 				end
-				obj.timeLog.afterDisplay=GetSecs;
 				
-				Screen('FillRect',obj.win,[1 0 0],[]);
+				%---------------------------------------------Finished
+				
 				Screen('Flip', obj.win);
+				obj.timeLog.afterDisplay=GetSecs;
 				obj.serialP.setDTR(0);
 				
 				obj.timeLog.deltaDispay=obj.timeLog.afterDisplay-obj.timeLog.beforeDisplay;
 				obj.timeLog.deltaUntilDisplay=obj.timeLog.beforeDisplay-obj.timeLog.start;
 				obj.timeLog.deltafirstVBL=obj.timeLog.vbl(1)-obj.timeLog.beforeDisplay;
-				
+				obj.timeLog.deltaStart=obj.timeLog.startflip-obj.timeLog.start;
 				
 				obj.info = Screen('GetWindowInfo', obj.win);
 				
@@ -244,7 +259,7 @@ classdef runExperiment < dynamicprops
 				
 			end
 			
-			if obj.showLog==1
+			if obj.verbose==1
 				obj.printLog;
 			end
 		end
@@ -267,14 +282,111 @@ classdef runExperiment < dynamicprops
 			obj.pixelsPerDegree=round(obj.pixelsPerCm*(57.3/obj.distance)); %set the pixels per degree
 			obj.salutation(['set sf: ' num2str(value)],'Custom set method')
 		end 
-	end %---END PUBLIC METHODS---%
+	end
 	
-	methods ( Access = private ) %----------PRIVATE METHODS---------%
+	%-------------------------END PUBLIC METHODS--------------------------------%
+	
+	methods ( Access = private ) %----------PRIVATE METHODS---------------------%
+		
+		%---------------Update the stimulus values for the current trial---------%
+		function initialiseTask(obj)
+			if isempty(obj.task.findprop('thisRun'))
+				obj.task.addprop('thisRun'); %add new dynamic property
+			end
+			obj.task.thisRun=1;
+			
+			if isempty(obj.task.findprop('thisRun'))
+				obj.task.addprop('thisTrial'); %add new dynamic property
+			end
+			obj.task.thisTrial=1;
+			
+			if isempty(obj.task.findprop('thisRun'))
+				obj.task.addprop('isBlank'); %add new dynamic property
+			end
+			obj.task.isBlank=0;
+			
+			if isempty(obj.task.findprop('startTime'))
+				obj.task.addprop('startTime'); %add new dynamic property
+			end
+			obj.task.startTime=0;
+			
+			if isempty(obj.task.findprop('switchTime'))
+				obj.task.addprop('switchTime'); %add new dynamic property
+			end
+			obj.task.startTime=0;
+			
+			if isempty(obj.task.findprop('stimIsDrifting'))
+				obj.task.addprop('stimIsDrifting'); %add new dynamic property
+			end
+			obj.task.stimIsDrifting=[];
+			
+			if isempty(obj.task.findprop('stimIsMoving'))
+				obj.task.addprop('stimIsMoving'); %add new dynamic property
+			end
+			obj.task.stimIsMoving=[];
+			
+			%work out which stimuli have animaton parameters to update
+
+		end
+		%---------------Update the stimulus values for the current trial---------%
+		function updateTask(obj,tick)
+			xt = GetSecs;
+			if tick==1 %first ever loop
+				obj.task.isBlank=0;
+				obj.task.startTime=xt;
+				obj.task.switchTime=obj.task.trialTime;
+			end
+			
+			if  xt <= (obj.task.startTime+obj.task.switchTime) %do what we were doing.
+				
+				if obj.task.isBlank == 0 %not in an interstim time
+					
+					for i=1:length(obj.task.stimIsDrifting)
+						ix=obj.task.stimIsDrifting(i);
+						obj.sVals(ix).phase=obj.sVals(ix).phase+obj.sVals(ix).phaseincrement;
+					end
+					
+					for i=1:length(obj.task.stimIsMoving)
+						
+					end
+				else %blank stimulus, don't need to do anything
+					
+				end
+				
+			else %need to switch to next trial or blank
+				
+				if obj.task.isBlank == 0
+					
+					obj.task.switchTime=obj.task.switchTime+obj.task.isTime;
+					obj.task.isBlank = 1;
+					
+				else
+					
+					obj.task.switchTime=obj.task.switchTime+obj.task.trialTime;
+					obj.task.isBlank = 0;
+					obj.task.thisRun = obj.task.thisRun+1
+					
+					if ~mod(obj.thisRun,obj.task.minTrials+1)
+						obj.task.thisTrial=obj.task.thisTrial+1
+						obj.task.thisRun=obj.task.thisRun-obj.task.minTrials; %reset run
+					end
+					
+					%now update our stimuli
+					for i=1:nVars
+						ix = obj.task.nVar(i).stimulus;
+						value=obj.task.outVars{obj.task.thisTrial,i}(obj.task.thisRun)
+						obj.sVars(ix)
+						
+					
+				end
+			end
+			
+		end
 		
 		%---------------Calculates the screen values----------------%
 		function prepareScreen(obj)
 			
-			obj.pixelsPerDegree=obj.pixelsPerCm*(57.3/obj.distance); %set the pixels per degree
+			obj.pixelsPerDegree=round(obj.pixelsPerCm*(57.3/obj.distance)); %set the pixels per degree
 			obj.maxScreen=max(Screen('Screens'));
 			
 			if isempty(obj.screen) || obj.screen > obj.maxScreen
@@ -312,7 +424,8 @@ classdef runExperiment < dynamicprops
 			obj.ptb=Screen('version');
 			
 			obj.timeLog.prepTime=GetSecs-obj.timeLog.construct;
-			WaitSecs(0.1); %preload function
+			WaitSecs(0.01); %preload function
+			
 			
 		end
 		
@@ -333,11 +446,19 @@ classdef runExperiment < dynamicprops
 			obj.sVals(i).phaseincrement = (obj.sVals(i).tf * 360) * obj.screenVals.ifi;
 			obj.sVals(i).color = obj.stimulus(i).color;
 			obj.sVals(i).xPosition = obj.stimulus(i).xPosition*obj.pixelsPerDegree;
-			obj.sVals(i).yPosition = obj.stimulus(i).xPosition*obj.pixelsPerDegree;
+			obj.sVals(i).yPosition = obj.stimulus(i).yPosition*obj.pixelsPerDegree;
 			obj.sVals(i).gabor=obj.stimulus(i).gabor;
 			
 			if obj.stimulus(i).driftDirection < 1
 				obj.sVals(i).phaseincrement = -obj.sVals(i).phaseincrement;
+			end
+			
+			if obj.sVals(i).tf>0 %we need to say this needs animating
+				obj.sVals(i).doDrift=1;
+				obj.task.stimIsDrifting=[obj.task.stimIsDrifting i];
+			else
+				obj.sVals(i).doDrift=0;
+				obj.task.stimIsDrifting=[obj.task.stimIsDrifting i];
 			end
 			
 			obj.sVals(i).res = [obj.sVals(i).gratingSize obj.sVals(i).gratingSize];
@@ -367,6 +488,21 @@ classdef runExperiment < dynamicprops
 			else
 				Screen('DrawTexture', obj.win, obj.sVals(j).gratingTexture, [], obj.sVals(j).dstRect, [], [], [], [], [], kPsychDontDoRotation, [obj.sVals(j).phase, obj.sVals(j).sf, 10, 10, 0.5, 0, 0, 0]);
 			end
+		end
+		
+		%--------------------Draw Fixation spot-------------%
+		function drawFixationPoint(obj)
+			Screen('gluDisk',obj.win,[1 1 0],obj.xCenter,obj.yCenter,5);
+		end
+		
+		%--------------------Draw photodiode block-------------%
+		function drawPhotoDiodeSquare(obj)
+			Screen('FillRect',obj.win,[1 1 1 0],obj.photoDiodeRect);
+		end
+		
+		%--------------------Draw photodiode block-------------%
+		function drawBackground(obj)
+			Screen('FillRect',obj.win,obj.backgroundColor,[]);
 		end
 		
 		%--------------------Print time log-------------------%
@@ -410,10 +546,12 @@ classdef runExperiment < dynamicprops
 			if ~exist('in','var')
 				in = 'random user';
 			end
-			if exist('message','var')
-				fprintf([message ' | ' in '\n']);
-			else
-				fprintf(['\nHello from ' obj.screen ' stimulus, ' in '\n\n']);
+			if obj.verbose==1
+				if exist('message','var')
+					fprintf([message ' | ' in '\n']);
+				else
+					fprintf(['\nHello from ' obj.screen ' stimulus, ' in '\n\n']);
+				end
 			end
 		end
 	end

@@ -5,11 +5,12 @@ classdef stimulusSequence < dynamicprops
 		nVar
 		nTrials = 5
 		nTrial
+		trialTime = 2
 		nSegments = 1
 		nSegment
 		isTime = 1 %inter stimulus time
 		isStimulus %what do we show in the blank?
-		verbose = 1
+		verbose = 0
 		randomSeed
 		randomGenerator='mt19937ar' %mersenne twister default
 	end
@@ -21,6 +22,10 @@ classdef stimulusSequence < dynamicprops
 		currentState
 		outValues
 		outVars
+	end
+	
+	properties (Dependent = true,  SetAccess = private)
+		nRuns
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -43,6 +48,7 @@ classdef stimulusSequence < dynamicprops
 				end
 			end
 			obj.initialiseRandom();
+			obj.nRuns=obj.nVars*obj.nTrials;
 		end
 		
 		%-------------------set up the random number generator------------
@@ -104,6 +110,11 @@ classdef stimulusSequence < dynamicprops
 				end
 				offset=offset+obj.minTrials;
 			end
+		end
+		
+		%this depends on other values
+		function nRuns = get.nRuns(obj)
+			nRuns = obj.nVars*obj.nTrials;
 		end
 		
 		%-------------------blah blah blah-----------------------------------
