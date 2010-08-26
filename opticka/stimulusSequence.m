@@ -9,6 +9,7 @@ classdef stimulusSequence < dynamicprops
 		nSegments = 1
 		nSegment
 		isTime = 1 %inter stimulus time
+		itTime = 2 %inter trial time
 		isStimulus %what do we show in the blank?
 		verbose = 0
 		randomSeed
@@ -48,7 +49,6 @@ classdef stimulusSequence < dynamicprops
 				end
 			end
 			obj.initialiseRandom();
-			obj.nRuns=obj.nVars*obj.nTrials;
 		end
 		
 		%-------------------set up the random number generator------------
