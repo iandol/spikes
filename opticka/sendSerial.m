@@ -7,7 +7,7 @@ classdef sendSerial < handle
 		baudRate=115200
 		silentMode=0 %this allows us to be called even if no serial port is attached
 		portHandle
-		verbosity=4
+		verbosity=0
 		openNow=0 %allows the constructor to run the open method immediately
 	end
 	properties (SetAccess = private, GetAccess = private)
@@ -47,7 +47,7 @@ classdef sendSerial < handle
 				obj.portHandle=IOPort('OpenSerialport', obj.deviceID, sprintf(' BaudRate=%i',obj.baudRate));
 				IOPort('Verbosity', obj.verbosity);
 				if isempty(obj.portHandle)
-					disp('Couldn''t open Serial Port, try the open method with another name')
+					obj.salutation('','Couldn''t open Serial Port, try the open method with another name');
 					obj.silentMode=1;
 				end
 			end
@@ -62,7 +62,7 @@ classdef sendSerial < handle
 			end
 			obj.deviceID=FindSerialPort(obj.name,1,1);
 			if isempty(obj.deviceID)
-				disp('Couldn''t find Serial Port, try the find method with another name')
+				obj.salutation('','Couldn''t find Serial Port, try the find method with another name');
 				obj.silentMode=1;
 			else
 				obj.silentMode=0;
@@ -117,13 +117,15 @@ classdef sendSerial < handle
 	methods ( Access = private ) %----------PRIVATE METHODS---------%
 		%===========Salutation==========%
 		function salutation(obj,in,message)
-			if ~exist('in','var')
-				in = 'random user';
-			end
-			if exist('message','var')
-				fprintf([message ' | ' in '\n']);
-			else
-				fprintf(['\nHello from ' obj.name ' | sendSerial\n\n']);
+			if obj.verbosity > 0
+				if ~exist('in','var')
+					in = 'random user';
+				end
+				if exist('message','var')
+					fprintf([message ' | ' in '\n']);
+				else
+					fprintf(['\nHello from ' obj.name ' | sendSerial\n\n']);
+				end
 			end
 		end
 	end

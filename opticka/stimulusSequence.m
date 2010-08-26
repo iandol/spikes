@@ -1,16 +1,21 @@
 classdef stimulusSequence < dynamicprops
 	properties
 		randomise = 1
-		task
 		nVars = 0
-		inVars
+		nVar
 		nTrials = 5
+		nTrial
+		trialTime = 2
 		nSegments = 1
-		blankTime = 1
-		verbose = 1
+		nSegment
+		isTime = 1 %inter stimulus time
+		itTime = 2 %inter trial time
+		isStimulus %what do we show in the blank?
+		verbose = 0
 		randomSeed
 		randomGenerator='mt19937ar' %mersenne twister default
 	end
+	
 	properties (SetAccess = private, GetAccess = public)
 		oldStream
 		taskStream
@@ -19,11 +24,16 @@ classdef stimulusSequence < dynamicprops
 		outValues
 		outVars
 	end
+	
+	properties (Dependent = true,  SetAccess = private)
+		nRuns
+	end
+	
 	properties (SetAccess = private, GetAccess = private)
 		allowedPropertiesBase='^(randomMode|numOfVariables|numOfTrials|blankTime)$'
 	end
+	
 	methods
-		
 		%-------------------CONSTRUCTOR----------------------%
 		function obj = stimulusSequence(args) 
 			if nargin>0 && isstruct(args)
@@ -59,13 +69,13 @@ classdef stimulusSequence < dynamicprops
 		%-------------------Do the randomisation-------------------------
 		function randomiseStimuli(obj)
 			
-			obj.nVars=length(obj.inVars);
+			obj.nVars=length(obj.nVar);
 			
 			obj.currentState=obj.taskStream.State;
 			
 			nLevels = zeros(obj.nVars, 1);
 			for f = 1:obj.nVars
-				nLevels(f) = length(obj.inVars(f).values);
+				nLevels(f) = length(obj.nVar(f).values);
 			end
 			obj.minTrials = prod(nLevels);
 
@@ -83,13 +93,13 @@ classdef stimulusSequence < dynamicprops
 				[~, index] = sort(rand(obj.minTrials, 1));
 				for f = 1:obj.nVars
 					len1 = len1 / nLevels(f);
-					if size(obj.inVars(f).values, 1) ~= 1
+					if size(obj.nVar(f).values, 1) ~= 1
 						% ensure that factor levels are arranged in one row
-						obj.inVars(f).values = reshape(obj.inVars(f).values, 1, numel(obj.inVars(1).values));
+						obj.nVar(f).values = reshape(obj.nVar(f).values, 1, numel(obj.nVar(1).values));
 					end
 					% this is the critical line: it ensures there are enough repetitions
 					% of the current factor in the correct order
-					obj.outVars{i,f} = repmat(reshape(repmat(obj.inVars(f).values, len1, len2), obj.minTrials, 1), obj.nVars, 1);
+					obj.outVars{i,f} = repmat(reshape(repmat(obj.nVar(f).values, len1, len2), obj.minTrials, 1), obj.nVars, 1);
 					if obj.randomise
 						obj.outVars{i,f} = obj.outVars{i,f}(index);
 					end
@@ -102,6 +112,11 @@ classdef stimulusSequence < dynamicprops
 			end
 		end
 		
+		%this depends on other values
+		function nRuns = get.nRuns(obj)
+			nRuns = obj.nVars*obj.nTrials;
+		end
+		
 		%-------------------blah blah blah-----------------------------------
 		function salutation(obj,in,message)
 			if obj.verbose==1
@@ -111,7 +126,7 @@ classdef stimulusSequence < dynamicprops
 				if exist('message','var')
 					fprintf([message ' | ' in '\n']);
 				else
-					fprintf(['\nHello from ' obj.screen ' stimulus, ' in '\n\n']);
+					fprintf(['\nHello from randomise, ' in '\n\n']);
 				end
 			end
 		end

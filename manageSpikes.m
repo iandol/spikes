@@ -14,7 +14,6 @@ classdef manageSpikes < handle
 		repInfo=''
 		bzrInfo=''
 		spikesPath=''
-		
 	end
 	properties (SetAccess = private, GetAccess = public) %---PROTECTED PROPERTIES---%
 		externalPath=''
