@@ -4,8 +4,10 @@ classdef dotsStimulus < baseStimulus
 
 	properties %--------------------PUBLIC PROPERTIES----------%
 		family = 'dots'
+		type = 'simple'
 		dotSpeed = 5    % dot speed (deg/sec)
 		nDots = 2000 % number of dots
+		angle = 90
 		maxDiameter = 10   % maximum radius of  annulus (degrees)
 		minDiameter = 1  % minumum radius of  annulus (degrees)
 		dotWidth       = 0.2  % width of dot (deg)
@@ -16,6 +18,7 @@ classdef dotsStimulus < baseStimulus
 	end
 
 	properties (SetAccess = private, GetAccess = private)
+		dots
 		allowedProperties='^(dotSpeed|nDots|maxDiameter|minDiameter|dotWidth|coherence|direction|kill|waitFrames)$';
 	end
 	
@@ -42,6 +45,25 @@ classdef dotsStimulus < baseStimulus
 				end
 			end
 			obj.salutation('constructor','Dots Stimulus initialisation complete');
+		end
+		
+		function initialiseDots(obj)
+			if strcmp(obj.type,'simple')
+				obj.dots.allAngles=ones(obj.nDots,1).*(obj.angle*(pi/180));
+				obj.dots.randDots=obj.nDots-floor(obj.nDots*(obj.coherence/100));
+				if obj.dots.randDots>0
+					obj.dots.allAngles(1:obj.dots.randDots)=(2*pi).*rand(1,obj.dots.randDots);
+				end
+				r = rmax * sqrt(rand(ndots,1)); % r
+				r(r<rmin) = rmin;
+				t = 2*pi*rand(ndots,1);                     % theta polar  coordinate
+				cs = [cos(t), sin(t)];
+				xy = [r r] .* cs;   % dot positions in Cartesian coordinates  (pixels from center)
+				dr = pfs.*(cueSign.*ones(ndots, 1))          ;   % change in radius per  frame (pixels)
+				dxdy= dr(1).*[cos(allAngles) sin(allAngles)];
+			else
+				
+			end
 		end
 		
 	end %---END PUBLIC METHODS---%

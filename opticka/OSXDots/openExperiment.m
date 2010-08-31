@@ -31,12 +31,13 @@ if nargin < 3
 end
 
 % added to make stuff behave itself in os x with multiple monitors
-Screen('Preference', 'VisualDebugLevel',2);
+Screen('Preference', 'SkipSyncTests', 2);
+Screen('Preference', 'VisualDebugLevel', 0);
 %%%%
 
 % Set the background to the background value.
 screenInfo.bckgnd = 0;
-[screenInfo.curWindow, screenInfo.screenRect] = Screen('OpenWindow', curScreen, screenInfo.bckgnd,[],32, 2,0,0);
+[screenInfo.curWindow, screenInfo.screenRect] = Screen('OpenWindow', curScreen, screenInfo.bckgnd,[1 1 801 601],32, 2,0,0);
 screenInfo.dontclear = 0; % 1 gives incremental drawing (does not clear buffer after flip)
 
 %get the refresh rate of the screen

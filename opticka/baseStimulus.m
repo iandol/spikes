@@ -4,7 +4,6 @@ classdef baseStimulus < dynamicprops
 	%   Detailed explanation to come
 	properties
 		family='grating'
-		type='sinusoid'
 		xPosition=0
 		yPosition=0
 		size=2
@@ -28,22 +27,20 @@ classdef baseStimulus < dynamicprops
 						end
 					end
 				end
-			elseif nargin>0 && iscell(args)
-				obj.type=args{1};
-				obj.size=args{2};
-				obj.xPosition=args{3};
-				obj.yPosition=args{4};
 			end
-		end
+		end 
+	end %---END PUBLIC METHODS---%
+	
+	methods ( Access = protected ) %----------PRIVATE METHODS---------%
 		function salutation(obj,in,message)
 			if obj.verbose==1
 				if ~exist('in','var')
-					in = 'random user';
+					in = 'undefined';
 				end
 				if exist('message','var')
 					fprintf([message ' | ' in '\n']);
 				else
-					fprintf(['\nHello from ' obj.family ' stimulus, ' in '\n\n']);
+					fprintf(['\n' obj.family ' stimulus, ' in '\n']);
 				end
 			end
 		end

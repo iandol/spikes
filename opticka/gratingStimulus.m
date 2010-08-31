@@ -12,8 +12,8 @@ classdef gratingStimulus < baseStimulus
 %   gabor = use a gabor rather than grating
 
    properties %--------------------PUBLIC PROPERTIES----------%
-		method = 'procedural'
-		sf = 1
+		type = 'procedural'
+		sf = 5
 		tf = 2
 		angle = 0
 		rotationMethod = 1
@@ -22,10 +22,13 @@ classdef gratingStimulus < baseStimulus
 		mask = 0
 		gabor = 0
 		driftDirection=1
+		speed = 0
+		moveAngle = 0
+		startPosition = 0
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
-		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|mask|gabor|driftDirection)$';
+		allowedProperties='^(sf|tf|method|angle|phase|rotationMethod|contrast|mask|gabor|driftDirection|speed|startPosition)$';
 	end
 	
    methods %----------PUBLIC METHODS---------%

@@ -2,7 +2,7 @@ classdef manageSpikes < handle
 	properties %------------------PUBLIC PROPERTIES--------------%
 		action='check'
 		branch='main'
-		installLocation='/Users/Shared/Code/'
+		installLocation='~/Code/'
 		directoryName='spikes'
 		checkoutCommand='branch'
 		bzrLocation='/usr/local/bin/bzr'
@@ -35,8 +35,8 @@ classdef manageSpikes < handle
 			end
 			switch obj.arch
 				case 'OSX'
-					obj.installLocation='/Users/Shared/Code/';
-					obj.bzrLocation='/usr/local/bin/bzr';
+					%obj.installLocation='/Users/Shared/Code/';
+					%obj.bzrLocation='/usr/local/bin/bzr';
 				case 'WIN'
 					obj.installLocation='C:\Users\Public\Code\';
 					obj.bzrLocation='bzr.exe';
@@ -147,6 +147,13 @@ classdef manageSpikes < handle
 				obj.genpath;
 				obj.addpath;
 			end
+		end
+		
+		%========Just remake the path=======%
+		function addToPath(obj)
+			obj.purgepath;
+			obj.genpath;
+			obj.addpath;
 		end
 		
 		%=====Update toolbox======%		
@@ -270,10 +277,15 @@ classdef manageSpikes < handle
 		end
 		
 		function p=genpath(obj,d) %modified to allow exclusion of 
+			addtospikepath=0;
 			exclstart = '^(\.|\.\.|@|+|\.bzr|\.svn|\.git)';
 			exclpath = '(VSX|VSS|c_sources|licence|private)';
 			p = '';
-
+			
+			if ~exist('d','var')
+				addtospikepath=1;
+				d = [obj.installLocation obj.directoryName];
+			end
 			% Generate path based on given root directory
 			files = dir(d);
 			if isempty(files)
@@ -293,6 +305,9 @@ classdef manageSpikes < handle
 				if isempty(regexpi(dirname,exclstart)) && isempty(regexpi(dirname, exclpath))
 					p = [p obj.genpath(fullfile(d,dirname))]; % recursive calling of this function.
 				end
+			end
+			if addtospikepath==1
+				obj.spikesPath = p;
 			end
 		end
 	end %---END PRIVATE METHODS---%

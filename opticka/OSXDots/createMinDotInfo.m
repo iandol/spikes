@@ -28,10 +28,10 @@ end
 dotInfo.numDotField = 2;
 dotInfo.apXYD = [-50 0 60; 50 0 60]; 
 %dotInfo.apXYD = [150 0 50; -150 0 50];  
-dotInfo.speed = [50 50];
-dotInfo.coh = [1000 0];
+dotInfo.speed = [2 2];
+dotInfo.coh = [1000 500];
 dotInfo.dir = [45 90];
-dotInfo.maxDotTime = [10 10];
+dotInfo.maxDotTime = [20 20];
 
 %dotInfo.trialtype = [1 1]; 
 % [1 fixed duration 2 reaction time,  1 hold on 2 hold off] hold on means

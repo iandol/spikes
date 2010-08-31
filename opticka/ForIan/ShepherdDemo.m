@@ -1,4 +1,5 @@
 Screen('Preference', 'SkipSyncTests',1) 
+clear all
 AssertOpenGL;
 try
     % ------------------------
@@ -7,14 +8,14 @@ try
     nframes     = 60; % number of animation frames in loop
     mon_width   = 33.2;   % horizontal dimension of viewable screen (cm)
     v_dist      = 57.3;   % viewing distance (cm)
-    dot_speed   = 2;    % dot speed (deg/sec)
-    ndots       = 2000; % number of dots
+    dot_speed   = 1;    % dot speed (deg/sec)
+    ndots       = 5; % number of dots
     max_d       = 10;   % maximum radius of  annulus (degrees)
     min_d       = 1;  % minumum radius of  annulus (degrees)
     dot_w       = 0.2;  % width of dot (deg)
     fix_r       = 0.15; % radius of fixation point (deg)
     f_kill      = 0.2; % fraction of dots to kill each frame  (limited lifetime)
-    waitframes = 10;     % Show new dot-images at each waitframes'th  monitor refresh.
+    waitframes = 1;     % Show new dot-images at each waitframes'th  monitor refresh.
 
     % Experiment parameters
     trialsDesired      = 10;
@@ -38,9 +39,9 @@ try
     screens=Screen('Screens');
     screenNumber=max(screens);
     [w, rect] = Screen('OpenWindow', screenNumber, 0,[],[], 2);
-    %Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     [center(1), center(2)] = RectCenter(rect);
-     fps=Screen('FrameRate',w);      % frames per second
+    fps=Screen('FrameRate',w);      % frames per second
     ifi=Screen('GetFlipInterval', w);
     if fps==0
        fps=1/ifi;
@@ -66,9 +67,6 @@ try
     q=QuestCreate(tGuess,tGuessSd,pThreshold,beta,delta,gamma);
     q.normalizePdf=1; % This adds a few ms per call to QuestUpdate,  but otherwise the pdf will underflow after about 1000 trials.
     wrongRight={'wrong','right'};
-
-
-
 
     % Trial Loop
     for k=1:trialsDesired
@@ -125,9 +123,9 @@ try
         Screen('FillOval', w, [255  0 0 ], fix_cord);   % draw  fixation dot (flip erases it)
         vbl=Screen('Flip', w, vbl + (waitframes-0.5)*ifi);
         % get response
-         Priority(0);
-         while KbCheck;
-         end; % wait until all keys are released.
+        Priority(0);
+        while KbCheck;
+        end; % wait until all keys are released.
         escapeKey = KbName('q'); NoHit=1;
         while NoHit
             touch = 0;

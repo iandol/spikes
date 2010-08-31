@@ -77,7 +77,11 @@ classdef stimulusSequence < dynamicprops
 			for f = 1:obj.nVars
 				nLevels(f) = length(obj.nVar(f).values);
 			end
+			
 			obj.minTrials = prod(nLevels);
+			if isempty(obj.minTrials)
+				obj.minTrials = 1;
+			end
 
 			% initialize cell array that will hold balanced variables
 			obj.outVars = cell(obj.nTrials, obj.nVars);
