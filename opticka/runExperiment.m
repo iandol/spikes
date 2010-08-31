@@ -185,7 +185,7 @@ classdef runExperiment < dynamicprops
 				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 				
-				tick=1;
+				obj.task.tick=1;
 				obj.timeLog.beforeDisplay=GetSecs;
 				obj.timeLog.stimTime(1) = 1;
 				[obj.timeLog.vbl(1),vbl.timeLog.show(1),obj.timeLog.flip(1),obj.timeLog.miss(1)] = Screen('Flip', obj.win);
@@ -219,7 +219,7 @@ classdef runExperiment < dynamicprops
 					end
 					
 					if obj.visualDebug==1
-						obj.infoText(tick);
+						obj.infoText;
 						obj.drawGrid;
 					end
 					
@@ -230,23 +230,23 @@ classdef runExperiment < dynamicprops
 						break;
 					end;
 					
-					obj.updateTask(tick);
+					obj.updateTask;
 					
 					% Show it at next retrace:
-					[obj.timeLog.vbl(tick+1),obj.timeLog.show(tick+1),obj.timeLog.flip(tick+1),obj.timeLog.miss(tick+1)] = Screen('Flip', obj.win, (obj.timeLog.vbl(tick)+obj.screenVals.halfisi));
+					[obj.timeLog.vbl(obj.task.tick+1),obj.timeLog.show(obj.task.tick+1),obj.timeLog.flip(obj.task.tick+1),obj.timeLog.miss(obj.task.tick+1)] = Screen('Flip', obj.win, (obj.timeLog.vbl(obj.task.tick)+obj.screenVals.halfisi));
 					if obj.task.isBlank==0
-						obj.timeLog.stimTime(tick+1)=1;
+						obj.timeLog.stimTime(obj.task.tick+1)=1;
 					else
-						obj.timeLog.stimTime(tick+1)=0;
+						obj.timeLog.stimTime(obj.task.tick+1)=0;
 					end
-					if tick==1
-						obj.timeLog.startflip=obj.timeLog.vbl(tick) + obj.screenVals.halfisi;
-						obj.timeLog.start=obj.timeLog.show(tick+1);
+					if obj.task.tick==1
+						obj.timeLog.startflip=obj.timeLog.vbl(obj.task.tick) + obj.screenVals.halfisi;
+						obj.timeLog.start=obj.timeLog.show(obj.task.tick+1);
 						%WaitSecs('UntilTime',obj.timeLog.show(thisRun+1));
 						obj.serialP.setDTR(1);
 					end
 					
-					tick=tick+1;
+					obj.task.tick=obj.task.tick+1;
 				end
 				
 				%---------------------------------------------Finished
@@ -259,6 +259,7 @@ classdef runExperiment < dynamicprops
 				obj.timeLog.deltaUntilDisplay=obj.timeLog.beforeDisplay-obj.timeLog.start;
 				obj.timeLog.deltaToFirstVBL=obj.timeLog.vbl(1)-obj.timeLog.beforeDisplay;
 				obj.timeLog.deltaStart=obj.timeLog.startflip-obj.timeLog.start;
+				obj.timeLog.deltaUpdateDiff = obj.timeLog.start-obj.task.startTime;
 				
 				obj.info = Screen('GetWindowInfo', obj.win);
 				
@@ -339,6 +340,11 @@ classdef runExperiment < dynamicprops
 				
 			%Set up the task structures needed
 			
+			if isempty(obj.task.findprop('tick'))
+				obj.task.addprop('tick'); %add new dynamic property
+			end
+			obj.task.tick=0;
+			
 			if isempty(obj.task.findprop('thisRun'))
 				obj.task.addprop('thisRun'); %add new dynamic property
 			end
@@ -364,6 +370,11 @@ classdef runExperiment < dynamicprops
 			end
 			obj.task.startTime=0;
 			
+			if isempty(obj.task.findprop('timeNow'))
+				obj.task.addprop('timeNow'); %add new dynamic property
+			end
+			obj.task.timeNow=0;
+			
 			if isempty(obj.task.findprop('stimIsDrifting'))
 				obj.task.addprop('stimIsDrifting'); %add new dynamic property
 			end
@@ -374,6 +385,11 @@ classdef runExperiment < dynamicprops
 			end
 			obj.task.stimIsMoving=[];
 			
+			if isempty(obj.task.findprop('stimIsFlashing'))
+				obj.task.addprop('stimIsFlashing'); %add new dynamic property
+			end
+			obj.task.stimIsFlashing=[];
+			
 			%work out which stimuli have animaton parameters to update
 
 		end
@@ -381,13 +397,15 @@ classdef runExperiment < dynamicprops
 		%-------------set up variables from the task structure -------------------%
 		function updateVars(obj,thisTrial,thisRun)
 			
-			%when we get to the end of a trial, our Run overflows so we need
-			%to explicitly pass the correct trial and run to updateVars
+			%As we change variables in the blank, we optionally send the
+			%values for the next stimulus
 			if ~exist('thisTrial','var') || ~exist('thisRun','var')
-				thisTrial = obj.task.thisTrial;
-				thisRun = obj.task.thisTrial;
+				thisTrial=obj.task.thisTrial;
+				thisRun=obj.task.thisRun;
 			end
-			
+			if thisTrial > obj.task.nTrials 
+				return %we've reached the end of the experiment, no need to update anything!
+			end
 			for i=1:obj.task.nVars
 				ix = obj.task.nVar(i).stimulus; %which stimulus
 				value=obj.task.outVars{thisTrial,i}(thisRun);
@@ -412,23 +430,21 @@ classdef runExperiment < dynamicprops
 						obj.sVals(ix(j)).mvRect=OffsetRect(obj.sVals(ix(j)).dstRect,dx*obj.ppd,dy*obj.ppd);
 					end
 				end
-				
 			end
-			
 		end
 		
 		%---------------Update the stimulus values for the current trial and increments the switchTime timer---------%
-		function updateTask(obj,tick)
-			xt = GetSecs;
-			if tick==1 %first ever loop
+		function updateTask(obj)
+			obj.task.timeNow = GetSecs;
+			if obj.task.tick==1 %first ever loop
 				obj.task.isBlank=0;
-				obj.task.startTime=xt;
+				obj.task.startTime=obj.task.timeNow;
 				obj.task.switchTime=obj.task.trialTime; %first ever time is for the first trial
 			end
 			
-			if  xt <= (obj.task.startTime+obj.task.switchTime) %do what we were doing.
+			if  obj.task.timeNow <= (obj.task.startTime+obj.task.switchTime) %we haven't hit a time trigger yet
 				
-				if obj.task.isBlank == 0 %not in an interstim time
+				if obj.task.isBlank == 0 %not in an interstimulus time, need to update drift, motion and pulsation
 					
 					for i=1:length(obj.task.stimIsDrifting) %only update those stimuli which are drifting
 						ix=obj.task.stimIsDrifting(i);
@@ -445,43 +461,47 @@ classdef runExperiment < dynamicprops
 				
 			else %need to switch to next trial or blank
 				
-				if obj.task.isBlank == 0 %we come from showing a stimulu
+				if obj.task.isBlank == 0 %we come from showing a stimulus
 					
-						if ~mod(obj.task.thisRun,obj.task.minTrials) %are we within a trial block or not? we add the required time to our switch timer
-							obj.task.switchTime=obj.task.switchTime+obj.task.itTime;
-						else
-							obj.task.switchTime=obj.task.switchTime+obj.task.isTime;
-						end
-
-						obj.task.isBlank = 1;
-
-						obj.task.thisRun = obj.task.thisRun+1;
-
-						%now update our stimuli, we do it in the blank as less
-						%critical timingwise
-						for i=1:length(obj.task.stimIsMoving) %reset the motion rect
-							ix=obj.task.stimIsMoving(i);
-							obj.sVals(ix).mvRect=obj.sVals(ix).dstRect;
-						end
-
-						if obj.task.thisTrial <= obj.task.nTrials
-							if obj.task.thisRun <= obj.task.minTrials
-								obj.updateVars;
-							else
-								obj.updateVars(obj.task.thisTrial, 1)
-							end
-						end
-						
-					%end
+					obj.logMe('IntoBlank');
+					obj.task.isBlank = 1;
+					
+					if ~mod(obj.task.thisRun,obj.task.minTrials) %are we within a trial block or not? we add the required time to our switch timer
+						obj.task.switchTime=obj.task.switchTime+obj.task.itTime;
+					else
+						obj.task.switchTime=obj.task.switchTime+obj.task.isTime;
+					end
+					
+					%now update our stimuli, we do it in the blank as less
+					%critical timingwise
+					for i=1:length(obj.task.stimIsMoving) %reset the motion rect back to the default
+						ix=obj.task.stimIsMoving(i);
+						obj.sVals(ix).mvRect=obj.sVals(ix).dstRect;
+					end
+					
+					if ~mod(obj.task.thisRun,obj.task.minTrials) %are we rolling over into a new trial?
+						mT=obj.task.thisTrial+1;
+						mR = 1;
+					else
+						mT=obj.task.thisTrial
+						mR = obj.task.thisRun + 1;
+					end
+					
+					obj.updateVars(mT,mR);
+					obj.logMe('OutaBlank');
 					
 				else %we have to show the new run on the next flip
 					
+					obj.logMe('IntoTrial');
 					obj.task.switchTime=obj.task.switchTime+obj.task.trialTime; %update our timer
 					obj.task.isBlank = 0;
-					if ~mod(obj.task.thisRun,obj.task.minTrials+1) %are we rolling over into a new trial?
+					if ~mod(obj.task.thisRun,obj.task.minTrials) %are we rolling over into a new trial?
 						obj.task.thisTrial=obj.task.thisTrial+1;
-						obj.task.thisRun=obj.task.thisRun-obj.task.minTrials; %reset run
+						obj.task.thisRun = 1;
+					else
+						obj.task.thisRun = obj.task.thisRun + 1;
 					end
+					obj.logMe('OutaTrial');
 					
 				end
 			end
@@ -543,7 +563,7 @@ classdef runExperiment < dynamicprops
 		end
 		
 		%--------------------Configure grating specific variables-----------%
-		function setupGrating(obj,i,j)
+		function setupGrating(obj,i)
 			ts = obj.stimulus.(obj.sList.list(i))(obj.sList.index(i));
 			
 			obj.sVals(i).family = ts.family;
@@ -683,9 +703,9 @@ classdef runExperiment < dynamicprops
 			Screen('DrawDots',obj.win,x,1,[0.8 0.8 0.4],[obj.xCenter obj.yCenter]);
 		end
 		
-		function infoText(obj,tick)
+		function infoText(obj)
 			t=sprintf('T: %i | R: %i | isBlank: %i | Time: %3.3f',obj.task.thisTrial,...
-			obj.task.thisRun,obj.task.isBlank,(obj.timeLog.vbl(tick)-obj.task.startTime)); 
+			obj.task.thisRun,obj.task.isBlank,(obj.timeLog.vbl(obj.task.tick)-obj.task.startTime)); 
 			for i=1:obj.task.nVars
 				t=[t sprintf('\n\n\t\t%s = %2.2f',obj.task.nVar(i).name,obj.task.outVars{obj.task.thisTrial,i}(obj.task.thisRun))];
 			end
@@ -781,6 +801,13 @@ classdef runExperiment < dynamicprops
 		function [dX dY] = updatePosition(obj,delta,angle)
 			dX = delta * cos(obj.d2r(angle));
 			dY = delta * sin(obj.d2r(angle));
+		end
+		
+		function logMe(obj,tag)
+			if ~exist('tag','var')
+				tag='#';
+			end
+			fprintf('%s -- T: %i | R: %i | B: %i | Tick: %i | Time: %5.5g\n',tag,obj.task.thisTrial,obj.task.thisRun,obj.task.isBlank,obj.task.tick,obj.task.timeNow-obj.task.startTime);
 		end
 		
 	end

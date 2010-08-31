@@ -31,22 +31,22 @@ s.nTrials = 5;
 s.nSegments = 1;
 s.trialTime = 2;
 s.isTime = 1;
-s.itTime=2;
-s.nVar(1).name = 'contrast';
-s.nVar(1).stimulus = [2 3];
-s.nVar(1).values = [0.025 0.05 0.1];
-s.nVar(2).name = 'angle';
-s.nVar(2).stimulus = [1 3 7];
-s.nVar(2).values = [0 45 90];
+s.itTime=1;
+s.nVar(1).name = 'angle';
+s.nVar(1).stimulus = [1 3 7];
+s.nVar(1).values = [0 90];
+s.nVar(2).name = 'contrast';
+s.nVar(2).stimulus = [2 3];
+s.nVar(2).values = [0.025 0.1];
 s.nVar(3).name = 'xPosition';
 s.nVar(3).stimulus = [2];
-s.nVar(3).values = [-1 -3 -5];
+s.nVar(3).values = [-1 5];
 
 %we call the routing to randomise trials in a block structure
 s.randomiseStimuli;
 
 %% ss is the object which interfaces with the screen and runs our
 %% experiment
-r=runExperiment(struct('distance',57.3,'pixelsPerCm',44,...
+r=runExperiment(struct('distance',57.3,'pixelsPerCm',26,...
 	'stimulus',stim,'task',s,'windowed',0,'debug',0,'hideFlash',0,'verbose',1));
 %r.run

@@ -261,10 +261,12 @@ classdef manageSpikes < handle
 		
 		function purgepath(obj) %this will strip out anything that matches spikes in its path.
 			p = path;
-			fragment = regexp(p,['(?<spath>/[^' pathsep ']*spikes[^' pathsep ']*' pathsep ')']);
+			fragment = regexp(p,['(?<spath>/[^' pathsep ']*spikes[^:]*' pathsep ')'],'names');
 			rmpth='';
-			for i=1:length(fragment)
-				rmpth=strcat(rmpth,fragment(i).spath);
+			if ~isempty(fragment)
+				for i=1:length(fragment)
+					rmpth=strcat(rmpth,fragment(i).spath);
+				end
 			end
 			if ~isempty(rmpth)
 				rmpath(rmpth);

@@ -6,7 +6,7 @@ classdef barStimulus < baseStimulus
 		barWidth = 1
 		barLength = 2
 		angle = 0
-		type = 'simple'
+		type = 'solid'
 		startPosition = -2
 		endPosition = 2
 		speed = 1
