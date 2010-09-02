@@ -3,12 +3,11 @@ classdef barStimulus < baseStimulus
 %   The current properties are:
 
    properties %--------------------PUBLIC PROPERTIES----------%
+		family = 'bar'
+		type = 'solid'
 		barWidth = 1
 		barLength = 2
 		angle = 0
-		type = 'solid'
-		startPosition = -2
-		endPosition = 2
 		speed = 1
 		contrast = []
 	end
@@ -60,13 +59,22 @@ classdef barStimulus < baseStimulus
 			obj.matrix(:,:,2)=ones(bl,bw)*obj.color(2);
 			obj.matrix(:,:,3)=ones(bl,bw)*obj.color(3);
 			obj.matrix(:,:,4)=ones(bl,bw)*obj.color(4);
-			if strcmp(obj.type, 'random')
-				obj.rmatrix=rand(bl,bw);
-				for i=1:4
-					obj.matrix(:,:,i)=obj.matrix(:,:,i).*obj.rmatrix;
-				end
+			switch obj.type
+				case 'random'
+					obj.rmatrix=rand(bl,bw);
+					for i=1:3
+						obj.matrix(:,:,i)=obj.matrix(:,:,i).*obj.rmatrix;
+					end
+					obj.matrix(:,:,4)=ones(bl,bw)*obj.alpha;
+				case 'randomN'
+					obj.rmatrix=randn(bl,bw);
+					for i=1:3
+						obj.matrix(:,:,i)=obj.matrix(:,:,i).*obj.rmatrix;
+					end
+					obj.matrix(:,:,4)=ones(bl,bw)*obj.alpha;
+				otherwise
+					obj.matrix(:,:,4)=ones(bl,bw)*obj.alpha;
 			end
-			
 		end
 		
 		function updatePosition(obj,angle,delta)

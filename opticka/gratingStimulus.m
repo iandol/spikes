@@ -12,6 +12,7 @@ classdef gratingStimulus < baseStimulus
 %   gabor = use a gabor rather than grating
 
    properties %--------------------PUBLIC PROPERTIES----------%
+		family = 'grating'
 		type = 'procedural'
 		sf = 5
 		tf = 2
@@ -24,7 +25,6 @@ classdef gratingStimulus < baseStimulus
 		driftDirection=1
 		speed = 0
 		moveAngle = 0
-		startPosition = 0
 	end
 	
 	properties (SetAccess = private, GetAccess = private)

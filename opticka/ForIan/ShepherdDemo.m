@@ -8,37 +8,36 @@ try
     nframes     = 60; % number of animation frames in loop
     mon_width   = 33.2;   % horizontal dimension of viewable screen (cm)
     v_dist      = 57.3;   % viewing distance (cm)
-    dot_speed   = 1;    % dot speed (deg/sec)
-    ndots       = 5; % number of dots
+    dot_speed   = 0.5;    % dot speed (deg/sec)
+    ndots       = 1000; % number of dots
     max_d       = 10;   % maximum radius of  annulus (degrees)
     min_d       = 1;  % minumum radius of  annulus (degrees)
     dot_w       = 0.2;  % width of dot (deg)
     fix_r       = 0.15; % radius of fixation point (deg)
-    f_kill      = 0.2; % fraction of dots to kill each frame  (limited lifetime)
-    waitframes = 1;     % Show new dot-images at each waitframes'th  monitor refresh.
-
+    f_kill      = 0.05; % fraction of dots to kill each frame  (limited lifetime)
+    waitframes	 = 2;     % Show new dot-images at each waitframes'th  monitor refresh.
     % Experiment parameters
-    trialsDesired      = 10;
+    trialsDesired  = 10;
     dirAng        = 90;  % In degrees
-    coherence     = 1;   % Percent
+    coherence     = 50;   % Percent
     responseKey1='1';
     responseKey2='2';
+	 sr = [1 1 801 601];
 
-    guessCoherence=[];
+    guessCoherence=25;
     while isempty(guessCoherence)
         guessCoherence=input('Estimate threshold (percent): ');
     end
-    guessCoherenceSd=[];
+    guessCoherenceSd=5;
     while isempty(guessCoherenceSd)
         guessCoherenceSd=input('Estimate the standard deviation of  your guess, above, (percent): ');
     end
-
 
     ndots=round(ndots);
     % Set up screen
     screens=Screen('Screens');
     screenNumber=max(screens);
-    [w, rect] = Screen('OpenWindow', screenNumber, 0,[],[], 2);
+    [w, rect] = Screen('OpenWindow', screenNumber, 128,[],[], 2);
     Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     [center(1), center(2)] = RectCenter(rect);
     fps=Screen('FrameRate',w);      % frames per second
@@ -52,7 +51,7 @@ try
     HideCursor; % Hide the mouse cursor
     Priority(MaxPriority(w));
 
-    ppd = pi * (rect(3)-rect(1)) / atan(mon_width/v_dist/2) /  360;    % pixels per degree
+    ppd = 44; %pi * (rect(3)-rect(1)) / atan(mon_width/v_dist/2) /  360;    % pixels per degree
     pfs = dot_speed * ppd / fps;                            % dot  speed (pixels/frame)
     s = dot_w * ppd;                                        % dot  size (pixels)
     fix_cord = [center-fix_r*ppd center+fix_r*ppd];

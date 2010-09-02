@@ -3,16 +3,16 @@ classdef baseStimulus < dynamicprops
 	%classes
 	%   Detailed explanation to come
 	properties
-		family='grating'
-		xPosition=0
-		yPosition=0
-		size=2
-		color=[0.5 0.5 0.5 0]
+		xPosition = 0
+		yPosition = 0
+		size = 2
+		color = [0.5 0.5 0.5 0.9]
+		alpha = 1
 		verbose=0
+		startPosition=0;
 	end
 	properties (SetAccess = private, GetAccess = private)
-		texid
-		allowedPropertiesBase='^(family|type|xPosition|yPosition|size|color|verbose)$'
+		allowedPropertiesBase='^(type|xPosition|yPosition|size|color|verbose)$'
 	end
 	methods
 		%-------------------CONSTRUCTOR----------------------%

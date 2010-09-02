@@ -3,7 +3,7 @@ classdef sendTTL < handle
 	%   Connects and manages Serial port communication
 	properties
 		name='LabJack'
-		deviceID
+		deviceID = 3
 		silentMode=0 %this allows us to be called even if no serial port is attached
 		header = '/usr/local/include/labjackusb.h'
 		library = '/usr/local/lib/liblabjackusb'
@@ -50,8 +50,8 @@ classdef sendTTL < handle
 				end
 				libfunctions liblabjackusb -full
 				obj.version =  calllib('liblabjackusb','LJUSB_GetLibraryVersion');
-				obj.devCount = calllib('liblabjackusb','LJUSB_GetDevCount',3);
-				obj.handle = calllib('liblabjackusb','LJUSB_OpenDevice',1,0,3);
+				obj.devCount = calllib('liblabjackusb','LJUSB_GetDevCount',obj.deviceID);
+				obj.handle = calllib('liblabjackusb','LJUSB_OpenDevice',1,0,obj.deviceID);
 				obj.isOpen = 1;
 			end
 		end

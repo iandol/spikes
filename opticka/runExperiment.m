@@ -385,6 +385,11 @@ classdef runExperiment < dynamicprops
 			end
 			obj.task.stimIsMoving=[];
 			
+			if isempty(obj.task.findprop('stimIsDots'))
+				obj.task.addprop('stimIsDots'); %add new dynamic property
+			end
+			obj.task.stimIsDots=[];
+			
 			if isempty(obj.task.findprop('stimIsFlashing'))
 				obj.task.addprop('stimIsFlashing'); %add new dynamic property
 			end
@@ -414,18 +419,27 @@ classdef runExperiment < dynamicprops
 				
 				if strcmp(name,'xPosition')||strcmp(name,'yPosition')
 					for j=1:length(ix)
-						obj.sVals(ix(j)).dstRect=Screen('Rect',obj.sVals(ix(j)).texture);
-						obj.sVals(ix(j)).dstRect=CenterRectOnPoint(obj.sVals(ix(j)).dstRect,obj.xCenter,obj.yCenter);
-						obj.sVals(ix(j)).dstRect=OffsetRect(obj.sVals(ix(j)).dstRect,obj.sVals(ix(j)).xPosition*obj.ppd,obj.sVals(ix(j)).yPosition*obj.ppd);
-						obj.sVals(ix(j)).mvRect=obj.sVals(ix(j)).dstRect;
+						if isempty(obj.sVals(ix(j)).doDots)
+							obj.sVals(ix(j)).dstRect=Screen('Rect',obj.sVals(ix(j)).texture);
+							obj.sVals(ix(j)).dstRect=CenterRectOnPoint(obj.sVals(ix(j)).dstRect,obj.xCenter,obj.yCenter);
+							obj.sVals(ix(j)).dstRect=OffsetRect(obj.sVals(ix(j)).dstRect,obj.sVals(ix(j)).xPosition*obj.ppd,obj.sVals(ix(j)).yPosition*obj.ppd);
+							obj.sVals(ix(j)).mvRect=obj.sVals(ix(j)).dstRect;
+						else
+							
+						end
+						
 					end
 				elseif (strcmp(name,'angle')||strcmp(name,'moveAngle'))
 					for j=1:length(ix)
+						if isempty(obj.sVals(ix(j)).doDots)
 						[obj.sVals(ix(j)).dX obj.sVals(ix(j)).dY]=obj.updatePosition(obj.sVals(ix(j)).delta,obj.sVals(ix(j)).angle);
+						end
 					end
+				elseif strcmp(name,'coherence')
+					
 				end
 				for j=1:length(ix)
-					if obj.sVals(ix(j)).speed > 0 && obj.sVals(ix(j)).startPosition ~= 0
+					if (obj.sVals(ix(j)).speed) > 0 && ~isempty(obj.sVals(ix(j)).startPosition) && (obj.sVals(ix(j)).startPosition ~= 0)
 						[dx dy]=pol2cart(obj.d2r(obj.sVals(ix(j)).angle),obj.sVals(ix(j)).startPosition);
 						obj.sVals(ix(j)).mvRect=OffsetRect(obj.sVals(ix(j)).dstRect,dx*obj.ppd,dy*obj.ppd);
 					end
@@ -455,6 +469,13 @@ classdef runExperiment < dynamicprops
 						ix=obj.task.stimIsMoving(i);
 						obj.sVals(ix).mvRect=OffsetRect(obj.sVals(ix).mvRect,obj.sVals(ix).dX,obj.sVals(ix).dY);
 					end
+					
+					for i=1:length(obj.task.stimIsDots) %only update those stimuli which are moving
+						ix=obj.task.stimIsDots(i);
+						t=obj.stimulus.(obj.sList.list(ix))(obj.sList.index(ix));
+						t.updateDots;
+						obj.sVals(ix).xy=t.xy;
+					end
 				else %blank stimulus, we don't need to update anything
 					
 				end
@@ -483,7 +504,7 @@ classdef runExperiment < dynamicprops
 						mT=obj.task.thisTrial+1;
 						mR = 1;
 					else
-						mT=obj.task.thisTrial
+						mT=obj.task.thisTrial;
 						mR = obj.task.thisRun + 1;
 					end
 					
@@ -548,14 +569,10 @@ classdef runExperiment < dynamicprops
 			obj.ptb=Screen('version');
 			
 			obj.timeLog.prepTime=GetSecs-obj.timeLog.construct;
-			a=GetSecs;
-			b=GetSecs;
-			c=GetSecs;
-			d=GetSecs;
-			e=GetSecs;
-			f=GetSecs;
-			g=GetSecs;
-			obj.timeLog.deltaGetSecs=mean(diff([a b c d e f g]))*1000; %what overhead does GetSecs have?
+			for i=1:8
+				a(i)=GetSecs;
+			end
+			obj.timeLog.deltaGetSecs=mean(diff(a))*1000; %what overhead does GetSecs have?
 			WaitSecs(0.01); %preload function
 			
 			Screen('Preference', 'TextRenderer', 0); %fast text renderer
@@ -646,7 +663,6 @@ classdef runExperiment < dynamicprops
 			obj.sVals(i).delta = (ts.speed*obj.ppd) * obj.screenVals.ifi;
 			obj.sVals(i).type = ts.type;
 			obj.sVals(i).startPosition = ts.startPosition;
-			obj.sVals(i).endPosition = ts.endPosition;
 			
 			obj.sVals(i).color = ts.color;
 			obj.sVals(i).xPosition = ts.xPosition;
@@ -671,6 +687,37 @@ classdef runExperiment < dynamicprops
 			obj.sVals(i).mvRect=obj.sVals(i).dstRect;
 		end
 		
+		%-------------------Setup dots-------------------%
+		function setupDots(obj,i)
+			ts=obj.stimulus.(obj.sList.list(i))(obj.sList.index(i));
+			obj.sVals(i).nDots = ts.nDots;
+			obj.sVals(i).angle = ts.angle;
+			obj.sVals(i).speed = ts.speed;
+			obj.sVals(i).size = ts.size*obj.ppd;
+			obj.sVals(i).delta = obj.sVals(i).speed * obj.ppd * obj.screenVals.ifi;
+			obj.sVals(i).alpha = ts.alpha;
+			obj.sVals(i).dotType = ts.dotType;
+			obj.sVals(i).dotSize = ts.dotSize*obj.ppd;
+			obj.sVals(i).color = ts.color;
+			obj.sVals(i).xPosition = ts.xPosition;
+			obj.sVals(i).yPosition = ts.yPosition;
+			
+			if obj.sVals(i).speed>0 %we need to say this needs animating
+				obj.sVals(i).doDots=1;
+ 				obj.task.stimIsDots=[obj.task.stimIsDots i];
+			else
+				obj.sVals(i).doDots=0;
+			end
+			
+			in.ppd = obj.ppd;
+			in.ifi = obj.screenVals.ifi;
+			ts.initialiseDots(in);
+			
+			obj.sVals(i).xy=ts.xy;
+			obj.sVals(i).dxdy=ts.dxdy;
+			obj.sVals(i).colors=ts.colors;
+		end
+		
 		%-------------------Draw the grating-------------------%
 		function drawGrating(obj,i)
 			if obj.sVals(i).gabor==0
@@ -687,6 +734,14 @@ classdef runExperiment < dynamicprops
 		%-------------------Draw the bar-------------------%
 		function drawBar(obj,i)
 			Screen('DrawTexture',obj.win,obj.sVals(i).texture,[],obj.sVals(i).mvRect,obj.sVals(i).angle);
+		end
+		
+		%-------------------Draw the dots-------------------%
+		function drawDots(obj,i)
+			x = obj.xCenter+(obj.sVals(i).xPosition*obj.ppd);
+			y = obj.xCenter+(obj.sVals(i).yPosition*obj.ppd);
+			Screen('DrawDots',obj.win,obj.sVals(i).xy,obj.sVals(i).dotSize,obj.sVals(i).colors,...
+				[x y],obj.sVals(i).dotType);
 		end
 		
 		%--------------------Draw Fixation spot-------------%
