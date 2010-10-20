@@ -3,7 +3,7 @@ function varargout = dogfig(varargin)
 %    FIG = DOGFIG launch dogfig GUI.
 %    DOGFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 16-Apr-2007 17:05:09
+% Last Modified by GUIDE v2.5 15-Oct-2010 11:58:53
 
 if nargin == 0  % LAUNCH GUI
 
@@ -115,3 +115,10 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+% --- Executes on button press in dgUseROG.
+function dgUseROG_Callback(hObject, eventdata, handles)
+% hObject    handle to dgUseROG (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of dgUseROG
