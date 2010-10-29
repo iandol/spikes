@@ -24,8 +24,21 @@ case 'Initialize'
 	set(0,'DefaultAxesLayer','top');
 	set(0,'DefaultAxesTickDir','out');
 	set(0,'DefaultAxesTickDirMode','manual');
-	rfd.fighandle=rfdiff_UI; %this is the GUI figure	
-	set(rfd.fighandle,'Name', 'RF Diff V0.85a');
+	
+	if ismac
+		rfd.oldlook=javax.swing.UIManager.getLookAndFeel;
+		javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
+	elseif ispc
+		
+	end
+	
+	rfd.fighandle=rfdiff_UI; %this is the GUI figure
+	
+	if ismac
+		javax.swing.UIManager.setLookAndFeel(rfd.oldlook);
+	end
+	
+	set(rfd.fighandle,'Name', 'RF Diff V0.86a');
 	rfd.ax1pos=get(gh('RFDCell1Axis'),'Position');
 	rfd.ax2pos=get(gh('RFDCell2Axis'),'Position');
 	rfd.ax3pos=get(gh('RFDCell3Axis'),'Position');
@@ -758,6 +771,91 @@ case 'Load'
 		text(str2num(get(gh('RFDIX'),'String')),str2num(get(gh('RFDIY'),'String')),'i','FontSize',12);
 	end
 	
+	if get(gh('RFDJOn'),'Value')==1 && rfd.cell1.numvars>0
+		x=str2num(get(gh('RFDJX'),'String'));
+		y=str2num(get(gh('RFDJY'),'String'));
+		switch rfd.cell1.numvars
+			case 0
+				rfd.xy{10}=[0];
+			case 1
+				rfd.xy{10}=[x];
+				x=find(rfd.cell1.xvalues==x);
+				y=1;
+			otherwise
+				rfd.xy{10}=[x y];
+				x=find(rfd.cell1.xvalues==x);
+				y=find(rfd.cell1.yvalues==y);
+		end	
+		endrun=str2num(get(gh('RFDEndRun'),'String'));
+		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if get(gh('RFDYToggle'),'Value')==0
+			rfd.comparej.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
+			rfd.comparej.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
+		else
+			rfd.comparej.cell1=rfd.cell1.sums{yval1,x,zval1}(startrun:endrun).*timemultiplier;
+			rfd.comparej.cell2=rfd.cell2.sums{yval2,x,zval2}(startrun:endrun).*timemultiplier;
+		end
+		[rfd.comparej.cell1mean,rfd.comparej.cell1error]=stderr(rfd.comparei.cell1);
+		[rfd.comparej.cell2mean,rfd.comparej.cell2error]=stderr(rfd.comparei.cell2);
+		[rfd.comparej.cell1ff]=stderr(rfd.comparei.cell1,'F',1); %fano factor
+		[rfd.comparej.cell2ff]=stderr(rfd.comparei.cell2,'F',1); %fano factor
+		[h,rfd.comparej.ttest]=dostatstest((rfd.comparej.cell1-rfd.comparej.cell2),0,0.05);
+		if rfd.ignorerecovery==0
+			if get(gh('RFDYToggle'),'Value')==0
+				rfd.comparej.cell3=rfd.cell3.sums{y,x,zval3}(startrun:endrun).*timemultiplier;
+			else
+				rfd.comparej.cell3=rfd.cell3.sums{yval3,x,zval3}(startrun:endrun).*timemultiplier;
+			end
+			[rfd.comparej.cell3mean,rfd.comparej.cell3error]=stderr(rfd.comparej.cell3);
+			[rfd.comparej.cell3ff]=stderr(rfd.comparej.cell3,'F',1); %fano factor
+			[h,rfd.comparej.ttestr]=dostatstest((rfd.comparej.cell1-rfd.comparej.cell3),0,0.05);
+		end
+		text(str2num(get(gh('RFDJX'),'String')),str2num(get(gh('RFDJY'),'String')),'j','FontSize',12);
+	end
+	
+	if get(gh('RFDKOn'),'Value')==1 && rfd.cell1.numvars>0
+		x=str2num(get(gh('RFDKX'),'String'));
+		y=str2num(get(gh('RFDKY'),'String'));
+		switch rfd.cell1.numvars
+			case 0
+				rfd.xy{11}=[0];
+			case 1
+				rfd.xy{11}=[x];
+				x=find(rfd.cell1.xvalues==x);
+				y=1;
+			otherwise
+				rfd.xy{11}=[x y];
+				x=find(rfd.cell1.xvalues==x);
+				y=find(rfd.cell1.yvalues==y);
+		end	
+		endrun=str2num(get(gh('RFDEndRun'),'String'));
+		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if get(gh('RFDYToggle'),'Value')==0
+			rfd.comparek.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
+			rfd.comparek.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
+		else
+			rfd.comparek.cell1=rfd.cell1.sums{yval1,x,zval1}(startrun:endrun).*timemultiplier;
+			rfd.comparek.cell2=rfd.cell2.sums{yval2,x,zval2}(startrun:endrun).*timemultiplier;
+		end
+		[rfd.comparek.cell1mean,rfd.comparek.cell1error]=stderr(rfd.comparek.cell1);
+		[rfd.comparek.cell2mean,rfd.comparek.cell2error]=stderr(rfd.comparek.cell2);
+		[rfd.comparek.cell1ff]=stderr(rfd.comparek.cell1,'F',1); %fano factor
+		[rfd.comparek.cell2ff]=stderr(rfd.comparek.cell2,'F',1); %fano factor
+		[h,rfd.comparek.ttest]=dostatstest((rfd.comparek.cell1-rfd.comparek.cell2),0,0.05);
+		if rfd.ignorerecovery==0
+			if get(gh('RFDYToggle'),'Value')==0
+				rfd.comparek.cell3=rfd.cell3.sums{y,x,zval3}(startrun:endrun).*timemultiplier;
+			else
+				rfd.comparek.cell3=rfd.cell3.sums{yval3,x,zval3}(startrun:endrun).*timemultiplier;
+			end
+			[rfd.comparek.cell3mean,rfd.comparek.cell3error]=stderr(rfd.comparek.cell3);
+			[rfd.comparek.cell3ff]=stderr(rfd.comparek.cell3,'F',1); %fano factor
+			[h,rfd.comparek.ttestr]=dostatstest((rfd.comparek.cell1-rfd.comparek.cell3),0,0.05);
+		end
+		text(str2num(get(gh('RFDKX'),'String')),str2num(get(gh('RFDKY'),'String')),'i','FontSize',12);
+	end
+	
+	
 	if get(gh('RFDHideABC'),'Value')==0
 		if rfd.ignorerecovery==0
 			out=[rfd.comparea.cell1mean rfd.comparea.cell2mean rfd.comparea.cell3mean; rfd.compareb.cell1mean rfd.compareb.cell2mean rfd.compareb.cell3mean; rfd.comparec.cell1mean rfd.comparec.cell2mean rfd.comparec.cell3mean]; 
@@ -848,6 +946,31 @@ case 'Load'
 		end
 		label=[label;{'i'}];
 	end
+	if get(gh('RFDJOn'),'Value')==1 && rfd.cell1.numvars>0
+		if rfd.ignorerecovery==0
+			out=[out;rfd.comparej.cell1mean rfd.comparej.cell2mean rfd.comparej.cell3mean];
+			outerror=[outerror;rfd.comparej.cell1error rfd.comparej.cell2error rfd.comparej.cell3error];		
+			outff=[outff;rfd.comparej.cell1ff rfd.comparej.cell2ff rfd.comparej.cell3ff];
+		else
+			out=[out;rfd.comparej.cell1mean rfd.comparej.cell2mean];
+			outerror=[outerror;rfd.comparej.cell1error rfd.comparej.cell2error];
+			outff=[outff;rfd.comparej.cell1ff rfd.comparej.cell2ff];
+		end
+		label=[label;{'j'}];
+	end
+	if get(gh('RFDKOn'),'Value')==1 && rfd.cell1.numvars>0
+		if rfd.ignorerecovery==0
+			out=[out;rfd.comparek.cell1mean rfd.comparek.cell2mean rfd.comparek.cell3mean];
+			outerror=[outerror;rfd.comparek.cell1error rfd.comparek.cell2error rfd.comparek.cell3error];
+			outff=[outff;rfd.comparek.cell1ff rfd.comparek.cell2ff rfd.comparek.cell3ff];
+		else
+			out=[out;rfd.comparek.cell1mean rfd.comparek.cell2mean];
+			outerror=[outerror;rfd.comparek.cell1error rfd.comparek.cell2error];
+			outff=[outff;rfd.comparek.cell1ff rfd.comparek.cell2ff];
+		end
+		label=[label;{'k'}];
+	end
+	
 	
 	axes(gh('RFDOutputAxis'));
 	cla;
@@ -936,6 +1059,18 @@ case 'Load'
 			toffset=toffset+1;
 			text(toffset,0,['p = ' num2str(rfd.comparei.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
 		end
+		if get(gh('RFDJOn'),'Value')==1 && rfd.cell1.numvars>0
+			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.comparej.ttest)];
+			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.comparej.ttestr)];
+			toffset=toffset+1;
+			text(toffset,0,['p = ' num2str(rfd.comparej.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+		end
+		if get(gh('RFDKOn'),'Value')==1 && rfd.cell1.numvars>0
+			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.comparek.ttest)];
+			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.comparek.ttestr)];
+			toffset=toffset+1;
+			text(toffset,0,['p = ' num2str(rfd.comparek.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+		end
 	else
 		outtext={rfd.cell1.matrixtitle;rfd.cell2.matrixtitle};
 		if get(gh('RFDHideABC'),'Value')==0	
@@ -979,6 +1114,16 @@ case 'Load'
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparei.ttest)];
 			toffset=toffset+1;
 			text(toffset,0,['p = ' num2str(rfd.comparei.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+		end
+		if get(gh('RFDJOn'),'Value')==1 && rfd.cell1.numvars>0
+			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparej.ttest)];
+			toffset=toffset+1;
+			text(toffset,0,['p = ' num2str(rfd.comparej.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+		end
+		if get(gh('RFDKOn'),'Value')==1 && rfd.cell1.numvars>0
+			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparek.ttest)];
+			toffset=toffset+1;
+			text(toffset,0,['p = ' num2str(rfd.comparek.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
 		end
 	end
 	

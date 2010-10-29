@@ -291,7 +291,12 @@ classdef manageCode < handle
 			if ~exist('d','var')				
 				addpath(obj.spikesPath,'-begin');
 			else
-				addpath(d,'-begin');
+				switch d
+					case 'spikes'
+						addpath(obj.spikesPath,'-begin');
+					case 'opticka'
+						addpath(obj.optickaPath,'-begin');
+				end
 			end
 			savepath;
 		end
@@ -336,13 +341,23 @@ classdef manageCode < handle
 		function p=genpath(obj,d) %modified to allow exclusion of 
 			addtospikepath=0;
 			exclstart = '^(\.|\.\.|@|+|\.bzr|\.svn|\.git)';
-			exclpath = '(VSX|VSS|c_sources|licence|private)';
+			exclpath = '(VSX|VSS|c_sources|licence|private|photodiode)';
 			p = '';
 			
 			if ~exist('d','var')
 				addtospikepath=1;
 				d = [obj.installLocation obj.spikesName];
 			end
+			
+			switch d
+				case 'spikes'
+					d = [obj.installLocation obj.spikesName];
+					update='spikes';
+				case 'opticka'
+					d = [obj.installLocation obj.optickaName];
+					update='opticka';
+			end
+			
 			% Generate path based on given root directory
 			files = dir(d);
 			if isempty(files)
@@ -365,6 +380,14 @@ classdef manageCode < handle
 			end
 			if addtospikepath==1
 				obj.spikesPath = p;
+			end
+			if exist('update','var')
+				switch update
+					case 'spikes'
+						obj.spikesPath = p;
+					case 'opticka'
+						obj.optickaPath = p;
+				end
 			end
 		end
 	end %---END PRIVATE METHODS---%

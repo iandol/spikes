@@ -26,7 +26,7 @@ switch(action)
 	case 'Initialize'
 		%-------------------------------------------------------------------
 		
-		version=['DOG-Fit Model Fitting Routine V1.6 | Started on ', datestr(now)];
+		version=['DOG-Fit Model Fitting Routine V1.7 | Started on ', datestr(now)];
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
 		dogfitfig;

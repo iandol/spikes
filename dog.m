@@ -138,9 +138,15 @@ switch(action)
 		%         %sc(i)=trapz(x,f);
 		%     end
 		
+		mn = sc(1);
+		mx = max(sc);
+		plateau = sc(end);
+		
+		psup = (1-((plateau-mn)/(mx-mn)))*100;
+		
 		figure
 		plot(s,sc,'k-o')
-		title(['Summation Curve, SI = ' num2str(SI)])
+		title([['Summation Curve | SI = ' num2str(SI)] ' | % Sup = ' num2str(psup)])
 		xlabel('Stimulus Size (degrees)')
 		ylabel('Model Response')
 		
