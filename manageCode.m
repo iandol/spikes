@@ -380,9 +380,20 @@ classdef manageCode < handle
 					rmpth=strcat(rmpth,fragment(i).spath);
 				end
 			end
+			
+			%now clean-up CVS junk
+			fragment = '';
+			fragment = regexp(p,['(?<spath>[^' pathsep ']*\.(svn|git|bzr|xcodeproj)[^' pathsep ']*' pathsep ')'],'names');
+			if ~isempty(fragment)
+				for i=1:length(fragment)
+					rmpth=strcat(rmpth,fragment(i).spath);
+				end
+			end
+				
 			if ~isempty(rmpth)
 				rmpath(rmpth);
 			end
+			
 		end
 		
 		function parsepath(obj) %
