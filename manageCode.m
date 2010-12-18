@@ -1,3 +1,10 @@
+% ========================================================================
+%> @brief MANAGECODE INTERFACES TO CHECK SPIKES AND OPTICKA ARE UP-TO-DATE
+%>
+%> manageCode probes the system for installed versions of opticka and
+%> spikes, and allows updating and path management.
+%>
+% ========================================================================
 classdef manageCode < handle
 	properties %------------------PUBLIC PROPERTIES--------------%
 		action='check'
@@ -7,6 +14,8 @@ classdef manageCode < handle
 		optickaName = 'opticka'
 		checkoutCommand='branch'
 		updateCommand = 'pull --overwrite'
+		rmCommand = 'rm -rf'
+		mkdirCommand = 'mkdir -p'
 		bzrLocation='/usr/local/bin/bzr'
 		spikesSource='http://144.82.131.18/spikes'
 		optickaSource='http://144.82.131.18/opticka'
@@ -23,6 +32,10 @@ classdef manageCode < handle
 		revInfoOpticka = ''
 		repInfoSpikes = ''
 		repInfoOpticka = ''
+		srcSpikesInfo = ''
+		srcSpikesRevNo = 0
+		srcOptickaInfo = ''
+		srcOptickaRevNo = 0
 		bzrInfo = ''
 	end
 	properties (SetAccess = private, GetAccess = private) %---PRIVATE PROPERTIES---%
@@ -34,7 +47,15 @@ classdef manageCode < handle
 	end
 	methods %------------------PUBLIC METHODS--------------%
 		
-		%==============CONSTRUCTOR============%
+		% ===================================================================
+		%> @brief Class constructor
+		%>
+		%> More detailed description of what the constructor does.
+		%>
+		%> @param args are passed as a structure of properties which is
+		%> parsed.
+		%> @return instance of labJack class.
+		% ===================================================================
 		function obj = manageCode(args) 
 			if regexp(computer,'(MACI|MACI64)')
 				obj.arch='OSX';
@@ -46,8 +67,10 @@ classdef manageCode < handle
 					%obj.installLocation='/Users/Shared/Code/';
 					%obj.bzrLocation='/usr/local/bin/bzr';
 				case 'WIN'
-					obj.installLocation='C:\Users\Public\Code\';
+					obj.installLocation='C:\MatlabFiles\Code\';
 					obj.bzrLocation='bzr.exe';
+					obj.rmCommand = 'rmdir /s /q';
+					obj.mkdirCommand = 'mkdir';
 			end
 			%Initialise for superclass, stops a noargs error
 			if nargin == 0
@@ -68,7 +91,11 @@ classdef manageCode < handle
 		end
 
 		%====Check if things are installed or not====%
-		function check(obj,~) 
+		function check(obj,~)
+			obj.hasBzr = 0;
+			obj.isSpikes = 0;
+			obj.isOpticka = 0;
+			
 			%grok bzr
 			[status,obj.bzrInfo]=system([obj.bzrLocation ' version']); 
 			if status == 0
@@ -125,7 +152,41 @@ classdef manageCode < handle
 					end
 					obj.optickaPath=obj.genpath(fullfile(obj.installLocation,obj.optickaName));
 				end
+            end
+            
+			%work out what our remote versions are
+			obj.salutation('Am now going to see what the latest versions are on the server...');
+			[status,obj.srcSpikesInfo]=system([obj.bzrLocation ' log -r -1 ' obj.spikesSource]);
+			if status ~= 0
+				obj.salutation(['Bzr can''t find remote spikes source']);
+			else
+				srcSpikesRevNo=regexp(obj.srcSpikesInfo,'revno: (\d)+','tokens'); %Get revision number
+				obj.srcSpikesRevNo=srcSpikesRevNo{1}{1};
+				if obj.verbose == 1
+					obj.salutation
+					obj.salutation('REMOTE Spikes Info:');
+					obj.salutation(obj.srcSpikesInfo);
+				else
+					obj.salutation(['Remote Spikes version is: ' obj.srcSpikesRevNo])
+				end
 			end
+			[status,obj.srcOptickaInfo]=system([obj.bzrLocation ' log -r -1 ' obj.optickaSource]);
+			if status ~= 0
+				obj.salutation(['Bzr can''t find remote opticka source']);
+			else
+				srcOptickaRevNo=regexp(obj.srcOptickaInfo,'revno: (\d)+','tokens'); %Get revision number
+				obj.srcOptickaRevNo=srcOptickaRevNo{1}{1};
+				if obj.verbose == 1
+					obj.salutation
+					obj.salutation('REMOTE Opticka Info:');
+					obj.salutation(obj.srcOptickaInfo);
+				else
+					obj.salutation(['Remote Spikes version is: ' obj.srcOptickaRevNo])
+				end
+			end
+			
+			
+			%Now lets see if we have a newer version to tell the user
 		end
 
 		%========Install spikes toolbox=======%
@@ -136,16 +197,16 @@ classdef manageCode < handle
 						obj.update('spikes');
 					elseif obj.hasBzr==1 && obj.isSpikes==0
 						if ~exist(obj.installLocation,'dir')
-							[status,values]=system(['mkdir -p ' obj.installLocation]);
+							[status,values]=system([obj.mkdirCommand ' ' obj.installLocation]);
 							if status ~= 0;obj.salutation(['Couldn''t make root install directory! - ' values]);end
 						end
 						if ~exist([obj.installLocation obj.spikesName],'dir')
-							[status,values]=system(['mkdir -p ' [obj.installLocation obj.spikesName]]);
+							[status,values]=system([obj.mkdirCommand ' ' [obj.installLocation obj.spikesName]]);
 							if status ~= 0;obj.salutation(['Couldn''t make install directory! - ' values]);end
 						else
 							out=input('---> Spikes directory exists but there is no proper install, delte it? -- ','s');
 							if regexpi(out,'(yes|y)') %%% Clean install
-								[status,values]=system(['rm -rf ' [obj.installLocation obj.spikesName]]);
+								[status,values]=system([obj.rmCommand ' ' [obj.installLocation obj.spikesName]]);
 								if status ~= 0;obj.salutation(['Couldn''t remove install directory! - ' values]);end
 							end
 						end
@@ -158,16 +219,16 @@ classdef manageCode < handle
 						obj.update('opticka');
 					elseif obj.hasBzr==1 && obj.isOpticka==0
 						if ~exist(obj.installLocation,'dir')
-							[status,values]=system(['mkdir -p ' obj.installLocation]);
+							[status,values]=system([obj.mkdirCommand ' ' obj.installLocation]);
 							if status ~= 0;obj.salutation(['Couldn''t make root install directory! - ' values]);end
 						end
 						if ~exist([obj.installLocation obj.optickaName],'dir')
-							[status,values]=system(['mkdir -p ' [obj.installLocation obj.optickaName]]);
+							[status,values]=system([obj.mkdirCommand ' ' [obj.installLocation obj.optickaName]]);
 							if status ~= 0;obj.salutation(['Couldn''t make opticka install directory! - ' values]);end
 						else
 							out=input('---> Opticka directory exists but there is no proper install, delte it? -- ','s');
 							if regexpi(out,'(yes|y)') %%% Clean install
-								[status,values]=system(['rm -rf ' [obj.installLocation obj.optickaName]]);
+								[status,values]=system([obj.rmCommand ' ' [obj.installLocation obj.optickaName]]);
 								if status ~= 0;obj.salutation(['Couldn''t remove install directory! - ' values]);end
 							end
 						end
@@ -177,6 +238,7 @@ classdef manageCode < handle
 					end
 			end
 		end
+        
 		%========Just remake the path=======%
 		function addToPath(obj,version)
 			obj.purge(version,'auto');
@@ -184,24 +246,14 @@ classdef manageCode < handle
 			obj.addpath(version);
 		end
 		
-		%=====Update toolbox======%
+		%=====Purge path======%
 		function purge(obj,version,automatic)
 			if exist('automatic','var')
-				switch version
-					case 'spikes'
-						obj.purgepath(version)
-					case 'opticka'
-						obj.purgepath(version)
-				end
+				obj.purgepath(version)
 			else
 				out=input('---> Do you want to purge the path? -- ','s');
 				if regexpi(out,'(yes|y)') %%% Clean install
-					switch version
-						case 'spikes'
-							obj.purgepath(version)
-						case 'opticka'
-							obj.purgepath(version)
-					end
+					obj.purgepath(version)
 				end
 			end
 		end
@@ -236,21 +288,21 @@ classdef manageCode < handle
 				cd(obj.installLocation);
 				switch version
 					case 'spikes'
-						[status,values]=system(['rm -rf ' obj.spikesName]);
+						[status,values]=system([obj.rmCommand ' ' obj.spikesName]);
 						if status ~= 0;obj.salutation(['Argh, couldn''t delete old install! - ' values]);end
-						[status,values]=system(['mkdir -p ' obj.installLocation]);
+						[status,values]=system([obj.mkdirCommand ' ' obj.installLocation]);
 						if status ~= 0;obj.salutation(['Couldn''t make install directory! - ' values]);end
 						[status,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.spikesSource ' ' obj.installLocation obj.spikesName]);
 						if status ~= 0;obj.salutation(['Couldn''t branch spikes! - ' values]);else obj.salutation(['Success: ' values]);end
-						obj.addToPath(fullfile(obj.installLocation,obj.spikesName));
+						obj.addToPath(version);
 					case 'opticka'
-						[status,values]=system(['rm -rf ' obj.optickaName]);
+						[status,values]=system([obj.rmCommand ' ' obj.optickaName]);
 						if status ~= 0;obj.salutation(['Argh, couldn''t delete old install! - ' values]);end
-						[status,values]=system(['mkdir -p ' obj.installLocation]);
+						[status,values]=system([obj.mkdirCommand ' ' obj.installLocation]);
 						if status ~= 0;obj.salutation(['Argh, couldn''t make install directory! - ' values]);end
 						[status,values]=system([obj.bzrLocation ' ' obj.checkoutCommand ' ' obj.optickaSource ' ' obj.installLocation obj.optickaName]);
 						if status ~= 0;obj.salutation(['Argh, couldn''t branch opticka! - ' values]);else obj.salutation(['Success: ' values]);end
-						obj.addToPath(fullfile(obj.installLocation,obj.optickaName));
+						obj.addToPath(version);
 				end
 			else
 				cd(obj.installLocation);
@@ -264,7 +316,7 @@ classdef manageCode < handle
 							obj.salutation('You will need to manually merge this local and remote trees, please ask Ian for more information!')
 							system([obj.bzrLocation ' explorer ']);
 						end
-						obj.addToPath(fullfile(obj.installLocation,obj.spikesName));
+						obj.addToPath(version);
 					case 'opticka'
 						cd(obj.optickaName);
 						[status,values]=system([obj.bzrLocation ' pull ' obj.optickaSource]);
@@ -274,7 +326,7 @@ classdef manageCode < handle
 							obj.salutation('You will need to manually merge this local and remote trees, please ask Ian for more information!')
 							system([obj.bzrLocation ' explorer ']);
 						end
-						obj.addToPath(fullfile(obj.installLocation,obj.optickaName));
+						obj.addToPath(version);
 				end
 			end
 		end
@@ -318,9 +370,9 @@ classdef manageCode < handle
 			p = path;
 			switch version
 				case 'spikes'
-					fragment = regexp(p,['(?<spath>/[^' filesep ']*spikes[^' pathsep ']*' filesep ')'],'names');
+					fragment = regexp(p,['(?<spath>[^' pathsep ']*Code' filesep 'spikes[^' pathsep ']*' pathsep ')'],'names');
 				case 'opticka'
-					fragment = regexp(p,['(?<spath>/[^' filesep ']*opticka[^' pathsep ']*' filesep ')'],'names');
+					fragment = regexp(p,['(?<spath>[^' pathsep ']*Code' filesep 'opticka[^' pathsep ']*' pathsep ')'],'names');
 			end
 			rmpth='';
 			if ~isempty(fragment)
@@ -328,9 +380,20 @@ classdef manageCode < handle
 					rmpth=strcat(rmpth,fragment(i).spath);
 				end
 			end
+			
+			%now clean-up CVS junk
+			fragment = '';
+			fragment = regexp(p,['(?<spath>[^' pathsep ']*\.(svn|git|bzr|xcodeproj)[^' pathsep ']*' pathsep ')'],'names');
+			if ~isempty(fragment)
+				for i=1:length(fragment)
+					rmpth=strcat(rmpth,fragment(i).spath);
+				end
+			end
+				
 			if ~isempty(rmpth)
 				rmpath(rmpth);
 			end
+			
 		end
 		
 		function parsepath(obj) %
