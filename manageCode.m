@@ -288,6 +288,10 @@ classdef manageCode < handle
 		function initialiseUI(obj)
 			obj.uihandle = manageCode_ui;
 			obj.h=guidata(obj.uihandle);
+			obj.refreshUI;
+		end
+		
+		function refreshUI(obj)
 			v=get(obj.h.mCCodebase,'Value');
 			s=get(obj.h.mCCodebase,'String');
 			s=s{v};
@@ -299,7 +303,6 @@ classdef manageCode < handle
 					set(obj.h.mCLocalVersion,'String',num2str(obj.revNoOpticka))
 					set(obj.h.mCRemoteVersion,'String',num2str(obj.srcOptickaRevNo))
 			end
-			
 		end
 		
 		%=====Update toolbox======%		
