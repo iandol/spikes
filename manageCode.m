@@ -40,6 +40,8 @@ classdef manageCode < handle
 	end
 	properties (SetAccess = private, GetAccess = private) %---PRIVATE PROPERTIES---%
 		hasBzr = 0
+		uihandle = []
+		h = []
 		isSpikes = 0
 		isOpticka = 0
 		arch = 'OSX'
@@ -87,7 +89,7 @@ classdef manageCode < handle
 				end
 			end
 			obj.check;
-			obj.salutation('Finished initialising manageSpikes...');
+			obj.initialiseUI;
 		end
 
 		%====Check if things are installed or not====%
@@ -247,7 +249,7 @@ classdef manageCode < handle
 		end
 		
 		%=====Purge path======%
-		function purge(obj,version,automatic)
+		function purge(obj,version,automatic) %#ok<INUSD>
 			if exist('automatic','var')
 				obj.purgepath(version)
 			else
@@ -281,10 +283,29 @@ classdef manageCode < handle
 	end %---END PUBLIC METHODS---%
 	
 	methods ( Access = private ) %----------PRIVATE METHODS---------%
+		
+		%===================
+		function initialiseUI(obj)
+			obj.uihandle = manageCode_ui;
+			obj.h=guidata(obj.uihandle);
+			v=get(obj.h.mCCodebase,'Value');
+			s=get(obj.h.mCCodebase,'String');
+			s=s{v};
+			switch s
+				case 'spikes'
+					set(obj.h.mCLocalVersion,'String',num2str(obj.revNoSpikes))
+					set(obj.h.mCRemoteVersion,'String',num2str(obj.srcSpikesRevNo))
+				case 'opticka'
+					set(obj.h.mCLocalVersion,'String',num2str(obj.revNoOpticka))
+					set(obj.h.mCRemoteVersion,'String',num2str(obj.srcOptickaRevNo))
+			end
+			
+		end
+		
 		%=====Update toolbox======%		
 		function update(obj,version)
 			out=input('---> Do you want to delete the previous install? -- ','s');
-			if regexpi(out,'(yes|y)') %%% Clean install
+			if regexpi(out,'(yes|y)') % -- Clean install
 				cd(obj.installLocation);
 				switch version
 					case 'spikes'
@@ -398,7 +419,6 @@ classdef manageCode < handle
 		
 		function parsepath(obj) %
 			oldpath = path;
-			
 		end
 		
 		function p=genpath(obj,d) %modified to allow exclusion of 
