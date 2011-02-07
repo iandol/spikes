@@ -22,7 +22,7 @@ function varargout = manageCode_ui(varargin)
 
 % Edit the above text to modify the response to help manageCode_ui
 
-% Last Modified by GUIDE v2.5 02-Feb-2011 14:15:34
+% Last Modified by GUIDE v2.5 04-Feb-2011 22:41:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,42 +81,69 @@ function mCCodebase_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns mCCodebase contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from mCCodebase
-
-function mCRemoteVersion_Callback(hObject, eventdata, handles)
-% hObject    handle to mCRemoteVersion (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of mCRemoteVersion as text
-%        str2double(get(hObject,'String')) returns contents of mCRemoteVersion as a double
-
-
-function mCLocalVersion_Callback(hObject, eventdata, handles)
-% hObject    handle to mCLocalVersion (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of mCLocalVersion as text
-%        str2double(get(hObject,'String')) returns contents of mCLocalVersion as a double
-
-
+if isappdata(0,'mC')
+	mC = getappdata(0,'mC');
+	contents = cellstr(get(hObject,'String'));
+	mC.uiChoice = contents{get(hObject,'Value')};
+	mC.refreshUI;
+end
 
 % --- Executes on button press in mCAddPath.
 function mCAddPath_Callback(hObject, eventdata, handles)
 % hObject    handle to mCAddPath (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if isappdata(0,'mC')
+	mC = getappdata(0,'mC');
+	mC.addPath(mC.uiChoice);
+end
 
 % --- Executes on button press in mCInstall.
 function mCInstall_Callback(hObject, eventdata, handles)
 % hObject    handle to mCInstall (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if isappdata(0,'mC')
+	mC = getappdata(0,'mC');
+	mC.install(mC.uiChoice);
+	mC.check;
+	mC.refreshUI;
+end
+	
 
 % --- Executes on button press in mCQuit.
 function mCQuit_Callback(hObject, eventdata, handles)
 % hObject    handle to mCQuit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if isappdata(0,'mC')
+	rmappdata(0,'mC');
+	clear mC;
+end
+close(gcf);
+
+% --- Executes on button press in mCDelete.
+function mCDelete_Callback(hObject, eventdata, handles)
+% hObject    handle to mCDelete (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+function mCBzrVersion_Callback(hObject, eventdata, handles)
+% hObject    handle to mCBzrVersion (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of mCBzrVersion as text
+%        str2double(get(hObject,'String')) returns contents of mCBzrVersion as a double
+
+
+
+function mCInfoBox_Callback(hObject, eventdata, handles)
+% hObject    handle to mCInfoBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of mCInfoBox as text
+%        str2double(get(hObject,'String')) returns contents of mCInfoBox as a double

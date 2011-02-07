@@ -22,6 +22,7 @@ classdef manageCode < handle
 		verbose=1
 		spikesPath=''
 		optickaPath='';
+		uiChoice = 'opticka'
 	end
 	properties (SetAccess = private, GetAccess = public) %---PROTECTED PROPERTIES---%
 		externalPath = ''
@@ -280,18 +281,9 @@ classdef manageCode < handle
 			[status,values]=system([obj.bzrLocation ' ' obj.spikesName]);
 			if status ~= 0;obj.salutation(['Argh, could not explore']);end
 		end
-	end %---END PUBLIC METHODS---%
-	
-	methods ( Access = private ) %----------PRIVATE METHODS---------%
-		
-		%===================
-		function initialiseUI(obj)
-			obj.uihandle = manageCode_ui;
-			obj.h=guidata(obj.uihandle);
-			obj.refreshUI;
-		end
 		
 		function refreshUI(obj)
+			set(obj.h.mCBzrVersion,'String',num2str(obj.bzrVersion));
 			v=get(obj.h.mCCodebase,'Value');
 			s=get(obj.h.mCCodebase,'String');
 			s=s{v};
@@ -299,15 +291,33 @@ classdef manageCode < handle
 				case 'spikes'
 					set(obj.h.mCLocalVersion,'String',num2str(obj.revNoSpikes))
 					set(obj.h.mCRemoteVersion,'String',num2str(obj.srcSpikesRevNo))
+					set(obj.h.mCInfoBox,'String',strvcat(obj.revInfoSpikes,obj.srcSpikesInfo,obj.repInfoSpikes));
 				case 'opticka'
 					set(obj.h.mCLocalVersion,'String',num2str(obj.revNoOpticka))
 					set(obj.h.mCRemoteVersion,'String',num2str(obj.srcOptickaRevNo))
+					set(obj.h.mCInfoBox,'String',strvcat(obj.revInfoOpticka,obj.srcOptickaInfo,obj.repInfoOpticka));
 			end
 		end
+	end %---END PUBLIC METHODS---%
+	
+	methods ( Access = private ) %----------PRIVATE METHODS---------%
+		
+		%===================
+		function initialiseUI(obj)
+			setappdata(0,'mC',obj); %we stash our object in the root appdata store for retrieval from the UI
+			obj.uihandle = manageCode_ui;
+			obj.h=guidata(obj.uihandle);
+			obj.refreshUI;
+		end
+		
 		
 		%=====Update toolbox======%		
 		function update(obj,version)
-			out=input('---> Do you want to delete the previous install? -- ','s');
+			if ishandle(obj.uihandle)
+				out = questdlg('Do you want to delete the previous install?','ManageCode Updater');
+			else
+				out=input('---> Do you want to delete the previous install? -- ','s');
+			end
 			if regexpi(out,'(yes|y)') % -- Clean install
 				cd(obj.installLocation);
 				switch version
