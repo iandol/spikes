@@ -67,6 +67,9 @@ classdef manageCode < handle
 			end
 			switch obj.arch
 				case 'OSX'
+					path1 = getenv('PATH');
+					path1 = [path1 ':/usr/local/bin'];
+					setenv('PATH', path1);
 					%obj.installLocation='/Users/Shared/Code/';
 					%obj.bzrLocation='/usr/local/bin/bzr';
 				case 'WIN'
@@ -114,9 +117,9 @@ classdef manageCode < handle
 			%grok spikes
 			if exist([obj.installLocation obj.spikesName],'dir')
 				cd([obj.installLocation obj.spikesName]);
-				[status,obj.revInfoSpikes]=system([obj.bzrLocation ' log -r -1']);
+				[status,obj.revInfoSpikes]=system([obj.bzrLocation ' log -r -5..-1']);
 				if status ~= 0
-					obj.salutation(['Bzr can''t find a spikes managed source -- ' values]);
+					obj.salutation(['Bzr can''t find a spikes managed source -- ','Check']);
 					obj.isSpikes=0;
 				else
 					obj.isSpikes = 1;
@@ -137,9 +140,9 @@ classdef manageCode < handle
 			%grok opticka
 			if exist([obj.installLocation obj.optickaName],'dir')
 				cd([obj.installLocation obj.optickaName]);
-				[status,obj.revInfoOpticka]=system([obj.bzrLocation ' log -r -1']);
+				[status,obj.revInfoOpticka]=system([obj.bzrLocation ' log -r -5..-1']);
 				if status ~= 0
-					obj.salutation(['Bzr can''t find a managed opticka source -- ' values]);
+					obj.salutation(['Bzr can''t find a managed opticka source -- ','Check']);
 					obj.isOpticka=0;
 				else
 					obj.isOpticka = 1;
