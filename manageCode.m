@@ -22,6 +22,7 @@ classdef manageCode < handle
 		verbose=1
 		spikesPath=''
 		optickaPath='';
+		showUI = 1;
 		uiChoice = 'opticka'
 	end
 	properties (SetAccess = private, GetAccess = public) %---PROTECTED PROPERTIES---%
@@ -46,7 +47,7 @@ classdef manageCode < handle
 		isSpikes = 0
 		isOpticka = 0
 		arch = 'OSX'
-		allowedProperties = '(action|branch|installLocation|checkoutCommand|spikesName|optickaName|bzrLocation|spikesSource|optickaSource|verbose)'
+		allowedProperties = '(action|branch|installLocation|checkoutCommand|spikesName|optickaName|bzrLocation|spikesSource|optickaSource|verbose|showUI)'
 	end
 	methods %------------------PUBLIC METHODS--------------%
 		
@@ -93,7 +94,7 @@ classdef manageCode < handle
 				end
 			end
 			obj.check;
-			obj.initialiseUI;
+			if obj.showUI == 1; obj.initialiseUI; end
 		end
 
 		%====Check if things are installed or not====%
@@ -440,7 +441,7 @@ classdef manageCode < handle
 		function p=genpath(obj,d) %modified to allow exclusion of 
 			addtospikepath=0;
 			exclstart = '^(\.|\.\.|@|+|\.bzr|\.svn|\.git)';
-			exclpath = '(VSX|VSS|c_sources|licence|private|photodiode)';
+			exclpath = '(VSX|VSS|c_sources|licence|private|photodiode|Junk)';
 			p = '';
 			
 			if ~exist('d','var')
