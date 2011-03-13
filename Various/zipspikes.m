@@ -7,7 +7,11 @@ classdef zipspikes < handle
 		hash=0
 		sourcepath=''
 		destpath=''
+		tmppath=''
 		tmp=''
+		filetype=''
+		sourcedir
+		userroot
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -23,17 +27,15 @@ classdef zipspikes < handle
 			else
 				obj.arch='WIN';
 			end
+			
+			obj.tmppath = tempname;
 						
 			if obj.hash==0 %make a random hash with which to create a directory
 				obj.hash=num2str(round(rand*1000000));
 			end
 			
-			%Initialise for superclass, stops a noargs error
-			if nargin == 0
-				args.action = 'check';
-			end
 			%start to build our parameters
-			if isstruct(args)
+			if exist('args','var') && isstruct(args)
 				fnames = fieldnames(args); %find our argument names
 				for i=1:length(fnames);
 					if regexp(fnames{i},obj.allowedProperties) %only set if allowed property
@@ -41,42 +43,47 @@ classdef zipspikes < handle
 						obj.(fnames{i})=args.(fnames{i}); %we set up the properies from the arguments as a structure
 					end
 				end
-			elseif ischar(args)
-				obj.action='load';
-				obj.sourcepath = args;
 			end
+				
+			 obj.userroot = fileparts(mfilename('fullpath'));
+			 p=regexp(obj.userroot,['(?<path>^.+\' filesep 'spikes\' filesep ')'],'names');
+			 obj.userroot = p.path;
 			
 			if isempty(obj.sourcepath)
-				[f,p]=uigetfile({'*.zip;*.gz','Archives (*.zip;*.gz)';'*.*',  'All Files (*.*)'},'Please select a compressed archive:');
+				[f,p]=uigetfile({'*.zip;*.gz','Archives (*.zip;*.gz)';'*.smr','SMR Files (*.smr)';'*.*',  'All Files (*.*)'},'Please select a compressed archive:');
+				[obj.sourcedir,~,obj.filetype]=fileparts([p,f]);
 				obj.sourcepath=[p,f];
 			end
 			
-			switch obj.arch
-				case 'OSX'
-					if isempty(obj.tmp) 
-						obj.tmp=['/private/tmp/matlab/zipspike/'];
-					end
-					if ~exist([obj.tmp obj.hash],'dir')
-						mkdir([obj.tmp obj.hash]);
-					end
-					obj.destpath = [obj.tmp obj.hash filesep];
-				case 'WIN'
-					obj.tmp=getenv('temp');
-			end
-				
-			switch obj.action
-				case 'load'
-					obj.readarchive('callfromswitch')
-				case 'check'
-					obj.check('callfromswitch')
-				case 'info'
-					obj.check('callfromswitch')
-				case 'clearcache'
-					obj.clearcache
-				otherwise
-					obj.check('callfromswitch')
-			end
 			obj.salutation('Finished running zipspikes...');
+		end
+		
+		function generate(obj,~)
+			if ismac
+				error('You can only generate zip files on PC');
+			end
+			
+			if strcmpi(obj.filetype,'.smr')
+				cd(obj.sourcedir)
+				d=dir;
+				for i = 1:length(d)
+					if regexpi(d(i).name,'smr')
+						tmpname=[obj.sourcedir filesep d(i).name];
+						[p,f,e]=fileparts(tmpname);
+						if isdir([p filesep f]) %stops annoying "directory alread exists" messages
+							disp('Deleting existing directory...');
+							rmdir([p filesep f],'s');
+						end
+						if exist([f '.zip'],'file')
+							delete([f '.zip']);
+						end
+						[s,w]=dos(['"' obj.userroot 'various\vsx\vsx.exe" "' tmpname '"']);
+						if s>0; error(w); end
+						zip([obj.sourcedir filesep f '.zip'], {[f '.smr'],f});
+						rmdir([p filesep f],'s');
+					end
+				end
+			end
 		end
 
 		function readarchive(obj,~)
@@ -84,7 +91,7 @@ classdef zipspikes < handle
 			%spikes
 			olddir=pwd;
 			[p,f,e]=fileparts(obj.sourcepath);
-			cd(obj.destpath);
+			cd(obj.tmppath);
 			switch e
 				case '.zip'
 					unzip(obj.sourcepath);

@@ -65,7 +65,7 @@ case 'Initialize'
 		end
 		sv.usingmac=1;
 		sv.historypath=['~' filesep 'MatlabFiles' filesep];
-		sv.temppath=['/private/tmp/matlab/spikes/'];
+		sv.temppath=tempdir;
 		oldlook=javax.swing.UIManager.getLookAndFeel;
 		javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
 	elseif ispc
@@ -74,7 +74,7 @@ case 'Initialize'
         end
 		sv.usingmac=0;
 		sv.historypath=['c:' filesep 'MatlabFiles' filesep];
-		sv.temppath=getenv('TEMP');
+		sv.temppath=tempdir;
 	end
 	sv.uihandle=spikes_UI; %our GUI file
 	if ismac
@@ -176,7 +176,7 @@ case 'Initialize'
             error('Cannot find Spikes parent directory');
         end
 		sv.userroot=sv.userroot{1};
-		javax.swing.UIManager.setLookAndFeel('com.apple.laf.AquaLookAndFeel');
+		%javax.swing.UIManager.setLookAndFeel('com.apple.laf.AquaLookAndFeel');
 	else
 		sv.matlabroot=regexprep(matlabroot,'Program files','Progra~1','ignorecase');
 		if regexp(sv.matlabroot,'2006b')
@@ -185,7 +185,7 @@ case 'Initialize'
 		mpath=path;
 		sv.userroot=regexpi(mpath,'([^;]+(user|Spikes));','tokens','once');
 		sv.userroot=sv.userroot{1};
-		javax.swing.UIManager.setLookAndFeel('com.sun.java.swing.plaf.windows.WindowsLookAndFeel');
+		%javax.swing.UIManager.setLookAndFeel('com.sun.java.swing.plaf.windows.WindowsLookAndFeel');
 		
 	end
 	
@@ -234,7 +234,7 @@ case 'Load'
 			switch sv.loadtype
 			case 'previous'
 				sv.loadtype='';
-				nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr)','names');
+				nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
 				number=str2double(nn.num)-1;
 				ind=regexp(n.name,'/'); %we only want to replave the number for the filename and preceding directory, not anywhere else in the path
 				if number<10
@@ -254,9 +254,9 @@ case 'Load'
 				sv.auto='yes';
 			case 'next'
 				sv.loadtype='';
-				nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr)','names');
+				nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
 				number=str2double(nn.num)+1;
-				ind=regexp(n.name,'/'); %we only want to replave the number for the filename and preceding directory, not anywhere else in the path
+				ind=regexp(n.name,'/'); %we only want to replace the number for the filename and preceding directory, not anywhere else in the path
 				if number<10
 					name=regexprep(n.name(ind(end-1)+1:end), nn.num, ['0' num2str(number)]);
 					name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
@@ -282,7 +282,9 @@ case 'Load'
 			set(gh('CellMenu'),'Value',str2double(n.num));
 			sv.reload='no';
 		else %we need the user to specify a file
-			[fn,pn]=uigetfile({'*.smr;*.txt;*.doc','All Spikes Filetypes (*.smr *.txt *.doc)';'*.smr','VS RAW DATA File (SMR)';'*.txt','VSX Output File (TXT)';'*.doc','XCor Output File (DOC)';'*.*','All Files'},'Select File Type to Load:');
+			[fn,pn]=uigetfile({'*.smr;*.txt;*.doc','All Spikes Filetypes (*.smr *.txt *.doc)'; ...
+				'*.smr','VS RAW DATA File (SMR)';'*.txt','VSX Output File (TXT)'; ...
+				'*.doc','XCor Output File (DOC)';'*.*','All Files'},'Select File Type to Load:');
 			if isequal(fn,0)||isequal(pn,0);set(gh('LoadText'),'String','No Data Loaded');errordlg('No File Selected or Found!');error('File was not selected by user / not found.');end
 			[p,basefilename,e]=fileparts([pn fn]);
 		end		
@@ -293,8 +295,15 @@ case 'Load'
 		automeasure=0;
 		
 		if regexpi(e,'\.zip')
-			data.zipload=true;
-			zs=zipspikes(struct('action','load','sourcepath','~/test.zip'));
+			if (strcmp(sv.auto,'report') || strcmp(sv.auto,'yes') ) && isdir([p filesep basefilename])
+				pn2=basefilename;
+				data.filetype = 'txt';
+			else
+				data.zipload=true;
+				data.filetype=text;
+				zs=zipspikes(struct('action','load','sourcepath','~/test.zip'));
+			end
+			
 		elseif regexpi(e,'\.smr') %raw SMR File so we need to run it through VSX first
 			if (strcmp(sv.auto,'report') || strcmp(sv.auto,'yes') ) && isdir([p filesep basefilename])
 				pn2=basefilename;
@@ -841,7 +850,6 @@ case 'Load'
 			data.sums{yi,xi,zi}=sums;
 		end
 	end
-
 
 	if data.numvars>1
 		yvals=num2str(data.yvalues);
