@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -43,7 +43,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	{
 	  vec[n] = ((int)vec_double[n])-1;
 	  if(vec[n]>=X[0].N)
-	    mexErrMsgIdAndTxt("SpikeInfo:MultiSiteSubset:outOfRange","Index in vec exceeds number of sites in X.");
+            {
+              mxFreeInput(X);
+              mxFree(vec);
+	      mexErrMsgIdAndTxt("SpikeInfo:MultiSiteSubset:outOfRange","Index in vec exceeds number of sites in X.");
+            }
 	}
     }
     

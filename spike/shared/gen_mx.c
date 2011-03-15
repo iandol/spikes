@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -153,8 +153,12 @@ void mxFreeMatrix3Double(double ***in)
   mxFree(in);
 }
 
-/* Converts an mx string to a C string */ 
-/* Reverse of CStringTomxString */
+/**
+ * @brief Converts a Matlab string to a C string
+ * Converts a Matlab string pointed to by the mxArray pointer in to a null
+ * terminated C string. This function is the reverse of the function
+ * CStringTomxString.
+ */
 void mxStringToCString(mxArray *in,char *out)
 {
   mxChar *temp_string;
@@ -168,26 +172,50 @@ void mxStringToCString(mxArray *in,char *out)
     out[i]='\0';
 }
 
-/* Converts a single-element cell array into a C string */
+/**
+ * @brief Converts a single-element cell array into a C string
+ * Under the assumption that the first element of the cell array pointed to by
+ * in is a string, converts the representation to a null terminated C string.
+ * This function is the reverse of CStringToSingleCellArray.
+ */
 void SingleCellArrayToCString(mxArray *in,char *out)
 {
   mxArray *temp_cell;
 
-  temp_cell = mxGetCell(in,0);
-  mxStringToCString(temp_cell,out);
+  if(mxIsCell(in))
+  {
+    temp_cell = mxGetCell(in,0);
+    mxStringToCString(temp_cell,out);
+  }
+  else
+    mexErrMsgIdAndTxt("STAToolkit:SingleCellArrayToCString:badInput","Input is not a cell array");
 }
 
-/* Pulls out a single element from a cell array
-   and converts it to a C string */
+/**
+ * @brief Converts a particular element in a cell array into a C string
+ * Under the assumption that the element indexed by n of the cell array
+ * pointed to by in is a string, converts the representation to a null
+ * terminated C string.
+ */
 void CellArrayElementToCString(mxArray *in,int n,char *out)
 {
   mxArray *temp_cell;
   
-  temp_cell = mxGetCell(in,n);
-  mxStringToCString(temp_cell,out);
+  if(mxIsCell(in))
+  {
+    temp_cell = mxGetCell(in,n);
+    mxStringToCString(temp_cell,out);
+  }
+  else
+    mexErrMsgIdAndTxt("STAToolkit:SingleCellArrayToCString:badInput","Input is not a cell array");
 }
 
-/* Converts a whole cell array into an array of C strings */
+/**
+ * @brief Converts a cell array into an array of C strings
+ * Under the assumption that the elements of the cell array pointed to by in
+ * are strings, converts each Matlab string to a null terminated C string.
+ * This function is the reverse of the function CStringArrayToCellArray.
+ */
 void CellArrayToCStringArray(mxArray *in,int N,char **out)
 {
   int n;
@@ -196,8 +224,11 @@ void CellArrayToCStringArray(mxArray *in,int N,char **out)
     CellArrayElementToCString(in,n,out[n]);
 }
 
-/* Converts a C string to an mx string */
-/* Reverse of mxStringToCString */
+/**
+ * @brief Converts a C string to a Matlab string 
+ * Converts the null terminated C string in to a Matlab string, returning its
+ * pointer. This function is the reverse of the function mxStringToCString.
+ */
 mxArray *CStringTomxString(char *in)
 {
   mxArray *out;
@@ -207,8 +238,12 @@ mxArray *CStringTomxString(char *in)
   return out;
 }
 
-/* Converts a C string to a single cell array */
-/* Reverse of CellToCString */
+/**
+ * @brief Converts a C string to a single-element cell array
+ * Converts the null terminated C string in to a cell array containing just
+ * one Matlab string, returning its pointer. This function is the reverse of
+ * the function SingleCellArrayToCString.
+ */
 mxArray *CStringToSingleCellArray(char *in)
 {
   mxArray *out,*temp;
@@ -221,8 +256,12 @@ mxArray *CStringToSingleCellArray(char *in)
   return out;
 }
 
-/* Converts an array of C strings to a cell array */
-/* Reverse of CellArrayToCStringArray */
+/**
+ * @brief Converts an array of C strings to a cell array of strings
+ * Converts an array of null terminated C strings to a Matlab cell array of
+ * strings, returning its pointer. This function is the reverse of the
+ * function CellArrayToCStringArray.
+ */
 mxArray *CStringArrayToCellArray(char **in,int N)
 {
   mxArray *out;
@@ -256,7 +295,8 @@ mxArray *ConvertIntScalar(int in)
 
 void mxAddAndSetField(mxArray *in,int n,const char *field_name,mxArray *value)
 {
-  mxAddField(in,field_name);
+  if(mxGetField(in,n,field_name)==NULL)
+    mxAddField(in,field_name);
   mxSetField(in,n,field_name,value);
 }
 
@@ -269,6 +309,22 @@ mxArray *mxCreateEmptyStruct(void)
   mxRemoveField(out,0);
 
   return out;
+}
+
+mxArray *mxCreateEmptyMatrix(void)
+{
+  mxArray *out;
+
+  out = mxCreateDoubleScalar(0.0);
+  mxSetM(out,0);
+  mxSetN(out,0);
+
+  return out;
+}
+
+mxArray *mxCreateInt32Scalar(int value)
+{
+	return ConvertIntScalar(value);
 }
 
 /**
@@ -285,7 +341,7 @@ int ReadOptionPossibleWords(const mxArray *in,const char *field_name,double *mem
   char *str;
 
   tmp = mxGetField(in,0,field_name);
-  if(tmp==NULL) /* field is empty */
+  if((tmp==NULL) || mxIsEmpty(tmp)) /* field is empty */
     flag = 0;
   else
   {
@@ -340,7 +396,7 @@ int ReadOptionsDoubleMember(const mxArray *in,const char *field_name,double *mem
   int flag;
   
   tmp = mxGetField(in,0,field_name);
-  if(tmp==NULL)
+  if((tmp==NULL) || mxIsEmpty(tmp))
     flag = 0;
   else
     {
@@ -356,7 +412,7 @@ int ReadOptionsIntMember(const mxArray *in,const char *field_name,int *member)
   int flag;
 
   tmp = mxGetField(in,0,field_name);
-  if(tmp==NULL)
+  if((tmp==NULL) || mxIsEmpty(tmp))
     flag = 0;
   else
     {

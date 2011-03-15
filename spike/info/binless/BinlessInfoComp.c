@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -16,7 +16,6 @@ int BinlessInfoComp(struct options_binless *opts,
 		     int N, /* number of spike trains */
 		     int S, /* number of stimulus classes */
 		     int *n_vec, /* number of spikes in each train */
-		     int *r_vec, /* number of dimensions in each train */
 		     int *a_vec, /* class id for each train */
 		     struct estimate *I_part,
 		     double *I_cont,
@@ -40,6 +39,7 @@ int BinlessInfoComp(struct options_binless *opts,
   int N_alt,N_cur;
   int num_dims;
   int C_flag;
+  int dmin, dmax;
 
   n_uni = (int *)malloc(N*sizeof(int));
   n_uni_i = (int *)malloc(N*sizeof(int));
@@ -53,6 +53,17 @@ int BinlessInfoComp(struct options_binless *opts,
   /* Strategy 2: Same as 1, except all spike trains with at least
      D_max-D_min+1 spikes go into one stratum */
 
+  if(opts->rec_tag_flag && (opts->rec_tag==1))
+    {
+      dmax = opts->D_max_cont;
+      dmin = opts->D_min_cont;
+    }
+  else
+    {
+      dmax = opts->D_max;
+      dmin = opts->D_min;
+    }
+
   switch((*opts).strat_strat)
     {
     case 0:
@@ -62,7 +73,7 @@ int BinlessInfoComp(struct options_binless *opts,
     case 1:
       break;
     case 2:
-      num_dims = (*opts).D_max - (*opts).D_min + 1;
+      num_dims = dmax - dmin + 1;
       for(n=0;n<N;n++)
 	if(n_vec[n]>=num_dims)
 	  n_vec[n]=num_dims;
@@ -96,7 +107,7 @@ int BinlessInfoComp(struct options_binless *opts,
       for(u2=0;u2<u1;u2++)
 	{
 	  a_list[u2] = a_vec[n_list[u2]];
-	  c_mat[u2] = embedded[n_list[u2]]+(*opts).D_min;
+	  c_mat[u2] = embedded[n_list[u2]]+dmin;
 	}
       
       if((n_uni[idx]==0) & (((*opts).strat_strat==1) | ((*opts).strat_strat==2))) /* if the spike trains are empty */
@@ -107,10 +118,10 @@ int BinlessInfoComp(struct options_binless *opts,
       else /* else the spike trains are nonempty or we are using strat_strat=0 */
 	{
 	  if((*opts).strat_strat == 0)
-	    r = (*opts).D_max;
+	    r = dmax;
 	  else
-	    r = MIN(n_uni[idx],(*opts).D_max);
-	  R = r-(*opts).D_min+1;
+	    r = MIN(n_uni[idx],dmax);
+	  R = r-dmin+1; /* number of embedding dimensions */
 
 	  N_C_a = (int *)calloc(S,sizeof(int));
 	  N_Z = (int *)calloc(N_n[idx],sizeof(int));
@@ -123,9 +134,9 @@ int BinlessInfoComp(struct options_binless *opts,
 	  /* Segregate the spike trains into their categories */
 	  /****************************************************/
 
-	  segfun(N_n[idx],R,n_list,a_list,S,c_mat,
-		 N_Z,N_Z_a,&b,
-		 &N_C,N_C_a,C_a,C,
+	  segfun(N_n[idx],R,n_list,a_list,S,c_mat, /* inputs */
+		 N_Z,N_Z_a,&b, /* outputs */
+		 &N_C,N_C_a,C_a,C, /* outputs */
 		 N_G_a,&u,N_n_a[idx],opts);
 
 	  /********************************************************/
@@ -281,10 +292,16 @@ int BinlessInfoComp(struct options_binless *opts,
 /* and everything else (C)                              */
 /********************************************************/
 
-void segfun(int N_n,int R,int *n_list,int *a_list,int S,double **c_mat,
-	    int *N_Z,int **N_Z_a,int *b,
-	    int *N_C,int *N_C_a,int *C_a,double **C,
-	    int **N_G_a,int *u,int *N_n_a,struct options_binless *opts)
+void segfun(int N_n, /* number of spike trains in this strata */
+            int R, /* number of embedding dimensions */
+            int *n_list, /* indices of the spike trains in this strata */
+            int *a_list, /* class id of the spike trains */
+            int S, /* number of stimulus classes */
+            double **c_mat, /* matrix of embedding values */
+	    int *N_Z,int **N_Z_a,int *b, /* Z collection arrays */
+	    int *N_C,int *N_C_a,int *C_a,double **C, /* C collection arrays */
+	    int **N_G_a,int *u,int *N_n_a, /* G collection etc. */
+            struct options_binless *opts)
 {
   int U;
   int m,q,s,ii;
@@ -590,6 +607,16 @@ void countfun(int *list,int N,int *cnt)
     cnt[list[n]]++;
 }
 
+/**
+ * @brief Find the value X in the vector in.
+ * Finds the indices of the value X in the M-element vector in, placing these
+ * indices in idx, and returning the number of times X was found in in.
+ * @param[in] in The vector to search.
+ * @param[in] M The length of the vector in.
+ * @param[in] X The value for which to search.
+ * @param[in,out] idx The vector of indices where X is found in in.
+ * @return The length of idx (i.e., the number of time X was found in in).
+ */
 int FindX(int *in,int M,int X,int *idx)
 {
   int n,m;

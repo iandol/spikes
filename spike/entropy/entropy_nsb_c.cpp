@@ -1,10 +1,22 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
+ */
+
+/*
+ * We hereby acknowledge the prior work on which this current work was based,
+ * as describled in Nemenman, I., Shafee, F., Bialek, W. (2002) Entropy and
+ * inference, revisited. In Dietterich, T.G., Becker, S., and Ghahramani, Z.
+ * eds. Advances in Neural Information Processing Systems 14, Cambridge, MA,
+ * 2002. MIT Press. arXiv: physics/010802, as well as the prior source code
+ * from which this code was distilled, as provided at
+ * http://nsb-entropy.sourceforge.net/, and copyrighted 2002-2004 by Ilya
+ * Nemenman under the GNU General Public License version 2 or greater
+ * (http://www.gnu.org/licenses/gpl.html).
  */
 
 /** @file
@@ -1084,12 +1096,30 @@ namespace nsb_entropy
 			}
 			catch(std::bad_alloc)
 			{
-				errors.push_back("Failed to properly instantiate interpolation splines.");
+				errors.push_back("Failed to properly instantiate GSL interpolation splines.");
 				return;
 			}
 
 			//calculate results
-			calculate();
+			try
+			{
+				calculate();
+			}
+			catch(std::bad_alloc)
+			{
+				errors.push_back("Failed to properly instantiate GSL integration workspace.");
+				return;
+			}
+			catch(const std::range_error &ex)
+			{
+				errors.push_back(ex.what());
+				return;
+			}
+			catch(const std::runtime_error &ex)
+			{
+				errors.push_back(ex.what());
+				return;
+			}
 
 			//reset error handler
 			gsl_set_error_handler(gsl_error_handler);

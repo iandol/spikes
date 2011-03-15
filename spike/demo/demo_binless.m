@@ -1,7 +1,25 @@
+%DEMO_BINLESS Demo of the binless method.
+
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%
+
+if isoctave
+    warning(['Due to differences in the figure handling and plotting functions ' ...
+        'between Matlab and Octave, this demo will not run in Octave. You may use ' ...
+        'this file as a template for your own analyses.']);
+	return;
+end
+
 path(path,'..');
 
 if(~exist('dataset','var'))
-  dataset = input('Enter dataset label (\"drift\", \"synth\", or \"taste\"): ','s');
+  dataset = input('Enter dataset label (\"drift\", \"synth\", \"taste\", or \"continuous\"): ','s');
 end
 
 opts.possible_words = 'unique';
@@ -33,6 +51,14 @@ elseif (strcmp(dataset,'taste'))
 
   X=staread(strrep('../data/taste.stam','/',filesep));
   
+elseif (strcmp(dataset,'continuous'))
+  opts.start_time = 0;
+  opts.end_time = 1;
+  opts.cont_min_embed_dim = 0;
+  opts.warping_strategy=0;
+  
+  X=staread(strrep('../data/continuous.stam','/',filesep));
+
 else
   clear dataset;
   error('Invalid label');
@@ -47,20 +73,32 @@ figure;
 set(gcf,'name',['Binless ' dataset ' demo']); 
 
 subplot(221);
-staraster(X,[opts.start_time opts.end_time]);
-title('Raster plot');
+if strcmp(dataset,'continuous')
+    staplot(X,[opts.start_time opts.end_time]);
+    title('Data plot');
+else
+    staraster(X,[opts.start_time opts.end_time]);
+    title('Raster plot');
+end
 
 %%% Simple analysis
 
 for D_max_idx=1:length(D_max_vec)
  opts.max_embed_dim = D_max_vec(D_max_idx);
+ opts.cont_max_embed_dim = D_max_vec(D_max_idx);
  [out(D_max_idx),opts_used] = binless(X,opts);
  info_total_plugin(D_max_idx) = out(D_max_idx).I_total(1).value;
  info_total_tpmc(D_max_idx) = out(D_max_idx).I_total(2).value;
  info_total_jack(D_max_idx) = out(D_max_idx).I_total(3).value;
- info_count_plugin(D_max_idx) = out(D_max_idx).I_count(1).value;
- info_count_tpmc(D_max_idx) = out(D_max_idx).I_count(2).value;
- info_count_jack(D_max_idx) = out(D_max_idx).I_count(3).value;
+ if strcmp(dataset,'continuous')
+  info_count_plugin(D_max_idx) = NaN;
+  info_count_tpmc(D_max_idx) = NaN;
+  info_count_jack(D_max_idx) = NaN;
+ else
+  info_count_plugin(D_max_idx) = out(D_max_idx).I_count(1).value;
+  info_count_tpmc(D_max_idx) = out(D_max_idx).I_count(2).value;
+  info_count_jack(D_max_idx) = out(D_max_idx).I_count(3).value;
+ end
  info_part_plugin(D_max_idx) = out(D_max_idx).I_part(1).value;
  info_part_tpmc(D_max_idx) = out(D_max_idx).I_part(2).value;
  info_part_jack(D_max_idx) = out(D_max_idx).I_part(3).value;
@@ -109,7 +147,11 @@ set(gca,'xlim',[min(D_max_vec) max(D_max_vec)]);
 set(gca,'ylim',[-2.5 2.5]);
 xlabel('Maximal embedding dimension');
 ylabel('Information (bits)');
-legend('Total','Timing','Count','location','best');
+if strcmp(dataset,'continuous')
+  legend('Total','Timing','location','best');
+else
+  legend('Total','Timing','Count','location','best');
+end
 
 %%% Shuffling
 
@@ -118,6 +160,7 @@ rand('state',0);
 S=10;
 for D_max_idx=1:length(D_max_vec)
   opts.max_embed_dim = D_max_vec(D_max_idx);
+  opts.cont_max_embed_dim = D_max_vec(D_max_idx);
   [out_unshuf(D_max_idx),shuf(:,D_max_idx),opts_used] = binless_shuf(X,opts,S);
   info_unshuf(D_max_idx) = out_unshuf(D_max_idx).I_total.value;
   for s=1:S
@@ -131,6 +174,7 @@ info_shuf_std = std(temp_info_shuf,[],1);
 
 for D_max_idx=1:length(D_max_vec)
   opts.max_embed_dim = D_max_vec(D_max_idx);
+  opts.cont_max_embed_dim = D_max_vec(D_max_idx);
   [out_unjk(D_max_idx),jk(:,D_max_idx),opts_used] = binless_jack(X,opts);
   info_unjk(D_max_idx)= out_unjk(D_max_idx).I_total.value;
   P_total = length(jk);

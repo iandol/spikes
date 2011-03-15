@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -29,7 +29,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   mxStringToCString(mx_string,docname);
 
   /* Allocate memory for X */
-  X = (struct input *)malloc(sizeof(struct input));
+  X = (struct input *)malloc(sizeof(struct input)); /* memory freed in staReadComp if it returns EXIT_FAILURE */
 
   /* Call fillSwatches */
   status = staReadComp(docname,X);

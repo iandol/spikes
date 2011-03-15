@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -72,12 +72,16 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   uni_j = (int *)mxCalloc(M,sizeof(int));
   cnt = (int *)mxCalloc(M,sizeof(int));
   U = UniqueInt(M,P_vec,uni_list,uni_i,uni_j,cnt);
-  if(U>1)
-    mexErrMsgIdAndTxt("STAToolkit:direct:directcondtime:catMismatch","All categories must have the same number of trials for this conditioning scheme.");
   mxFree(uni_list);
   mxFree(uni_i);
   mxFree(uni_j);
   mxFree(cnt);
+  if(U>1)
+  {
+    mxFree(opts);
+    mxFree(P_vec);
+    mexErrMsgIdAndTxt("STAToolkit:direct:directcondtime:catMismatch","All categories must have the same number of trials for this conditioning scheme.");
+  }
 
   mxbinned_in = mxGetCell(prhs[0],0);
   N = mxGetN(mxbinned_in);

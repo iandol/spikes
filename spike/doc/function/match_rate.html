@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>match_rate (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="match_rate">
+  <meta name="description" content="MATCH_RATE    Redraw samples to match spike rate">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>match_rate</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>match_rate</h1>
+
+<!-- <p><a name="_name"></a>MATCH_RATE    Redraw samples to match spike rate</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment"> MATCH_RATE    Redraw samples to match spike rate
+
+ usage:  [X_out] = match_rate(X_in, R_samples, R);
+
+ arguments:   X_in -- Nx1 samples from distribution of
+                      estimated entropy rates
+              R_in -- Nx1 samples of spike rates associated with
+                      entropy rate estimates.
+                 R -- center (mean) spike rate
+
+ outputs:    X_out -- samples of X_in adjusted to spike rate
+
+ This function presumes a linear Ansatz between entropy rate and
+ spike rate by finding a linear fit between X_in and R.
+ It will adjust samples by removing this linear trend, i.e. 
+ interpolating to given rate R. 
+ 
+ Original coding: Matt Kennel 2004
+ Edited: Shlens 2006-02-14</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="correlated_bootstrap.html"><tt>correlated_bootstrap</tt></a> CORRELATED_BOOTSTRAP    Calculate correlated bootstrap samples of P(X(t))</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

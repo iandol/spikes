@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -39,6 +39,20 @@ int IsSortedDouble(int M,double *in)
   return out;
 }
 
+/**
+ * @brief Returns the number of unique integers in a vector.
+ * Uses a sorting algorithm to determine the number of unique items in the
+ * vector list, and places the list in uni_list. Also sets the sort indexes
+ * uni_i and uni_j, and the item counts in cnt.
+ * @param[in] M The number of items in sorted.
+ * @param[in] list The vector in which to count the unique integers.
+ * @param[out] uni_list A vector containing the unique items of list.
+ * @param[out] uni_i An index to relate uni_list to list (i.e.,
+ * uni_list[i]==unsorted[uni_i[i]]).
+ * @param[out] uni_j An index to relate list to uni_list (i.e.,
+ * unsorted[i]==uni_list[uni_j[i]]).
+ * @param[out] cnt A vector of the counts.
+ */
 int UniqueInt(int M,int *list,int *uni_list,int *uni_i,int *uni_j,int *cnt)
 {
   int *sorted;
@@ -58,6 +72,23 @@ int UniqueInt(int M,int *list,int *uni_list,int *uni_i,int *uni_j,int *cnt)
   return u;
 }
 
+/**
+ * @brief Count the unique integers in a sorted vector.
+ * Returns the number of unique integers in the array sorted, and places the
+ * list of unique indices in uni_list. Also sets the sort indexes uni_i and
+ * uni_j, and the counts in cnt.
+ * @param[in] M The number of items in sorted.
+ * @param[in] sorted The sorted vector in which to count the unique integers.
+ * @param[in] sort_idx The sorting index that specifies from which index of
+ * the unsorted vector each item of sorted derives (i.e.,
+ * sorted[i]==unsorted[sort_idx[i]]).
+ * @param[out] uni_list A vector containing the unique integers of sorted.
+ * @param[out] uni_i An index to relate uni_list to the unsorted vector (i.e.,
+ * uni_list[i]==unsorted[uni_i[i]]).
+ * @param[out] uni_j An index to relate the unsorted vector to uni_list (i.e.,
+ * unsorted[i]==uni_list[uni_j[i]]).
+ * @param[out] cnt A vector of the counts.
+ */
 int CountSortedInt(int M,int *sorted,int *sort_idx,int *uni_list,int *uni_i,int *uni_j,int *cnt)
 {
   int u,m;

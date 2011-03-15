@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -13,6 +13,8 @@ struct site{
   char recording_tag[MAXCHARS];
   double time_scale;
   double time_resolution;
+  char si_unit[MAXCHARS];
+  double si_prefix;
 };
 
 struct category{

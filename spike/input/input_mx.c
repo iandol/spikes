@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -40,22 +40,22 @@ struct input *ReadInput(const mxArray *in)
 
   /* Get number of categories */
   tmp = mxGetField(in,0,"M");
-  if(tmp==NULL)
+  if((tmp==NULL) || mxIsEmpty(tmp))
     mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter M.");
   if(mxIsClass(tmp,"int32")==0)
     mexWarnMsgIdAndTxt("STAToolkit:ReadInput:wrongType","M is not int32.");
-  (*X).M = mxGetScalar(tmp);
+  (*X).M = (int)mxGetScalar(tmp);
 #ifdef DEBUG
   mexPrintf("(*X).M=%d\n",(*X).M);
 #endif  
 
   /* Get number of sites */
   tmp = mxGetField(in,0,"N");
-  if(tmp==NULL)
+  if((tmp==NULL) || mxIsEmpty(tmp))
     mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter N.");
   if(mxIsClass(tmp,"int32")==0)
     mexWarnMsgIdAndTxt("STAToolkit:ReadInput:wrongType","N is not int32.");
-  (*X).N = mxGetScalar(tmp);
+  (*X).N = (int)mxGetScalar(tmp);
 #ifdef DEBUG
   mexPrintf("(*X).N=%d\n",(*X).N);
 #endif
@@ -83,14 +83,21 @@ struct input *ReadInput(const mxArray *in)
 #endif
 
       tmp = mxGetField(in_sites,n,"time_scale");
-      if(tmp==NULL)
+      if((tmp==NULL) || mxIsEmpty(tmp))
 	mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter time_scale.");
       (*X).sites[n].time_scale = mxGetScalar(tmp);
 
       tmp = mxGetField(in_sites,n,"time_resolution");
-      if(tmp==NULL)
+      if((tmp==NULL) || mxIsEmpty(tmp))
 	mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter time_resolution.");
       (*X).sites[n].time_resolution = mxGetScalar(tmp);
+
+      mxStringToCString(mxGetField(in_sites,n,"si_unit"),(*X).sites[n].si_unit);
+
+      tmp = mxGetField(in_sites,n,"si_prefix");
+      if((tmp==NULL) || mxIsEmpty(tmp))
+	mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter si_prefix.");
+      (*X).sites[n].si_prefix = mxGetScalar(tmp);
     }
   
   /****************/
@@ -108,11 +115,11 @@ struct input *ReadInput(const mxArray *in)
     {
       /* Get the number of trials */
       tmp = mxGetField(in_categories,m,"P");
-      if(tmp==NULL)
+      if((tmp==NULL) || mxIsEmpty(tmp))
 	mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter P.");
       if(mxIsClass(tmp,"int32")==0)
 	mexWarnMsgIdAndTxt("STAToolkit:ReadInput:wrongType","P is not int32.");
-      cur_P = mxGetScalar(tmp); 
+      cur_P = (int)mxGetScalar(tmp); 
       (*X).categories[m].P = cur_P;
 
       SingleCellArrayToCString(mxGetField(in_categories,m,"label"),(*X).categories[m].label);
@@ -138,20 +145,20 @@ struct input *ReadInput(const mxArray *in)
 	  {
 	    /* Get the number of spikes */
 	    tmp = mxGetField(in_trials,n*cur_P+p,"Q");
-	    if(tmp==NULL)
+            if((tmp==NULL) || mxIsEmpty(tmp))
 	      mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter Q.");
 	    if(mxIsClass(tmp,"int32")==0)
 	      mexWarnMsgIdAndTxt("STAToolkit:ReadInput:wrongType","Q is not int32.");
-	    cur_Q = mxGetScalar(tmp);
+	    cur_Q = (int)mxGetScalar(tmp);
 	    (*X).categories[m].trials[p][n].Q = cur_Q;
 	    
 	    tmp = mxGetField(in_trials,n*cur_P+p,"start_time");
-	    if(tmp==NULL)
+            if((tmp==NULL) || mxIsEmpty(tmp))
 	      mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter start_time.");
 	    (*X).categories[m].trials[p][n].start_time = mxGetScalar(tmp);
 	    
 	    tmp = mxGetField(in_trials,n*cur_P+p,"end_time");
-	    if(tmp==NULL)
+            if((tmp==NULL) || mxIsEmpty(tmp))
 	      mexErrMsgIdAndTxt("STAToolkit:ReadInput:missingParameter","Missing parameter end_time.");
 	    (*X).categories[m].trials[p][n].end_time = mxGetScalar(tmp);
 	    
@@ -165,7 +172,7 @@ struct input *ReadInput(const mxArray *in)
 	    memcpy((*X).categories[m].trials[p][n].list,mxGetPr(tmp),cur_Q*sizeof(double));
 
 	    /* This is where I would check to see if the spike times are in order. */
-	    if(IsSortedDouble(cur_Q,(*X).categories[m].trials[p][n].list)==0)
+	    if((strcmp((*X).sites[n].recording_tag,"episodic")==0) && (IsSortedDouble(cur_Q,(*X).categories[m].trials[p][n].list)==0))
 	       mexErrMsgIdAndTxt("STAToolkit:ReadInput:outOfOrder","Spike times are not sorted.");
 	    
 #ifdef DEBUG
@@ -205,7 +212,7 @@ mxArray *WriteInput(struct input *X, int L)
   mxArray *out,*mx_sites,*mx_categories,*mx_trials,*mx_list;
   double *list_c;
   const char *input_field_names[] = {"M","N","sites","categories"};
-  const char *site_field_names[] = {"label","recording_tag","time_scale","time_resolution"};
+  const char *site_field_names[] = {"label","recording_tag","time_scale","time_resolution","si_unit","si_prefix"};
   const char *category_field_names[] = {"label","P","trials"};
   const char *trial_field_names[] = {"start_time","end_time","Q","list"};
   int cur_P,cur_Q;
@@ -217,13 +224,15 @@ mxArray *WriteInput(struct input *X, int L)
   for(l=0;l<L;l++)
     {
       /* for each site */
-      mx_sites = mxCreateStructMatrix(X[l].N,1,4,site_field_names);
+      mx_sites = mxCreateStructMatrix(X[l].N,1,6,site_field_names);
       for(n=0;n<X[l].N;n++)
 	{
 	  mxSetField(mx_sites,n,"recording_tag",CStringToSingleCellArray(X[l].sites[n].recording_tag));
 	  mxSetField(mx_sites,n,"label",CStringToSingleCellArray(X[l].sites[n].label));
 	  mxSetField(mx_sites,n,"time_scale",mxCreateDoubleScalar(X[l].sites[n].time_scale));
 	  mxSetField(mx_sites,n,"time_resolution",mxCreateDoubleScalar(X[l].sites[n].time_resolution));
+	  mxSetField(mx_sites,n,"si_unit",CStringTomxString(X[l].sites[n].si_unit));
+	  mxSetField(mx_sites,n,"si_prefix",mxCreateDoubleScalar(X[l].sites[n].si_prefix));
 	}
       
 #ifdef DEBUG

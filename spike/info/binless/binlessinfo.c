@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -16,7 +16,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   struct options_binless *opts;
   struct options_entropy *opts_ent;
   double **embedded,*embedded_temp;
-  int *n_vec,*r_vec,*a_vec;
+  int *n_vec,*a_vec;
   int N,R,S;
   int n,r;
   struct estimate *I_part,*I_count,*I_total;
@@ -59,22 +59,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     {
       (*opts).single_strat = (int)DEFAULT_SINGLETON_STRATEGY;
       (*opts).single_strat_flag = 1;
-      mexErrMsgIdAndTxt("STAToolkit:binlessinfo:invalidValue","Option singleton_strategy set to an invalid value. Must be 0 or 1. Using default value %d.",(*opts).single_strat);
+      mexWarnMsgIdAndTxt("STAToolkit:binlessinfo:invalidValue","Option singleton_strategy set to an invalid value. Must be 0 or 1. Using default value %d.",(*opts).single_strat);
     }
 
   /* STRATIFICATION */
   if(opts[0].strat_strat_flag==0)
     {
-      (*opts).strat_strat = (int)DEFAULT_STRATIFICATION_STRATEGY;
+      (*opts).strat_strat = (opts->rec_tag_flag && (opts->rec_tag==1)) ? 0 : (int)DEFAULT_STRATIFICATION_STRATEGY;
       (*opts).strat_strat_flag = 1;
       mexWarnMsgIdAndTxt("STAToolkit:binlessinfo:missingParameter","Missing parameter stratification_strategy. Using default value %d.",(*opts).strat_strat);
     }
 
   if( ((*opts).strat_strat!=0) & ((*opts).strat_strat!=1) & ((*opts).strat_strat!=2) )
     {
-      (*opts).strat_strat = (int)DEFAULT_STRATIFICATION_STRATEGY;
+      (*opts).strat_strat = (opts->rec_tag_flag && (opts->rec_tag==1)) ? 0 : (int)DEFAULT_STRATIFICATION_STRATEGY;
       (*opts).strat_strat_flag = 1;
-      mexErrMsgIdAndTxt("STAToolkit:binlessinfo:invalidValue","Option stratification_strategy set to an invalid value. Must be 0, 1, or 2. Using default value %d.",(*opts).strat_strat);
+      mexWarnMsgIdAndTxt("STAToolkit:binlessinfo:invalidValue","Option stratification_strategy set to an invalid value. Must be 0, 1, or 2. Using default value %d.",(*opts).strat_strat);
     }
 
   /* USEALL */
@@ -108,14 +108,36 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       embedded[n][r] = embedded_temp[r*N+n];
   
   if(mxGetNumberOfElements(prhs[1])!=N)
-    mexErrMsgIdAndTxt("STAToolkit:binlessinfo:sizeMismatch","The number of elements in COUNTS must match the number of rows in X.");
+    {
+      mxFree(opts);
+      if((opts_ent->E)>0) 
+        mxFree(opts_ent->ent_est_meth);
+      if((opts_ent->var_est_meth_flag)>0) 
+        mxFreeMatrixInt(opts_ent->var_est_meth);
+      mxFree(opts_ent->V);
+      mxFree(opts_ent);
+      mxFree(embedded);
+      mexErrMsgIdAndTxt("STAToolkit:binlessinfo:sizeMismatch","The number of elements in COUNTS must match the number of rows in X.");
+    }
 
   if(mxIsClass(prhs[1],"int32")==0)
     mexWarnMsgIdAndTxt("STAToolkit:binlessinfo:wrongType","COUNTS is not int32.");
-  n_vec = (int *)mxGetPr(prhs[1]);
+  n_vec = (int *)mxMalloc(N*sizeof(int));
+  memcpy(n_vec,mxGetPr(prhs[1]),N*sizeof(int));
 
   if(mxGetNumberOfElements(prhs[2])!=N)
-    mexErrMsgIdAndTxt("STAToolkit:binlessinfo:sizeMismatch","The number of elements in CATEGORIES must match the number of rows in X.");
+    {
+      mxFree(opts);
+      if((opts_ent->E)>0) 
+        mxFree(opts_ent->ent_est_meth);
+      if((opts_ent->var_est_meth_flag)>0) 
+        mxFreeMatrixInt(opts_ent->var_est_meth);
+      mxFree(opts_ent->V);
+      mxFree(opts_ent);
+      mxFree(embedded);
+      mxFree(n_vec);
+      mexErrMsgIdAndTxt("STAToolkit:binlessinfo:sizeMismatch","The number of elements in CATEGORIES must match the number of rows in X.");
+    }
 
   if(mxIsClass(prhs[2],"int32")==0)
     mexWarnMsgIdAndTxt("STAToolkit:binlessinfo:wrongType","CATEGORIES is not int32.");
@@ -125,7 +147,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   if(mxIsClass(prhs[3],"int32")==0)
     mexWarnMsgIdAndTxt("STAToolkit:binlessinfo:wrongType","M is not int32.");
-  S = mxGetScalar(prhs[3]);
+  S = (int)mxGetScalar(prhs[3]);
 
   I_part = (struct estimate *)mxMalloc((*opts_ent).E*sizeof(struct estimate));
   plhs[0] = AllocEst(I_part,opts_ent);
@@ -140,7 +162,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   plhs[3] = AllocEst(I_total,opts_ent);
 
   /* Do computation */
-  status = BinlessInfoComp(opts,opts_ent,embedded,N,S,n_vec,r_vec,a_vec,I_part,I_cont,I_count,I_total);
+  status = BinlessInfoComp(opts,opts_ent,embedded,N,S,n_vec,a_vec,I_part,I_cont,I_count,I_total);
 
   WriteEst(I_part,plhs[0]);
   mxFree(I_part);
@@ -160,6 +182,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   plhs[4] = WriteOptionsEntropy(temp,opts_ent);
 
   mxFree(embedded);
+  mxFree(n_vec);
 
   return;
 }

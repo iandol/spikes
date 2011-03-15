@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -29,6 +29,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   if((nlhs<1) | (nlhs>2))
     mexErrMsgIdAndTxt("STAToolkit:directcountcond:numArgs","1 or 2 output argument required.");
 
+  if(!mxIsCell(prhs[0]))
+    mexErrMsgIdAndTxt("STAToolkit:directcountcond:badInput","The input is not conditioned properly. It must be a column vector of cells.");
+
   /* Read options structure */
   if(nrhs<2)
     opts = ReadOptionsDirect(mxCreateEmptyStruct());
@@ -38,17 +41,23 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     opts = ReadOptionsDirect(prhs[1]);
 
   /* Get input dimensions */
-  if(!mxIsCell(prhs[0]))
-    mexErrMsgIdAndTxt("STAToolkit:directcountcond:badInput","The input is not conditioned properly. It must be a column vector of cells.");
   M = mxGetM(prhs[0]);
   Z = mxGetN(prhs[0]); /* Number of words per train */
   if(Z>1)
+  {
+    mxFree(opts);
     mexErrMsgIdAndTxt("STAToolkit:directcountcond:badInput","The input is not conditioned properly. It must be a column vector of cells.");
+  }
   P_vec = (int *)mxMalloc(M*sizeof(int));
   P_total = 0;
   for(m=0;m<M;m++)
   {
     mxbinned = mxGetCell(prhs[0],m);
+    if(!mxIsInt32(mxbinned)) /* check data format */
+    {
+      mxFree(opts);
+      mexErrMsgIdAndTxt("STAToolkit:directcountcond:badInput","The input cell array elements are required to be int32.");
+    }
     P_vec[m] = mxGetM(mxbinned);
     P_total += P_vec[m];
   }

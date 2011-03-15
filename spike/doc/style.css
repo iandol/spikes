@@ -1,53 +1,218 @@
+@import "style_common.css";
+
+/*****************************************************************************/
+/* "Neurodatabase.org" thematic elements. */
+
+a {
+	color: #2d2a62;
+}
+
+.highlightLink {
+	color: #003366;
+}
+
+.mainTableBG {
+        background-color:#B31B1B
+}
+
+.tableColumnHeader {
+	background-color:#D8D8D8;
+}
+
+
+.mainTableColumnHeader {
+	background-color:#2D2A62;
+	color: white;
+}
+
+.miscTableTitle {
+	background-color:#CC0000;
+	color: white;
+}
+
+
+/*****************************************************************************/
+/* From Forrest XSLs.. */
+
+.note, .warning, .fixme {
+	border-top: 3px solid #900;
+	border-bottom: 3px solid #900;
+}
+
+.default {
+        background-color: #eef;
+    }
+
+
+.multi {
+        background-color: #fee;
+    }
+
+.fixme {
+	background-image: url(images/xdoc/icon_warning_lrg.gif);
+	border-color: #c60;
+}
+
+.note {
+	background-image: url(images/xdoc/icon_info_lrg.gif);
+	border-color: #999;
+}
+
+.code {
+        background-color: #F7F7F7;
+        border-color: #8C8C8C;
+}
+
+.highlight {
+	background-color: yellow;
+}
+
+.dtdTag {
+        color: #990000;
+}
+
+.top-left {
+	background-color: #8c8c8c;
+	background-image: url(images/xdoc/top-left.png);
+}
+
+.top-right {
+	background-color: #8c8c8c;
+	background-image: url(images/xdoc/top-right.png);
+}
+
+.bottom-left {
+	background-color: #8c8c8c;
+	background-image: url(images/xdoc/bottom-left.png);
+}
+
+.bottom-right {
+	background-color: #8c8c8c;
+	background-image: url(images/xdoc/bottom-right.png);
+}
+
+.bottom-left-thick {
+	background-color: #8c8c8c;
+	background-image: url(images/xdoc/bottom-left.png);
+}
+
+.bottom-right-thick {
+	background-color: #8c8c8c;
+	background-image: url(images/xdoc/bottom-right.png);
+}
+
+table .title {
+        background-color: #FFFFFF;
+}
+
+
+/*****************************************************************************/
+/* Stuff for "query view" display (XSL). */
+
+/* "Page" title. */
+.viewPageTitle {
+	background-color: #9D2C2E;
+	color: white;
+}
+
+/* Entity (table) title. */
+.viewEntityTitle {
+	background-color:#516DA7;
+	color: white;
+}
+
+/* Field title. */
+.viewFieldTitle {
+	background-color:#E5E5E5;
+	color: black;
+}
+
+.viewFieldWidget {
+        background-color:#cac9c3;
+}
+
+
+/*****************************************************************************/
+/* Stuff for "view results" display (XSL). */
+
+/* Title areas in results display. */
+.metadataTitle {
+	background-color:#516DA7;
+	color: white;
+}
+
+/* Content areas in results display. */
+.metadataContent {
+	background-color:#EEEEEE;
+	color: black;
+}
+
+.metadataMetaTitle {
+	background-color:#927F8B;
+	color: white;
+}
+
+/* Content areas in results display. */
+.metadataMetaContent {
+	background-color:#DDCBD6;
+	color: black;
+}
+
+/*****************************************************************************/
+/* STAToolkit thematic elements. */
+
 h3.fancy {
-background-color: #eee;
-border-top: 1px solid black;
+	background-color: #eee;
+	border-top: 1px solid black;
 }
 
-span.typ{
-color: #282;
-font-family: monospace;
+span.typ {
+	color: #282;
+	font-family: monospace;
 }
 
-span.var{
-color: #860;
-font-family: monospace;
+span.var {
+	color: #860;
+	font-family: monospace;
 }
 
-.math{
-font-family: serif;
+.math {
+	font-family: serif;
+}
+
+.multi, .deprecated {
+	background-color: #fee;
 }
 
 blockquote.example {
-background-color: #ffc;
-border: 1px dotted black;
-padding: 1em;
+	background-color: #ffc;
+	border: 1px dotted black;
+	padding: 1em;
 }
 
 table.doctable, .doctable td, .doctable th {
-border-collapse: collapse;
-border: 1px solid black;
+	border-collapse: collapse;
+	border: 1px solid black;
+	font-family: serif;
 }
 
 .doctable tr {
-vertical-align: top;
+	vertical-align: top;
 }
 
 code {
-background-color: #ffc;
-border-bottom: 1px dotted black;
+	background-color: #ffc;
+	border-bottom: 1px dotted black;
 }
 
 code a, a code {
-border-bottom: none;
+	border-bottom: none;
 }
 
 blockquote code {
-border-bottom: none;
+	border-bottom: none;
 }
 
-/* .alert {
-  color: #bf0000;
-} */
 .alert {
-  background-color: #fee;
+	background-color: #fee;
 }

@@ -46,6 +46,10 @@
 
    [Y,OPTS_USED] = BINLESSWARP(X) or [Y,OPTS_USED] =
    BINLESSWARP(X,OPTS) additionally return the options used.
+
+   Note that BINLESSWARP currently has no effect on continuous data.
+   That is, if OPTS.recording_tag='continuous', OPTS.warping_strategy
+   will be set to 0, and Y will be equal to X.
  
    See also <a href="binlessinfo.html" class="code" title="">BINLESSINFO</a>, <a href="binlessembed.html" class="code" title="">BINLESSEMBED</a>, <a href="binlessinfo.html" class="code" title="">BINLESSINFO</a>.</pre></div></font></p>
 
@@ -63,6 +67,6 @@ This function is called by:
 
 
 
-<hr><cite>Generated on Wed 26-Aug-2009 11:46:18 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
 </body>
 </html>

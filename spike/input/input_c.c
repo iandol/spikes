@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -10,7 +10,8 @@
 
 #define LEN 10000
 #define TRACE_ATTR 5
-#define SITE_ATTR 4
+#define SITE_ATTR 6
+#define SITE_ATTR_REQ 4
 #define CAT_ATTR 1
 /* #define DEBUG */
 
@@ -95,6 +96,7 @@ int staReadComp(char *stamfile, struct input *X)
   double *start_time_vec,*end_time_vec;
   double *cur_list;
   int linecnt;
+  unsigned int read_length = LEN;
 
   /* First, read in metadata */
 #ifdef DEBUG
@@ -105,13 +107,14 @@ int staReadComp(char *stamfile, struct input *X)
   if(fid==NULL)
     {
       printf("Cannot find .stam file: %s. Please check the path.\n",stamfile);
+      free(X);
       return EXIT_FAILURE;
     }
 
-  nm = (char **)malloc(TRACE_ATTR*sizeof(char *));
-  vl = (char **)malloc(TRACE_ATTR*sizeof(char *));
+  nm = (char **)malloc(MAX(MAX(TRACE_ATTR,SITE_ATTR),CAT_ATTR)*sizeof(char *));
+  vl = (char **)malloc(MAX(MAX(TRACE_ATTR,SITE_ATTR),CAT_ATTR)*sizeof(char *));
 
-  line = (char *)malloc(LEN*sizeof(char)); 
+  line = (char *)malloc(read_length*sizeof(char)); 
 
   /*************************************************************/
   /*** Pass 1: Determine the number of sites and categories. ***/
@@ -120,7 +123,7 @@ int staReadComp(char *stamfile, struct input *X)
   (*X).M=0;
   (*X).N=0;
 
-  while(fgets(line,LEN,fid) != NULL)
+  while(fgets(line,read_length,fid) != NULL)
     {
       sscanf(line,"%c",&firstchar);
 
@@ -151,6 +154,11 @@ int staReadComp(char *stamfile, struct input *X)
   /* Allocate memory for sites and categories */
   (*X).sites = (struct site *)malloc((*X).N*sizeof(struct site));
   (*X).categories = (struct category *)malloc((*X).M*sizeof(struct category));
+  for(n=0;n<(*X).N;n++) /* initialize optional fields */
+    {
+      strcpy((*X).sites[n].si_unit,"none");
+      (*X).sites[n].si_prefix = 1.0;
+    }
   
   /****************************************************************/
   /*** Pass 2: Read in metadata about sites and categories.     ***/
@@ -163,7 +171,7 @@ int staReadComp(char *stamfile, struct input *X)
   fid = fopen(stamfile,"r");
 
   linecnt=1;
-  while(fgets(line,LEN,fid) != NULL)
+  while(fgets(line,read_length,fid) != NULL)
     {
       sscanf(line,"%c",&firstchar);
 
@@ -186,19 +194,31 @@ int staReadComp(char *stamfile, struct input *X)
 		{
 		  nm[i] = strtok(NULL,eq);
 		  vl[i] = strtok(NULL,sc);
-		  if((nm[i]==NULL) | (vl[i]==NULL))
+		  if((i<SITE_ATTR_REQ) && ((nm[i]==NULL) || (vl[i]==NULL)))
 		    {
 		      printf("Malformed site in line %d in %s.\n",linecnt,stamfile);
+                      free(nm);
+                      free(vl);
+                      free(line);
+                      free((*X).sites);
+                      free((*X).categories);
+                      free(X);
 		      return EXIT_FAILURE;
 		    }
 		}
 
 	      /* Pull off leading whitespace of the name if it is there */
 	      for(i=0;i<SITE_ATTR;i++)
-		nm[i] = strtok(nm[i],sp);
+                {
+		  nm[i] = strtok(nm[i],spnl);
+#ifdef DEBUG
+		  printf("nm[%d]='%s'    vl[%d]='%s'\n",i,nm[i],i,vl[i]);
+#endif
+                }
 
 	      /* Find out which name/value pairs are what */
 	      for(i=0;i<SITE_ATTR;i++)
+		if(nm[i])
 		{
 		  if(strcmp(nm[i],"label")==0)
 		    strcpy((*X).sites[cur_n].label,vl[i]);
@@ -208,9 +228,19 @@ int staReadComp(char *stamfile, struct input *X)
 		    (*X).sites[cur_n].time_scale = atof(vl[i]);
 		  else if(strcmp(nm[i],"time_resolution")==0)
 		    (*X).sites[cur_n].time_resolution = atof(vl[i]);
+		  else if(strcmp(nm[i],"si_unit")==0)
+		    strcpy((*X).sites[cur_n].si_unit,vl[i]);
+		  else if(strcmp(nm[i],"si_prefix")==0)
+		    (*X).sites[cur_n].si_prefix = atof(vl[i]);
 		  else
 		    {
 		      printf("Malformed site in line %d in %s.\n",linecnt,stamfile);
+                      free(nm);
+                      free(vl);
+                      free(line);
+                      free((*X).sites);
+                      free((*X).categories);
+                      free(X);
 		      return EXIT_FAILURE;
 		    }
 		}
@@ -229,6 +259,12 @@ int staReadComp(char *stamfile, struct input *X)
 		  if((nm[i]==NULL) | (vl[i]==NULL))
 		    {
 		      printf("Malformed category in line %d in %s.\n",linecnt,stamfile);
+                      free(nm);
+                      free(vl);
+                      free(line);
+                      free((*X).sites);
+                      free((*X).categories);
+                      free(X);
 		      return EXIT_FAILURE;
 		    }
 		}
@@ -245,6 +281,12 @@ int staReadComp(char *stamfile, struct input *X)
 		  else
 		    {
 		      printf("Malformed category in line %d in %s.\n",linecnt,stamfile);
+                      free(nm);
+                      free(vl);
+                      free(line);
+                      free((*X).sites);
+                      free((*X).categories);
+                      free(X);
 		      return EXIT_FAILURE;
 		    }
 		}
@@ -264,6 +306,12 @@ int staReadComp(char *stamfile, struct input *X)
 		  if((nm[i]==NULL) | (vl[i]==NULL))
 		    {
 		      printf("Malformed trace in line %d in %s.\n",linecnt,stamfile);
+                      free(nm);
+                      free(vl);
+                      free(line);
+                      free((*X).sites);
+                      free((*X).categories);
+                      free(X);
 		      return EXIT_FAILURE;
 		    }
 		}
@@ -326,7 +374,7 @@ int staReadComp(char *stamfile, struct input *X)
   end_time_vec = (double *)malloc(P_total*sizeof(double));
 
   linecnt=1;
-  while(fgets(line,LEN,fid) != NULL)
+  while(fgets(line,read_length,fid) != NULL)
     {
       sscanf(line,"%c",&firstchar);
 
@@ -368,6 +416,23 @@ int staReadComp(char *stamfile, struct input *X)
 		  else
 		    {
 		      printf("Malformed trace in line %d.\n",linecnt);
+                      free(nm);
+                      free(vl);
+                      free(line);
+                      free((*X).sites);
+                      for(m=0;m<(*X).M;m++)
+                        {
+                          for(p=0;p<(*X).categories[m].P;p++)
+                            free((*X).categories[m].trials[p]);
+                          free((*X).categories[m].trials);
+                        }
+                      free((*X).categories);
+                      free(X);
+                      free(p_vec);
+                      free(m_vec);
+                      free(n_vec);
+                      free(start_time_vec);
+                      free(end_time_vec);
 		      return EXIT_FAILURE;
 		    }	
 		}
@@ -397,22 +462,38 @@ int staReadComp(char *stamfile, struct input *X)
   if(fid==NULL)
     {
       printf("Cannot find .stad file: %s. Please check the path.\n",stadfile);
+      free(line);
+      free((*X).sites);
+      for(m=0;m<(*X).M;m++)
+        {
+          for(p=0;p<(*X).categories[m].P;p++)
+            free((*X).categories[m].trials[p]);
+          free((*X).categories[m].trials);
+        }
+      free((*X).categories);
+      free(X);
+      free(p_vec);
+      free(m_vec);
+      free(n_vec);
+      free(start_time_vec);
+      free(end_time_vec);
       return EXIT_FAILURE;
     }
 
   q_vec = (int *)calloc(P_total,sizeof(int));
 
   i = 0;
-  while(fgets(line,LEN,fid) != NULL)
+  while(fgets(line,read_length,fid) != NULL)
     {
 
-      /* Check to see if we exceeded the maximum line limit */
-      /* If there is no \n in the entire string,
-	 then it didn't finish reading */
+      /* Check to see if we exceeded the maximum line limit, reallocating as necessary */
+      /* If there is no \n in the entire string, then it didn't finish reading */
       if(strchr(line,'\n')==NULL)
 	{
-	  printf("Line length limit exceeded at line %d in %s\n. Try increasing LEN in shared/input_c.c\n.",i+1,stadfile);
-	  return EXIT_FAILURE;
+          fseek(fid,-read_length+1,SEEK_CUR);
+          read_length = (unsigned int)(1.618*read_length);
+	  line = (char *)realloc(line,read_length*sizeof(char)); 
+	  continue;
 	}
 
       /* Get the first number */
@@ -433,6 +514,22 @@ int staReadComp(char *stamfile, struct input *X)
   if(i!=P_total)
     {
       printf("Mismatch between trace metadata and trace data in %s.\n",stadfile);
+      free(line);
+      free((*X).sites);
+      for(m=0;m<(*X).M;m++)
+        {
+          for(p=0;p<(*X).categories[m].P;p++)
+            free((*X).categories[m].trials[p]);
+          free((*X).categories[m].trials);
+        }
+      free((*X).categories);
+      free(X);
+      free(p_vec);
+      free(m_vec);
+      free(n_vec);
+      free(start_time_vec);
+      free(end_time_vec);
+      free(q_vec);
       return EXIT_FAILURE;
     }
 
@@ -458,10 +555,10 @@ int staReadComp(char *stamfile, struct input *X)
       (*X).categories[m_vec[i]].trials[p_vec[i]][n_vec[i]].list = (double *)malloc(q_vec[i]*sizeof(double)); 
     }
 
-  /* Open the datafile get and get the lists. */
+  /* Open the datafile and get the lists. */
   fid = fopen(stadfile,"r");
   i=0;
-  while(fgets(line,LEN,fid) != NULL)
+  while(fgets(line,read_length,fid) != NULL)
     {
       cur_list = (*X).categories[m_vec[i]].trials[p_vec[i]][n_vec[i]].list;
 
@@ -475,18 +572,42 @@ int staReadComp(char *stamfile, struct input *X)
 	  if(temp==NULL)
 	    {
 	      printf("Malformed trace data in line %d in %s\n",i+1,stadfile);
+              free(line);
+              FreeInput(X);
+              free(p_vec);
+              free(m_vec);
+              free(n_vec);
+              free(start_time_vec);
+              free(end_time_vec);
+              free(q_vec);
 	      return EXIT_FAILURE;
 	    }
 	  cur_list[q]=atof(temp);
-	  if((cur_list[q]<start_time_vec[i]) | (cur_list[q]>end_time_vec[i]))
+	  if((strcmp((*X).sites[n_vec[i]].recording_tag,"episodic")==0) && ((cur_list[q]<start_time_vec[i]) || (cur_list[q]>end_time_vec[i])))
 	    {
 	      printf("Time out of range in line %d in %s\n",i+1,stadfile);
+              free(line);
+              FreeInput(X);
+              free(p_vec);
+              free(m_vec);
+              free(n_vec);
+              free(start_time_vec);
+              free(end_time_vec);
+              free(q_vec);
 	      return EXIT_FAILURE;
 	    }
 	}
-      if(IsSortedDouble(q_vec[i],cur_list)==0)
+      if((strcmp((*X).sites[n_vec[i]].recording_tag,"episodic")==0) && (IsSortedDouble(q_vec[i],cur_list)==0))
 	{
 	  printf("Spike times are not sorted in line %d in %s\n",i+1,stadfile);
+          free(line);
+          FreeInput(X);
+          free(p_vec);
+          free(m_vec);
+          free(n_vec);
+          free(start_time_vec);
+          free(end_time_vec);
+          free(q_vec);
 	  return EXIT_FAILURE;
 	}
       i++;
@@ -506,6 +627,12 @@ int staReadComp(char *stamfile, struct input *X)
 #endif
 
   free(line);
+  free(p_vec);
+  free(m_vec);
+  free(n_vec);
+  free(start_time_vec);
+  free(end_time_vec);
+  free(q_vec);
 
   return EXIT_SUCCESS;
 }
@@ -537,6 +664,10 @@ struct input *MultiSiteSubsetComp(struct input *X,int *vec,int N)
 	   MAXCHARS*sizeof(char));
     Y[0].sites[n].time_scale = X[0].sites[vec[n]].time_scale;
     Y[0].sites[n].time_resolution = X[0].sites[vec[n]].time_resolution;
+    memcpy(Y[0].sites[n].si_unit,
+	   X[0].sites[vec[n]].si_unit,
+	   MAXCHARS*sizeof(char));
+    Y[0].sites[n].si_prefix = X[0].sites[vec[n]].si_prefix;
   }
     
   /* categories */
@@ -607,6 +738,10 @@ struct input *MultiSiteArrayComp(struct input *X,int *vec,int N)
 	     MAXCHARS*sizeof(char));
       Y[n].sites[0].time_scale = X[0].sites[vec[n]].time_scale;
       Y[n].sites[0].time_resolution = X[0].sites[vec[n]].time_resolution;
+      memcpy(Y[n].sites[0].si_unit,
+	     X[0].sites[vec[n]].si_unit,
+	     MAXCHARS*sizeof(char));
+      Y[n].sites[0].si_prefix = X[0].sites[vec[n]].si_prefix;
       
       /* categories */
       Y[n].M = X[0].M;

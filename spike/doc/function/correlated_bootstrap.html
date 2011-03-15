@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>correlated_bootstrap (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="correlated_bootstrap">
+  <meta name="description" content="CORRELATED_BOOTSTRAP    Calculate correlated bootstrap samples of P(X(t))">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>correlated_bootstrap</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>correlated_bootstrap</h1>
+
+<!-- <p><a name="_name"></a>CORRELATED_BOOTSTRAP    Calculate correlated bootstrap samples of P(X(t))</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment"> CORRELATED_BOOTSTRAP    Calculate correlated bootstrap samples of P(X(t))
+
+ usage 1:     [X] = correlated_bootstrap(X_t);
+              [X] = correlated_bootstrap(X_t, N);
+ usage 2:     [X] = correlated_bootstrap(X_t, N, spike_rate);
+
+ Inputs:     X_t  -  [N_mc x T] matrix of N_mc samples from a
+                     distribution P(X(t) where X_t(:,i) are N_mc
+                     samples from time i.
+
+               N  -  number of desired samples [default = 199]
+
+       spike_rate -  [1xT] vector spike rates. [optional] 
+        
+ Outputs:      X  -  [1xN] samples from distribution P(X). Calculate
+                     confidence intervals using PRCTILE.
+
+ Compute N samples from distribution P(X) when all is known is
+ N_mc samples from P(X(t)) for each moment in time t=[1,T] and
+ samples from P(X(t=a)) is correlated with P(X(t=a+b)).
+
+ Usage 1: Standard correlated bootstrap procedure.
+
+ Usage 2: Correlated bootstrap but adjust P(X(t)) according to the
+          linear relationship with the spike rate. Specifiying the
+          spike rate centers the resampled estimates about the
+          mean spike rate.
+
+ See also: PRCTILE, <a href="bootstrap_pr.html" class="code" title="function T = bootstrap_pr(A,N,L)">BOOTSTRAP_PR</a>
+
+ Original coding - Kennel
+ Edited - shlens 2005-09-23
+ Edited - shlens 2006-02-14</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+<li><a href="bootstrap_pr.html"><tt>bootstrap_pr</tt></a> BOOTSTRAP_PR    Politis-Romano method for correlated bootstrap</li><li><a href="match_rate.html"><tt>match_rate</tt></a> MATCH_RATE    Redraw samples to match spike rate</li></ul>
+This function is called by:
+<ul>
+<li><a href="ctwmcmcinfo.html"><tt>ctwmcmcinfo</tt></a> CTWMCMCINFO Estimate information from CTW tree based entropy estimates.</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

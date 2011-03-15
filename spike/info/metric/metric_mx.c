@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -23,7 +23,7 @@ struct options_metric *ReadOptionsMetric(const mxArray *in)
 
   /* shift cost */
   tmp = mxGetField(in,0,"shift_cost");
-  if(tmp==NULL)
+  if((tmp==NULL) || mxIsEmpty(tmp))
     opts->num_q = 0;
   else
     {
@@ -34,7 +34,7 @@ struct options_metric *ReadOptionsMetric(const mxArray *in)
 
   /* shift cost */
   tmp = mxGetField(in,0,"label_cost");
-  if(tmp==NULL)
+  if((tmp==NULL) || mxIsEmpty(tmp))
     opts->num_k = 0;
   else
     {

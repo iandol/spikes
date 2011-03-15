@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>ctwmcmcsample (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="ctwmcmcsample">
+  <meta name="description" content="CTWMCMCSAMPLE Perform MCMC sampling of entropy on CTW tree graph(s).">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>ctwmcmcsample</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>ctwmcmcsample</h1>
+
+<!-- <p><a name="_name"></a>CTWMCMCSAMPLE Perform MCMC sampling of entropy on CTW tree graph(s).</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">CTWMCMCSAMPLE Perform MCMC sampling of entropy on CTW tree graph(s).
+   Y = CTWMCMCSAMPLE(X,OPTS) returns both the analytic (or weighted)
+   entropy estimation on the input context-tree weighted (CTW) graph(s),
+   and numerous Markov chain Monte Carlo (MCMC) Bayesian samples derived
+   from the CTW tree graph(s). The type of analytic entropy calculated
+   depends on the options, as does the number of MCMC sample to return.
+   The input X is a representation of CTW tree graph(s), as either a cell
+   array or structure, as obtained from CTWMCMCTREE. The output Y is a
+   structure containing both analytic and MCMC entropy estimates.
+
+   The options and parameters for this function are:
+      OPTS.nmc: The number of MCMC samples to make. Its value must be
+         greater than 0, and should be at least 100. The default is 199.
+      OPTS.entropy_estimation_method: A cell array of entropy estimation
+         methods. Please see the Spike Train Analysis Toolkit
+         documentation for more information, and corresponding entropy
+         options. The default is {'plugin'}.
+      OPTS.variance_estimation_method: A cell array of variance
+         estimation methods. Please see the Spike Train Analysis Toolkit
+         documentation for more information, and corresponding variance
+         options (listed with entropy options). The default is not to
+         perform any variance estimation.
+      OPTS.memory_expansion: The ratio by which tree memory is expanded
+         when reallocation become necessary during tree building. Its
+         value must be greater than or equal to 1. The default is 1.61.
+      OPTS.mcmc_iterations: The absolute number of iterations to run the
+         Markov chain Monte Carlo simulation (for each OPTS.nmc sample).
+         If OPTS.mcmc_min_acceptances probability vectors have been
+         accepted, this is also the minimum number of iterations. The
+         default is 100.
+      OPTS.mcmc_max_iterations: The maximum number of Markov chain Monte
+         Carlo iterations. The simulation runs OPTS.mcmc_iterations sized
+         batches of iterations until OPTS.mcmc_min_acceptances probability
+         vectors are accepted, or this number is reached. The default is
+         10000.
+      OPTS.mcmc_min_acceptances: The minimum number of Markov chain Monte
+         Carlo acceptances, that is the number of acceptable probability
+         vectors. The default is 20.
+
+   Y = CTWMCMCSAMPLE(X) uses the default options and parameters.
+
+   [Y,OPTS_USED] = CTWMCMCSAMPLE(X) or [Y,OPTS_USED] =
+   CTWMCMCSAMPLE(X,OPTS) additionally return the options used.
+
+   See also <a href="directbin.html" class="code" title="">DIRECTBIN</a>, <a href="ctwmcmc.html" class="code" title="function [Y, opts_used] = ctwmcmc(X_stream,X_replica,opts)">CTWMCMC</a>, <a href="ctwmcmctree.html" class="code" title="">CTWMCMCTREE</a>, <a href="ctwmcmcinfo.html" class="code" title="function [Y, opts_used] = ctwmcmcinfo(X,rep_binned,opts)">CTWMCMCINFO</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="ctwmcmc.html"><tt>ctwmcmc</tt></a> CTWMCMC Context-tree weighted method analysis to estimate information.</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

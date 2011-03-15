@@ -25,25 +25,65 @@
 <!-- <p><a name="_name"></a>MAKE Compile functions in the Spike Train Analysis Toolkit.</p> -->
 
 <p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">MAKE Compile functions in the Spike Train Analysis Toolkit.
-   MAKE compiles the necessary functions in the Spike Train
-   Analysis Toolkit. This m-file shares some similarities
-   with the GNU make utility in its basic operation and
-   options. Namely, a particular MEX file will be compiled
-   only if it doesn't already exist, or if its modification
-   date is older than the modification date of any of its
-   dependencies.
+   MAKE compiles the necessary functions in the Spike Train Analysis
+   Toolkit. This m-file shares some similarities with the GNU make
+   utility in its basic operation and options. Namely, a particular
+   MEX file will be compiled only if it doesn't already exist, or if
+   its modification date is older than the modification date of any
+   of its dependencies.
 
-   Additionally, the following options are permitted
-   (passed on the command line as with GNU make or as
-   individual string arguments):
+   Additionally, the following options are permitted, passed on the
+   command line as with GNU make or in functional form as individual
+   string arguments (note that in Octave prior to version 3.2 you
+   must first give the command &quot;mark_as_command make&quot; or use the
+   functional form):
 
    -B, --always-make Unconditionally compile all MEX files.
-   -h, --ignore-header-files Do not consider the modification
-      date of the header files.
-   -n, --just-print, --dry-run, --recon Print the commands
-      that would be executed, but do not execute them.
-   -Dname[=value] Define a symbol name (and optional value)
-      to the C preprocessor (see also mex).</pre></div></font></p>
+   -Dname[=value] Define a symbol name (and optional value) to the C
+      preprocessor (see also MEX).
+   -g Compile MEX files with debug symbols.
+   -h, --ignore-header-files Do not consider the modification date
+      of the header files.
+   -n, --just-print, --dry-run, --recon Print the commands that
+      would be executed, but do not execute them.
+
+   Specific goals or targets may also be specified to compile a
+   particular portion of the toolkit. If no goal is specified, then
+   all goals will be compiled. The currently available goals are
+   (multiple goals may be passed):
+
+   all: Compiles all code and prepares data (default goal).
+   input: Compiles input code.
+   shared: Compiles shared code.
+   direct: Compiles direct method code.
+   metric: Compiles <a href="metric.html" class="code" title="function [out,opts_used]=metric(X,opts)">metric</a> space method code.
+   binless: Compiles <a href="binless.html" class="code" title="function [out,opts_used]=binless(X,opts)">binless</a> method code.
+   ctwmcmc: Compiles <a href="ctwmcmc.html" class="code" title="function [Y, opts_used] = ctwmcmc(X_stream,X_replica,opts)">ctwmcmc</a> method code.
+   data: Prepares data.
+
+   After the toolkit has been compiled, you may use the following
+   goals to check and install the toolkit:
+
+   check: Checks that all toolkit functions work as expected (runs
+      demo/staverify).
+   install: &quot;Installs&quot; the toolkit by adding and saving the toolkit
+      path to your pathdef (may not work on some systems - please
+      save path manually).
+
+   Examples:
+      <a href="make.html" class="code" title="function make(varargin)">make</a>
+         Conditionally compiles the whole toolkit.
+      <a href="make.html" class="code" title="function make(varargin)">make</a> -B
+         Unconditionally compiles the whole toolkit.
+      <a href="make.html" class="code" title="function make(varargin)">make</a> -g -B <a href="ctwmcmc.html" class="code" title="function [Y, opts_used] = ctwmcmc(X_stream,X_replica,opts)">ctwmcmc</a>
+         Unconditionally compiles <a href="ctwmcmc.html" class="code" title="function [Y, opts_used] = ctwmcmc(X_stream,X_replica,opts)">ctwmcmc</a> method code with debug
+         symbols (w/o -B may not give desired result).
+      <a href="make.html" class="code" title="function make(varargin)">make</a> --just-print
+         Print the commands that would be executed to conditionally
+         compile the whole toolkit.
+      make('-n','--always-make','binless')
+         Functional form to print the commands that would be
+         executed to compile all <a href="binless.html" class="code" title="function [out,opts_used]=binless(X,opts)">binless</a> methods.</pre></div></font></p>
 
 <!-- crossreference -->
 <h2><a name="_cross"></a>Cross-reference information</h2>
@@ -59,6 +99,6 @@ This function is called by:
 
 
 
-<hr><cite>Generated on Wed 26-Aug-2009 11:46:18 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
 </body>
 </html>

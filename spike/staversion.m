@@ -2,7 +2,7 @@ function staversion()
 %STAVERSION Return the version and revision number of the Spike Train Analysis Toolkit.
 
 %
-%  Copyright 2009, Weill Medical College of Cornell University
+%  Copyright 2010, Weill Medical College of Cornell University
 %  All rights reserved.
 %
 %  This software is distributed WITHOUT ANY WARRANTY

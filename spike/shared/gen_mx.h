@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -32,6 +32,8 @@ extern void mxFreeMatrix3Double(double ***in);
 /* Options */
 extern void mxAddAndSetField(mxArray *in,int n,const char *field_name,mxArray *value);
 extern mxArray *mxCreateEmptyStruct(void);
+extern mxArray *mxCreateEmptyMatrix(void);
+extern mxArray *mxCreateInt32Scalar(int value);
 extern struct options_entropy *ReadOptionsEntropy(const mxArray *in);
 extern mxArray *WriteOptionsEntropy(const mxArray *in,struct options_entropy *opts);
 extern int ReadOptionPossibleWords(const mxArray *in,const char *field_name,double *member);

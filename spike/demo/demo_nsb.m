@@ -1,6 +1,22 @@
 function demo_nsb()
 %DEMO_NSB Shows a comparitive example of the NSB method
 
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%
+
+if isoctave
+    warning(['Due to differences in the figure handling and plotting functions ' ...
+        'between Matlab and Octave, this demo will not run in Octave. You may use ' ...
+        'this file as a template for your own analyses.']);
+	return;
+end
+
 %reset random number stream
 stream = RandStream.getDefaultStream;
 stream.reset;

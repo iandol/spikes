@@ -16,3 +16,12 @@
 %   [Y,OPTS_USED] = ENTROPY1DVEC(X,OPTS) copies OPTS into OPTS_USED.
 %
 %   See also ENTROPY1D, INFOCOND, INFO2D.
+
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%

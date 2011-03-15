@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -39,7 +39,7 @@ struct options_entropy *ReadOptionsEntropy(const mxArray *in)
 
   /* Which entropy estimate methods were requested? */
   ent_temp = mxGetField(in,0,"entropy_estimation_method");
-  if(ent_temp==NULL) 
+  if((ent_temp==NULL) || mxIsEmpty(ent_temp))
     opts->E = 0;
   else
     {
@@ -73,7 +73,7 @@ struct options_entropy *ReadOptionsEntropy(const mxArray *in)
   /* variance estimation */
   ve_temp = mxGetField(in,0,"variance_estimation_method");
   opts->V = (int *)mxCalloc(opts->E,sizeof(int));
-  if(ve_temp==NULL)
+  if((ve_temp==NULL) || mxIsEmpty(ve_temp))
     opts->var_est_meth_flag = 0;
   else
     {

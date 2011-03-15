@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -14,6 +14,9 @@
 struct options_binless *ReadOptionsBinless(const mxArray *in)
 {
   struct options_binless *opts;
+  mxArray *tmp;
+  int stringLength, i;
+  char *str;
 
   opts = (struct options_binless *)mxMalloc(sizeof(struct options_binless));
 
@@ -26,6 +29,35 @@ struct options_binless *ReadOptionsBinless(const mxArray *in)
   opts->warp_strat_flag = ReadOptionsIntMember(in,"warping_strategy",&(opts->warp_strat));
   opts->single_strat_flag = ReadOptionsIntMember(in,"singleton_strategy",&(opts->single_strat));
   opts->strat_strat_flag = ReadOptionsIntMember(in,"stratification_strategy",&(opts->strat_strat));
+  opts->D_min_cont_flag = ReadOptionsIntMember(in,"cont_min_embed_dim",&(opts->D_min_cont));
+  opts->D_max_cont_flag = ReadOptionsIntMember(in,"cont_max_embed_dim",&(opts->D_max_cont));
+
+  opts->rec_tag_flag = 0; /* assume field is empty */
+  tmp = mxGetField(in,0,"recording_tag");
+  if(tmp && mxIsChar(tmp)) /* field is string */
+  {
+    /* copy string and set to lowercase */
+    stringLength = mxGetNumberOfElements(tmp) + 1;
+    str = (char *)mxCalloc(stringLength,sizeof(char));
+    if(mxGetString(tmp,str,stringLength)!=0)
+      mexErrMsgIdAndTxt("STAToolkit:ReadOptionsBinless:invalidValue","Option recording_tag is not valid string data.");
+    for(i=0; str[i]; i++)
+      str[i] = tolower(str[i]);
+
+    /* use string to set member value */
+    if(strcmp(str,"episodic")==0)
+      opts->rec_tag = 0;
+    else if(strcmp(str,"continuous")==0)
+      opts->rec_tag = 1;
+    else
+    {
+      mexWarnMsgIdAndTxt("STAToolkit:ReadOptionsBinless:invalidValue","Unrecognized option \"%s\" for recording_tag. Using default \"episodic\".",str);
+      opts->rec_tag = (int)DEFAULT_REC_TAG;
+    }
+    opts->rec_tag_flag = 1;
+
+    mxFree(str);
+  }
 
   return opts;
 }
@@ -45,6 +77,16 @@ mxArray *WriteOptionsBinless(const mxArray *in,struct options_binless *opts)
   WriteOptionsIntMember(out,"warping_strategy",opts->warp_strat,opts->warp_strat_flag);
   WriteOptionsIntMember(out,"singleton_strategy",opts->single_strat,opts->single_strat_flag);
   WriteOptionsIntMember(out,"stratification_strategy",opts->strat_strat,opts->strat_strat_flag);
+  WriteOptionsIntMember(out,"cont_min_embed_dim",opts->D_min_cont,opts->D_min_cont_flag);
+  WriteOptionsIntMember(out,"cont_max_embed_dim",opts->D_max_cont,opts->D_max_cont_flag);
+
+  if(opts->rec_tag_flag)
+    if(opts->rec_tag==0)
+      mxAddAndSetField(out,0,"recording_tag",mxCreateString("episodic"));
+    else if(opts->rec_tag==1)
+      mxAddAndSetField(out,0,"recording_tag",mxCreateString("continuous"));
+    else
+      mxAddAndSetField(out,0,"recording_tag",mxCreateString("error"));
 
   mxFree(opts);
 
@@ -72,22 +114,44 @@ void ReadOptionsWarpRange(struct options_binless *opts)
 
 void ReadOptionsEmbedRange(struct options_binless *opts)
 {
-  if(opts->D_min_flag==0)
+  if(opts->rec_tag_flag && (opts->rec_tag==1)) /* continuous data */
     {
-      opts->D_min = (int)DEFAULT_MIN_EMBED_DIM;
-      opts->D_min_flag=1;
-      mexWarnMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:missingParameter","Missing parameter min_embed_dim. Using default value %d.\n",(*opts).D_min);
-    }
+      if(opts->D_min_cont_flag==0)
+        {
+          opts->D_min_cont = (int)DEFAULT_CONT_MIN_EMBED_DIM;
+          opts->D_min_cont_flag=1;
+          mexWarnMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:missingParameter","Missing parameter cont_min_embed_dim. Using default value %d.\n",(*opts).D_min_cont);
+        }
 
-  if(opts->D_max_flag==0)
+      if(opts->D_max_cont_flag==0)
+        {
+          opts->D_max_cont = (int)DEFAULT_CONT_MAX_EMBED_DIM;
+          opts->D_max_cont_flag=1;
+          mexWarnMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:missingParameter","Missing parameter cont_max_embed_dim. Using default value %d.\n",(*opts).D_max_cont);
+        }
+
+      if((*opts).D_min_cont>(*opts).D_max_cont)
+        mexErrMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:badRange","Lower limit %d greater than upper limit %d for cont_min_embed_dim and cont_max_embed_dim.\n",(*opts).D_min_cont,(*opts).D_max_cont);
+    }
+  else /* episodic (or unspecified) data */
     {
-      opts->D_max = (int)DEFAULT_MAX_EMBED_DIM;
-      opts->D_max_flag=1;
-      mexWarnMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:missingParameter","Missing parameter max_embed_dim. Using default value %d.\n",(*opts).D_max);
-    }
+      if(opts->D_min_flag==0)
+        {
+          opts->D_min = (int)DEFAULT_MIN_EMBED_DIM;
+          opts->D_min_flag=1;
+          mexWarnMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:missingParameter","Missing parameter min_embed_dim. Using default value %d.\n",(*opts).D_min);
+        }
 
-  if((*opts).D_min>(*opts).D_max)
-    mexErrMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:badRange","Lower limit %d greater than upper limit %d for min_embed_dim and max_embed_dim.\n",(*opts).D_min,(*opts).D_max);
+      if(opts->D_max_flag==0)
+        {
+          opts->D_max = (int)DEFAULT_MAX_EMBED_DIM;
+          opts->D_max_flag=1;
+          mexWarnMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:missingParameter","Missing parameter max_embed_dim. Using default value %d.\n",(*opts).D_max);
+        }
+
+      if((*opts).D_min>(*opts).D_max)
+        mexErrMsgIdAndTxt("STAToolkit:ReadOptionsEmbedRange:badRange","Lower limit %d greater than upper limit %d for min_embed_dim and max_embed_dim.\n",(*opts).D_min,(*opts).D_max);
+    }
 }
 
 void ReadOptionsBinlessTimeRange(struct options_binless *opts,struct input *X)

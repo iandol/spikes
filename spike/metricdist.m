@@ -14,10 +14,14 @@
 %
 %   The options and parameters for this function are:
 %      OPTS.shift_cost: The cost of shifting a spike per unit time
-%         relative to inserting or deleting a spike.
+%         relative to inserting or deleting a spike. This option may
+%         be a vector of such values. The default is
+%         1/(end_time-start_time).
 %      OPTS.label_cost: This applies only to data sets with
 %         simultaneously recorded spike trains. It is the cost of
-%         altering a spike's label.
+%         altering a spike's label, and may range from 0 to 2. This
+%         option may be a vector of such values whose length is equal
+%         to OPTS.shift_cost. The default is 0.
 %      OPTS.metric_family: Selects the metric to be used.
 %         OPTS.metric_family=0: Uses D^spike metric.
 %         OPTS.metric_family=1: Uses D^interval metric. This is
@@ -43,3 +47,12 @@
 %   options used.
 % 
 %   See also METRICOPEN, METRICCLUST.
+
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%

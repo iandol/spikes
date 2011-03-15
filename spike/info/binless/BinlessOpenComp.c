@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -20,6 +20,7 @@ int BinlessOpenComp(struct input *X,
   int m,p_total,p;
   int cur_Q;
   int q_start,q_end;
+  double delta;
 
   /* Next, unroll the categories */
   /* Really, just get the addresses of all of the spike times */
@@ -30,7 +31,14 @@ int BinlessOpenComp(struct input *X,
 	{
 	  a[p_total] = m;
 	  cur_Q = (*X).categories[m].trials[p][0].Q;
-	  GetLims((*X).categories[m].trials[p][0].list,(*opts).t_start,(*opts).t_end,cur_Q,&q_start,&q_end);
+          if(opts->rec_tag==0) /* episodic data */
+	    GetLims((*X).categories[m].trials[p][0].list,(*opts).t_start,(*opts).t_end,cur_Q,&q_start,&q_end);
+          else if(opts->rec_tag==1) /* continuous data */
+            {
+              delta = ((*X).categories[m].trials[p][0].end_time-(*X).categories[m].trials[p][0].start_time)/(cur_Q-1);
+              q_start = MAX(0,(opts->t_start-(*X).categories[m].trials[p][0].start_time)/delta);
+              q_end = MIN(cur_Q-1,(opts->t_end-(*X).categories[m].trials[p][0].start_time)/delta);
+            }
 #ifdef DEBUG
 	  printf("p=%d q_start=%d q_end=%d\n",p_total,q_start,q_end);
 #endif

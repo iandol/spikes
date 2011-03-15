@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>ctwmcmcinfo (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="ctwmcmcinfo">
+  <meta name="description" content="CTWMCMCINFO Estimate information from CTW tree based entropy estimates.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>ctwmcmcinfo</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>ctwmcmcinfo</h1>
+
+<!-- <p><a name="_name"></a>CTWMCMCINFO Estimate information from CTW tree based entropy estimates.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">CTWMCMCINFO Estimate information from CTW tree based entropy estimates.
+   Y = CTWMCMCINFO(X,REP_BINNED,OPTS) accepts a structure X containing the
+   fields 'signal' and 'noise' that hold entropy estimates derived via the
+   context-tree weighting (CTW) Markov chain Monte Carlo (MCMC) method, as
+   obtained from CTWMCMCSAMPLE. X is copied to the output Y, and the field
+   'information' is added that includes an estimate of the mutual
+   information between the signal and noise, and its confidence interval.
+   The additional required input REP_BINNED is the binned spike trains
+   from which 'noise' estimates were derived, as obtained with DIRECTBIN.
+
+   The options and parameters for this function are:
+      OPTS.match_rates: Flag to indicate whether resampled spike trains
+         should be adjusted based on the original spike rates. The default
+         is 1 (true).
+      OPTS.confidence_interval: The confidence interval (in percent). The
+         default is 95, indicating the 2.5 and 97.5 percentiles.
+
+   Y = CTWMCMCINFO(X,REP_BINNED) uses the default options and parameters.
+
+   [Y,OPTS_USED] = CTWMCMCINFO(X,REP_BINNED) or [Y,OPTS_USED] =
+   CTWMCMCINFO(X,REP_BINNED,OPTS) additionally return the options used.
+
+   See also <a href="directbin.html" class="code" title="">DIRECTBIN</a>, <a href="ctwmcmc.html" class="code" title="function [Y, opts_used] = ctwmcmc(X_stream,X_replica,opts)">CTWMCMC</a>, <a href="ctwmcmcsample.html" class="code" title="">CTWMCMCSAMPLE</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+<li><a href="correlated_bootstrap.html"><tt>correlated_bootstrap</tt></a> CORRELATED_BOOTSTRAP    Calculate correlated bootstrap samples of P(X(t))</li></ul>
+This function is called by:
+<ul>
+<li><a href="ctwmcmc.html"><tt>ctwmcmc</tt></a> CTWMCMC Context-tree weighted method analysis to estimate information.</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

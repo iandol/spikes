@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -79,12 +79,19 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       mxSetN(mxlabels,counts[p]);
     }
   
-  if(nrhs<2)
-    plhs[3] = WriteOptionsMetric(mxCreateEmptyStruct(),opts);
-  else if(mxIsEmpty(prhs[1]))
-    plhs[3] = WriteOptionsMetric(mxCreateEmptyStruct(),opts);
+  if(nlhs==4)
+    if((nrhs<2) || mxIsEmpty(prhs[1]))
+      plhs[3] = WriteOptionsMetric(mxCreateEmptyStruct(),opts);
+    else
+      plhs[3] = WriteOptionsMetric(prhs[1],opts);
   else
-    plhs[3] = WriteOptionsMetric(prhs[1],opts);
+    {
+      if(opts->num_q)
+        mxFree(opts->q);
+      if(opts->num_k)
+        mxFree(opts->k);
+      mxFree(opts);
+    }
 
   mxFreeInput(X);
   mxFree(counts);

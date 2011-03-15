@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -13,6 +13,9 @@
 #define DEFAULT_MAX_EMBED_DIM 2
 #define DEFAULT_SINGLETON_STRATEGY 0
 #define DEFAULT_STRATIFICATION_STRATEGY 2
+#define DEFAULT_REC_TAG 0
+#define DEFAULT_CONT_MIN_EMBED_DIM 0
+#define DEFAULT_CONT_MAX_EMBED_DIM 2
 
 struct options_binless{
   double t_start; int t_start_flag;
@@ -24,6 +27,9 @@ struct options_binless{
   int D_min; int D_min_flag;
   int single_strat; int single_strat_flag;
   int strat_strat; int strat_strat_flag;
+  int rec_tag; int rec_tag_flag;
+  int D_max_cont; int D_max_cont_flag;
+  int D_min_cont; int D_min_cont_flag;
 };
 
 extern void ReadOptionsWarpRange(struct options_binless *opts);
@@ -45,6 +51,7 @@ extern int BinlessEmbedComp(struct options_binless *opts,
 			    double **warped,
 			    int *n_vec,
 			    int N,
+			    int R,
 			    double **embedded);
 extern int BinlessInfoComp(struct options_binless *opts,
 			   struct options_entropy *opts_ent,
@@ -52,7 +59,6 @@ extern int BinlessInfoComp(struct options_binless *opts,
 			   int N, /* number of spike trains */
 			   int S, /* number of stimulus classes */
 			   int *n_vec_int, /* number of spikes in each train */
-			   int *r_vec, /* number of dimensions in each train */
 			   int *a_vec, /* class id for each train */
 			   struct estimate *I_part,
 			   double *I_cont,

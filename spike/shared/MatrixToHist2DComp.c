@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -65,7 +65,10 @@ int MatrixToHist2DComp(double **in,
   /* First rows */
   (*row_ptr).P = P;
   (*row_ptr).N = 1;
-  (*row_ptr).C = MarginalProc(C,1,row_list,joint_cnt,(*row_ptr).wordlist,(*row_ptr).wordcnt);
+  if(C)
+    (*row_ptr).C = MarginalProc(C,1,row_list,joint_cnt,(*row_ptr).wordlist,(*row_ptr).wordcnt);
+  else
+    (*row_ptr).C = 0;
 
 #ifdef DEBUG
   for(c=0;c<(*row_ptr).C;c++)
@@ -75,7 +78,10 @@ int MatrixToHist2DComp(double **in,
   /* Then columns */
   (*col_ptr).P = P;
   (*col_ptr).N = 1;
-  (*col_ptr).C = MarginalProc(C,1,col_list,joint_cnt,(*col_ptr).wordlist,(*col_ptr).wordcnt);
+  if(C)
+    (*col_ptr).C = MarginalProc(C,1,col_list,joint_cnt,(*col_ptr).wordlist,(*col_ptr).wordcnt);
+  else
+    (*col_ptr).C = 0;
   
 #ifdef DEBUG
   for(c=0;c<(*col_ptr).C;c++)
@@ -172,7 +178,7 @@ int MarginalProc(int C_in,int N,int **list,double *cnt,int **wordlist,double *wo
   uni_j = (int *)calloc(C_in,sizeof(int));
  
   C_out = UniqueRowsInt(C_in,N,list,wordlist,uni_i,uni_j,uni_cnt);
- 
+
   for(c=0;c<C_in;c++)
     wordcnt[uni_j[c]]+=cnt[c];
 

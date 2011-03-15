@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -40,12 +40,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
   
   if(mxGetM(prhs[0])!=mxGetN(prhs[0]))
-    mexErrMsgIdAndTxt("STAToolkit:metricclust:sizeMismatch","D matrix must be square.");
+    {
+      mxFree(opts->q);
+      mxFree(opts->k);
+      mxFree(opts);
+      mexErrMsgIdAndTxt("STAToolkit:metricclust:sizeMismatch","D matrix must be square.");
+    }
 
   P_total = mxGetM(prhs[0]);
   
   if(mxGetNumberOfElements(prhs[1])!=P_total)
-    mexErrMsgIdAndTxt("STAToolkit:metricclust:sizeMismatch","The number of elements in CATEGORIES must match the number of rows and columns in D.");
+    {
+      mxFree(opts->q);
+      mxFree(opts->k);
+      mxFree(opts);
+      mexErrMsgIdAndTxt("STAToolkit:metricclust:sizeMismatch","The number of elements in CATEGORIES must match the number of rows and columns in D.");
+    }
 
   if(mxIsClass(prhs[1],"int32")==0)
     mexWarnMsgIdAndTxt("STAToolkit:metricclust:wrongType","CATEGORIES is not int32.");
@@ -74,7 +84,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   status = MetricClustComp(opts,d_in,m_list,M,P_total,cm_in);
   if(status==EXIT_FAILURE)
-    mexErrMsgIdAndTxt("STAToolkit:metricclust:failure","metricclust failed.");
+    {
+      mxFree(opts->q);
+      mxFree(opts->k);
+      mxFree(opts);
+      mxFree(cm_in);
+      mxFree(d_in);
+      mexErrMsgIdAndTxt("STAToolkit:metricclust:failure","metricclust failed.");
+    }
 
   if(nrhs<4)
     plhs[1] = WriteOptionsMetric(mxCreateEmptyStruct(),opts);

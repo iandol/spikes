@@ -3,6 +3,15 @@ function scalefig(h,sc)
 % SCALEFIG(H,SC) scales figure windows for demo plots. H is the
 % figure handle and SC is the scaling factor.
 
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%
+
 if(length(sc)==1)
   sc=sc*ones([1 2]);
 end

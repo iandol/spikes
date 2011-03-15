@@ -1,8 +1,8 @@
 # Data filename
-datafile=/Users/iana/Desktop/spike/data/taste.stad;
+datafile=/Users/iana/Code/spikes/spike/data/taste.stad;
 #
 # Site metadata
-site=1; label=unit_001; recording_tag=episodic; time_scale=1.000000; time_resolution=0.001000
+site=1; label=unit_001; recording_tag=episodic; time_scale=1.000000; time_resolution=0.001000;
 #
 # Category metadata
 category=1; label=NaCl;

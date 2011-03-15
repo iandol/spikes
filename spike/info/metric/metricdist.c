@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -33,6 +33,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   if( (nlhs<1) | (nlhs>2) )
     mexErrMsgIdAndTxt("STAToolkit:metricdist:numArgs","1 or 2 output arguments required.");
 
+  if(mxGetNumberOfElements(prhs[1]) != mxGetNumberOfElements(prhs[2]))
+    mexErrMsgIdAndTxt("STAToolkit:metricdist:sizeMismatch","The dimensions of TIMES and LABELS must match.");
+
   if(nrhs<4)
     opts = ReadOptionsMetric(mxCreateEmptyStruct());
   else if(mxIsEmpty(prhs[3]))
@@ -55,7 +58,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   
   for(k=0;k<opts->num_q;k++)
     if(opts->q[k]<0)
-      mexErrMsgIdAndTxt("STAToolkit:metricdist:invalidValue","Values of label cost must not be negative. Element %d has a value of %f.\n",k,opts[k]);
+      {
+        mxFree(opts->q);
+        mxFree(opts->k);
+        mxFree(opts);
+        mexErrMsgIdAndTxt("STAToolkit:metricdist:invalidValue","Values of shift_cost must not be negative. Element %d has a value of %f.\n",k,opts[k]);
+      }
   
   /* Read in parallel_strategy */
   if(opts->parallel_flag==0)
@@ -98,18 +106,30 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	}
 
       if(opts->num_q!=opts->num_k)
-	mexErrMsgIdAndTxt("STAToolkit:metricdist:mismatchedParameter","Number of shift_cost parameters and number of label_cost parameters must be equal.\n");
+        {
+          mxFree(opts->q);
+          mxFree(opts->k);
+          mxFree(opts);
+          mexErrMsgIdAndTxt("STAToolkit:metricdist:mismatchedParameter","Number of shift_cost parameters and number of label_cost parameters must be equal.\n");
+        }
 
       for(k=0;k<opts->num_k;k++)
 	if((opts->k[k]<0) | (opts->k[k]>2))
-	  mexErrMsgIdAndTxt("STAToolkit:metricdist:invalidValue","Values of label cost must between 0 and 2. Element %d has a value of %f.\n",k,opts[k]);
+          {
+            mxFree(opts->q);
+            mxFree(opts->k);
+            mxFree(opts);
+            mexErrMsgIdAndTxt("STAToolkit:metricdist:invalidValue","Values of label cost must between 0 and 2. Element %d has a value of %f.\n",k,opts[k]);
+          }
 
       if(opts->metric)
-	mexErrMsgIdAndTxt("STAToolkit:metricdist:multineuron","Interval metric not allowed for multisite data.");
+        {
+          mxFree(opts->q);
+          mxFree(opts->k);
+          mxFree(opts);
+          mexErrMsgIdAndTxt("STAToolkit:metricdist:multineuron","Interval metric not allowed for multisite data.");
+        }
     }
-
-  if(mxGetNumberOfElements(prhs[1]) != mxGetNumberOfElements(prhs[2]))
-    mexErrMsgIdAndTxt("STAToolkit:metricdist:sizeMismatch","The dimensions of TIMES and LABELS must match.");
 
   P_total = mxGetNumberOfElements(prhs[1]);
 
@@ -125,13 +145,29 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     times[p] = mxGetPr(mxtimes);
 
     if(IsSortedDouble(counts[p],times[p])==0)
-      mexErrMsgIdAndTxt("STAToolkit:metricdist:outOfOrder","Spike times out of order.");
+      {
+        mxFree(opts->q);
+        mxFree(opts->k);
+        mxFree(opts);
+        mxFree(counts);
+        mxFree(times);
+        mxFree(labels);
+        mexErrMsgIdAndTxt("STAToolkit:metricdist:outOfOrder","Spike times out of order.");
+      }
 
     mxlabels = mxGetCell(prhs[2],p);
     labels[p] = mxGetData(mxlabels);
     
     if(mxGetNumberOfElements(mxtimes)!=mxGetNumberOfElements(mxlabels))
-      mexErrMsgIdAndTxt("STAToolkit:metricdist:sizeMismatch","The dimensions of TIMES and LABELS must match.");
+      {
+        mxFree(opts->q);
+        mxFree(opts->k);
+        mxFree(opts);
+        mxFree(counts);
+        mxFree(times);
+        mxFree(labels);
+        mexErrMsgIdAndTxt("STAToolkit:metricdist:sizeMismatch","The dimensions of TIMES and LABELS must match.");
+      }
   }
 
   /* Allocate memory for d */
@@ -163,7 +199,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
 
   if(status==EXIT_FAILURE)
-    mexErrMsgIdAndTxt("STAToolkit:metricdist:failure","metricdist failed.");
+    {
+      mxFree(opts->q);
+      mxFree(opts->k);
+      mxFree(opts);
+      mxFree(counts);
+      mxFree(times);
+      mxFree(labels);
+      mxFreeMatrix3Double(d_in);
+      mxFree(d_dims);
+      mexErrMsgIdAndTxt("STAToolkit:metricdist:failure","metricdist failed.");
+    }
   
   for(i=0;i<P_total;i++)
     for(j=0;j<P_total;j++)

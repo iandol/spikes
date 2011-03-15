@@ -19,3 +19,12 @@
 %   [Y,OPTS_USED] = INFOCOND(X,OPTS) copies OPTS into OPTS_USED.
 % 
 %   See also MATRIX2HIST2D, INFO2D, ENTROPY1D.
+
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%

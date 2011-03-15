@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -114,17 +114,17 @@ struct hist1d *ReadHist1D(int M,mxArray *hist_mx,struct options_entropy *opts)
 			/* Read in scalars */
 			temp = mxGetField(hist_mx,m,"P");
 			if(temp)
-				hist_c[m].P = mxGetScalar(temp);
+				hist_c[m].P = (int)mxGetScalar(temp);
 			else
 				mexErrMsgIdAndTxt("STAToolkit:ReadHist1D:badInput","Missing hist1d field \"P\".");
 			temp = mxGetField(hist_mx,m,"C");
 			if(temp)
-				hist_c[m].C = mxGetScalar(temp);
+				hist_c[m].C = (int)mxGetScalar(temp);
 			else
 				mexErrMsgIdAndTxt("STAToolkit:ReadHist1D:badInput","Missing hist1d field \"C\".");
 			temp = mxGetField(hist_mx,m,"N");
 			if(temp)
-				hist_c[m].N = mxGetScalar(temp);
+				hist_c[m].N = (int)mxGetScalar(temp);
 			else
 				mexErrMsgIdAndTxt("STAToolkit:ReadHist1D:badInput","Missing hist1d field \"N\".");
 
@@ -301,12 +301,12 @@ struct histcond *ReadHistCond(mxArray *hist_mx,struct options_entropy *opts)
 	hist_c = (struct histcond *)mxMalloc(sizeof(struct histcond));
 
 	class_mx = mxGetField(hist_mx,0,"class");
-	if(class_mx==NULL)
+	if((class_mx==NULL) || mxIsEmpty(class_mx))
 		mexErrMsgIdAndTxt("STAToolkit:ReadHistCond:badInput","The input data structure is ill-formed. Field \"class\" is missing.");
 	(*hist_c).classcond = ReadHist1DVec(class_mx,opts);
 
 	total_mx = mxGetField(hist_mx,0,"total");
-	if(total_mx==NULL)
+	if((total_mx==NULL) || mxIsEmpty(total_mx))
 		mexErrMsgIdAndTxt("STAToolkit:ReadHistCond:badInput","The input data structure is ill-formed. Field \"total\" is missing.");
 	(*hist_c).total = ReadHist1D(1,total_mx,opts);
 
@@ -373,8 +373,8 @@ struct hist1dvec *ReadHist1DVec(mxArray *hist_mx,struct options_entropy *opts)
 
 	hist_c = (struct hist1dvec *)mxMalloc(sizeof(struct hist1dvec));
 
-	(*hist_c).P = mxGetScalar(mxGetField(hist_mx,0,"P"));
-	(*hist_c).M = mxGetScalar(mxGetField(hist_mx,0,"M"));
+	(*hist_c).P = (int)mxGetScalar(mxGetField(hist_mx,0,"P"));
+	(*hist_c).M = (int)mxGetScalar(mxGetField(hist_mx,0,"M"));
 	
 	vec_mx = mxGetField(hist_mx,0,"vec");
 	(*hist_c).vec = ReadHist1D((*hist_c).M,vec_mx,opts);

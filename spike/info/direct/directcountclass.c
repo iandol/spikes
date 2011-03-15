@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -62,13 +62,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   M = mxGetM(prhs[0]); /* number of stimulus classes */
   Z = mxGetN(prhs[0]); /* Number of words per train */
   if(Z>1)
-    mexErrMsgIdAndTxt("STAToolkit:directcountclass","The input is not conditioned properly. It must be a column vector of cells.");
+  {
+    mxFree(opts);
+    mexErrMsgIdAndTxt("STAToolkit:directcountclass:badInput","The input is not conditioned properly. It must be a column vector of cells.");
+  }
   
   P_vec = (int *)mxMalloc(M*sizeof(int));
   P_total = 0;
   for(m=0;m<M;m++)
   {
     mxbinned = mxGetCell(prhs[0],m);
+    if(!mxIsInt32(mxbinned)) /* check data format */
+    {
+      mxFree(opts);
+      mxFree(P_vec);
+      mexErrMsgIdAndTxt("STAToolkit:directcountclass:badInput","The input cell array elements are required to be int32.");
+    }
     P_vec[m] = mxGetM(mxbinned);
     P_total += P_vec[m];
   }

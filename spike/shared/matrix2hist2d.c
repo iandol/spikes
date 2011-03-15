@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -21,7 +21,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   if( (nrhs<1) | (nrhs>2) )
     mexErrMsgIdAndTxt("STAToolkit:matrix2hist2d:numArgs","1 or 2 input arguments required.");
-  if( (nlhs<1) | (nlhs>3) )
+  if( (nlhs<1) | (nlhs>2) )
     mexErrMsgIdAndTxt("STAToolkit:matrix2hist2d:numArgs","1 or 2 output arguments required.");
 
   in = mxGetPr(prhs[0]);

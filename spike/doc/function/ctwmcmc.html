@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>ctwmcmc (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="ctwmcmc">
+  <meta name="description" content="CTWMCMC Context-tree weighted method analysis to estimate information.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>ctwmcmc</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>ctwmcmc</h1>
+
+<!-- <p><a name="_name"></a>CTWMCMC Context-tree weighted method analysis to estimate information.</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">CTWMCMC Context-tree weighted method analysis to estimate information.
+   Y = CTWMCMC(X_STREAM,X_REPLICA,OPTS) uses the context-tree weighted
+   (CTW) method paired with Markov chain Monte Carlo (MCMC) Bayesian
+   techniques to estimate the amount of information conveyed by the spike
+   train in X_STREAM (the &quot;signal&quot; entropy) when accounting for the
+   variance of the spike responses in X_REPLICA (the &quot;noise&quot; entropy). The
+   results are stored in the structure Y.
+
+   The members of Y are:
+      Y.stream_binned: Binned versions of the spike trains in X_STREAM.
+         See DIRECTBIN for details.
+      Y.replica_binned: Binned versions of the spike trains in X_REPLICA.
+         See DIRECTBIN for details.
+      Y.stream_tree: A CTW tree graph of the data in X_STREAM. See
+         CTWMCMCTREE for details.
+      Y.replica_tree: The CTW tree graphs of the data in X_REPLICA. See
+         CTWMCMCTREE for details.
+      Y.estimates: A structure with &quot;signal&quot; and &quot;noise&quot; entropy estimates
+         derived from X_STREAM and X_REPLICA, respectively, as well as
+         estimates of information and its confidence intervals. See
+         CTWMCMCSAMPLE and CTWMCMCINFO for details.
+
+   The options and parameters for this function are:
+      OPTS.start_time: The start time of the analysis window. The
+         default is the maximum of all of the start times in X. It is
+         typically best not to specify this value, as the start times for
+         X_STREAM and X_REPLICA may be different.
+      OPTS.end_time: The end time of the analysis window. The
+         default is the minimum of all of the end times in X. It is
+         typically best not to specify this value, as the end times for
+         X_STREAM and X_REPLICA may be different.
+      OPTS.counting_bin_size: The size of the counting bins in
+         seconds. The default is OPTS.end_time-OPTS.start_time.
+      OPTS.letter_cap: Places a cap on the maximum number of spikes
+         to be counted in a bin. The default value is Inf.
+      OPTS.beta: Krischevsky-Trofimov ballast parameter used in the
+         calculation of local codelength, Le, which also serves as the
+         Dirichlet prior parameter in subsequent Markov chain Monte Carlo
+         (MCMC) tree sampling. Its value should be greater than 0. The
+         default is 1/A, where A is the largest value in the input data X
+         plus one.
+      OPTS.gamma: The weighting between tree node and its children, used
+         when calculating the weighted codelength, Lw. Its value should
+         lie between 0 and 1, non-inclusive. The default is 0.5.
+      OPTS.max_tree_depth: The maximum tree depth (may be used to conserve
+         memory). Its value must be greater than 0. The default is 1000.
+      OPTS.h_zero: Flag to indicate use of the H_zero estimator for
+         deterministic nodes, that is such nodes will not be weighted when
+         true. The default is 1 (true).
+      OPTS.tree_format: The format for the output tree graph(s), if
+         requested. Its value may be the string 'none', 'cell', or
+         'struct', which is a trade-off between memory consumption and
+         clarity. Data output in cell format consume less memory, but are
+         not easy to decipher, whereas data output in struct format are
+         memory-intensive, but readily human-readable. The default is
+         'none', which does not export any tree graphs.
+      OPTS.memory_expansion: The ratio by which tree memory is expanded
+         when reallocation become necessary during tree building. Its
+         value must be greater than or equal to 1. The default is 1.61.
+      OPTS.nmc: The number of MCMC samples to make. Its value must be
+         greater than 0, and should be at least 100. The default is 199.
+      OPTS.entropy_estimation_method: A cell array of entropy estimation
+         methods. Please see the Spike Train Analysis Toolkit
+         documentation for more information, and corresponding entropy
+         options. The default is {'plugin'}.
+      OPTS.variance_estimation_method: A cell array of variance
+         estimation methods. Please see the Spike Train Analysis Toolkit
+         documentation for more information, and corresponding variance
+         options (listed with entropy options). The default is not to
+         perform any variance estimation.
+      OPTS.mcmc_iterations: The absolute number of iterations to run the
+         Markov chain Monte Carlo simulation (for each OPTS.nmc sample).
+         If OPTS.mcmc_min_acceptances probability vectors have been
+         accepted, this is also the minimum number of iterations. The
+         default is 100.
+      OPTS.mcmc_max_iterations: The maximum number of Markov chain Monte
+         Carlo iterations. The simulation runs OPTS.mcmc_iterations sized
+         batches of iterations until OPTS.mcmc_min_acceptances probability
+         vectors are accepted, or this number is reached. The default is
+         10000.
+      OPTS.mcmc_min_acceptances: The minimum number of Markov chain Monte
+         Carlo acceptances, that is the number of acceptable probability
+         vectors. The default is 20.
+
+   Y = CTWMCMC(X_STREAM,X_REPLICA) uses default options and parameters.
+
+   [Y,OPTS_USED] = CTWMCMC(X_STREAM,X_REPLICA) or [Y,OPTS_USED] =
+   CTWMCMC(X_STREAM,X_REPLICA,OPTS) additionally return the options used.
+
+   See also <a href="directbin.html" class="code" title="">DIRECTBIN</a>, <a href="ctwmcmctree.html" class="code" title="">CTWMCMCTREE</a>, <a href="ctwmcmcsample.html" class="code" title="">CTWMCMCSAMPLE</a>, <a href="ctwmcmcinfo.html" class="code" title="function [Y, opts_used] = ctwmcmcinfo(X,rep_binned,opts)">CTWMCMCINFO</a>.</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+<li><a href="ctwmcmcbridge.html"><tt>ctwmcmcbridge</tt></a> CTWMCMCBRIDGE Build CTW tree graph(s) and make MCMC samples.</li><li><a href="ctwmcmcinfo.html"><tt>ctwmcmcinfo</tt></a> CTWMCMCINFO Estimate information from CTW tree based entropy estimates.</li><li><a href="ctwmcmcsample.html"><tt>ctwmcmcsample</tt></a> CTWMCMCSAMPLE Perform MCMC sampling of entropy on CTW tree graph(s).</li><li><a href="ctwmcmctree.html"><tt>ctwmcmctree</tt></a> CTWMCMCTREE Build full CTW tree graph(s) from data.</li><li><a href="directbin.html"><tt>directbin</tt></a> DIRECTBIN Bin spike trains for direct method analysis.</li></ul>
+This function is called by:
+<ul>
+</ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

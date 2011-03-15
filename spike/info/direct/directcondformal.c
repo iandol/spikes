@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -41,6 +41,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mexErrMsgIdAndTxt("STAToolkit:directcondformal:numArgs","1 or 2 input arguments required.");
   if((nlhs<1) | (nlhs>2))
     mexErrMsgIdAndTxt("STAToolkit:directcondformal:numArgs","1 or 2 output argument required.");
+
+  /* check input type */
+  if(!mxIsCell(prhs[0]))
+    mexErrMsgIdAndTxt("STAToolkit:directcondformal:badInput","First input must be a cell array.");
 
   /* get or set options */
   if(nrhs<2)

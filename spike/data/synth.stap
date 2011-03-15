@@ -2,7 +2,7 @@
 datafile=DATAFILE_FULL_PATH;
 #
 # Site metadata
-site=1; label=only one cell; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000000
+site=1; label=only one cell; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000000;
 #
 # Category metadata
 category=1; label=0;

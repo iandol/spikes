@@ -3,7 +3,7 @@
 <head>
   <title>binlessembed (Spike Train Analysis Toolkit)</title>
   <meta name="keywords" content="binlessembed">
-  <meta name="description" content="BINLESSEMBED Embed the spike trains.">
+  <meta name="description" content="BINLESSEMBED Embed the data with the Legendre polynomials.">
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
   <meta name="robots" content="index, follow">
@@ -22,19 +22,31 @@
 
 <h1>binlessembed</h1>
 
-<!-- <p><a name="_name"></a>BINLESSEMBED Embed the spike trains.</p> -->
+<!-- <p><a name="_name"></a>BINLESSEMBED Embed the data with the Legendre polynomials.</p> -->
 
-<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">BINLESSEMBED Embed the spike trains.
-   Y = BINLESSEMBED(X,OPTS) embeds the spike trains in cell array
-   X with Legendre polynomials. Y is a matrix with
-   OPTS.max_embed_dim columns. Future versions may feature other
-   embedding functions.
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment">BINLESSEMBED Embed the data with the Legendre polynomials.
+   Y = BINLESSEMBED(X,OPTS) embeds the data in cell array X with
+   Legendre polynomials. Y is a matrix with OPTS.max_embed_dim+1 or
+   OPTS.cont_max_embed_dim+1 columns, which contains the embedding
+   coordinates for all polynomials, from the zeroth order, up to the
+   specified maximum. Future versions may feature other embedding
+   functions.
 
    The options and parameters for this function are:
-      OPTS.min_embed_dim: The minimal embedding dimension. The
-         default is 1.  
-      OPTS.max_embed_dim: The maximal embedding dimension. The
-         default is 2.  
+      OPTS.recording_tag: The type of recording, namely, 'episodic'
+         (e.g. spike trains) or 'continuous' (e.g., LFP). If
+         unspecified, 'episodic' is assumed for backwards
+         compatibility.
+      OPTS.max_embed_dim: The maximal embedding dimension for
+         episodic data. The default is 2. (Related option
+         OPTS.min_embed_dim is used by BINLESSINFO.)
+      OPTS.cont_max_embed_dim: The maximal embedding dimension for
+         continuous data. The default is 2. (Related option
+         OPTS.cont_min_embed_dim is used by BINLESSINFO.)
+      OPTS.start_warp: The lower limit of the warping. This option is
+         only needed when using continuous data. The default is -1.
+      OPTS.end_warp: The upper limit of the warping. This option is
+         only needed when using continuous data. The default is 1.
 
    Y = BINLESSEMBED(X) uses the default options and parameters.
 
@@ -57,6 +69,6 @@ This function is called by:
 
 
 
-<hr><cite>Generated on Wed 26-Aug-2009 11:46:18 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
 </body>
 </html>

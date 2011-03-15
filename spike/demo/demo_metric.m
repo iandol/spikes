@@ -1,11 +1,26 @@
+%DEMO_METRIC Demo of the metric space method.
+
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%
+
+if isoctave
+    warning(['Due to differences in the figure handling and plotting functions ' ...
+        'between Matlab and Octave, this demo will not run in Octave. You may use ' ...
+        'this file as a template for your own analyses.']);
+	return;
+end
 
 path(path,'..');
 
 if(~exist('dataset','var'))
   dataset = input('Enter dataset label (\"drift\", \"synth\", or \"taste\"): ','s');
 end
-
-tic
 
 opts.clustering_exponent = -2;
 opts.unoccupied_bins_strategy = 0;
@@ -114,7 +129,6 @@ end
 info_jk_sem = sqrt((P_total-1)*var(temp_info_jk,1,1));
 
 %%% Plot results
-toc
 
 subplot(224);
 errorbar(1:length(opts.shift_cost),info_unjk,2*info_jk_sem);

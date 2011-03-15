@@ -1,14 +1,14 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
  *  under license "license.txt" included with distribution and
  *  at http://neurodatabase.org/src/license.
  */
+
 #include "../../shared/toolkit_c.h"
 #include "metric_c.h"
-/* #define DEBUG */
 
 int MetricDistSingleQKComp(struct options_metric *opts,
 				 int L,
@@ -39,10 +39,10 @@ int MetricDistSingleQKComp(struct options_metric *opts,
 	s = labels[j];
 	N = counts[j];
 
+#ifdef DEBUG
 	if(l%10000==0)
-	  printf("i=%d j=%d M=%d N=%d %d/%d=%3.1f \%\n",i,j,M,N,l,P_total*(P_total-1)/2,
-		 ((double)k)/((double)(P_total*(P_total-1)/2))*100
-		 );
+	  printf("i=%d j=%d M=%d N=%d %d/%d=%3.1f %%\n",i,j,M,N,l,P_total*(P_total-1)/2,((double)k)/((double)(P_total*(P_total-1)/2))*100);
+#endif
 
 	d[i][j][k]=DistSingleQK(a,b,r,s,M,N,L,(*opts).q[k],(*opts).k[k]);
 #ifdef DEBUG

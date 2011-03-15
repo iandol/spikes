@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -21,6 +21,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   int n,N,r,R;
   mxArray *mxwarped;
   int status;
+  int iscontinuous;
 
   if( (nrhs<1) | (nrhs>2) )
     mexErrMsgIdAndTxt("STAToolkit:binlessembed:numArgs","2 input arguments required.");
@@ -36,6 +37,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   ReadOptionsEmbedRange(opts);
 
+  /* check options */
+  if(opts->rec_tag_flag==0)
+  {
+    opts->rec_tag = (int)DEFAULT_REC_TAG;
+    opts->rec_tag_flag = 1;
+    mexWarnMsgIdAndTxt("STAToolkit:binlessembed:missingParameter","Option recording_tag was unspecified. Assuming 'episodic'.");
+  }
+  iscontinuous = (opts->rec_tag==1);
+  if(iscontinuous)
+    ReadOptionsWarpRange(opts);
+
   N = mxGetM(prhs[0]);
 
   warped = (double **)mxCalloc(N,sizeof(double *));
@@ -48,18 +60,23 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     n_vec[n] = mxGetN(mxwarped);
     warped[n] = mxGetPr(mxwarped);
 
-    if(IsSortedDouble(n_vec[n],warped[n])==0)
+    if(!iscontinuous && (IsSortedDouble(n_vec[n],warped[n])==0))
+    {
+      mxFree(opts);
+      mxFree(warped);
+      mxFree(n_vec);
       mexErrMsgIdAndTxt("STAToolkit:binlessembed:outOfOrder","Spike times out of order.");
+    }
   }
 
-  R = (*opts).D_max+1;
+  R = iscontinuous ? opts->D_max_cont+1 : opts->D_max+1;
 
   plhs[0] = mxCreateDoubleMatrix(N,R,mxREAL);
   embedded_temp = mxGetData(plhs[0]);
   embedded = mxMatrixDouble(N,R);
 
   /* Do computation */
-  status = BinlessEmbedComp(opts,warped,n_vec,N,embedded);
+  status = BinlessEmbedComp(opts,warped,n_vec,N,R,embedded);
 
   /* vectorize and transpose */
   for(n=0;n<N;n++)
@@ -75,7 +92,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   mxFree(warped);
   mxFree(n_vec);
-  mxFree(embedded);
+  mxFreeMatrixDouble(embedded);
 
   return;
 }

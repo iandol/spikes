@@ -7,7 +7,7 @@ function stawrite(X,filebase)
 %   See also STAREAD.
 
 %
-%  Copyright 2009, Weill Medical College of Cornell University
+%  Copyright 2010, Weill Medical College of Cornell University
 %  All rights reserved.
 %
 %  This software is distributed WITHOUT ANY WARRANTY
@@ -39,8 +39,15 @@ fprintf(meta_id,'datafile=%s%s%s;\n',absdir,filesep,datfilename);
 
 fprintf(meta_id,'#\n# Site metadata\n');
 for n=1:X.N
-  fprintf(meta_id,'site=%d; label=%s; recording_tag=%s; time_scale=%f; time_resolution=%f;\n', ...
-          n,char(X.sites(n).label),char(X.sites(n).recording_tag),X.sites(n).time_scale,X.sites(n).time_resolution);
+  if isfield(X.sites(n),'si_unit')
+      si_unit = X.sites(n).si_unit;
+      si_prefix = X.sites(n).si_prefix;
+  else
+      si_unit = 'none';
+      si_prefix = 1;
+  end
+  fprintf(meta_id,'site=%d; label=%s; recording_tag=%s; time_scale=%.15f; time_resolution=%.15f; si_unit=%s; si_prefix=%.15f;\n', ...
+          n,char(X.sites(n).label),char(X.sites(n).recording_tag),X.sites(n).time_scale,X.sites(n).time_resolution,si_unit,si_prefix);
 end
 
 %%%%%%%%%%%%%%%%%%
@@ -57,11 +64,11 @@ p_total=1;
 for m=1:X.M
   for p=1:X.categories(m).P
     for n=1:X.N
-      fprintf(meta_id,'trace=%d; catid=%d; trialid=%d; siteid=%d; start_time=%f; end_time=%f;\n', ...
+      fprintf(meta_id,'trace=%d; catid=%d; trialid=%d; siteid=%d; start_time=%.15f; end_time=%.15f;\n', ...
               p_total,m,p,n,X.categories(m).trials(p,n).start_time,X.categories(m).trials(p,n).end_time);
       
       for q=1:X.categories(m).trials(p,n).Q
-        fprintf(dat_id,'%f ',X.categories(m).trials(p,n).list(q));
+        fprintf(dat_id,'%.15f ',X.categories(m).trials(p,n).list(q));
       end
       fprintf(dat_id,'\n');
       p_total = p_total+1;

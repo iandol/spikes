@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>bootstrap_pr (Spike Train Analysis Toolkit)</title>
+  <meta name="keywords" content="bootstrap_pr">
+  <meta name="description" content="BOOTSTRAP_PR    Politis-Romano method for correlated bootstrap">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+
+<p><a name="_top"></a>
+<div>
+<a href="../index.html">Spike Train Analysis Toolkit Documentation</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<a href="index.html">Spike Train Analysis Toolkit Function Reference</a>&nbsp;<img src="http://www.mathworks.com/access/helpdesk/help/arrowr.gif">&nbsp;<tt>bootstrap_pr</tt>
+</div>
+</p>
+
+<!-- -->
+<p><div class="box"><strong>Spike Train Analysis Toolkit</strong></div></p>
+
+<h1>bootstrap_pr</h1>
+
+<!-- <p><a name="_name"></a>BOOTSTRAP_PR    Politis-Romano method for correlated bootstrap</p> -->
+
+<p><font size="+1"><a name="_description"></a><div class="fragment"><pre class="comment"> BOOTSTRAP_PR    Politis-Romano method for correlated bootstrap
+
+ usage:   [T] = bootstrap_pr(A, N, L); 
+
+ arguments:   A - range of integers 1:A to perform bootstrap on
+              N - length of integers to select bootstraps from
+              L - average length of bootstrap blocks. Each 
+                  bootstrap block has length k, such that:
+                   1. P(k) = q*(1-q)^(k-1)
+                   2. (P(k) * k&gt; = L
+                   3. q = 1/L  
+
+ outputs:     T - Nx1 vector of bootstrap indices
+
+ This function performs the 'stationary bootstrap' of integers
+ 1:N according together the method detailed in:
+
+     Politis &amp; Romano (1994) Journal Amer. Stat. Assoc.
+
+ This algorithm is used for drawing bootstrap samples from a 
+ correlated time series indexed by the integers outputted from
+ this function.
+
+ Algorithm: We start with a random starting location, and with 
+ probability q the next value is drawn again, and with probability
+ (1-p) it is consecutive from the previous value.
+
+ Original coding: Matt Kennel 2004
+ Edited: Shlens 2006-02-14</pre></div></font></p>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>Cross-reference information</h2>
+
+<p>This function calls:
+<ul>
+</ul>
+This function is called by:
+<ul>
+<li><a href="correlated_bootstrap.html"><tt>correlated_bootstrap</tt></a> CORRELATED_BOOTSTRAP    Calculate correlated bootstrap samples of P(X(t))</li></ul>
+</p>
+<!-- crossreference -->
+
+
+
+<hr><cite>Generated on Fri 12-Feb-2010 15:32:32 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</cite>
+</body>
+</html>

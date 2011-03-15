@@ -1,0 +1,46 @@
+# Data filename
+datafile=DATAFILE_FULL_PATH;
+#
+# Site metadata
+site=1; label=unit_L410106s; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000000;
+site=2; label=unit_L410106t; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000000;
+#
+# Category metadata
+category=1; label= condition 1;
+category=2; label= condition 5;
+category=3; label= condition 9;
+category=4; label= condition 13;
+#
+# Trace metadata
+trace=1; catid=1; trialid=1; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=2; catid=1; trialid=1; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=3; catid=1; trialid=2; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=4; catid=1; trialid=2; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=5; catid=1; trialid=3; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=6; catid=1; trialid=3; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=7; catid=1; trialid=4; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=8; catid=1; trialid=4; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=9; catid=2; trialid=1; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=10; catid=2; trialid=1; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=11; catid=2; trialid=2; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=12; catid=2; trialid=2; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=13; catid=2; trialid=3; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=14; catid=2; trialid=3; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=15; catid=2; trialid=4; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=16; catid=2; trialid=4; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=17; catid=3; trialid=1; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=18; catid=3; trialid=1; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=19; catid=3; trialid=2; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=20; catid=3; trialid=2; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=21; catid=3; trialid=3; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=22; catid=3; trialid=3; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=23; catid=3; trialid=4; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=24; catid=3; trialid=4; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=25; catid=4; trialid=1; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=26; catid=4; trialid=1; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=27; catid=4; trialid=2; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=28; catid=4; trialid=2; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=29; catid=4; trialid=3; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=30; catid=4; trialid=3; siteid=2; start_time=0.000000; end_time=0.947000;
+trace=31; catid=4; trialid=4; siteid=1; start_time=0.000000; end_time=0.947000;
+trace=32; catid=4; trialid=4; siteid=2; start_time=0.000000; end_time=0.947000;

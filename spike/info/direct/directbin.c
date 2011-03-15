@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009, Weill Medical College of Cornell University
+ *  Copyright 2010, Weill Medical College of Cornell University
  *  All rights reserved.
  *
  *  This software is distributed WITHOUT ANY WARRANTY
@@ -72,7 +72,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
   
   if(opts->Delta <= 0)
-    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","counting_bin_size must be positive. It is currently set to %f.\n",opts[0].Delta);
+    {
+      mxFree(opts);
+      mxFreeInput(X); 
+      mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","counting_bin_size must be positive. It is currently set to %f.\n",opts[0].Delta);
+    }
 
   if(opts->words_per_train_flag==0)
     {
@@ -82,7 +86,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
 
   if(opts->words_per_train <= 0)
-    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","words_per_train must be positive. It is currently set to %d.\n",opts[0].words_per_train);
+    {
+      mxFree(opts);
+      mxFreeInput(X); 
+      mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","words_per_train must be positive. It is currently set to %d.\n",opts[0].words_per_train);
+    }
 
  if(opts->legacy_binning_flag==0)
     {
@@ -92,7 +100,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
 
   if((opts->legacy_binning!=0) & (opts->legacy_binning!=1))
-    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option legacy_binning set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",opts[0].legacy_binning);
+    {
+      mxFree(opts);
+      mxFreeInput(X); 
+      mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option legacy_binning set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",opts[0].legacy_binning);
+    }
 
  if(opts->letter_cap_flag==0)
     {
@@ -102,7 +114,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
 
   if(opts->letter_cap<0)
-    mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option letter_cap set to an invalid value. Must be a positive integer or Inf. It is currently set to %d.\n",opts[0].letter_cap);
+    {
+      mxFree(opts);
+      mxFreeInput(X); 
+      mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option letter_cap set to an invalid value. Must be a positive integer or Inf. It is currently set to %d.\n",opts[0].letter_cap);
+    }
 
   if((*X).N>1)
     {
@@ -114,7 +130,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	}
 
       if((opts->sum_spike_trains!=0) & (opts->sum_spike_trains!=1))
-	mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option sum_spike_trains set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",(*opts).sum_spike_trains);
+        {
+          mxFree(opts);
+          mxFreeInput(X); 
+	  mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option sum_spike_trains set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",(*opts).sum_spike_trains);
+        }
       
       if(opts->permute_spike_trains_flag==0)
 	{
@@ -124,7 +144,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	}
 
       if((opts->permute_spike_trains!=0) & (opts->permute_spike_trains!=1))
-	mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option permute_spike_trains set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",(*opts).permute_spike_trains);
+        {
+          mxFree(opts);
+          mxFreeInput(X); 
+	  mexErrMsgIdAndTxt("STAToolkit:directbin:invalidValue","Option permute_spike_trains set to an invalid value. Must be 0 or 1. It is currently set to %d.\n",(*opts).permute_spike_trains);
+        }
     }
 
   P_total = GetNumTrials(X);
@@ -144,7 +168,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   /* Do computation */
   status = DirectBinComp(X,opts,(*opts).words_per_train*P_total,W,P_vec,binned);
   if(status==EXIT_FAILURE)
-    mexErrMsgIdAndTxt("STAToolkit:directbin:failure","directbin failed.");
+    {
+      mxFree(opts);
+      mxFreeInput(X); 
+      mxFreeMatrixInt(binned);
+      mxFree(P_vec);
+      mexErrMsgIdAndTxt("STAToolkit:directbin:failure","directbin failed.");
+    }
 
   /* Create binned cell array */
   plhs[0] = mxCreateCellMatrix((*X).M,(*opts).words_per_train);

@@ -20,5 +20,18 @@
 %
 %   [Y,OPTS_USED] = BINLESSWARP(X) or [Y,OPTS_USED] =
 %   BINLESSWARP(X,OPTS) additionally return the options used.
+%
+%   Note that BINLESSWARP currently has no effect on continuous data.
+%   That is, if OPTS.recording_tag='continuous', OPTS.warping_strategy
+%   will be set to 0, and Y will be equal to X.
 % 
 %   See also BINLESSINFO, BINLESSEMBED, BINLESSINFO.
+
+%
+%  Copyright 2010, Weill Medical College of Cornell University
+%  All rights reserved.
+%
+%  This software is distributed WITHOUT ANY WARRANTY
+%  under license "license.txt" included with distribution and
+%  at http://neurodatabase.org/src/license.
+%
