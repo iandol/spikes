@@ -566,7 +566,11 @@ function PrevFileButton_Callback(hObject, eventdata, handles)
 global sv;
 global data;
 if strcmp(sv.loaded,'yes')
-	sv.reload=[data.filename ' | Cell ' num2str(data.cell)];
+	if data.zipload == true
+		sv.reload = [data.sourcepath ' | Cell ' num2str(data.cell)];
+	else
+		sv.reload=[data.filename ' | Cell ' num2str(data.cell)];
+	end
 	sv.loadtype='previous';
 	spikes('Load');
 end
@@ -579,7 +583,11 @@ function NextFileButton_Callback(hObject, eventdata, handles)
 global sv;
 global data;
 if strcmp(sv.loaded,'yes')
-	sv.reload=[data.filename ' | Cell ' num2str(data.cell)];
+	if data.zipload == true
+		sv.reload = [data.sourcepath ' | Cell ' num2str(data.cell)];
+	else
+		sv.reload=[data.filename ' | Cell ' num2str(data.cell)];
+	end
 	sv.loadtype='next';
 	spikes('Load');
 end

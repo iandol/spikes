@@ -59,6 +59,20 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+if ismac
+	if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
+		mkdir(['~' filesep 'MatlabFiles' filesep]);
+	end
+	rlist.usingmac=1;
+	rlist.basepath=['~' filesep 'MatlabFiles' filesep];
+elseif ispc
+	if ~exist('c:\MatlabFiles','dir')
+		mkdir('c:\MatlabFiles')
+	end
+	rlist.usingmac=0;
+	rlist.basepath=['c:' filesep 'MatlabFiles' filesep];
+end
 rlist=[];
 rlist.format='DOC';
 rlist.size=1;
@@ -146,7 +160,7 @@ function RepLoad_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global rlist;
 
-[fn,pn]=uigetfile({'*.smr;*.txt;*.mat','All Spikes Filetypes (*.smr *.txt *.mat)';'*.*','All Files'},'Select File Type to Load:','MultiSelect','on');
+[fn,pn]=uigetfile({'*.zip;*.smr;*.txt;*.mat','All Spikes Filetypes (*.zip *.smr *.txt *.mat)';'*.*','All Files'},'Select File Type to Load:','MultiSelect','on');
 
 if ~iscell(fn)
 	fn={fn};
@@ -865,7 +879,7 @@ out=['report.' rlist.format];
 [fn,pn]=uiputfile('*.*','File to Save Report in',out);
 rlist.fn=fn;
 rlist.pn=pn;
-save 'c:\report.mat' rlist;
+save([rlist.basepath  'report.mat'], rlist);
 reportout=['-o' rlist.pn rlist.fn];
 reporttype=['-f' rlist.format];
 report('spikereport',reportout,reporttype);
@@ -1069,7 +1083,7 @@ function RepExit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global rlist
 
-save c:\reportbak.mat rlist
+save([rlist.basepath  'reportbackup.mat'], rlist);
 close(gcf);
 
 
@@ -1144,7 +1158,7 @@ out=['reportSD.' rlist.format];
 [fn,pn]=uiputfile('*.*','File to Save Report in',out);
 rlist.fn=fn;
 rlist.pn=pn;
-save 'c:\report.mat' rlist;
+save([rlist.basepath  'report.mat'], rlist);
 reportout=['-o' rlist.pn rlist.fn];
 reporttype=['-f' rlist.format];
 report('spikereportSD',reportout,reporttype);

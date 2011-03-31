@@ -44,901 +44,2174 @@ global automeasure
 global txtcomment		%these store vsx generated data info text files
 global txtprotocol	%same
 
-%---------------------------------------------------Start------------------------------------------
+%--------------------------------------------Start------------------------------------------
 
 if nargin<1;
 	action='Initialize';
 end
 
 switch(action)			%As we use the GUI this switch allows us to respond to the user input
-
-	%----------------------------------------------------------------------
-case 'Initialize'
-	%----------------------------------------------------------------------
-	sv=[];
-	data=[];
-	rlist=[];
-	sv.version='SPIKES: V1.83a';
-	if ismac
-		if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
-			mkdir(['~' filesep 'MatlabFiles' filesep]);
-		end
-		sv.usingmac=1;
-		sv.historypath=['~' filesep 'MatlabFiles' filesep];
-		sv.temppath=tempdir;
-		oldlook=javax.swing.UIManager.getLookAndFeel;
-		javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
-	elseif ispc
-        if ~exist('c:\MatlabFiles','dir')
-            mkdir('c:\MatlabFiles')
-        end
-		sv.usingmac=0;
-		sv.historypath=['c:' filesep 'MatlabFiles' filesep];
-		sv.temppath=tempdir;
-	end
-	sv.uihandle=spikes_UI; %our GUI file
-	if ismac
-		javax.swing.UIManager.setLookAndFeel(oldlook);
-	end
-	figpos(2);	%position the figure
-	set(sv.uihandle,'Name', [sv.version ' | Started at ' datestr(now)]);
-	colormap(jet(256)); %this gives us a much higher resolution colormap
-	%-------The following sv structure sets up the GUI interface structure--
-	sv.BinWidth=10;
-	sv.StartMod=1;
-	sv.EndMod=Inf;
-	sv.StartTrial=1; 
-	sv.EndTrial=Inf;
-	sv.Wrapped=1;
-	sv.AnalysisMethod=1;	
-	sv.firstunit=1;
-	sv.loop=0;
-	sv.HeldVariable=3;
-	sv.HeldValue=1;
-	sv.PropAxis=1;
-	sv.PlotType='Raw Data';
-	sv.ShadingType='interp';
-	sv.Lighting='phong';
-	sv.SmoothType='none';
-	sv.SmoothValue=5;
-	sv.CMap='jet';
-	sv.LightAdd='none';
-	sv.reload='no';
-	sv.loadtype='';
-	sv.loaded='no';
-	sv.ErrorMode='Standard Error';
-	sv.ticks='out';
-	sv.layer='top';
-	sv.box='on';
-	sv.auto='no';
-	sv.xval=1;
-	sv.yval=1;
-	sv.zval=1;
-	sv.xlock=0;
-	sv.ylock=0;
-	sv.zlock=0;
-	sv.xholdold=0;
-	sv.yholdold=0;
-	sv.zholdold=0;
-	%-----------------------------------------------------------------------
-	sv.mint=0;
-	sv.maxt=inf;
-	automeasure=0; 			%used by temporal movie creator
-
-	history='';
-	shistory='';
-	paths='';
-	if exist([sv.historypath 'history.mat'],'file') == 2
-		load([sv.historypath 'history.mat']);
-		set(gh('spikehistory'),'String',history);
-	else
-		set(gh('spikehistory'),'String',' ');
-	end
-	if exist([sv.historypath 'shistory.mat'],'file') == 2
-		load([sv.historypath 'shistory.mat']);
-		if length(shistory)>10
-			set(gh('SSliceHistory'),'String',shistory(end-9:end));
-		else
-			set(gh('SSliceHistory'),'String',shistory);
-		end
-	end
 	
-	set(gh('CMapMenu'),'String',{'jet';'jet2';'hot';'rbmap';'gray';'gray1';'gray2';'hsv';'prism';'colorcube';'bone';'copper';'pink';'summer';'winter';'autumn';'spring'});
-	set(gh('ErrorMenu'),'String',{'Standard Error';'Standard Deviation';'Fano Factor';'Coefficient of Variation';'2 StdDevs';'3 StdDevs';'2 StdErrs';'Variance'});
-	set(gh('ErrorMenu'),'Value',1);
-	set(gh('AxisMenu'),'String',{'auto';'on';'off';'normal';'tight';'vis3d';'equal';'square';'image';'------------';'Axis Above Data';'Axis Below Data';'Ticks Facing In';'Ticks Facing Out';'Axis Box On';'Axis Box Off';'Flip X and Y';'Y Axis Normal';'Y Axis Reverse';'------------';'Auto Renderer';'Painters Renderer';'ZBuffer Renderer';'OpenGL Renderer'});
-	set(gh('AnalysisMenu'),'String',{'Mean';'Peak 3 bin';'Peak 1 Bin';'Count';'A/B Ratio';'FFT'});
-	set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
-	set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
-	set(gh('SPlotMenu'),'Value',7);
-	set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-	set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
-	set(gcf,'DefaultLineLineWidth',1.5);
-	set(gcf,'DefaultAxesLineWidth',1.5);
-	set(gcf,'defaultaxesfontname','Georgia');
-	set(gcf,'defaulttextfontname','Georgia');
-	set(gcf,'defaulttextfontsize',8);
-	set(gca,'Layer','top');						%ticks go over data
-	set(gca,'TickDir','out');					%get ticks going out
-	set(gh('SMinEdit'),'UserData','no');		%these initialize the min and max time boxes
-	set(gh('SMaxEdit'),'UserData','no');		%...
-	set(gca,'tag','SpikeFigMainAxes');			%make sure axes have right name
-	set(gcf,'tag','SpikeFig');					%ditto for the figure
-	if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end %delete any previous data
-
-	if sv.usingmac==1
-		sv.matlabroot=matlabroot;
-		mpath=path;
-		sv.userroot=regexpi(mpath,'([^:]+(Spikes|User)):','tokens','once');
-        if isempty(sv.userroot)
-            close(sv.uihandle);
-				errordlg('OS X: Cannot find Spikes parent directory');
-            error('Cannot find Spikes parent directory');
-        end
-		sv.userroot=sv.userroot{1};
-		%javax.swing.UIManager.setLookAndFeel('com.apple.laf.AquaLookAndFeel');
-	else
-		sv.matlabroot=regexprep(matlabroot,'Program files','Progra~1','ignorecase');
-		if regexp(sv.matlabroot,'2006b')
-			sv.matlabroot=regexprep(sv.matlabroot,'2006b','2007a');
+	%----------------------------------------------------------------------
+	case 'Initialize'
+	%----------------------------------------------------------------------
+		sv=[];
+		data=[];
+		rlist=[];
+		sv.version='SPIKES: V1.90b';
+		if ismac
+			if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
+				mkdir(['~' filesep 'MatlabFiles' filesep]);
+			end
+			sv.matlabroot=matlabroot;
+			sv.usingmac=1;
+			sv.historypath=['~' filesep 'MatlabFiles' filesep];
+			sv.temppath=tempdir;
+			oldlook=javax.swing.UIManager.getLookAndFeel;
+			javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
+		elseif ispc
+			if ~exist(['c:' filesep 'MatlabFiles' filesep],'dir')
+				mkdir(['c:' filesep 'MatlabFiles' filesep])
+			end
+			sv.matlabroot=regexprep(matlabroot,'Program files','Progra~1','ignorecase');
+			sv.usingmac=0;
+			sv.historypath=['c:' filesep 'MatlabFiles' filesep];
+			sv.temppath=tempdir;
 		end
-		mpath=path;
-		sv.userroot=regexpi(mpath,'([^;]+(user|Spikes));','tokens','once');
-		sv.userroot=sv.userroot{1};
-		%javax.swing.UIManager.setLookAndFeel('com.sun.java.swing.plaf.windows.WindowsLookAndFeel');
 		
-	end
-	
-	if isfield(paths,'matsavepath')
-		cv.matsavepath=paths.matsavepath;
-	end
-	if isfield(paths,'matloadpath')
-		sv.matloadpath=paths.matloadpath;
-	end
-	if isfield(paths,'dataloadpath')
-		sv.dataloadpath=paths.dataloadpath;
-		cd(sv.dataloadpath);
-	end
-	  
- 	%-----------------------------------------------------------------------------------------
-case 'ChoosePlot'
-	%-----------------------------------------------------------------------------------------
-
-	ChoosePlot;
-
-	%------------------------------------------Loading the data-------------------------------------
-case 'Load'
-	%-----------------------------------------------------------------------------------------------
-	close(gh('MovieToolFig')); 	
-	
-	startclock=clock;
-	startcpu=cputime;
-	
-	switch(sv.reload)%see if we have to reload the data or not
-	case 'yes'
-		set(gh('LoadText'),'String','Reloading Data');
-		meta=data.meta;
-		info=data.info;
-		t=data.filetype;
-		data=struct;
-		data.meta=meta;
-		data.info=info;
-		data.filetype=t;
+		sv.userroot=fileparts(mfilename('fullpath'));
+		
+		sv.uihandle=spikes_UI; %our GUI file
+		if ismac
+			javax.swing.UIManager.setLookAndFeel(oldlook);
+		end
+		figpos(2);	%position the figure
+		set(sv.uihandle,'Name', [sv.version ' | Started at ' datestr(now)]);
+		colormap(jet(256)); %this gives us a much higher resolution colormap
+		%-------The following sv structure sets up the GUI interface structure--
+		sv.BinWidth=10;
+		sv.StartMod=1;
+		sv.EndMod=Inf;
+		sv.StartTrial=1;
+		sv.EndTrial=Inf;
+		sv.Wrapped=1;
+		sv.AnalysisMethod=1;
+		sv.firstunit=1;
+		sv.loop=0;
+		sv.HeldVariable=3;
+		sv.HeldValue=1;
+		sv.PropAxis=1;
+		sv.PlotType='Raw Data';
+		sv.ShadingType='interp';
+		sv.Lighting='phong';
+		sv.SmoothType='none';
+		sv.SmoothValue=5;
+		sv.CMap='jet';
+		sv.LightAdd='none';
 		sv.reload='no';
-	otherwise
-		if ~strcmp(sv.auto,'report'); sv.auto='no'; end
-		set(gh('LoadText'),'String','Data Loading');		
-		%This checks to see if we are called with a load history or to open new data.
-		n=regexpi(sv.reload,'^(?<name>[^|]+)(?:.+)(?<num>\d)','names'); %part of the file history reloading mechanism
-		if ~isempty(n) %&& ~strcmp(sv.loadtype,'') %we already have a path			
-			switch sv.loadtype
-			case 'previous'
-				sv.loadtype='';
-				nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
-				number=str2double(nn.num)-1;
-				ind=regexp(n.name,'/'); %we only want to replave the number for the filename and preceding directory, not anywhere else in the path
-				if number<10
-					name=regexprep(n.name(ind(end-1)+1:end), nn.num, ['0' num2str(number)]);
-					name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
-				else
-					name=regexprep(n.name(ind(end-1)+1:end), nn.num, num2str(number));
-					name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
-				end
-				if ~strcmp(filesep,'/'); name=regexprep(name,'\/','\\'); end
-				[p,basefilename,e]=fileparts(name);
-				name=[p '.smr'];
-				if ~exist(name,'file')
-					errordlg('No previous file');
-					error('No previous file');
-				end
-				sv.auto='yes';
-			case 'next'
-				sv.loadtype='';
-				nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
-				number=str2double(nn.num)+1;
-				ind=regexp(n.name,'/'); %we only want to replace the number for the filename and preceding directory, not anywhere else in the path
-				if number<10
-					name=regexprep(n.name(ind(end-1)+1:end), nn.num, ['0' num2str(number)]);
-					name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
-				else
-					name=regexprep(n.name(ind(end-1)+1:end), nn.num, num2str(number));
-					name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
-				end
-				if ~strcmp(filesep,'/'); name=regexprep(name,'\/','\\'); end
-				[p,basefilename,e]=fileparts(name);
-				name=[p '.smr'];
-				if ~exist(name,'file')
-					errordlg('No next file');
-					error('No next file');
-				end
-				sv.auto='yes';
-			otherwise
-				name=n.name(1:end-1);
-			end
-			[p,basefilename,e]=fileparts(name);
-			pn=[p filesep];
-			fn=[basefilename e];
-			sv.firstunit=str2double(n.num);
-			set(gh('CellMenu'),'Value',str2double(n.num));
-			sv.reload='no';
-		else %we need the user to specify a file
-			[fn,pn]=uigetfile({'*.smr;*.txt;*.doc','All Spikes Filetypes (*.smr *.txt *.doc)'; ...
-				'*.smr','VS RAW DATA File (SMR)';'*.txt','VSX Output File (TXT)'; ...
-				'*.doc','XCor Output File (DOC)';'*.*','All Files'},'Select File Type to Load:');
-			if isequal(fn,0)||isequal(pn,0);set(gh('LoadText'),'String','No Data Loaded');errordlg('No File Selected or Found!');error('File was not selected by user / not found.');end
-			[p,basefilename,e]=fileparts([pn fn]);
-		end		
-		%we have a file so we reset our data and axes
-		data=struct;
-		cla;  reset(gca);  set(gca,'Tag','SpikeFigMainAxes');	%this resets the axis
-		set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
-		automeasure=0;
-		
-		if regexpi(e,'\.zip')
-			if (strcmp(sv.auto,'report') || strcmp(sv.auto,'yes') ) && isdir([p filesep basefilename])
-				pn2=basefilename;
-				data.filetype = 'txt';
-			else
-				data.zipload=true;
-				data.filetype=text;
-				zs=zipspikes(struct('action','load','sourcepath','~/test.zip'));
-			end
-			
-		elseif regexpi(e,'\.smr') %raw SMR File so we need to run it through VSX first
-			if (strcmp(sv.auto,'report') || strcmp(sv.auto,'yes') ) && isdir([p filesep basefilename])
-				pn2=basefilename;
-				data.filetype = 'txt';
-			else
-				if isdir([p filesep basefilename]) %stops annoying "directory alread exists" messages
-					cd(sv.historypath);
-					disp('Deleting existing directory...');
-					rmdir([p filesep basefilename],'s');
-					cd(p);
-				end
-				[s,w]=dos(['"',sv.userroot,'\various\vsx\vsx.exe" "',pn,fn,'"']);
-                if s>0; error(w); end
-				pn2 = fn(1:find(fn(:)=='.')-1);
-				if ~exist([pn,pn2],'dir'); error('Sorry VSX cannot load the data!!! Make sure files do not have the read-only attribute set...'); end
-				data.filetype = 'smr';
-			end
-			data.meta=loadvstext(strcat(pn,pn2,filesep,pn2,'.txt'));
-			txtcomment=textread(strcat(pn,pn2,filesep,pn2,'.cmt'),'%s','delimiter','\n','whitespace','');
-			txtprotocol=textread(strcat(pn,pn2,filesep,pn2,'.prt'),'%s','delimiter','\n','whitespace','');
-			data.info=['===============PROTOCOL================';txtprotocol(2:end);'===============COMMENTS================';txtcomment(9:end)];
-		elseif regexpi(e,'\.txt')
-			data.filetype = 'txt';
-			data.meta=loadvstext([pn,fn]);
-			txtcomment=textread([pn,strrep(fn,'.txt','.cmt')],'%s','delimiter','\n','whitespace','');
-			txtprotocol=textread([pn,strrep(fn,'.txt','.prt')],'%s','delimiter','\n','whitespace','');
-			data.info=['===============PROTOCOL================';txtprotocol(2:end);'===============COMMENTS================';txtcomment(9:end)];
-		elseif regexpi(e,'\.doc')
-			errordlg('Sorry, .doc files are an old format not safe to use, please use the .SMR!');
-			error('Sorry, .doc files are an old format not safe to use, please use the .SMR!');
-			%dos([sv.matlabroot,'\user\Frogbit\frogbitrun.exe ', sv.matlabroot,'\user\Frogbit\spikestrip1.FB ',pn,fn,]);
-			%data.filetype = 'doc';
-		elseif regexpi(e,'\.mat')
-			sv.pn=pn;
-			sv.fn=fn;
-			spikes('Load MAT');
-			return;
-		else
-			errordlg('Sorry, unsupported file type loaded!')
-			error('File selection error, unsupported file type loaded!')
-		end
-	end
-	[p,basefilename,e]=fileparts(data.meta.filename);	%seperate out the file from the path
-	cd(p);												%change to the directory where all the spike time files live
-	sv.dataloadpath=p;
-	data.meta.filename(data.meta.filename=='\')='/';	%stops annoying TeX interpertation errors
-	t=find(data.meta.filename=='/');
-	data.runname=data.meta.filename((t(end-2))+1:t(end));
-
-	silence_before_burst 	= str2double(get(gh('silence'),'String'))*10;
-	first_isi				= str2double(get(gh('firstisi'),'String'))*10;
-	subsequent_isi	   		= str2double(get(gh('subsisi'),'String'))*10;
-	number_burst			= str2double(get(gh('numberspikes'),'String'));
-	
-	if (get(gh('SCutTransient'),'Value')>0) %this gets a time for optinally cutting the first transient out of the data
-		cuttime=str2double(get(gh('STransientValue'),'String'))*10; %*10 converts into raw timebase from milliseconds
-	else
-		cuttime=0;
-	end
-
-	data.numvars=data.meta.numvars;
-	data.protocol.name=data.meta.protocol;
-	data.protocol.desc=data.meta.description;
-	data.protocol.filecomm=data.meta.comments;
-	data.protocol.date=data.meta.date;
-	data.repeats=data.meta.repeats;
-	data.error=[];
-
-	if strcmp(data.filetype,'smr') || strcmp(data.filetype,'txt')
-		data.cycles=data.meta.cycles;
-		data.trialtime=data.meta.trialtime;
-		data.modtime=data.meta.modtime;
-		if isfield(data.meta,'tempfreq')
-			data.tempfreq=data.meta.tempfreq;
-		else
-			data.tempfreq=[];
-		end
-	end
-
-	switch data.numvars
-	case 0   %this means we have no variables
-		%Setup GUI
-		sv.yholdold=0;
-		sv.xholdold=0;
-		sv.zholdold=0;
-		set(gh('HoldXText'),'String',' ');
-		set(gh('XHoldMenu'),'Value',1);
-		set(gh('XHoldMenu'),'String',' ');
-		set(gh('XHoldMenu'),'Enable','off');
-		set(gh('XHoldCheck'),'Enable','off');
-		set(gh('HoldYText'),'String',' ');
-		set(gh('YHoldMenu'),'Value',1);
-		set(gh('YHoldMenu'),'String',' ');
-		set(gh('YHoldMenu'),'Enable','off');
-		set(gh('YHoldCheck'),'Enable','off');
-		set(gh('HoldZText'),'String',' ');
-		set(gh('ZHoldMenu'),'Value',1);
-		set(gh('ZHoldMenu'),'String',' ');
-		set(gh('ZHoldMenu'),'Enable','off');
-		set(gh('ZHoldCheck'),'Enable','off');
-
-		%%%Disenables the 3D plotting options menus
-		if get(gh('SPlotMenu'),'Value')>6; set(gh('SPlotMenu'),'Value',6); end
-		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Point'});		
-		set(gh('STypeMenu'),'Enable','off');
-		set(gh('CMapMenu'),'Enable','off');
-		set(gh('ShadingMenu'),'Enable','off');
-		set(gh('LightMenu'),'Enable','off');
-		set(gh('LightingMenu'),'Enable','off');
-		set(gh('RotateButton'),'Enable','off');
-		set(gh('CMapButton'),'Enable','off');
-		set(gh('LabelButton'),'Enable','off');
-		set(gh('ColorEdit'),'Enable','off');
-		set(gh('CheckBox1'),'Enable','off');
-		set(gh('SmoothingMenu'),'Enable','off');
-
-		% This section extracts variable info and sets up the data structure
-		data.filename=data.meta.filename;
-		data.xtitle='';
-		data.xvalues=[];
-		data.xvalueso=data.xvalues;
-		data.xrange=1;
-		data.ytitle='';
-		data.yvalues=[];
-		data.yvalueso=data.yvalues;
-		data.yrange=1;
-		data.ztitle='';
-		data.zvalues=[];
-		data.zvalueso=data.zvalues;
-		data.zrange=1;
-		data.cell=sv.firstunit;
-		data.wrapped=sv.Wrapped;
-		data.binwidth=sv.BinWidth;
-		data.anal.error=-1;
-		data.anal.errormode=-1;
-		data.raw=cell(data.xrange);		%set up dimensions of our cell array
-		data.psth=cell(data.xrange);		%and for our resultant psth
-		data.bpsth=cell(data.xrange);		%for the burst psth
-		data.time=cell(data.xrange);		%and the timebase of the psth
-		data.rawspikes=cell(data.xrange);		%and the timebase of the psth
-		data.names=cell(data.xrange);		%original fileames for errorchecking
-		data.plotburst=0;					%locks us into burst analysis or not
-		data.plottonic=0;
-		data.measured=0;					%so rowland knows if someone has
-		data.fftinfnnpoints=[];				%to store infinity and Not-A-Number values for fft ratios
-		data.textload=0;
-		data.areaplot=0;
-
-		filename = [basefilename '.1'];
-		data.names=filename;
-		switch data.filetype
-		case 'doc'
-			x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
-		otherwise
-			x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
-		end
-		x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
-		data.raw{1}=x;
-		if ~isempty(x.error); data.error=x.error; end
-		[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-		[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-		if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-			sigma=str2double(get(gh('GaussEdit'),'String'));
-			psth=gausssmooth(time,psth,sigma);
-			bpsth=gausssmooth(time2,bpsth,sigma);
-		end
-		data.bpsth{1}=bpsth;
-		data.psth{1}=psth;
-		data.time{1}=time;
-		data.rawspikes{1}=rawspikes;
-		data.sums{1}=sums;
-		
-	case 1  %this means we have only 1 variable
-		%%%Change Hold X & Hold Y pull down menu labels to something
-		%%%meaningful
-		if strcmp(sv.loaded,'yes')
-			sv.xholdold=get(gh('XHoldMenu'),'Value');
-			sv.yholdold=0;
-			sv.zholdold=0;
-			sv.xholdoldval=get(gh('XHoldMenu'),'String');
-			sv.yholdoldval=[];
-			sv.zholdoldval=[];
-			if iscell(sv.yholdoldval)
-				sv.xholdoldval=str2double(sv.xholdoldval{sv.xholdold}); 
-			else
-				sv.xholdoldval=[];
-			end
-		end
-		set(gh('HoldXText'),'String','Held X Value');
-		set(gh('XHoldMenu'),'Value',1);
-		set(gh('XHoldMenu'),'String',' ');
-		set(gh('XHoldMenu'),'Enable','on');
-		set(gh('XHoldCheck'),'Enable','on');
-		set(gh('HoldYText'),'String','');
-		set(gh('YHoldMenu'),'Value',1);
-		set(gh('YHoldMenu'),'String',' ');
-		set(gh('YHoldMenu'),'Enable','off');
-		set(gh('YHoldCheck'),'Enable','off');
-		set(gh('HoldZText'),'String','');
-		set(gh('ZHoldMenu'),'Value',1);
-		set(gh('ZHoldMenu'),'String',' ');
-		set(gh('ZHoldMenu'),'Enable','off');
-		set(gh('ZHoldCheck'),'Enable','off');
-
-		%%%Set the plotting options
-		if get(gh('SPlotMenu'),'Value')>6; set(gh('SPlotMenu'),'Value',6); end
-		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve'});		
-		set(gh('STypeMenu'),'String',{'Normal';'Polar';'Polar+Error';'Cartesian Polar+Error'});
-		set(gh('STypeMenu'),'Enable','on');
-		set(gh('CMapMenu'),'Enable','off');
-		set(gh('ShadingMenu'),'Enable','off');
-		set(gh('LightMenu'),'Enable','off');
-		set(gh('LightingMenu'),'Enable','off');
-		set(gh('RotateButton'),'Enable','off');
-		set(gh('CMapButton'),'Enable','off');
-		set(gh('LabelButton'),'Enable','off');
-		set(gh('ColorEdit'),'Enable','off');
-		set(gh('CheckBox1'),'Enable','off');
-		set(gh('SmoothingMenu'),'String',{'none';'interpolated';'polynomial';'smoothed'});
-		set(gh('SmoothingMenu'),'Value',1);
-		set(gh('CheckBox1'),'Enable','on');
-
-		firstnumber=min(data.meta.matrix(:,1));   %tells us the first and last file to load
-		lastnumber=max(data.meta.matrix(:,1));
-		% This section extracts variable info and sets up the data structure
-		data.filename=data.meta.filename;
-		
-		data.xtitle=regexprep(data.meta.var{1}.title,'w\\o','with O');
-		data.xrange=data.meta.var{1}.range;
-		data.xvalues=data.meta.var{1}.values;
-		data.xvalueso=data.xvalues;
-		
-		data.ytitle='';
-		data.yvalues=[];
-		data.yrange=1;
-		data.yvalueso=data.yvalues;
-		
-		data.ztitle='';
-		data.zvalues=[];
-		data.zrange=1;
-		data.zvalueso=data.zvalues;
-		
-		data.cell=sv.firstunit;
-		data.wrapped=sv.Wrapped;
-		data.binwidth=sv.BinWidth;
-		data.anal.error=-1;
-		data.anal.errormode=-1;
-		data.raw=cell(1,data.xrange);		%set up dimensions of our cell array
-		data.psth=cell(1,data.xrange);		%and for our resultant psth
-		data.bpsth=cell(1,data.xrange);		%for the burst psth
-		data.time=cell(1,data.xrange);		%and the timebase of the psth
-		data.rawspikes=cell(1,data.xrange);		%and the timebase of the psth
-		data.sums=cell(1,data.xrange);		%and the timebase of the psth
-		data.names=cell(1,data.xrange);		%original fileames for errorchecking
-		data.plotburst=0;					%locks us into burst analysis or not
-		data.plottonic=0;
-		data.measured=0;					%so rowland knows if someone has
-		data.fftinfnnpoints=[];				%to store infinity and Not-A-Number values for fft ratios
-		data.textload=0;
-		data.areaplot=0;
-
-% 		h=waitbar(0,'Processing: binning data and finding bursts...');
-		for i=firstnumber:lastnumber
-			set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
-			drawnow;
-			filename = [basefilename '.' int2str(i)];
-			data.names{i}=filename;
-			switch data.filetype
-			case 'doc'
-				x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
-			otherwise
-				x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
-			end
-			x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
-			data.raw{i}=x;
-			if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
-			[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-			[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-			if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-				sigma=str2double(get(gh('GaussEdit'),'String'));
-				psth=gausssmooth(time,psth,sigma);
-				bpsth=gausssmooth(time2,bpsth,sigma);
-			end
-			data.bpsth{i}=bpsth;
-			data.psth{i}=psth;
-			data.time{i}=time;
-			data.rawspikes{i}=rawspikes;
-			data.sums{i}=sums;
-% 			waitbar(i/((data.xrange+1)-1));
-		end
-% 		close(h);
-
-	case 2 % we have 2 variables
-
-		%%%Makes sure that menus say the right thing and are enabled
-		if strcmp(sv.loaded,'yes')
-			sv.xholdold=get(gh('XHoldMenu'),'Value');
-			sv.yholdold=get(gh('YHoldMenu'),'Value');
-			sv.zholdold=0;
-			sv.xholdoldval=get(gh('XHoldMenu'),'String');
-			sv.yholdoldval=get(gh('YHoldMenu'),'String');
-			sv.zholdoldval='';
-			if iscell(sv.yholdoldval); 
-				sv.xholdoldval=str2double(sv.xholdoldval{sv.xholdold}); 
-			else
-				sv.xholdoldval=[];
-			end;
-			if iscell(sv.yholdoldval); 
-				sv.yholdoldval=str2double(sv.yholdoldval{sv.yholdold}); 
-			else
-				sv.yholdoldval=[];
-			end;
-		end
-		set(gh('HoldXText'),'String','Hold X Value');
-		set(gh('XHoldMenu'),'Value',1);
-		set(gh('XHoldMenu'),'String',' ');
-		set(gh('XHoldMenu'),'Enable','on');
-		set(gh('XHoldCheck'),'Enable','on');
-		set(gh('HoldYText'),'String','Hold Y Value');
-		set(gh('YHoldMenu'),'Value',1);
-		set(gh('YHoldMenu'),'String',' ')
-		set(gh('YHoldMenu'),'Enable','on');
-		set(gh('YHoldCheck'),'Enable','on');
-		set(gh('ZHoldMenu'),'Value',1);
-		set(gh('ZHoldMenu'),'String',' ');
-		set(gh('ZHoldMenu'),'Enable','off');
-		set(gh('ZHoldCheck'),'Enable','off');
-		set(gh('HoldZText'),'String','');
-
-		%%%Set the plotting options
-		if get(gh('SPlotMenu'),'Value')>7; set(gh('SPlotMenu'),'Value',7); end
-		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});		
-		set(gh('STypeMenu'),'Enable','on');
-		set(gh('CMapMenu'),'Enable','on');
-		set(gh('ShadingMenu'),'Enable','on');
-		set(gh('LightMenu'),'Enable','on');
-		set(gh('LightingMenu'),'Enable','on');
-		set(gh('RotateButton'),'Enable','on');
-		set(gh('CMapButton'),'Enable','on');
-		set(gh('LabelButton'),'Enable','on');
-		set(gh('ColorEdit'),'Enable','on');
-		set(gh('CheckBox1'),'Enable','on');
-		set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
-		set(gh('SmoothingMenu'),'Value',1);
-		set(gh('CheckBox1'),'Enable','on');
-
-		firstnumber=min(data.meta.matrix(:,1));   %tells us the first and last file to load
-		lastnumber=max(data.meta.matrix(:,1));
-
-		% This section extracts variable info and sets up the data structure
-		data.filename=data.meta.filename;
-
-		data.xtitle=regexprep(data.meta.var{1}.title,'w\\ o','with O');
-		data.xrange=data.meta.var{1}.range;
-		data.xvalues=data.meta.var{1}.values;
-		data.xvalueso=data.xvalues;
-
-		data.ytitle=regexprep(data.meta.var{2}.title,'w\\ o','with O');
-		data.yrange=data.meta.var{2}.range;
-		data.yvalues=data.meta.var{2}.values;
-		data.yvalueso=data.yvalues;
-
-		data.ztitle='';
-		data.zvalues=[];
-		data.zrange=1;
-		data.zvalueso=data.zvalues;
-
-		data.cell=sv.firstunit;
-		data.wrapped=sv.Wrapped;
-		data.binwidth=sv.BinWidth;
-		data.anal.error=-1;
-		data.anal.errormode=-1;
-		data.raw=cell(data.yrange,data.xrange);		%set up dimensions of our cell array
-		data.psth=cell(data.yrange,data.xrange);	%and for our resultant psth
-		data.bpsth=cell(data.yrange,data.xrange);
-		data.time=cell(data.yrange,data.xrange);	%and the timebase of the psth
-		data.rawspikes=cell(data.yrange,data.xrange);
-		data.sums=cell(data.yrange,data.xrange);
-		data.names=cell(data.yrange,data.xrange);
-		data.plotburst=0;
-		data.plottonic=0;
-		data.measured=0;		   					%so rowland knows if someone has
-		data.textload=0;
-		data.areaplot=0;
-
-% 		h=waitbar(0,'Processing: binning data and finding bursts...');
-		for i=firstnumber:lastnumber
-			set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
-			drawnow;
-			filename = strcat(basefilename,'.',int2str(i));
-			data.names{i}=filename;
-			switch data.filetype
-			case 'doc'
-				x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
-			otherwise
-				x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
-			end
-			x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
-			data.raw{i}=x;
-			if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
-			[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-			[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-			if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-				sigma=str2double(get(gh('GaussEdit'),'String'));
-				psth=gausssmooth(time,psth,sigma);
-				bpsth=gausssmooth(time2,bpsth,sigma);
-			end
-			data.bpsth{i}=bpsth;
-			data.psth{i}=psth;
-			data.time{i}=time;
-			data.rawspikes{i}=rawspikes;
-			data.sums{i}=sums;
-% 			waitbar(i/((data.xrange*data.yrange+1)-1));
-		end
-% 		close(h);
-
-	case 3  % we have 3 variables
-		%%%Makes sure that menus say the right thing and are enabled
-		if strcmp(sv.loaded,'yes')
-			sv.xholdold=get(gh('XHoldMenu'),'Value');
-			sv.yholdold=get(gh('YHoldMenu'),'Value');
-			sv.zholdold=get(gh('ZHoldMenu'),'Value');
-			sv.xholdoldval=get(gh('XHoldMenu'),'String');
-			sv.yholdoldval=get(gh('YHoldMenu'),'String');
-			sv.zholdoldval=get(gh('ZHoldMenu'),'String');
-			if iscell(sv.yholdoldval); 
-				sv.xholdoldval=str2double(sv.xholdoldval{sv.xholdold}); 
-			else
-				sv.xholdoldvalue=[];
-			end;
-			if iscell(sv.yholdoldval); 
-				sv.yholdoldval=str2double(sv.yholdoldval{sv.yholdold}); 
-			else
-				sv.yholdoldvalue=[];
-			end;
-			if iscell(sv.zholdoldval); 
-				sv.zholdoldval=str2double(sv.zholdoldval{sv.zholdold}); 
-			else
-				sv.zholdoldvalue=[];
-			end;
-		end
-		set(gh('HoldXText'),'String','Hold X Value');
-		set(gh('XHoldMenu'),'Value',1);
-		set(gh('XHoldMenu'),'String',' ');
-		set(gh('XHoldMenu'),'Enable','on');
-		set(gh('XHoldCheck'),'Enable','on');
-		set(gh('HoldYText'),'String','Hold Y Value');
-		set(gh('YHoldMenu'),'Value',1);
-		set(gh('YHoldMenu'),'String',' ')
-		set(gh('YHoldMenu'),'Enable','on');
-		set(gh('YHoldCheck'),'Enable','on');
-		set(gh('HoldZText'),'String','Hold Z Value');
-		set(gh('ZHoldMenu'),'Value',1);
-		set(gh('ZHoldMenu'),'String',' ');
-		set(gh('ZHoldMenu'),'Enable','on');
-		set(gh('ZHoldCheck'),'Enable','on');
-
-		%%%Set the plotting options
-		if get(gh('SPlotMenu'),'Value')>7; set(gh('SPlotMenu'),'Value',7); end
-		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
-		set(gh('STypeMenu'),'Enable','on');
-		set(gh('CMapMenu'),'Enable','on');
-		set(gh('ShadingMenu'),'Enable','on');
-		set(gh('LightMenu'),'Enable','on');
-		set(gh('LightingMenu'),'Enable','on');
-		set(gh('RotateButton'),'Enable','on');
-		set(gh('CMapButton'),'Enable','on');
-		set(gh('LabelButton'),'Enable','on');
-		set(gh('ColorEdit'),'Enable','on');
-		set(gh('CheckBox1'),'Enable','on');
-		set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
-		set(gh('SmoothingMenu'),'Value',1);
-		set(gh('CheckBox1'),'Enable','on');
-
-		% this section juggles all the variables around for selection
-		data.filename=data.meta.filename;
-
-		data.xtitle=regexprep(data.meta.var{1}.title,'w\\ o','with O');
-		data.xrange=data.meta.var{1}.range;
-		data.xvalues=data.meta.var{1}.values;
-		data.xvalueso=data.xvalues;
-
-		data.ytitle=regexprep(data.meta.var{2}.title,'w\\ o','with O');
-		data.yrange=data.meta.var{2}.range;
-		data.yvalues=data.meta.var{2}.values;
-		data.yvalueso=data.yvalues;
-		
-		data.ztitle=regexprep(data.meta.var{3}.title,'w\\ o','with O');
-		data.zrange=data.meta.var{3}.range;
-		data.zvalues=data.meta.var{3}.values;
-		data.zvalueso=data.zvalues;
-
-		%defaults for first run
-		data.cell=sv.firstunit;
-		data.wrapped=sv.Wrapped;
-		data.binwidth=sv.BinWidth;
-		data.anal.error=-1;
-		data.anal.errormode=-1;
-		% set up our data structure, using cells for each set of spikes
-		data.raw=cell(data.yrange,data.xrange,data.zrange);	   %set up dimensions of our cell array for sparse matrix
-		data.psth=cell(data.yrange,data.xrange,data.zrange);	  %and for our resultant psth
-		data.bpsth=cell(data.yrange,data.xrange,data.zrange);	%psth generated from burst spikes
-		data.time=cell(data.yrange,data.xrange,data.zrange);	  %the timebase of the psth
-		data.rawspikes=cell(data.yrange,data.xrange,data.zrange);
-		data.sums=cell(data.yrange,data.xrange,data.zrange);
-		data.names=cell(data.yrange,data.xrange,data.zrange);  %file names to track which data is where
-		data.plotburst=0;
-		data.plottonic=0;
-		data.measured=0;		   %so rowland knows if someone has
-		data.textload=0;
-		data.areaplot=0;
-		fileindex=find(data.meta.matrix(:,sv.HeldVariable+1)==sv.HeldValue); %index the files needed...
-
-		index=data.meta.matrix(:,2:4); %the list of variable values for each file
-
-		for i=1:data.xrange*data.yrange*data.zrange
-			xi=index(i,1);
-			yi=index(i,2);
-			zi=index(i,3);
-			set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
-			drawnow;
-			filename = [basefilename '.' int2str(i)];
-			data.names{yi,xi,zi}=filename;
-			switch data.filetype
-			case 'doc'
-				x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
-			otherwise
-				x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
-			end
-			x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
-			[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-			[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
-			if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-				sigma=str2double(get(gh('GaussEdit'),'String'));
-				psth=gausssmooth(time,psth,sigma);
-				bpsth=gausssmooth(time2,bpsth,sigma);
-			end
-			data.raw{yi,xi,zi}=x;
-			if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
-			data.bpsth{yi,xi,zi}=bpsth;
-			data.psth{yi,xi,zi}=psth;
-			data.time{yi,xi,zi}=time;
-			data.rawspikes{yi,xi,zi}=rawspikes;
-			data.sums{yi,xi,zi}=sums;
-		end
-	end
-
-	if data.numvars>1
-		yvals=num2str(data.yvalues);
-		yvals=regexprep(yvals,'\s+',' ');
-		set(gh('SYSlice'),'String',yvals);
-	end
-
-	switch data.numvars %now we set our variable selection menus
-	case 0
+		sv.loadtype='';
+		sv.loaded='no';
+		sv.ErrorMode='Standard Error';
+		sv.ticks='out';
+		sv.layer='top';
+		sv.box='on';
+		sv.auto='no';
 		sv.xval=1;
 		sv.yval=1;
 		sv.zval=1;
-		set(gh('SXSlice'),'String',' ');
-		set(gh('SYSlice'),'String',' ');
-	case 1
-		set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
-		if sv.xholdold>0 && sv.xholdold<=data.xrange && strcmp(sv.loaded,'yes');
-			set(gh('XHoldMenu'),'Value',sv.xholdold);
-		else
-			set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
-		end
-		sv.xval=get(gh('XHoldMenu'),'Value');
-		sv.yval=1;
-		sv.zval=1;
-		xvals=regexprep(num2str(data.xvalues),'\s+',' ');
-		set(gh('SXSlice'),'String',xvals);
-		set(gh('SYSlice'),'String',' ');
-	case 2		
-		set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
-		if sv.xholdold>0 && sv.xholdold<=data.xrange && strcmp(sv.loaded,'yes');
-			set(gh('XHoldMenu'),'Value',sv.xholdold);
-		else
-			set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
-		end
-		set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
-		if sv.yholdold>0 && sv.yholdold<=data.yrange && strcmp(sv.loaded,'yes');
-			set(gh('YHoldMenu'),'Value',sv.yholdold);
-		else
-			set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
-		end		
-		sv.xval=get(gh('XHoldMenu'),'Value');
-		sv.yval=get(gh('YHoldMenu'),'Value');
-		sv.zval=1;
-		xvals=regexprep(num2str(data.xvalues),'\s+',' ');
-		set(gh('SXSlice'),'String',xvals);
-		yvals=regexprep(num2str(data.yvalues),'\s+',' ');
-		set(gh('SYSlice'),'String',yvals);
-	otherwise
-		set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
-		set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
-		set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
-		set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
-		set(gh('ZHoldMenu'),'String',{num2str(data.zvalues')});
-		set(gh('ZHoldMenu'),'Value',ceil(data.zrange/2));
-		sv.xval=get(gh('XHoldMenu'),'Value');
-		sv.yval=get(gh('YHoldMenu'),'Value');
-		sv.zval=get(gh('ZHoldMenu'),'Value');
-		xvals=regexprep(num2str(data.xvalues),'\s+',' ');
-		set(gh('SXSlice'),'String',xvals);
-		yvals=regexprep(num2str(data.yvalues),'\s+',' ');
-		set(gh('SYSlice'),'String',yvals);
-	end
-	set(gh('XHoldCheck'),'Value',0);
-	set(gh('YHoldCheck'),'Value',0);
-	set(gh('ZHoldCheck'),'Value',0);
-	sv.xlock=0;
-	sv.ylock=0;
-	sv.zlock=0;
-	data.xindex=1:data.xrange;
-	data.yindex=1:data.yrange;
-	
-	set(gh('SStartTrial'),'String',num2str(sv.StartTrial));
-	set(gh('SEndTrial'),'String',num2str(sv.EndTrial));
-	set(gh('SStartMod'),'String',num2str(sv.StartMod));
-	set(gh('SEndMod'),'String',num2str(sv.EndMod));
-	set(gh('SBinWidth'),'String',num2str(sv.BinWidth));
-	
-
-	set(gh('LoadText'),'String','Plot All Spikes ON');
-	set(gh('AnalMenu'),'Value',1);
-	
-	if ~strcmp(sv.auto,'report')
-		endclock=etime(clock,startclock);
-		endcpu=cputime-startcpu;	
-		set(sv.uihandle,'Name', [sv.version ' | Loading took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
-		time=[];
-	end
+		sv.xlock=0;
+		sv.ylock=0;
+		sv.zlock=0;
+		sv.xholdold=0;
+		sv.yholdold=0;
+		sv.zholdold=0;
+		%-----------------------------------------------------------------------
+		sv.mint=0;
+		sv.maxt=inf;
+		automeasure=0; 			%used by temporal movie creator
 		
-	if strcmp(sv.auto,'no') %if we manually load, set an initial PSTH measurement
+		history='';
+		shistory='';
+		paths='';
+		if exist([sv.historypath 'history.mat'],'file') == 2
+			load([sv.historypath 'history.mat']);
+			set(gh('spikehistory'),'String',history);
+		else
+			set(gh('spikehistory'),'String',' ');
+		end
+		if exist([sv.historypath 'shistory.mat'],'file') == 2
+			load([sv.historypath 'shistory.mat']);
+			if length(shistory)>10
+				set(gh('SSliceHistory'),'String',shistory(end-9:end));
+			else
+				set(gh('SSliceHistory'),'String',shistory);
+			end
+		end
+		
+		set(gh('CMapMenu'),'String',{'jet';'jet2';'hot';'rbmap';'gray';'gray1';'gray2';'hsv';'prism';'colorcube';'bone';'copper';'pink';'summer';'winter';'autumn';'spring'});
+		set(gh('ErrorMenu'),'String',{'Standard Error';'Standard Deviation';'Fano Factor';'Coefficient of Variation';'2 StdDevs';'3 StdDevs';'2 StdErrs';'Variance'});
+		set(gh('ErrorMenu'),'Value',1);
+		set(gh('AxisMenu'),'String',{'auto';'on';'off';'normal';'tight';'vis3d';'equal';'square';'image';'------------';'Axis Above Data';'Axis Below Data';'Ticks Facing In';'Ticks Facing Out';'Axis Box On';'Axis Box Off';'Flip X and Y';'Y Axis Normal';'Y Axis Reverse';'------------';'Auto Renderer';'Painters Renderer';'ZBuffer Renderer';'OpenGL Renderer'});
+		set(gh('AnalysisMenu'),'String',{'Mean';'Peak 3 bin';'Peak 1 Bin';'Count';'A/B Ratio';'FFT'});
+		set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
+		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
+		set(gh('SPlotMenu'),'Value',7);
+		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
+		set(gcf,'DefaultLineLineWidth',1.25);
+		set(gcf,'DefaultAxesLineWidth',1.25);
+		set(gcf,'defaultaxesfontname','Georgia');
+		set(gcf,'defaulttextfontname','Georgia');
+		set(gcf,'defaulttextfontsize',8);
+		set(gca,'Layer','top');						%ticks go over data
+		set(gca,'TickDir','out');					%get ticks going out
+		set(gh('SMinEdit'),'UserData','no');		%these initialize the min and max time boxes
+		set(gh('SMaxEdit'),'UserData','no');		%...
+		set(gca,'tag','SpikeFigMainAxes');			%make sure axes have right name
+		set(gcf,'tag','SpikeFig');					%ditto for the figure
+		if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end %delete any previous data
+		
+		if isfield(paths,'matsavepath')
+			cv.matsavepath=paths.matsavepath;
+		end
+		if isfield(paths,'matloadpath')
+			sv.matloadpath=paths.matloadpath;
+		end
+		if isfield(paths,'dataloadpath')
+			sv.dataloadpath=paths.dataloadpath;
+			cd(sv.dataloadpath);
+		end
+		
+		%-----------------------------------------------------------------------------------------
+	case 'ChoosePlot'
+		%-----------------------------------------------------------------------------------------
+		
+		ChoosePlot;
+		
+		%------------------------------------------Loading the data-------------------------------------
+	case 'Load'
+		%-----------------------------------------------------------------------------------------------
+		close(gh('MovieToolFig'));
+		
+		startclock=clock;
+		startcpu=cputime;
+		
+		switch(sv.reload)%see if we have to reload the data or not
+			case 'yes'
+				set(gh('LoadText'),'String','Reloading Data');
+				meta=data.meta;
+				info=data.info;
+				t=data.filetype;
+				sourcepath=data.sourcepath;
+				zipload = data.zipload;
+				zs=data.zs;
+				data=struct;
+				data.zs=zs;
+				data.meta=meta;
+				data.info=info;
+				data.filetype=t;
+				data.sourcepath=sourcepath;
+				data.zipload=zipload;
+				sv.reload='no';
+			otherwise
+				if ~strcmp(sv.auto,'report'); sv.auto='no'; end
+				set(gh('LoadText'),'String','Data Loading');
+				%This checks to see if we are called with a load history or to open new data.
+				n=regexpi(sv.reload,'^(?<name>[^|]+)(?:.+)(?<num>\d)','names'); %part of the file history reloading mechanism
+				if ~isempty(n) %&& ~strcmp(sv.loadtype,'') %we already have a path
+					switch sv.loadtype
+						case 'previous'
+							if data.zipload == true
+								sv.loadtype='';
+								nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
+								number=str2double(nn.num)-1;
+								if number<10
+									name=regexprep(n.name, '\d\d\.zip', ['0' num2str(number) '.zip']);
+								else
+									name=regexprep(n.name, '\d\d\.zip', [num2str(number) '.zip']);
+								end
+								name=regexprep(name,'\s$','');
+								if ~exist(name,'file')
+									errordlg('No next file');
+									error('No next file');
+								end
+								sv.auto='yes';
+							else
+								sv.loadtype='';
+								nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
+								number=str2double(nn.num)-1;
+								ind=regexp(n.name,'/'); %we only want to replave the number for the filename and preceding directory, not anywhere else in the path
+								if number<10
+									name=regexprep(n.name(ind(end-1)+1:end), nn.num, ['0' num2str(number)]);
+									name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
+								else
+									name=regexprep(n.name(ind(end-1)+1:end), nn.num, num2str(number));
+									name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
+								end
+								if ~strcmp(filesep,'/'); name=regexprep(name,'\/','\\'); end
+								[p,basefilename,e]=fileparts(name);
+								name=[p '.smr'];
+								if ~exist(name,'file')
+									errordlg('No previous file');
+									error('No previous file');
+								end
+								sv.auto='yes';
+							end
+						case 'next'
+							if data.zipload == true
+								sv.loadtype='';
+								nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
+								number=str2double(nn.num)+1;
+								if number<10
+									name=regexprep(n.name, '\d\d\.zip', ['0' num2str(number) '.zip']);
+								else
+									name=regexprep(n.name, '\d\d\.zip', [num2str(number) '.zip']);
+								end
+								name=regexprep(name,'\s$','');
+								if ~exist(name,'file')
+									errordlg('No next file');
+									error('No next file');
+								end
+								sv.auto='yes';
+							else
+								sv.loadtype='';
+								nn=regexpi(n.name,'[^\d\\]+(?<num>\d\d)\.(?<ext>txt|smr|zip)','names');
+								number=str2double(nn.num)+1;
+								ind=regexp(n.name,'/'); %we only want to replace the number for the filename and preceding directory, not anywhere else in the path
+								if number<10
+									name=regexprep(n.name(ind(end-1)+1:end), nn.num, ['0' num2str(number)]);
+									name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
+								else
+									name=regexprep(n.name(ind(end-1)+1:end), nn.num, num2str(number));
+									name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
+								end
+								if ~strcmp(filesep,'/'); name=regexprep(name,'\/','\\'); end
+								[p,basefilename,e]=fileparts(name);
+								name=[p '.smr'];
+								if ~exist(name,'file')
+									errordlg('No next file');
+									error('No next file');
+								end
+								sv.auto='yes';
+							end
+						otherwise
+							name=n.name(1:end-1);
+					end
+					[p,basefilename,e]=fileparts(name);
+					pn=[p filesep];
+					fn=[basefilename e];
+					sv.firstunit=str2double(n.num);
+					set(gh('CellMenu'),'Value',str2double(n.num));
+					sv.reload='no';
+				else %we need the user to specify a file
+					[fn,pn]=uigetfile({'*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.zip *.smr *.txt *.doc)'; ...
+						'*.smr','VS RAW DATA File (SMR)';'*.txt','VSX Output File (TXT)'; ...
+						'*.doc','XCor Output File (DOC)';'*.*','All Files'},'Select File Type to Load:');
+					if isequal(fn,0)||isequal(pn,0);set(gh('LoadText'),'String','No Data Loaded');errordlg('No File Selected or Found!');error('File was not selected by user / not found.');end
+					[p,basefilename,e]=fileparts([pn fn]);
+				end
+				%we have a file so we reset our data and axes
+				if exist('data','var') && isfield(data,'zs')
+					zs=data.zs;
+				else
+					zs=[];
+				end
+				data=struct;
+				data.zs=zs;
+				cla;  reset(gca);  set(gca,'Tag','SpikeFigMainAxes');	%this resets the axis
+				set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
+				automeasure=0;
+				
+				if regexpi(e,'\.zip')
+					
+					data.zipload=true;
+					data.filetype='txt';
+					data.sourcepath = [pn fn];
+					if isa(data.zs,'zipspikes')
+						data.zs.sourcepath = data.sourcepath;
+					else
+						data.zs=zipspikes(struct('sourcepath',data.sourcepath));
+					end
+					[data.meta,txtcomment,txtprotocol] = data.zs.readarchive;
+					data.info=['===============PROTOCOL================';txtprotocol(2:end);'===============COMMENTS================';txtcomment(9:end)];
+					
+				elseif regexpi(e,'\.smr') %raw SMR File so we need to run it through VSX first
+					
+					data.sourcepath = [pn fn];
+					if (strcmp(sv.auto,'report') || strcmp(sv.auto,'yes') ) && isdir([p filesep basefilename])
+						pn2=basefilename;
+						data.filetype = 'txt';
+					else
+						if isdir([p filesep basefilename]) %stops annoying "directory alread exists" messages
+							cd(sv.historypath);
+							disp('Deleting existing directory...');
+							rmdir([p filesep basefilename],'s');
+							cd(p);
+						end
+						[s,w]=dos(['"',sv.userroot,'\various\vsx\vsx.exe" "',data.sourcepath,'"']);
+						if s>0; error(w); end
+						pn2 = fn(1:find(fn(:)=='.')-1);
+						if ~exist([pn,pn2],'dir'); error('Sorry VSX cannot load the data!!! Make sure files do not have the read-only attribute set...'); end
+						data.filetype = 'smr';
+					end
+					data.meta=loadvstext(strcat(pn,pn2,filesep,pn2,'.txt'));
+					txtcomment=textread(strcat(pn,pn2,filesep,pn2,'.cmt'),'%s','delimiter','\n','whitespace','');
+					txtprotocol=textread(strcat(pn,pn2,filesep,pn2,'.prt'),'%s','delimiter','\n','whitespace','');
+					data.info=['===============PROTOCOL================';txtprotocol(2:end);'===============COMMENTS================';txtcomment(9:end)];
+					
+				elseif regexpi(e,'\.txt')
+					
+					data.filetype = 'txt';
+					data.sourcepath = [pn fn];
+					data.meta=loadvstext(data.sourcepath);
+					txtcomment=textread([pn,strrep(fn,'.txt','.cmt')],'%s','delimiter','\n','whitespace','');
+					txtprotocol=textread([pn,strrep(fn,'.txt','.prt')],'%s','delimiter','\n','whitespace','');
+					data.info=['===============PROTOCOL================';txtprotocol(2:end);'===============COMMENTS================';txtcomment(9:end)];
+					
+				elseif regexpi(e,'\.doc')
+					
+					errordlg('Sorry, .doc files are an old format not safe to use, please use the .SMR!');
+					error('Sorry, .doc files are an old format not safe to use, please use the .SMR!');
+					%dos([sv.matlabroot,'\user\Frogbit\frogbitrun.exe ', sv.matlabroot,'\user\Frogbit\spikestrip1.FB ',pn,fn,]);
+					%data.filetype = 'doc';
+					
+				elseif regexpi(e,'\.mat')
+					
+					sv.pn=pn;
+					sv.fn=fn;
+					spikes('Load MAT');
+					return;
+					
+				else
+					errordlg('Sorry, unsupported file type loaded!')
+					error('File selection error, unsupported file type loaded!')
+				end
+		end
+		[p,basefilename,e]=fileparts(data.meta.filename);	%seperate out the file from the path
+		cd(p);												%change to the directory where all the spike time files live
+		sv.dataloadpath=p;
+		data.meta.filename(data.meta.filename=='\')='/';	%stops annoying TeX interpertation errors
+		t=find(data.sourcepath==filesep);
+		if data.zipload == true
+			data.runname=[data.sourcepath((t(end-1))+1:end-4) '|'];
+		else
+			t=find(data.sourcepath==filesep);
+			data.runname=data.sourcepath((t(end-2))+1:t(end));
+		end
+		
+		silence_before_burst 	= str2double(get(gh('silence'),'String'))*10;
+		first_isi				= str2double(get(gh('firstisi'),'String'))*10;
+		subsequent_isi	   		= str2double(get(gh('subsisi'),'String'))*10;
+		number_burst			= str2double(get(gh('numberspikes'),'String'));
+		
+		if (get(gh('SCutTransient'),'Value')>0) %this gets a time for optinally cutting the first transient out of the data
+			cuttime=str2double(get(gh('STransientValue'),'String'))*10; %*10 converts into raw timebase from milliseconds
+		else
+			cuttime=0;
+		end
+		
+		data.numvars=data.meta.numvars;
+		data.protocol.name=data.meta.protocol;
+		data.protocol.desc=data.meta.description;
+		data.protocol.filecomm=data.meta.comments;
+		data.protocol.date=data.meta.date;
+		data.repeats=data.meta.repeats;
+		data.error=[];
+		
+		if strcmp(data.filetype,'smr') || strcmp(data.filetype,'txt')
+			data.cycles=data.meta.cycles;
+			data.trialtime=data.meta.trialtime;
+			data.modtime=data.meta.modtime;
+			if isfield(data.meta,'tempfreq')
+				data.tempfreq=data.meta.tempfreq;
+			else
+				data.tempfreq=[];
+			end
+		end
+		
+		switch data.numvars
+			case 0   %this means we have no variables
+				%Setup GUI
+				sv.yholdold=0;
+				sv.xholdold=0;
+				sv.zholdold=0;
+				set(gh('HoldXText'),'String',' ');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','off');
+				set(gh('XHoldCheck'),'Enable','off');
+				set(gh('HoldYText'),'String',' ');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ');
+				set(gh('YHoldMenu'),'Enable','off');
+				set(gh('YHoldCheck'),'Enable','off');
+				set(gh('HoldZText'),'String',' ');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Enable','off');
+				
+				%%%Disenables the 3D plotting options menus
+				if get(gh('SPlotMenu'),'Value')>6; set(gh('SPlotMenu'),'Value',6); end
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Point'});
+				set(gh('STypeMenu'),'Enable','off');
+				set(gh('CMapMenu'),'Enable','off');
+				set(gh('ShadingMenu'),'Enable','off');
+				set(gh('LightMenu'),'Enable','off');
+				set(gh('LightingMenu'),'Enable','off');
+				set(gh('RotateButton'),'Enable','off');
+				set(gh('CMapButton'),'Enable','off');
+				set(gh('LabelButton'),'Enable','off');
+				set(gh('ColorEdit'),'Enable','off');
+				set(gh('CheckBox1'),'Enable','off');
+				set(gh('SmoothingMenu'),'Enable','off');
+				
+				% This section extracts variable info and sets up the data structure
+				data.filename=data.meta.filename;
+				data.xtitle='';
+				data.xvalues=[];
+				data.xvalueso=data.xvalues;
+				data.xrange=1;
+				data.ytitle='';
+				data.yvalues=[];
+				data.yvalueso=data.yvalues;
+				data.yrange=1;
+				data.ztitle='';
+				data.zvalues=[];
+				data.zvalueso=data.zvalues;
+				data.zrange=1;
+				data.cell=sv.firstunit;
+				data.wrapped=sv.Wrapped;
+				data.binwidth=sv.BinWidth;
+				data.anal.error=-1;
+				data.anal.errormode=-1;
+				data.raw=cell(data.xrange);		%set up dimensions of our cell array
+				data.psth=cell(data.xrange);		%and for our resultant psth
+				data.bpsth=cell(data.xrange);		%for the burst psth
+				data.time=cell(data.xrange);		%and the timebase of the psth
+				data.rawspikes=cell(data.xrange);		%and the timebase of the psth
+				data.names=cell(data.xrange);		%original fileames for errorchecking
+				data.plotburst=0;					%locks us into burst analysis or not
+				data.plottonic=0;
+				data.measured=0;					%so rowland knows if someone has
+				data.fftinfnnpoints=[];				%to store infinity and Not-A-Number values for fft ratios
+				data.textload=0;
+				data.areaplot=0;
+				
+				filename = [basefilename '.1'];
+				data.names=filename;
+				switch data.filetype
+					case 'doc'
+						x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
+					otherwise
+						x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+				end
+				x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+				data.raw{1}=x;
+				if ~isempty(x.error); data.error=x.error; end
+				[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+				[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+				if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
+					sigma=str2double(get(gh('GaussEdit'),'String'));
+					psth=gausssmooth(time,psth,sigma);
+					bpsth=gausssmooth(time2,bpsth,sigma);
+				end
+				data.bpsth{1}=bpsth;
+				data.psth{1}=psth;
+				data.time{1}=time;
+				data.rawspikes{1}=rawspikes;
+				data.sums{1}=sums;
+				
+			case 1  %this means we have only 1 variable
+				%%%Change Hold X & Hold Y pull down menu labels to something
+				%%%meaningful
+				if strcmp(sv.loaded,'yes')
+					sv.xholdold=get(gh('XHoldMenu'),'Value');
+					sv.yholdold=0;
+					sv.zholdold=0;
+					sv.xholdoldval=get(gh('XHoldMenu'),'String');
+					sv.yholdoldval=[];
+					sv.zholdoldval=[];
+					if iscell(sv.yholdoldval)
+						sv.xholdoldval=str2double(sv.xholdoldval{sv.xholdold});
+					else
+						sv.xholdoldval=[];
+					end
+				end
+				set(gh('HoldXText'),'String','Held X Value');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','on');
+				set(gh('XHoldCheck'),'Enable','on');
+				set(gh('HoldYText'),'String','');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ');
+				set(gh('YHoldMenu'),'Enable','off');
+				set(gh('YHoldCheck'),'Enable','off');
+				set(gh('HoldZText'),'String','');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Enable','off');
+				
+				%%%Set the plotting options
+				if get(gh('SPlotMenu'),'Value')>6; set(gh('SPlotMenu'),'Value',6); end
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve'});
+				set(gh('STypeMenu'),'String',{'Normal';'Polar';'Polar+Error';'Cartesian Polar+Error'});
+				set(gh('STypeMenu'),'Enable','on');
+				set(gh('CMapMenu'),'Enable','off');
+				set(gh('ShadingMenu'),'Enable','off');
+				set(gh('LightMenu'),'Enable','off');
+				set(gh('LightingMenu'),'Enable','off');
+				set(gh('RotateButton'),'Enable','off');
+				set(gh('CMapButton'),'Enable','off');
+				set(gh('LabelButton'),'Enable','off');
+				set(gh('ColorEdit'),'Enable','off');
+				set(gh('CheckBox1'),'Enable','off');
+				set(gh('SmoothingMenu'),'String',{'none';'interpolated';'polynomial';'smoothed'});
+				set(gh('SmoothingMenu'),'Value',1);
+				set(gh('CheckBox1'),'Enable','on');
+				
+				firstnumber=min(data.meta.matrix(:,1));   %tells us the first and last file to load
+				lastnumber=max(data.meta.matrix(:,1));
+				% This section extracts variable info and sets up the data structure
+				data.filename=data.meta.filename;
+				
+				data.xtitle=regexprep(data.meta.var{1}.title,'w\\o','with O');
+				data.xrange=data.meta.var{1}.range;
+				data.xvalues=data.meta.var{1}.values;
+				data.xvalueso=data.xvalues;
+				
+				data.ytitle='';
+				data.yvalues=[];
+				data.yrange=1;
+				data.yvalueso=data.yvalues;
+				
+				data.ztitle='';
+				data.zvalues=[];
+				data.zrange=1;
+				data.zvalueso=data.zvalues;
+				
+				data.cell=sv.firstunit;
+				data.wrapped=sv.Wrapped;
+				data.binwidth=sv.BinWidth;
+				data.anal.error=-1;
+				data.anal.errormode=-1;
+				data.raw=cell(1,data.xrange);		%set up dimensions of our cell array
+				data.psth=cell(1,data.xrange);		%and for our resultant psth
+				data.bpsth=cell(1,data.xrange);		%for the burst psth
+				data.time=cell(1,data.xrange);		%and the timebase of the psth
+				data.rawspikes=cell(1,data.xrange);		%and the timebase of the psth
+				data.sums=cell(1,data.xrange);		%and the timebase of the psth
+				data.names=cell(1,data.xrange);		%original fileames for errorchecking
+				data.plotburst=0;					%locks us into burst analysis or not
+				data.plottonic=0;
+				data.measured=0;					%so rowland knows if someone has
+				data.fftinfnnpoints=[];				%to store infinity and Not-A-Number values for fft ratios
+				data.textload=0;
+				data.areaplot=0;
+				
+				% 		h=waitbar(0,'Processing: binning data and finding bursts...');
+				for i=firstnumber:lastnumber
+					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
+					drawnow;
+					filename = [basefilename '.' int2str(i)];
+					data.names{i}=filename;
+					switch data.filetype
+						case 'doc'
+							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
+						otherwise
+							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+					end
+					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+					data.raw{i}=x;
+					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
+					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
+						sigma=str2double(get(gh('GaussEdit'),'String'));
+						psth=gausssmooth(time,psth,sigma);
+						bpsth=gausssmooth(time2,bpsth,sigma);
+					end
+					data.bpsth{i}=bpsth;
+					data.psth{i}=psth;
+					data.time{i}=time;
+					data.rawspikes{i}=rawspikes;
+					data.sums{i}=sums;
+					% 			waitbar(i/((data.xrange+1)-1));
+				end
+				% 		close(h);
+				
+			case 2 % we have 2 variables
+				
+				%%%Makes sure that menus say the right thing and are enabled
+				if strcmp(sv.loaded,'yes')
+					sv.xholdold=get(gh('XHoldMenu'),'Value');
+					sv.yholdold=get(gh('YHoldMenu'),'Value');
+					sv.zholdold=0;
+					sv.xholdoldval=get(gh('XHoldMenu'),'String');
+					sv.yholdoldval=get(gh('YHoldMenu'),'String');
+					sv.zholdoldval='';
+					if iscell(sv.yholdoldval);
+						sv.xholdoldval=str2double(sv.xholdoldval{sv.xholdold});
+					else
+						sv.xholdoldval=[];
+					end;
+					if iscell(sv.yholdoldval);
+						sv.yholdoldval=str2double(sv.yholdoldval{sv.yholdold});
+					else
+						sv.yholdoldval=[];
+					end;
+				end
+				set(gh('HoldXText'),'String','Hold X Value');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','on');
+				set(gh('XHoldCheck'),'Enable','on');
+				set(gh('HoldYText'),'String','Hold Y Value');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ')
+				set(gh('YHoldMenu'),'Enable','on');
+				set(gh('YHoldCheck'),'Enable','on');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Enable','off');
+				set(gh('HoldZText'),'String','');
+				
+				%%%Set the plotting options
+				if get(gh('SPlotMenu'),'Value')>7; set(gh('SPlotMenu'),'Value',7); end
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
+				set(gh('STypeMenu'),'Enable','on');
+				set(gh('CMapMenu'),'Enable','on');
+				set(gh('ShadingMenu'),'Enable','on');
+				set(gh('LightMenu'),'Enable','on');
+				set(gh('LightingMenu'),'Enable','on');
+				set(gh('RotateButton'),'Enable','on');
+				set(gh('CMapButton'),'Enable','on');
+				set(gh('LabelButton'),'Enable','on');
+				set(gh('ColorEdit'),'Enable','on');
+				set(gh('CheckBox1'),'Enable','on');
+				set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
+				set(gh('SmoothingMenu'),'Value',1);
+				set(gh('CheckBox1'),'Enable','on');
+				
+				firstnumber=min(data.meta.matrix(:,1));   %tells us the first and last file to load
+				lastnumber=max(data.meta.matrix(:,1));
+				
+				% This section extracts variable info and sets up the data structure
+				data.filename=data.meta.filename;
+				
+				data.xtitle=regexprep(data.meta.var{1}.title,'w\\ o','with O');
+				data.xrange=data.meta.var{1}.range;
+				data.xvalues=data.meta.var{1}.values;
+				data.xvalueso=data.xvalues;
+				
+				data.ytitle=regexprep(data.meta.var{2}.title,'w\\ o','with O');
+				data.yrange=data.meta.var{2}.range;
+				data.yvalues=data.meta.var{2}.values;
+				data.yvalueso=data.yvalues;
+				
+				data.ztitle='';
+				data.zvalues=[];
+				data.zrange=1;
+				data.zvalueso=data.zvalues;
+				
+				data.cell=sv.firstunit;
+				data.wrapped=sv.Wrapped;
+				data.binwidth=sv.BinWidth;
+				data.anal.error=-1;
+				data.anal.errormode=-1;
+				data.raw=cell(data.yrange,data.xrange);		%set up dimensions of our cell array
+				data.psth=cell(data.yrange,data.xrange);	%and for our resultant psth
+				data.bpsth=cell(data.yrange,data.xrange);
+				data.time=cell(data.yrange,data.xrange);	%and the timebase of the psth
+				data.rawspikes=cell(data.yrange,data.xrange);
+				data.sums=cell(data.yrange,data.xrange);
+				data.names=cell(data.yrange,data.xrange);
+				data.plotburst=0;
+				data.plottonic=0;
+				data.measured=0;		   					%so rowland knows if someone has
+				data.textload=0;
+				data.areaplot=0;
+				
+				% 		h=waitbar(0,'Processing: binning data and finding bursts...');
+				for i=firstnumber:lastnumber
+					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
+					drawnow;
+					filename = strcat(basefilename,'.',int2str(i));
+					data.names{i}=filename;
+					switch data.filetype
+						case 'doc'
+							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
+						otherwise
+							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+					end
+					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+					data.raw{i}=x;
+					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
+					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
+						sigma=str2double(get(gh('GaussEdit'),'String'));
+						psth=gausssmooth(time,psth,sigma);
+						bpsth=gausssmooth(time2,bpsth,sigma);
+					end
+					data.bpsth{i}=bpsth;
+					data.psth{i}=psth;
+					data.time{i}=time;
+					data.rawspikes{i}=rawspikes;
+					data.sums{i}=sums;
+					% 			waitbar(i/((data.xrange*data.yrange+1)-1));
+				end
+				% 		close(h);
+				
+			case 3  % we have 3 variables
+				%%%Makes sure that menus say the right thing and are enabled
+				if strcmp(sv.loaded,'yes')
+					sv.xholdold=get(gh('XHoldMenu'),'Value');
+					sv.yholdold=get(gh('YHoldMenu'),'Value');
+					sv.zholdold=get(gh('ZHoldMenu'),'Value');
+					sv.xholdoldval=get(gh('XHoldMenu'),'String');
+					sv.yholdoldval=get(gh('YHoldMenu'),'String');
+					sv.zholdoldval=get(gh('ZHoldMenu'),'String');
+					if iscell(sv.yholdoldval);
+						sv.xholdoldval=str2double(sv.xholdoldval{sv.xholdold});
+					else
+						sv.xholdoldvalue=[];
+					end;
+					if iscell(sv.yholdoldval);
+						sv.yholdoldval=str2double(sv.yholdoldval{sv.yholdold});
+					else
+						sv.yholdoldvalue=[];
+					end;
+					if iscell(sv.zholdoldval);
+						sv.zholdoldval=str2double(sv.zholdoldval{sv.zholdold});
+					else
+						sv.zholdoldvalue=[];
+					end;
+				end
+				set(gh('HoldXText'),'String','Hold X Value');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','on');
+				set(gh('XHoldCheck'),'Enable','on');
+				set(gh('HoldYText'),'String','Hold Y Value');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ')
+				set(gh('YHoldMenu'),'Enable','on');
+				set(gh('YHoldCheck'),'Enable','on');
+				set(gh('HoldZText'),'String','Hold Z Value');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','on');
+				set(gh('ZHoldCheck'),'Enable','on');
+				
+				%%%Set the plotting options
+				if get(gh('SPlotMenu'),'Value')>7; set(gh('SPlotMenu'),'Value',7); end
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
+				set(gh('STypeMenu'),'Enable','on');
+				set(gh('CMapMenu'),'Enable','on');
+				set(gh('ShadingMenu'),'Enable','on');
+				set(gh('LightMenu'),'Enable','on');
+				set(gh('LightingMenu'),'Enable','on');
+				set(gh('RotateButton'),'Enable','on');
+				set(gh('CMapButton'),'Enable','on');
+				set(gh('LabelButton'),'Enable','on');
+				set(gh('ColorEdit'),'Enable','on');
+				set(gh('CheckBox1'),'Enable','on');
+				set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
+				set(gh('SmoothingMenu'),'Value',1);
+				set(gh('CheckBox1'),'Enable','on');
+				
+				% this section juggles all the variables around for selection
+				data.filename=data.meta.filename;
+				
+				data.xtitle=regexprep(data.meta.var{1}.title,'w\\ o','with O');
+				data.xrange=data.meta.var{1}.range;
+				data.xvalues=data.meta.var{1}.values;
+				data.xvalueso=data.xvalues;
+				
+				data.ytitle=regexprep(data.meta.var{2}.title,'w\\ o','with O');
+				data.yrange=data.meta.var{2}.range;
+				data.yvalues=data.meta.var{2}.values;
+				data.yvalueso=data.yvalues;
+				
+				data.ztitle=regexprep(data.meta.var{3}.title,'w\\ o','with O');
+				data.zrange=data.meta.var{3}.range;
+				data.zvalues=data.meta.var{3}.values;
+				data.zvalueso=data.zvalues;
+				
+				%defaults for first run
+				data.cell=sv.firstunit;
+				data.wrapped=sv.Wrapped;
+				data.binwidth=sv.BinWidth;
+				data.anal.error=-1;
+				data.anal.errormode=-1;
+				% set up our data structure, using cells for each set of spikes
+				data.raw=cell(data.yrange,data.xrange,data.zrange);	   %set up dimensions of our cell array for sparse matrix
+				data.psth=cell(data.yrange,data.xrange,data.zrange);	  %and for our resultant psth
+				data.bpsth=cell(data.yrange,data.xrange,data.zrange);	%psth generated from burst spikes
+				data.time=cell(data.yrange,data.xrange,data.zrange);	  %the timebase of the psth
+				data.rawspikes=cell(data.yrange,data.xrange,data.zrange);
+				data.sums=cell(data.yrange,data.xrange,data.zrange);
+				data.names=cell(data.yrange,data.xrange,data.zrange);  %file names to track which data is where
+				data.plotburst=0;
+				data.plottonic=0;
+				data.measured=0;		   %so rowland knows if someone has
+				data.textload=0;
+				data.areaplot=0;
+				fileindex=find(data.meta.matrix(:,sv.HeldVariable+1)==sv.HeldValue); %index the files needed...
+				
+				index=data.meta.matrix(:,2:4); %the list of variable values for each file
+				
+				for i=1:data.xrange*data.yrange*data.zrange
+					xi=index(i,1);
+					yi=index(i,2);
+					zi=index(i,3);
+					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
+					drawnow;
+					filename = [basefilename '.' int2str(i)];
+					data.names{yi,xi,zi}=filename;
+					switch data.filetype
+						case 'doc'
+							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
+						otherwise
+							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+					end
+					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
+					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
+						sigma=str2double(get(gh('GaussEdit'),'String'));
+						psth=gausssmooth(time,psth,sigma);
+						bpsth=gausssmooth(time2,bpsth,sigma);
+					end
+					data.raw{yi,xi,zi}=x;
+					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
+					data.bpsth{yi,xi,zi}=bpsth;
+					data.psth{yi,xi,zi}=psth;
+					data.time{yi,xi,zi}=time;
+					data.rawspikes{yi,xi,zi}=rawspikes;
+					data.sums{yi,xi,zi}=sums;
+				end
+		end
+		
+		if data.numvars>1
+			yvals=num2str(data.yvalues);
+			yvals=regexprep(yvals,'\s+',' ');
+			set(gh('SYSlice'),'String',yvals);
+		end
+		
+		switch data.numvars %now we set our variable selection menus
+			case 0
+				sv.xval=1;
+				sv.yval=1;
+				sv.zval=1;
+				set(gh('SXSlice'),'String',' ');
+				set(gh('SYSlice'),'String',' ');
+			case 1
+				set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
+				if sv.xholdold>0 && sv.xholdold<=data.xrange && strcmp(sv.loaded,'yes');
+					set(gh('XHoldMenu'),'Value',sv.xholdold);
+				else
+					set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
+				end
+				sv.xval=get(gh('XHoldMenu'),'Value');
+				sv.yval=1;
+				sv.zval=1;
+				xvals=regexprep(num2str(data.xvalues),'\s+',' ');
+				set(gh('SXSlice'),'String',xvals);
+				set(gh('SYSlice'),'String',' ');
+			case 2
+				set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
+				if sv.xholdold>0 && sv.xholdold<=data.xrange && strcmp(sv.loaded,'yes');
+					set(gh('XHoldMenu'),'Value',sv.xholdold);
+				else
+					set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
+				end
+				set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
+				if sv.yholdold>0 && sv.yholdold<=data.yrange && strcmp(sv.loaded,'yes');
+					set(gh('YHoldMenu'),'Value',sv.yholdold);
+				else
+					set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
+				end
+				sv.xval=get(gh('XHoldMenu'),'Value');
+				sv.yval=get(gh('YHoldMenu'),'Value');
+				sv.zval=1;
+				xvals=regexprep(num2str(data.xvalues),'\s+',' ');
+				set(gh('SXSlice'),'String',xvals);
+				yvals=regexprep(num2str(data.yvalues),'\s+',' ');
+				set(gh('SYSlice'),'String',yvals);
+			otherwise
+				set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
+				set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
+				set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
+				set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
+				set(gh('ZHoldMenu'),'String',{num2str(data.zvalues')});
+				set(gh('ZHoldMenu'),'Value',ceil(data.zrange/2));
+				sv.xval=get(gh('XHoldMenu'),'Value');
+				sv.yval=get(gh('YHoldMenu'),'Value');
+				sv.zval=get(gh('ZHoldMenu'),'Value');
+				xvals=regexprep(num2str(data.xvalues),'\s+',' ');
+				set(gh('SXSlice'),'String',xvals);
+				yvals=regexprep(num2str(data.yvalues),'\s+',' ');
+				set(gh('SYSlice'),'String',yvals);
+		end
+		set(gh('XHoldCheck'),'Value',0);
+		set(gh('YHoldCheck'),'Value',0);
+		set(gh('ZHoldCheck'),'Value',0);
+		sv.xlock=0;
+		sv.ylock=0;
+		sv.zlock=0;
+		data.xindex=1:data.xrange;
+		data.yindex=1:data.yrange;
+		
+		set(gh('SStartTrial'),'String',num2str(sv.StartTrial));
+		set(gh('SEndTrial'),'String',num2str(sv.EndTrial));
+		set(gh('SStartMod'),'String',num2str(sv.StartMod));
+		set(gh('SEndMod'),'String',num2str(sv.EndMod));
+		set(gh('SBinWidth'),'String',num2str(sv.BinWidth));
+		
+		
+		set(gh('LoadText'),'String','Plot All Spikes ON');
+		set(gh('AnalMenu'),'Value',1);
+		
+		if ~strcmp(sv.auto,'report')
+			endclock=etime(clock,startclock);
+			endcpu=cputime-startcpu;
+			set(sv.uihandle,'Name', [sv.version ' | Loading took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
+			time=[];
+		end
+		
+		if strcmp(sv.auto,'no') %if we manually load, set an initial PSTH measurement
+			set(gh('SMinEdit'),'UserData','yes');
+			set(gh('SMaxEdit'),'UserData','yes');
+			mint=str2double(get(gh('SMinEdit'),'String'));
+			maxt=str2double(get(gh('SMaxEdit'),'String'));
+			if isempty(mint) || str2double(mint)<min(data.time{1})
+				mint=min(data.time{1});
+				set(gh('SMinEdit'),'String',num2str(min(data.time{1})));
+			end
+			if isempty(maxt) || str2double(maxt)>max(data.time{1})
+				maxt=max(data.time{1});
+				set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
+			end
+		elseif strcmp(sv.auto,'report')
+			mint=sv.mintime;
+			maxt=sv.maxtime;
+		end
+		set(gca,'Tag','SpikeFigMainAxes');
+		spikes('Measure');
+		sv.loaded='yes';
+		
+		%-----------Set up our history mechanism-----------
+		history=get(gh('spikehistory'),'String');
+		newitem=[data.sourcepath ' | Cell ' num2str(sv.firstunit)];
+		hsize=20;
+		if ischar(history)
+			history={history};
+		end
+		if max(strcmp(newitem,history))<1 && ~strcmp(sv.auto,'report')
+			if size(history,1)>hsize
+				history=([newitem;history(1:hsize)]); %prunes the history list
+			elseif strcmp(history(end),' ')
+				history=([newitem;history(1:end-1)]); %removes dummy space
+			else
+				history=([newitem;history]);
+			end
+			set(gh('spikehistory'),'String',history);
+			set(gh('spikehistory'),'Value',1);
+		end
+		%---------------------------------------------------
+		
+		if strcmp(sv.reload,'yes'); %ensures only non-reloaded data shows info box
+			sv.reload='no';
+		elseif ~strcmp(sv.auto,'report')
+			spikes('Data Info');
+		end
+		if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
+		
+		if ~isempty(data.error) && get(gh('SShowError'),'Value')==1 %show the possible	data errors
+			warndlg(cat(1,data.error,{' ';'If trials were removed for one variable, please re-run removing the last trial manually for all the data; this happens because VSX fails to tag some spikes properly.'}));
+		end
+		
+		%-----------------------Set Spike Type to Measure------------------------------------
+	case 'SpikeSet'
+		%---------------------------------------------------------------------------------------------
+		
+		switch get(gh('SpikeMenu'),'Value');
+			case 1 %all spikes
+				data.areaplot=0;
+				automeasure=0;
+				data.plotburst=0;
+				data.plottonic=0;
+				set(gh('AnalysisMenu'),'Enable','on');
+				set(gh('LoadText'),'String','Plot All Spikes ON');
+				set(gca,'Tag','SpikeFigMainAxes');
+				sv.AnalysisMethod=get(gh('AnalysisMenu'),'Value') ;
+			case 2 %burst spikes
+				data.areaplot=0;
+				data.plotburst=1;
+				data.plottonic=0;
+				set(gh('AnalysisMenu'),'Enable','on');
+				set(gca,'Tag','SpikeFigMainAxes');
+				set(gh('LoadText'),'String','Burst Analysis ON');
+				sv.AnalysisMethod=get(gh('AnalysisMenu'),'Value') ;
+			case 3 %subtract burst from all to get tonic, only surfaces etc
+				data.areaplot=0;
+				data.plottonic=1;
+				data.plotburst=0;
+				set(gh('AnalysisMenu'),'Enable','off');
+				set(gca,'Tag','SpikeFigMainAxes');
+				set(gh('LoadText'),'String','TONIC Analysis ON');
+			otherwise
+				errordlg('Spike Selection Error');
+				error('spike selection error in spikeset');
+		end
+		
+		%---------------------Taking measurements from a reference PSTH-------------------
+	case 'Measure'
+		%---------------------------------------------------------------------------------------------------
+		
+		data.areaplot=0;
+		data.measured=1;
+		
+		data.fftinfo=[];
+		data.fftinfnnpoints=[];
+		
+		mint=sv.mint;
+		maxt=sv.maxt;
+		
+		if get(gh('SOverrideTime'),'Value')==1
+			mint=0;
+			if data.wrapped==1
+				maxt=ceil(data.modtime/10);
+			else
+				maxt=ceil(data.trialtime/10);
+			end
+			maxt=data.time{1}(ceil(maxt/data.binwidth));
+		elseif (strcmp(get(gh('SMinEdit'),'UserData'),'yes') && strcmp(get(gh('SMaxEdit'),'UserData'),'yes')) || strcmp(sv.auto,'report')
+			time=data.time{1};
+			if (mint<=0 || isnan(mint) || mint>=max(time)); mint=0; end
+			if maxt>max(time) || isnan(maxt); maxt=max(time);end
+			
+			mint=mint+0.0001;
+			maxt=maxt+0.0001;
+			
+			mint=time(ceil(mint/data.binwidth));
+			maxt=time(ceil(maxt/data.binwidth));
+		elseif strcmp(get(gh('SMinEdit'),'UserData'),'yes') || strcmp(get(gh('SMaxEdit'),'UserData'),'yes');
+			error('Need to Select the Other Value')
+		elseif get(gh('SOverrideTime'),'Value')==0
+			if data.numvars>1 && automeasure<1 && sv.AnalysisMethod~=6
+				[mint,maxt]=measure(data,get(gh('XHoldMenu'),'Value'),get(gh('YHoldMenu'),'Value'),get(gh('ZHoldMenu'),'Value'));
+			elseif data.numvars==1 && automeasure<1 && sv.AnalysisMethod~=6
+				[mint,maxt]=measure(data,get(gh('XHoldMenu'),'Value'),1,1);
+			elseif data.numvars==0 && automeasure<1 && sv.AnalysisMethod~=6
+				[mint,maxt]=measure(data,1,1,1);
+			end
+		end
+		
+		if ~isempty(findobj('tag','MovieToolFig')) && automeasure<1 %if the movie program is already there
+			CreateMovie; %just reruns initialisation for the new timeslice
+		end
+		
+		if sv.AnalysisMethod==6  %we want to be seen to use all of it for ffts
+			mint=min(data.time{1});
+			maxt=max(data.time{1});
+		end
+		
+		set(gh('SMinEdit'),'String',num2str(mint));
+		set(gh('SMaxEdit'),'String',num2str(maxt));
+		sv.mint=mint;
+		sv.maxt=maxt;
+		
+		String=get(gh('ErrorMenu'),'String');
+		Value=get(gh('ErrorMenu'),'Value');
+		err=String{Value};
+		
+		if data.plotburst==1
+			rawpsth=data.bpsth;
+		elseif data.plotburst==0
+			rawpsth=data.psth;
+		end
+		
+		tmat=zeros(data.yrange,data.xrange,data.zrange);	%the data matrix
+		emat=zeros(data.yrange,data.xrange,data.zrange);	%the error matrix
+		
+		if isfield(data,'plotonic') && data.plottonic==1
+			sv.AnalysisMethod=7;
+		end
+		%axes(gh('SpikeFigMainAxes'));
+		
+		switch(sv.AnalysisMethod)
+			%================================================We are using the mean
+			case 1
+				mini=find(data.time{1}==mint);
+				maxi=find(data.time{1}==maxt);
+				time=(maxi-mini)*data.binwidth;  %doesn't correct, same as original VS
+				%time=((maxi+1)-mini)*data.binwidth;  %corrects for the extra binwidth
+				for i=1:data.yrange*data.xrange*data.zrange
+					x=sum(rawpsth{i}(mini:maxi));
+					if data.wrapped==1 %wrapped
+						x=x/(data.raw{i}.numtrials*data.raw{i}.nummods); %we have to get the values for an individual trial
+					elseif data.wrapped==2
+						x=x/(data.raw{i}.numtrials);
+					end
+					if data.plotburst==1 && x>0
+						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
+					elseif x>0
+						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,0);
+					else
+						e=0;
+					end
+					
+					x=(x/time)*1000; %convert into spikes/second
+					
+					if strcmp(sv.ErrorMode,'Fano Factor') || strcmp(sv.ErrorMode,'Coefficient of Variation') || strcmp(sv.ErrorMode,'Allan Factor')
+					else
+						e=(e/time)*1000;
+					end
+					tmat(i)=x;
+					emat(i)=e;
+				end
+				
+				%================================================We are using the Peak
+			case 2
+				mini=find(data.time{1}==mint); %find the index for the times
+				maxi=find(data.time{1}==maxt);
+				for i=1:data.yrange*data.xrange*data.zrange
+					m=max(rawpsth{i}(mini:maxi));	  %look for the maximum in the range specified
+					if m>0				   %the value is greater than 0
+						n=find(rawpsth{i}(mini:maxi)==m);   %find the points where max occurs
+						if size(n,2)>1			%there is more than 1 position
+							n=n(1);				%so we just select the first
+						end
+						n=n+(mini-1);			 %to get the index into PSTH we add the mini index
+						if n>1 && n<length(rawpsth{1}) % somewhere in the psth
+							x=(sum(rawpsth{i}(n-1:n+1)));
+							mit=data.time{i}(n-1);
+							mxt=data.time{i}(n+1)+data.binwidth;
+							if data.plotburst==1
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
+							else
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
+							end
+							if data.wrapped==1
+								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+							elseif data.wrapped==2
+								x=x/(data.raw{1}.numtrials);
+							end
+						elseif n==length(rawpsth{1}) %we are at the end of the psth
+							x=(sum(rawpsth{i}(n-2:n)));
+							mit=data.time{i}(n-2);
+							mxt=data.time{i}(n)+data.binwidth;
+							if data.plotburst==1
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
+							else
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
+							end
+							if data.wrapped==1
+								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+							elseif data.wrapped==2
+								x=x/(data.raw{1}.numtrials);
+							end
+						elseif n==1 %we are at the beginning
+							x=(sum(rawpsth{i}(n:n+2)));
+							mit=data.time{i}(n);
+							mxt=data.time{i}(n+2)+data.binwidth;
+							if data.plotburst==1
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
+							else
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
+							end
+							if data.wrapped==1
+								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+							elseif data.wrapped==2
+								x=x/(data.raw{1}.numtrials);
+							end
+						end
+						x=(x/(data.binwidth*3))*1000;	 %convert into spikes/second
+						e=(e/(data.binwidth*3))*1000;
+						tmat(i)=x;
+						emat(i)=e;
+					else  %data is just all zero values
+						tmat(i)=0;
+						emat(i)=0;
+					end
+				end
+				
+			case 3 %We are using the Peak using only 1 bin
+				
+				mini=find(data.time{1}==mint); %find the index for the times
+				maxi=find(data.time{1}==maxt);
+				for i=1:data.yrange*data.xrange*data.zrange
+					m=max(rawpsth{i}(mini:maxi));		%look for the maximum in the range specified
+					if m>0				   %the value is greater than 0
+						n=find(rawpsth{i}(mini:maxi)==m);	 %find the points where max occurs
+						if size(n,2)>1			%there is more than 1 position
+							n=n(1);				%so we just select the first
+						end
+						n=n+(mini-1);			 %to get the index into PSTH we add the mini index
+						if n>1 && n<length(rawpsth{1})	 %check if we are at the beginning
+							x=(sum(rawpsth{i}(n)));			  %Peak is just 1 bin
+							mit=data.time{i}(n);
+							mxt=data.time{i}(n)+data.binwidth;
+							if data.plotburst==1
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
+							else
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
+							end
+							if data.wrapped==1
+								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+							elseif data.wrapped==2
+								x=x/(data.raw{1}.numtrials);
+							end
+						else
+							x=(sum(rawpsth{i}(n)));	  %Peak is the average over 3 bins starting at 1
+							mit=data.time{i}(n);
+							mxt=data.time{i}(n)+data.binwidth;
+							if data.plotburst==1
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
+							else
+								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
+							end
+							if data.wrapped==1
+								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+							elseif data.wrapped==2
+								x=x/(data.raw{1}.numtrials);
+							end
+						end
+						x=(x/(data.binwidth))*1000;	 %convert into spikes/second
+						e=(e/(data.binwidth))*1000;
+						tmat(i)=x;
+						emat(i)=e;
+					else  %data is just all zero values
+						tmat(i)=0;
+						emat(i)=0;
+					end
+				end
+				
+				
+			case 4 %We are using the count
+				mini=find(data.time{1}==mint);
+				maxi=find(data.time{1}==maxt);
+				%time=(maxi-(mini-1))*data.binwidth;
+				for i=1:data.yrange*data.xrange
+					x=sum(rawpsth{i}(mini:maxi));
+					if data.plotburst==1
+						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
+					else
+						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,0);
+					end
+					tmat(i)=x;
+					emat(i)=e;
+				end
+				
+			case 5 %We are using the peak/mean ratio
+				errordlg('Not yet set up...');
+				
+			case 6 %We're using FFT
+				%if we're using a doc file, user needs to give temp freq
+				if isempty(data.tempfreq)
+					tmpfrq=inputdlg('Temporal Frequency (Hz)?','Temp Freq for FFT Calculation');
+					data.tempfreq=tmpfrq{1};
+				end
+				
+				%get our options from GUI box
+				vals=fftoptions(data.tempfreq);
+				
+				%call up fft finding routine and assign values
+				tmp=computefft(vals(1),vals(2),sv.ErrorMode,data.tempfreq,vals(3),vals(4));
+				tmat=tmp.fftvalue;
+				emat=tmp.errvalue;
+				
+				%store our inf/NaN points in data
+				if vals(3)~=inf %if we have infinity/NaN points set for ratios
+					data.fftinfnnpoints=[tmp.infpoint,tmp.nnpoint];
+				end
+				
+				%give some extra meaning to title of plots
+				if length(tmp.freq)==1 %if we've calculated single harmonics
+					data.fftinfo=[' FFT Harmonic at: ',num2str(tmp.freq),' Hz'];
+				else		   %if we've calculated ratios
+					data.fftinfo=[' FFT Ratio: ',num2str(tmp.freq(1)),'Hz / ',num2str(tmp.freq(2)),'Hz'];
+				end
+				
+			case 7  %We are using the tonic
+				mini=find(data.time{1}==mint);
+				maxi=find(data.time{1}==maxt);
+				time=(maxi-mini)*data.binwidth;  %doesn't correct, same as original VS
+				% 		time=((maxi+1)-mini)*data.binwidth;  %find how many msecs the bins take up
+				% 		if data.numvars>1
+				% 			ynum=data.yrange;
+				% 		else
+				% 			ynum=1;
+				% 		end
+				for i=1:data.yrange*data.xrange*data.zrange
+					mtmp=sum(data.psth{i}(mini:maxi));
+					btmp=sum(data.bpsth{i}(mini:maxi));
+					if data.wrapped==1
+						mtmp=mtmp/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+						btmp=btmp/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+					elseif data.wrapped==2
+						mtmp=mtmp/(data.raw{1}.numtrials);
+						btmp=btmp/(data.raw{1}.numtrials);
+					end
+					if data.plotburst==1 && mtmp>0
+						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
+					elseif mtmp>0
+						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,0);
+					else
+						e=0;
+					end
+					mtmp=(mtmp/time)*1000; %convert into spikes/second
+					btmp=(btmp/time)*1000;
+					e=(e/time)*1000;
+					tmat(i)=mtmp-btmp;
+					emat(i)=e;
+				end
+		end
+		
+		if data.plotburst==1
+			data.bmatrixall=tmat;
+		elseif data.plotburst==0 && data.plottonic==0
+			data.matrixall=tmat;
+		else
+			data.tmatrixall=tmat;
+		end
+		
+		data.errormatall=emat;
+		
+		ChoosePlot;
+		
+		% 	if data.numvars>1
+		% 		x=get(gh('XHoldMenu'),'Value');
+		% 		y=get(gh('YHoldMenu'),'Value');
+		% 		s1=data.matrix(x,y); s2=data.errormat(x,y); t1='SE'; t=data.matrixtitle;
+		% 		s=[sprintf('%s\t',t),sprintf('%0.6g\t',s1),sprintf('%s\t',t1),sprintf('%0.6g\t',s2)];
+		% 		clipboard('Copy',s);
+		% 	end
+		
+		
+		%-----------------------------------------------------------------------------------------
+	case '========'
+		%----------------------------------------------------------------------------------------------
+		
+		%just a padding line for the further analysis menu
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Difference of Gaussian'
+		%-----------------------------------------------------------------------------------------
+		dogfit
+		dogfit('Import')
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Gabor Fit'
+		%-----------------------------------------------------------------------------------------
+		gaborfit
+		gaborfit('Import')
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Tuning Curves'
+		%-----------------------------------------------------------------------------------------
+		
+		switch data.numvars
+			case 0
+				helpdlg('You need to have a least one independent variable to get tuning curves!');
+				error('Tuninig curves need more variables');
+			case 1
+				SpawnPlot;
+			otherwise
+				x=data.xvalues;
+				y=data.yvalues;
+				z=data.matrix;
+				e=data.errormat;
+				
+				[a,b]=meshgrid(x,y);
+				
+				sv.tchandle=figure;
+				set(gcf,'Tag','tcplotfig');
+				figpos(1,[700 800]);
+				set(gcf,'Color',[1 1 1]);
+				subaxis(2,1,1,'S',0.1);
+				c=[[0 0 0];[1 0 0];[0 0 .6];[0 .75 0];[0.6 0.5 0];[1 0 1];[0 0.5 0.5];[1 .5 0];[.75 0 .5];[.25 .5 .25];[.25 .25 .25];[.75 .25 0];[.25 .75 0]];
+				set(gca,'ColorOrder',c);
+				set(gca,'NextPlot','replacechildren');
+				set(gcf, 'DefaultLineLineWidth', 1);
+				errorbar(b,z,e);
+				legend(num2str(data.xvalues'));
+				sv.xlabelhandle=xlabel(data.ytitle);
+				sv.ylabelhandle=ylabel('Firing Rate (spikes/second)');
+				box on
+				
+				%             if data.numvars==3
+				%                 t=[ data.runname ' [' data.heldvar ':' num2str(data.heldvalue) ']'];
+				%                 m=get(gh('SMinEdit'),'String');
+				%                 n=get(gh('SMaxEdit'),'String');
+				%                 Value=get(gh('AnalysisMenu'),'Value');
+				%                 String=get(gh('AnalysisMenu'),'String');
+				%                 o=String{Value};
+				%                 t=[ t '[' o ':' m '-' n ']'];
+				%             else
+				%                 m=get(gh('SMinEdit'),'String');
+				%                 n=get(gh('SMaxEdit'),'String');
+				%                 Value=get(gh('AnalysisMenu'),'Value');
+				%                 String=get(gh('AnalysisMenu'),'String');
+				%                 o=String{Value};
+				%                 t=[ data.runname '[' o ':' m '-' n ']'];
+				%             end
+				MakeTitle('vector');
+				sv.titlehandle=title(data.matrixtitle);
+				set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+				
+				w=rot90(z,-1);
+				w=fliplr(w);
+				f=rot90(e,-1);
+				f=fliplr(f);
+				a=rot90(a,-1);
+				a=fliplr(a);
+				subaxis(2,1,2,'S',0.1);
+				c=[[0 0 0];[1 0 0];[0 0 .6];[0 .75 0];[0.6 0.5 0];[1 0 1];[0 0.5 0.5];[1 .5 0];[.75 0 .5];[.25 .5 .25];[.25 .25 .25];[.75 .25 0];[.25 .75 0]];
+				set(gca,'ColorOrder',c);
+				set(gca,'NextPlot','replacechildren');
+				set(gcf, 'DefaultLineLineWidth', 1);
+				errorbar(a,w,f)
+				sv.xlabelhandle=xlabel(data.xtitle);
+				sv.ylabelhandle=ylabel('Firing Rate (spikes/second)');
+				box on
+				legend(num2str(data.yvalues'));
+				
+				sv.titlehandle=title(data.matrixtitle);
+				set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+				
+				x=get(gh('XHoldMenu'),'Value');
+				y=get(gh('YHoldMenu'),'Value');
+				tune.data.xcurve=data.matrix(:,x);
+				tune.data.ycurve=data.matrix(y,:);
+				tune.data.xcurveerror=data.errormat(:,x);
+				tune.data.ycurveerror=data.errormat(y,:);
+				save([sv.historypath 'tune.mat'], 'tune');
+		end
+		
+		%-----------------------------Surround Suppression Measurement----------
+	case 'Surround Suppression'
+		
+		if data.numvars==1
+			switch get(gh('SpikeMenu'),'Value');
+				case 1 %all spikes
+					a=data.matrix;
+					w=data.xvalues;
+					T='all spikes';
+				case 2 %burst spikes
+					a=data.matrix;
+					w=data.xvalues;
+					T='Burst spikes';
+				case 3 %subtract burst from all to get tonic, only surfaces etc
+					a=data.matrix;
+					w=data.xvalues;
+					T='Tonic spikes';
+				otherwise
+					errordlg('Spike Selection Error')
+					error('spike selection error in spikeset')
+			end
+			aerr=data.errormat;
+			if w(1)==0
+				s=a(1);
+				a=a-s;
+			else
+				errordlg('sorry, no 0 diameter, please calculate manually')
+				s=0;
+			end
+			[m,i]=max(a);
+			aerr=aerr./m;
+			a=a./m;
+			d=w(i);
+			figure;
+			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+			t=data.matrixtitle;
+			sv.titlehandle=title(t);
+			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+			sv.ylabelhandle=ylabel('Normalized Firing Rate');
+			sv.xlabelhandle=xlabel('Diameter');
+			legend(T,0)
+			[xx,b]=ginput(2);
+			b=mean(b);
+			b=100-b*100;
+			o=[s,d,b]; %spontaneous - diameter - percent suppression
+			t1=['Spontaneous: ' sprintf('%0.5f',s)];
+			t2=['Optimal Diameter: ' sprintf('%0.5g',d)];
+			t3=['Surround Suppression: ' sprintf('%0.5f',b)];
+			tt={t1,t2,t3};
+			gtext (tt);
+			%gtext(num2str(o))
+			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
+			clipboard('Copy',s);
+			
+		elseif data.numvars==2 % Two Variable Condition
+			Y=get(gh('YHoldMenu'),'value');
+			YY=data.yvalues(Y);
+			switch get(gh('SpikeMenu'),'Value');
+				case 1 %all spikes
+					a=data.matrix(Y,:);
+					w=data.xvalues;
+					T='all spikes';
+				case 2 %burst spikes
+					a=data.bmatrix(Y,:);
+					w=data.xvalues;
+					T='Burst spikes';
+				case 3 %subtract burst from all to get tonic, only surfaces etc
+					a=data.tmatrix(Y,:);
+					w=data.xvalues;
+					T='Tonic spikes';
+				otherwise
+					errordlg('Spike Selection Error')
+					error('spike selection error in spikeset')
+			end
+			aerr=data.errormat(Y,:);
+			
+			if w(1)==0
+				s=a(1);
+				a=a-s;
+			else
+				errordlg('sorry, no 0 diameter, please calculate manually')
+				s=0;
+			end
+			
+			[m,i]=max(a);
+			aerr=aerr./m;
+			a=a./m;
+			d=w(i);
+			figure;
+			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+			t=data.matrixtitle;
+			yt=['----' data.ytitle ' ' sprintf('%0.5g',YY)];
+			t=[t yt];
+			sv.titlehandle=title(t);
+			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+			sv.ylabelhandle=ylabel('Normalized Firing Rate');
+			sv.xlabelhandle=xlabel('Diameter');
+			legend(T,0)
+			
+			[xx,b]=ginput(2);
+			b=mean(b);
+			b=100-b*100;
+			o=[s,d,b]; %spontaneous - diameter - percent suppression
+			
+			t1=['Spontaneous: ' sprintf('%0.5f',s)];
+			t2=['Optimal Diameter: ' sprintf('%0.5g',d)];
+			t3=['Surround Suppression: ' sprintf('%0.5f',b)];
+			tt={t1,t2,t3};
+			gtext (tt);
+			%gtext(num2str(o))
+			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
+			clipboard('Copy',s);
+		end
+		
+		%----------------------------Half-width at half-height calculation---------------
+	case 'Copy Title'
+		%-------------------------------------------------------------------------
+		tit=data.matrixtitle;
+		tit=regexprep(tit,'\\newline','|');
+		tit=regexprep(tit,'\\pm','+-');
+		clipboard('copy',tit);
+		
+		%----------------------------Half-width at half-height calculation---------------
+	case 'Plot All ISIs'
+		%-------------------------------------------------------------------------
+		sv.isihandle=figure;
+		set(gcf,'Tag','isiplotfig');
+		figpos(1,[850 750]);
+		set(gcf,'Color',[1 1 1]);
+		window=str2double(get(gh('SISIWindow'),'String'));
+		
+		if data.wrapped==1
+			wrapped=1;
+		else
+			wrapped=0;
+		end
+		
+		switch data.numvars
+			case 0
+				
+			case 1
+				for i=1:data.xrange
+					isi=getisi(data.raw{i},window,0,Inf,wrapped);
+					subaxis(data.xrange,1,i,'S',0,'M',0.1,'P',0);
+					[y,x]=hist(isi,window);
+					h=bar(x,y,1,'k');
+					t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
+					[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'y');
+					[ax,h2]=suplabel('Time (ms)','x');
+					[ax,h3]=suplabel(t ,'t');
+				end
+			case 2
+				for i=1:data.yrange*data.xrange
+					isi=getisi(data.raw{i},window,0,Inf,wrapped);
+					subaxis(data.yrange,data.xrange,i,'S',0,'M',0.1,'P',0);
+					if isi == 0
+						y=zeros(1,window);
+						x=(1:window);
+					else
+						[y,x]=hist(isi,window);
+					end
+					bar(x,y,'k');
+					if max(y)==0
+						axis([-inf inf 0 1]);
+					end
+					t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
+					%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
+					[ax,h2]=suplabel('Time (ms)','x');
+					[ax,h3]=suplabel(t ,'t');
+				end
+		end
+		
+		%----------------------------Half-width at half-height calculation---------------
+	case 'Half-Width'
+		%-----------------------------------------------------------------------------------------
+		
+		HwHH('go');
+		
+		%--------------------Plateau Analysis for Helen calculation--------------------------------
+	case 'Plateau Analysis'
+		%--------------------------------------------------------------------------------------------------
+		
+		plateau('go');
+		
+		%--------------------Plateau Analysis for Helen calculation--------------------------------
+	case 'Temporal Analysis'
+		%--------------------------------------------------------------------------------------------------
+		
+		temporalanalysis(data);
+		
+		%---------------------------Run SPlot------------------------------------------------------------------
+	case 'Plot Single PSTH'
+		%---------------------------------------------------------------------------------------------------
+		
+		splot
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Burst Ratio'
+		%-----------------------------------------------------------------------------------------
+		
+		if data.measured~=1 || data.plotburst~=1
+			errordlg('You need to first measure all the spikes, then remeasure using the bursts before using this analysis')
+			error('Burst Ratio Error')
+		end
+		
+		ratio=data.bmatrix./data.matrix;
+		a=find(ratio==inf | ratio==-inf);
+		ratio(a)=0;
+		ratio(isnan(ratio))=0;
+		figure
+		if data.numvars==1
+			plot(data.xvalues,data.matrix,'k-');
+			hold on
+			[ax,h1,h2]=plotyy(data.xvalues,data.bmatrix,data.xvalues,ratio);
+			hold off
+			sv.xlabelhandle=xlabel(data.xtitle);
+			axes(ax(1))
+			sv.ylabelhandle=ylabel('All Spikes (black) and Burst Spikes (blue)');
+			axes(ax(2))
+			sv.ylabelhandle=ylabel('Ratio of Burst to Total Spikes');
+			sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
+			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+			data.ratio=ratio;
+			MR=mean(data.ratio);
+			save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
+			s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',ratio),sprintf('%0.6g\t',MR)];
+			clipboard('Copy',s);
+		else
+			pcolor(data.xvalues,data.yvalues,ratio);
+			shading interp
+			colormap(hot(256))
+			caxis([0 1])
+			sv.xlabelhandle=xlabel(data.xtitle);
+			sv.ylabelhandle=ylabel(data.ytitle);
+			sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
+			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+			set(gca,'Tag','');
+			colorbar
+			Y=get(gh('YHoldMenu'),'value');
+			data.ratio=ratio;
+			R=data.ratio(Y,:);
+			MR=mean(R);
+			save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
+			s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',R),sprintf('%0.6g\t',MR)];
+			clipboard('Copy',s);
+		end
+		
+		fixfig
+		RR=mean(mean(data.ratio));
+		RR=['Mean Burst Ratio:     ' sprintf('%0.6g',RR)]
+		gtext(RR)
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Temporal Movie'
+		%-----------------------------------------------------------------------------------------
+		%calls external movie creation routine
+		CreateMovie;
+		
+		%-----------------------------------------------------------------------------------------
+	case '2D Curves'
+		%-----------------------------------------------------------------------------------------
+		if data.numvars<2
+			errordlg('Single independent variable file is Loaded - Cannot perform this analysis')
+			error('Returned with Error')
+		end
+		if isempty(data.matrix);
+			errordlg('You must first measure a portion of the PSTH to obtain a data matrix');
+			error('Returned with Error');
+		end
+		figure;
+		sv.xhold=get(gh('XHoldMenu'),'Value');
+		sv.yhold=get(gh('YHoldMenu'),'Value');
+		xcurve=data.matrix(sv.yhold,:);
+		xcurveerror=data.errormat(sv.yhold,:);
+		ycurve=data.matrix(:,sv.xhold);
+		ycurveerror=data.errormat(:,sv.xhold);
+		set(gcf, 'DefaultLineLineWidth', 1);
+		set(gcf, 'DefaultAxesLineWidth', 1);
+		x(:,1)=data.xvalues';
+		x(:,2)=data.yvalues';
+		y(:,1)=xcurve';
+		y(:,2)=ycurve;
+		e(:,1)=xcurveerror';
+		e(:,2)=ycurveerror;
+		hold on
+		areabar(x(:,1),y(:,1),e(:,1),[.85 .80 .80],'Color',[1 0 0],'Marker','o','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+		areabar(x(:,2),y(:,2),e(:,2),[.80 .80 .85],'Color',[0 0 .6],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 .6])
+		plot(x(:,1),y(:,1),'Color',[1 0 0],'Marker','o','MarkerSize',6,'MarkerFaceColor',[1 0 0]);
+		plot(x(:,2),y(:,2),'Color',[0 0 .6],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 .6]);
+		hold off
+		box on
+		legend('X Axis','Y Axis')
+		
+		%c=[[1 0 0];[0 0 1]];
+		%set(gca,'ColorOrder',c);
+		%set(gca,'NextPlot','replacechildren');
+		%errorbar(x,y,e);
+		xmax=max(xcurve);
+		ymax=max(ycurve);
+		x=find(xcurve==xmax);
+		y=find(ycurve==ymax);
+		if max(size(x))>1; x=x(1); end;  %select the first max if more than 1
+		if max(size(y))>1; y=y(1); end;
+		x=data.xvalues(x);
+		y=data.yvalues(y);
+		sv.titlehandle=title('Please measure the RED plot first, then the blue plot');
+		sv.xlabelhandle=xlabel('Spatial Position in X or Y coordinates (deg)');
+		sv.ylabelhandle=ylabel('Firing Rate (spikes/second)');
+		axval=axis;
+		line([axval(1) axval(2)],[xmax/2 xmax/2],'Color', [1 0 0],'LineStyle',':');
+		line([x x],[axval(3) axval(4)],'Color', [1 0 0],'LineStyle',':');
+		line([axval(1) axval(2)],[ymax/2 ymax/2],'Color', [0 0 .6],'LineStyle',':');
+		line([y y],[axval(3) axval(4)],'Color', [0 0 .6],'LineStyle',':');
+		[x y]=ginput(4);
+		xval=x(1:2);
+		yval=x(3:4);
+		xvals=max(xval)-min(xval);
+		yvals=max(yval)-min(yval);
+		avg=(xvals+yvals)/2;
+		if data.numvars==3
+			t=[ data.runname ' [' data.heldvar ':' num2str(data.heldvalue) ']'];
+			m=get(gh('SMinEdit'),'String');
+			n=get(gh('SMaxEdit'),'String');
+			Value=get(gh('AnalysisMenu'),'Value');
+			String=get(gh('AnalysisMenu'),'String');
+			o=String{Value};
+			t=[ t '[' o ':' m '-' n ']'];
+		else
+			m=get(gh('SMinEdit'),'String');
+			n=get(gh('SMaxEdit'),'String');
+			Value=get(gh('AnalysisMenu'),'Value');
+			String=get(gh('AnalysisMenu'),'String');
+			o=String{Value};
+			t=[ data.runname '[' o ':' m '-' n ']'];
+		end
+		t=[t ': X curve=' num2str(xvals) '   Y curve=' num2str(yvals) ' (mean=' num2str(avg) ')'];
+		sv.titlehandle=title(t);
+		set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+		
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Plot All Spikes'
+		%-----------------------------------------------------------------------------------------
+		
+		data.areaplot=0;
+		automeasure=0;
+		data.plotburst=0;
+		data.plottonic=0;
+		set(gh('LoadText'),'String','Plot All Spikes ON');
+		set(gca,'Tag','SpikeFigMainAxes');
+		sv.AnalysisMethod=get(gh('AnalysisMenu'),'Value') ;
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Area Analysis'
+		%-----------------------------------------------------------------------------------------
+		x=str2double(get(gh('ErrorEdit'),'String'));
+		if data.numvars<2
+			errordlg('Single independent variable file is Loaded - Cannot perform this analysis')
+			error('Error: Need X and Y variable data.')
+		end
+		if data.measured==0 && data.textload==0
+			errordlg('Sorry, you need to measure the PSTH first before you can perform an area analysis...')
+			error('Error: Please measure data before area analysis.')
+		end
+		if ~isfield(data,'spontaneous') && x==0
+			errordlg('You need to first measure a spontaneous point in the data using "Plot Single PSTH" and select the correct data point');
+			error('Error: Please measure spontaneous before area analysis.')
+		end
+		data.areaplot=1;
+		set(gh('SmoothingMenu'),'Value',4);
+		set(gh('SmoothingSlider'),'Value',5);
+		sv.SmoothType='linear';
+		sv.SmoothValue=5;
+		set(findobj('Tag','SmoothingText'),'String',['Resolution: ' num2str(sv.SmoothValue)]);
+		set(gh('STypeMenu'),'Value',3);
+		set(gh('CMapMenu'),'Value',5);
+		set(gh('ShadingMenu'),'Value',3);
+		sv.PlotType='CheckerBoard';
+		sv.ShadingType='faceted';
+		sv.CMap='gray';
+		set(gh('ColorEdit'),'String','0');
+		Value=get(gh('ErrorMenu'),'Value');
+		String=get(gh('ErrorMenu'),'String');
+		sv.ErrorMode=String{Value};
+		data.anal.errormode=sv.ErrorMode;
+		
+		if x~=0
+			data.anal.error=x;
+		else
+			button=questdlg(['Do you want to use Mean+2*SD (' num2str(data.spontaneous.limitt) '), Mean+2*SE (' num2str(data.spontaneous.limitset) ') or 0.01 confidence interval of a poisson (' num2str(data.spontaneous.poissont) ')?'],'Area Analysis','2*SD','2*SE','Poisson','2*SD');
+			switch button
+				case '2*SD'
+					data.anal.error=data.spontaneous.limitt;
+				case '2*SE'
+					data.anal.error=data.spontaneous.limitset;
+				case 'Poisson'
+					data.anal.error=data.spontaneous.poissont;
+				case 'Cancel'
+					error('Area analysis cancelled');
+			end
+			if data.plotburst == 0
+				PlotDMatrix(data.matrix);
+			else
+				PlotDMatrix(data.bmatrix);
+			end
+		end
+		x=data.anal.xvals(2)-data.anal.xvals(1);
+		y=data.anal.yvals(2)-data.anal.yvals(1);
+		area=x*y;
+		a=find(data.anal.area>0);
+		data.anal.size=area*size(a,1);
+		x=axis;
+		g=text(x(1)-(x(1)/25),x(3)-(x(3)/25),num2str(data.anal.size));
+		
+		set(g,'Color',[1 0 0],'Fontsize',12,'Fontweight','bold');
+		
+		%-----------------------------------------------------------------
+		s1=data.anal.size;
+		v=get(gh('ErrorMenu'),'Value');
+		t1=String{v};
+		s2=data.anal.error; t=data.matrixtitle;
+		s=[sprintf('%s\t',t),sprintf('%0.6g\t',s1),sprintf('%s\t',t1),sprintf('%0.6g\t',s2)];
+		clipboard('Copy',s);
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Spawn'
+		%-----------------------------------------------------------------------------------------
+		
+		SpawnPlot(gca);
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Load MAT'
+		%-----------------------------------------------------------------------------------------
+		startclock=clock;
+		startcpu=cputime;
+		
+		oldpath=pwd;
+		if isfield(sv,'matsavepath') && ~isnumeric(sv.matsavepath)
+			cd(sv.matsavepath);
+		elseif isfield(sv,'matloadpath') && ~isnumeric(sv.matloadpath)
+			cd(sv.matloadpath);
+		end
+		if ~strcmp(sv.auto,'report')
+			[fn,pn]=uigetfile('*.mat','Load Processed Matrix');
+			if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('File is empty'); end
+		else
+			pn=sv.pn;
+			fn=sv.fn;
+		end
+		clear global data
+		sv.matloadpath=pn;
+		cd(pn);
+		load(fn);
+		cd(oldpath);
+		
+		set(gh('SBinWidth'),'String',num2str(data.binwidth));
+		sv.BinWidth=data.binwidth;
+		set(gh('WrappedMenu'),'Value',data.wrapped);
+		sv.Wrapped=data.wrapped;
+		set(gh('CellMenu'),'Value',data.cell);
+		sv.firstunit=data.cell;
+		
+		switch data.numvars
+			case 0
+				set(gh('HoldXText'),'String',' ');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','off');
+				set(gh('XHoldCheck'),'Enable','off');
+				set(gh('HoldYText'),'String',' ');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ');
+				set(gh('YHoldMenu'),'Enable','off');
+				set(gh('YHoldCheck'),'Enable','off');
+				set(gh('HoldZText'),'String',' ');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Enable','off');
+				
+				%%%Disenables the 3D plotting options menus
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Point'});
+				if get(gh('SPlotMenu'),'Value')>3; set(gh('SPlotMenu'),'Value',2+2); end
+				set(gh('STypeMenu'),'Enable','off');
+				set(gh('CMapMenu'),'Enable','off');
+				set(gh('ShadingMenu'),'Enable','off');
+				set(gh('LightMenu'),'Enable','off');
+				set(gh('LightingMenu'),'Enable','off');
+				set(gh('RotateButton'),'Enable','off');
+				set(gh('CMapButton'),'Enable','off');
+				set(gh('LabelButton'),'Enable','off');
+				set(gh('ColorEdit'),'Enable','off');
+				set(gh('CheckBox1'),'Enable','off');
+				set(gh('SmoothingMenu'),'Enable','off');
+				
+				sv.xval=1;
+				sv.yval=1;
+				sv.zval=1;
+				set(gh('XHoldCheck'),'Value',0);
+				set(gh('YHoldCheck'),'Value',0);
+				set(gh('ZHoldCheck'),'Value',0);
+				sv.xlock=0;
+				sv.ylock=0;
+				sv.zlock=0;
+				data.xtitle='';
+				data.xvalues=[];
+				data.xrange=1;
+				data.ytitle='';
+				data.yvalues=[];
+				data.yrange=1;
+				data.ztitle='';
+				data.zvalues=[];
+				data.zrange=1;
+				
+				set(gh('SXSlice'),'String',' ');
+				set(gh('SYSlice'),'String',' ');
+				
+			case 1
+				%%%Change Hold X & Hold Y pull down menu labels to something meaningful
+				set(gh('HoldXText'),'String','Held X Value');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','on');
+				set(gh('XHoldCheck'),'Enable','on');
+				set(gh('HoldYText'),'String','');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ');
+				set(gh('YHoldMenu'),'Enable','off');
+				set(gh('YHoldCheck'),'Enable','off');
+				set(gh('HoldZText'),'String','');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Enable','off');
+				
+				%%%Set the plotting options
+				if get(gh('SPlotMenu'),'Value')>6; set(gh('SPlotMenu'),'Value',6); end
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve'});
+				set(gh('STypeMenu'),'Enable','off');
+				set(gh('CMapMenu'),'Enable','off');
+				set(gh('ShadingMenu'),'Enable','off');
+				set(gh('LightMenu'),'Enable','off');
+				set(gh('LightingMenu'),'Enable','off');
+				set(gh('RotateButton'),'Enable','off');
+				set(gh('CMapButton'),'Enable','off');
+				set(gh('LabelButton'),'Enable','off');
+				set(gh('ColorEdit'),'Enable','off');
+				set(gh('CheckBox1'),'Enable','off');
+				set(gh('SmoothingMenu'),'String',{'none';'interpolated';'polynomial';'smoothed'});
+				set(gh('SmoothingMenu'),'Value',1);
+				set(gh('CheckBox1'),'Enable','on');
+				
+				set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
+				set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
+				sv.xval=get(gh('XHoldMenu'),'Value');
+				sv.yval=1;
+				sv.zval=1;
+				set(gh('YHoldCheck'),'Value',0);
+				set(gh('ZHoldCheck'),'Value',0);
+				sv.ylock=0;
+				sv.zlock=0;
+				data.ytitle='';
+				data.yvalues=[];
+				data.yrange=1;
+				data.ztitle='';
+				data.zvalues=[];
+				data.zrange=1;
+				
+				set(gh('SXSlice'),'String',num2str(data.xvalues));
+				set(gh('SYSlice'),'String',' ');
+				
+			case 2
+				set(gh('HoldXText'),'String','Hold X Value');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','on');
+				set(gh('XHoldCheck'),'Enable','on');
+				set(gh('HoldYText'),'String','Hold Y Value');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ')
+				set(gh('YHoldMenu'),'Enable','on');
+				set(gh('YHoldCheck'),'Enable','on');
+				set(gh('HoldZText'),'String','Hold Z Value');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','on');
+				set(gh('ZHoldCheck'),'Enable','on');
+				
+				%%%Set the plotting options
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
+				set(gh('SPlotMenu'),'Value',4+2);
+				set(gh('STypeMenu'),'Enable','on');
+				set(gh('CMapMenu'),'Enable','on');
+				set(gh('ShadingMenu'),'Enable','on');
+				set(gh('LightMenu'),'Enable','on');
+				set(gh('LightingMenu'),'Enable','on');
+				set(gh('RotateButton'),'Enable','on');
+				set(gh('CMapButton'),'Enable','on');
+				set(gh('LabelButton'),'Enable','on');
+				set(gh('ColorEdit'),'Enable','on');
+				set(gh('CheckBox1'),'Enable','on');
+				set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
+				set(gh('SmoothingMenu'),'Value',1);
+				set(gh('CheckBox1'),'Enable','on');
+				
+				set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
+				set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
+				set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
+				set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
+				sv.xval=get(gh('XHoldMenu'),'Value');
+				sv.yval=get(gh('YHoldMenu'),'Value');
+				sv.zval=1;
+				set(gh('ZHoldCheck'),'Value',0);
+				sv.zlock=0;
+				data.ztitle='';
+				data.zvalues=[];
+				data.zrange=1;
+				
+				set(gh('SXSlice'),'String',num2str(data.xvalues));
+				set(gh('SYSlice'),'String',num2str(data.yvalues));
+				
+			case 3
+				set(gh('HoldXText'),'String','Hold X Value');
+				set(gh('XHoldMenu'),'Value',1);
+				set(gh('XHoldMenu'),'String',' ');
+				set(gh('XHoldMenu'),'Enable','on');
+				set(gh('XHoldCheck'),'Enable','on');
+				set(gh('HoldYText'),'String','Hold Y Value');
+				set(gh('YHoldMenu'),'Value',1);
+				set(gh('YHoldMenu'),'String',' ')
+				set(gh('YHoldMenu'),'Enable','on');
+				set(gh('YHoldCheck'),'Enable','on');
+				set(gh('HoldZText'),'String','Hold Z Value');
+				set(gh('ZHoldMenu'),'Value',1);
+				set(gh('ZHoldMenu'),'String',' ');
+				set(gh('ZHoldMenu'),'Enable','on');
+				set(gh('ZHoldCheck'),'Enable','on');
+				
+				%%%Set the plotting options
+				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
+				set(gh('SPlotMenu'),'Value',4+2);
+				set(gh('STypeMenu'),'Enable','on');
+				set(gh('CMapMenu'),'Enable','on');
+				set(gh('ShadingMenu'),'Enable','on');
+				set(gh('LightMenu'),'Enable','on');
+				set(gh('LightingMenu'),'Enable','on');
+				set(gh('RotateButton'),'Enable','on');
+				set(gh('CMapButton'),'Enable','on');
+				set(gh('LabelButton'),'Enable','on');
+				set(gh('ColorEdit'),'Enable','on');
+				set(gh('CheckBox1'),'Enable','on');
+				set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
+				set(gh('SmoothingMenu'),'Value',1);
+				set(gh('CheckBox1'),'Enable','on');
+				
+				set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
+				set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
+				set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
+				set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
+				set(gh('ZHoldMenu'),'String',{num2str(data.zvalues')});
+				set(gh('ZHoldMenu'),'Value',ceil(data.zrange/2));
+				sv.xval=get(gh('XHoldMenu'),'Value');
+				sv.yval=get(gh('YHoldMenu'),'Value');
+				sv.zval=get(gh('ZHoldMenu'),'Value');
+				
+				if ~isfield(data,'zvalues');
+					data.ztitle='';
+					data.zvalues=[];
+					data.zrange=1;
+				end
+				
+				set(gh('SXSlice'),'String',num2str(data.xvalues));
+				set(gh('SYSlice'),'String',num2str(data.yvalues));
+		end
+		
+		if isfield(data,'sv') %better if we can use old values
+			set(gh('SStartMod'),'String',num2str(data.sv.StartMod));
+			set(gh('SStartTrial'),'String',num2str(data.sv.StartTrial));
+			set(gh('SEndMod'),'String',num2str(data.sv.EndMod));
+			set(gh('SEndTrial'),'String',num2str(data.sv.EndTrial));
+			sv.StartMod=data.sv.StartMod;
+			sv.StartTrial=data.sv.StartTrial;
+			sv.EndMod=data.sv.EndMod;
+			sv.EndTrial=data.sv.EndTrial;
+			if isfield(data.sv,'mint')
+				set(gh('SMinEdit'),'String',num2str(data.sv.mint));
+				set(gh('SMaxEdit'),'String',num2str(data.sv.maxt));
+			end
+		elseif ~strcmp(sv.auto,'report')
+			sv.EndTrial=data.raw{1}.numtrials;
+			sv.EndMod=data.raw{1}.nummods;
+			set(gh('SEndMod'),'String',num2str(sv.EndMod));
+			set(gh('SEndTrial'),'String',num2str(sv.EndTrial));
+		end
+		
+		
+		if ~isfield(data,'plottonic')
+			data.plottonic=0;
+		end
+		if ~isfield(data,'xvalueso')
+			data.xvalueso=data.xvalues;
+		end
+		if ~isfield(data,'yvalueso')
+			data.yvalueso=data.yvalues;
+		end
+		if ~isfield(data,'zvalueso')
+			data.zvalueso=data.zvalues;
+		end
+		if ~isfield(data,'runname')
+			data.filename(data.filename=='\')='/';	%stops annoying TeX interpertation errors
+			t=find(data.filename=='/');
+			data.runname=data.filename((t(end-2))+1:t(end));
+		end
+		
+		set(gh('LoadText'),'String','Plot All Spikes ON');
+		set(gh('AnalMenu'),'Value',1);
+		
 		set(gh('SMinEdit'),'UserData','yes');
 		set(gh('SMaxEdit'),'UserData','yes');
 		mint=str2double(get(gh('SMinEdit'),'String'));
@@ -951,1472 +2224,245 @@ case 'Load'
 			maxt=max(data.time{1});
 			set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
 		end
-	elseif strcmp(sv.auto,'report')
-		mint=sv.mintime;
-		maxt=sv.maxtime;
-	end
-	set(gca,'Tag','SpikeFigMainAxes');
-	spikes('Measure');
-	sv.loaded='yes';
-
-	%-----------Set up our history mechanism-----------
-	history=get(gh('spikehistory'),'String');
-	newitem=[data.filename ' | Cell ' num2str(sv.firstunit)];
-	hsize=20;	
-	if ischar(history)
-		history={history};
-	end
-	if max(strcmp(newitem,history))<1 && ~strcmp(sv.auto,'report')
-		if size(history,1)>hsize
-			history=([newitem;history(1:hsize)]); %prunes the history list
-		elseif strcmp(history(end),' ')
-			history=([newitem;history(1:end-1)]); %removes dummy space
-		else
-			history=([newitem;history]);
-		end
-		set(gh('spikehistory'),'String',history);
-		set(gh('spikehistory'),'Value',1);
-	end
-	%---------------------------------------------------
-	
-	if strcmp(sv.reload,'yes'); %ensures only non-reloaded data shows info box
-		sv.reload='no';
-	elseif ~strcmp(sv.auto,'report')
-		spikes('Data Info');
-	end
-	if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
-
-	if ~isempty(data.error) && get(gh('SShowError'),'Value')==1 %show the possible	data errors
-		warndlg(cat(1,data.error,{' ';'If trials were removed for one variable, please re-run removing the last trial manually for all the data; this happens because VSX fails to tag some spikes properly.'}));
-	end
-
-	%-----------------------Set Spike Type to Measure------------------------------------
-case 'SpikeSet'
-	%---------------------------------------------------------------------------------------------
-
-	switch get(gh('SpikeMenu'),'Value');
-	case 1 %all spikes
-		data.areaplot=0;
-		automeasure=0;
-		data.plotburst=0;
-		data.plottonic=0;
-		set(gh('AnalysisMenu'),'Enable','on');
-		set(gh('LoadText'),'String','Plot All Spikes ON');
 		set(gca,'Tag','SpikeFigMainAxes');
-		sv.AnalysisMethod=get(gh('AnalysisMenu'),'Value') ;
-	case 2 %burst spikes
-		data.areaplot=0;
-		data.plotburst=1;
-		data.plottonic=0;
-		set(gh('AnalysisMenu'),'Enable','on');
-		set(gca,'Tag','SpikeFigMainAxes');
-		set(gh('LoadText'),'String','Burst Analysis ON');
-		sv.AnalysisMethod=get(gh('AnalysisMenu'),'Value') ;
-	case 3 %subtract burst from all to get tonic, only surfaces etc
-		data.areaplot=0;
-		data.plottonic=1;
-		data.plotburst=0;
-		set(gh('AnalysisMenu'),'Enable','off');
-		set(gca,'Tag','SpikeFigMainAxes');
-		set(gh('LoadText'),'String','TONIC Analysis ON');
-	otherwise
-		errordlg('Spike Selection Error');
-		error('spike selection error in spikeset');
-	end
-
-	%---------------------Taking measurements from a reference PSTH-------------------
-case 'Measure'
-	%---------------------------------------------------------------------------------------------------
-
-	data.areaplot=0;
-	data.measured=1;
-
-	data.fftinfo=[];
-	data.fftinfnnpoints=[];
-	
-	mint=sv.mint;
-	maxt=sv.maxt;
-
-	if get(gh('SOverrideTime'),'Value')==1
-		mint=0;
-		if data.wrapped==1
-			maxt=ceil(data.modtime/10);
-		else
-			maxt=ceil(data.trialtime/10);
-		end
-		maxt=data.time{1}(ceil(maxt/data.binwidth));
-	elseif (strcmp(get(gh('SMinEdit'),'UserData'),'yes') && strcmp(get(gh('SMaxEdit'),'UserData'),'yes')) || strcmp(sv.auto,'report')
-		time=data.time{1};
-		if (mint<=0 || isnan(mint) || mint>=max(time)); mint=0; end
-		if maxt>max(time) || isnan(maxt); maxt=max(time);end
-
-		mint=mint+0.0001;
-		maxt=maxt+0.0001;
-
-		mint=time(ceil(mint/data.binwidth));
-		maxt=time(ceil(maxt/data.binwidth));
-	elseif strcmp(get(gh('SMinEdit'),'UserData'),'yes') || strcmp(get(gh('SMaxEdit'),'UserData'),'yes');
-		error('Need to Select the Other Value')
-	elseif get(gh('SOverrideTime'),'Value')==0
-		if data.numvars>1 && automeasure<1 && sv.AnalysisMethod~=6
-			[mint,maxt]=measure(data,get(gh('XHoldMenu'),'Value'),get(gh('YHoldMenu'),'Value'),get(gh('ZHoldMenu'),'Value'));
-		elseif data.numvars==1 && automeasure<1 && sv.AnalysisMethod~=6
-			[mint,maxt]=measure(data,get(gh('XHoldMenu'),'Value'),1,1);
-		elseif data.numvars==0 && automeasure<1 && sv.AnalysisMethod~=6
-			[mint,maxt]=measure(data,1,1,1);
-		end
-	end
-
-	if ~isempty(findobj('tag','MovieToolFig')) && automeasure<1 %if the movie program is already there
-		CreateMovie; %just reruns initialisation for the new timeslice
-	end
-
-	if sv.AnalysisMethod==6  %we want to be seen to use all of it for ffts
-		mint=min(data.time{1});
-		maxt=max(data.time{1});
-	end
-
-	set(gh('SMinEdit'),'String',num2str(mint));
-	set(gh('SMaxEdit'),'String',num2str(maxt));
-	sv.mint=mint;
-	sv.maxt=maxt;
-
-	String=get(gh('ErrorMenu'),'String');
-	Value=get(gh('ErrorMenu'),'Value');
-	err=String{Value};
-
-	if data.plotburst==1
-		rawpsth=data.bpsth;
-	elseif data.plotburst==0
-		rawpsth=data.psth;
-	end
-
-	tmat=zeros(data.yrange,data.xrange,data.zrange);	%the data matrix
-	emat=zeros(data.yrange,data.xrange,data.zrange);	%the error matrix
-
-	if isfield(data,'plotonic') && data.plottonic==1
-		sv.AnalysisMethod=7;
-	end
-	%axes(gh('SpikeFigMainAxes'));
-
-	switch(sv.AnalysisMethod)
-	%================================================We are using the mean
-	case 1		
-		mini=find(data.time{1}==mint);
-		maxi=find(data.time{1}==maxt);
-		time=(maxi-mini)*data.binwidth;  %doesn't correct, same as original VS
-		%time=((maxi+1)-mini)*data.binwidth;  %corrects for the extra binwidth
-		for i=1:data.yrange*data.xrange*data.zrange
-			x=sum(rawpsth{i}(mini:maxi));
-			if data.wrapped==1 %wrapped
-				x=x/(data.raw{i}.numtrials*data.raw{i}.nummods); %we have to get the values for an individual trial
-			elseif data.wrapped==2
-				x=x/(data.raw{i}.numtrials);
-			end
-			if data.plotburst==1 && x>0
-				e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
-			elseif x>0
-				e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,0);
-			else
-				e=0;
-			end
-
-			x=(x/time)*1000; %convert into spikes/second
-
-			if strcmp(sv.ErrorMode,'Fano Factor') || strcmp(sv.ErrorMode,'Coefficient of Variation') || strcmp(sv.ErrorMode,'Allan Factor')				
-			else
-				e=(e/time)*1000;
-			end
-			tmat(i)=x;
-			emat(i)=e;
-		end
-
-	%================================================We are using the Peak
-	case 2
-		mini=find(data.time{1}==mint); %find the index for the times
-		maxi=find(data.time{1}==maxt);
-		for i=1:data.yrange*data.xrange*data.zrange
-			m=max(rawpsth{i}(mini:maxi));	  %look for the maximum in the range specified
-			if m>0				   %the value is greater than 0
-				n=find(rawpsth{i}(mini:maxi)==m);   %find the points where max occurs
-				if size(n,2)>1			%there is more than 1 position
-					n=n(1);				%so we just select the first
-				end
-				n=n+(mini-1);			 %to get the index into PSTH we add the mini index
-				if n>1 && n<length(rawpsth{1}) % somewhere in the psth
-					x=(sum(rawpsth{i}(n-1:n+1)));
-					mit=data.time{i}(n-1);
-					mxt=data.time{i}(n+1)+data.binwidth;
-					if data.plotburst==1
-						e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
-					else
-						e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
-					end
-					if data.wrapped==1
-						x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-					elseif data.wrapped==2
-						x=x/(data.raw{1}.numtrials);
-					end
-				elseif n==length(rawpsth{1}) %we are at the end of the psth
-					x=(sum(rawpsth{i}(n-2:n)));
-					mit=data.time{i}(n-2);
-					mxt=data.time{i}(n)+data.binwidth;
-					if data.plotburst==1
-						e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
-					else
-						e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
-					end
-					if data.wrapped==1
-						x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-					elseif data.wrapped==2
-						x=x/(data.raw{1}.numtrials);
-					end
-				elseif n==1 %we are at the beginning
-					x=(sum(rawpsth{i}(n:n+2)));
-					mit=data.time{i}(n);
-					mxt=data.time{i}(n+2)+data.binwidth;
-					if data.plotburst==1
-						e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
-					else
-						e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
-					end
-					if data.wrapped==1
-						x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-					elseif data.wrapped==2
-						x=x/(data.raw{1}.numtrials);
-					end
-				end
-				x=(x/(data.binwidth*3))*1000;	 %convert into spikes/second
-				e=(e/(data.binwidth*3))*1000;
-				tmat(i)=x;
-				emat(i)=e;
-			else  %data is just all zero values
-				tmat(i)=0;
-				emat(i)=0;
-			end
-		end
-
-	case 3 %We are using the Peak using only 1 bin
-
-		mini=find(data.time{1}==mint); %find the index for the times
-		maxi=find(data.time{1}==maxt);
-		for i=1:data.yrange*data.xrange*data.zrange
-				m=max(rawpsth{i}(mini:maxi));		%look for the maximum in the range specified
-				if m>0				   %the value is greater than 0
-					n=find(rawpsth{i}(mini:maxi)==m);	 %find the points where max occurs
-					if size(n,2)>1			%there is more than 1 position
-						n=n(1);				%so we just select the first
-					end
-					n=n+(mini-1);			 %to get the index into PSTH we add the mini index
-					if n>1 && n<length(rawpsth{1})	 %check if we are at the beginning
-						x=(sum(rawpsth{i}(n)));			  %Peak is just 1 bin
-						mit=data.time{i}(n);
-						mxt=data.time{i}(n)+data.binwidth;
-						if data.plotburst==1
-							e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
-						else
-							e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
-						end
-						if data.wrapped==1
-							x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-						elseif data.wrapped==2
-							x=x/(data.raw{1}.numtrials);
-						end
-					else
-						x=(sum(rawpsth{i}(n)));	  %Peak is the average over 3 bins starting at 1
-						mit=data.time{i}(n);
-						mxt=data.time{i}(n)+data.binwidth;
-						if data.plotburst==1
-							e=finderror(data.raw{i},err,mint,maxt,data.wrapped,1);
-						else
-							e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
-						end
-						if data.wrapped==1
-							x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-						elseif data.wrapped==2
-							x=x/(data.raw{1}.numtrials);
-						end
-					end
-					x=(x/(data.binwidth))*1000;	 %convert into spikes/second
-					e=(e/(data.binwidth))*1000;
-					tmat(i)=x;
-					emat(i)=e;
-				else  %data is just all zero values
-					tmat(i)=0;
-					emat(i)=0;
-				end
-			end
-
-
-	case 4 %We are using the count
-		mini=find(data.time{1}==mint);
-		maxi=find(data.time{1}==maxt);
-		%time=(maxi-(mini-1))*data.binwidth;
-		for i=1:data.yrange*data.xrange
-			x=sum(rawpsth{i}(mini:maxi));
-			if data.plotburst==1
-				e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
-			else
-				e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,0);
-			end
-			tmat(i)=x;
-			emat(i)=e;
-		end
-
-	case 5 %We are using the peak/mean ratio
-		errordlg('Not yet set up...');
-
-	case 6 %We're using FFT
-		%if we're using a doc file, user needs to give temp freq
-		if isempty(data.tempfreq)
-			tmpfrq=inputdlg('Temporal Frequency (Hz)?','Temp Freq for FFT Calculation');
-			data.tempfreq=tmpfrq{1};
-		end
-
-		%get our options from GUI box
-		vals=fftoptions(data.tempfreq);
-
-		%call up fft finding routine and assign values
-		tmp=computefft(vals(1),vals(2),sv.ErrorMode,data.tempfreq,vals(3),vals(4));
-		tmat=tmp.fftvalue;
-		emat=tmp.errvalue;
-
-		%store our inf/NaN points in data
-		if vals(3)~=inf %if we have infinity/NaN points set for ratios
-			data.fftinfnnpoints=[tmp.infpoint,tmp.nnpoint];
-		end
-
-		%give some extra meaning to title of plots
-		if length(tmp.freq)==1 %if we've calculated single harmonics
-			data.fftinfo=[' FFT Harmonic at: ',num2str(tmp.freq),' Hz'];
-		else		   %if we've calculated ratios
-			data.fftinfo=[' FFT Ratio: ',num2str(tmp.freq(1)),'Hz / ',num2str(tmp.freq(2)),'Hz'];
-		end
-
-	case 7  %We are using the tonic
-		mini=find(data.time{1}==mint);
-		maxi=find(data.time{1}==maxt);
-		time=(maxi-mini)*data.binwidth;  %doesn't correct, same as original VS
-% 		time=((maxi+1)-mini)*data.binwidth;  %find how many msecs the bins take up
-% 		if data.numvars>1
-% 			ynum=data.yrange;
-% 		else
-% 			ynum=1;
-% 		end
-		for i=1:data.yrange*data.xrange*data.zrange
-			mtmp=sum(data.psth{i}(mini:maxi));
-			btmp=sum(data.bpsth{i}(mini:maxi));
-			if data.wrapped==1
-				mtmp=mtmp/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-				btmp=btmp/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-			elseif data.wrapped==2
-				mtmp=mtmp/(data.raw{1}.numtrials);
-				btmp=btmp/(data.raw{1}.numtrials);
-			end
-			if data.plotburst==1 && mtmp>0
-				e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
-			elseif mtmp>0
-				e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,0);
-			else 
-				e=0;
-			end
-			mtmp=(mtmp/time)*1000; %convert into spikes/second
-			btmp=(btmp/time)*1000;
-			e=(e/time)*1000;
-			tmat(i)=mtmp-btmp;
-			emat(i)=e;
-		end
-	end
-
-	if data.plotburst==1
-		data.bmatrixall=tmat;
-	elseif data.plotburst==0 && data.plottonic==0
-		data.matrixall=tmat;
-	else
-		data.tmatrixall=tmat;
-	end
-
-	data.errormatall=emat;
-
-	ChoosePlot;
-
-% 	if data.numvars>1
-% 		x=get(gh('XHoldMenu'),'Value');
-% 		y=get(gh('YHoldMenu'),'Value');
-% 		s1=data.matrix(x,y); s2=data.errormat(x,y); t1='SE'; t=data.matrixtitle;
-% 		s=[sprintf('%s\t',t),sprintf('%0.6g\t',s1),sprintf('%s\t',t1),sprintf('%0.6g\t',s2)];
-% 		clipboard('Copy',s);
-% 	end
-
-
-	%-----------------------------------------------------------------------------------------
-case '========'
-	%----------------------------------------------------------------------------------------------
-
-	%just a padding line for the further analysis menu
-
-	%-----------------------------------------------------------------------------------------
-case 'Difference of Gaussian'
-	%-----------------------------------------------------------------------------------------
-	dogfit
-	dogfit('Import')
-	
-	%-----------------------------------------------------------------------------------------
-case 'Gabor Fit'
-	%-----------------------------------------------------------------------------------------
-	gaborfit
-	gaborfit('Import')
-
-	%-----------------------------------------------------------------------------------------
-case 'Tuning Curves'
-	%-----------------------------------------------------------------------------------------
-
-	switch data.numvars
-		case 0
-			helpdlg('You need to have a least one independent variable to get tuning curves!');
-			error('Tuninig curves need more variables');
-		case 1
-			SpawnPlot;
-		otherwise
-			x=data.xvalues;
-			y=data.yvalues;
-			z=data.matrix;
-			e=data.errormat;
-			
-			[a,b]=meshgrid(x,y);
-
-			sv.tchandle=figure;
-			set(gcf,'Tag','tcplotfig');
-			figpos(1,[700 800]);
-			set(gcf,'Color',[1 1 1]);
-			subaxis(2,1,1,'S',0.1);
-			c=[[0 0 0];[1 0 0];[0 0 .6];[0 .75 0];[0.6 0.5 0];[1 0 1];[0 0.5 0.5];[1 .5 0];[.75 0 .5];[.25 .5 .25];[.25 .25 .25];[.75 .25 0];[.25 .75 0]];
-			set(gca,'ColorOrder',c);
-			set(gca,'NextPlot','replacechildren');
-			set(gcf, 'DefaultLineLineWidth', 1);
-			errorbar(b,z,e);
-			legend(num2str(data.xvalues'));
-			sv.xlabelhandle=xlabel(data.ytitle);
-			sv.ylabelhandle=ylabel('Firing Rate (spikes/second)');
-			box on
-
-%             if data.numvars==3
-%                 t=[ data.runname ' [' data.heldvar ':' num2str(data.heldvalue) ']'];
-%                 m=get(gh('SMinEdit'),'String');
-%                 n=get(gh('SMaxEdit'),'String');
-%                 Value=get(gh('AnalysisMenu'),'Value');
-%                 String=get(gh('AnalysisMenu'),'String');
-%                 o=String{Value};
-%                 t=[ t '[' o ':' m '-' n ']'];
-%             else
-%                 m=get(gh('SMinEdit'),'String');
-%                 n=get(gh('SMaxEdit'),'String');
-%                 Value=get(gh('AnalysisMenu'),'Value');
-%                 String=get(gh('AnalysisMenu'),'String');
-%                 o=String{Value};
-%                 t=[ data.runname '[' o ':' m '-' n ']'];
-%             end
-			MakeTitle('vector');
-			sv.titlehandle=title(data.matrixtitle);
-			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-			
-			w=rot90(z,-1);
-			w=fliplr(w);
-			f=rot90(e,-1);
-			f=fliplr(f);
-			a=rot90(a,-1);
-			a=fliplr(a);
-			subaxis(2,1,2,'S',0.1);
-			c=[[0 0 0];[1 0 0];[0 0 .6];[0 .75 0];[0.6 0.5 0];[1 0 1];[0 0.5 0.5];[1 .5 0];[.75 0 .5];[.25 .5 .25];[.25 .25 .25];[.75 .25 0];[.25 .75 0]];
-			set(gca,'ColorOrder',c);
-			set(gca,'NextPlot','replacechildren');
-			set(gcf, 'DefaultLineLineWidth', 1);
-			errorbar(a,w,f)
-			sv.xlabelhandle=xlabel(data.xtitle);
-			sv.ylabelhandle=ylabel('Firing Rate (spikes/second)');
-			box on
-			legend(num2str(data.yvalues'));
-
-			sv.titlehandle=title(data.matrixtitle);
-			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-
-			x=get(gh('XHoldMenu'),'Value');
-			y=get(gh('YHoldMenu'),'Value');
-			tune.data.xcurve=data.matrix(:,x);
-			tune.data.ycurve=data.matrix(y,:);
-			tune.data.xcurveerror=data.errormat(:,x);
-			tune.data.ycurveerror=data.errormat(y,:);
-			save([sv.historypath 'tune.mat'], 'tune');
-	end
-
-	%-----------------------------Surround Suppression Measurement----------
-case 'Surround Suppression'
-
-if data.numvars==1
-	switch get(gh('SpikeMenu'),'Value');
-	case 1 %all spikes
-		a=data.matrix;
-		w=data.xvalues;
-		T='all spikes';
-	case 2 %burst spikes
-		a=data.matrix;
-		w=data.xvalues;
-		T='Burst spikes';
-	case 3 %subtract burst from all to get tonic, only surfaces etc
-		a=data.matrix;
-		w=data.xvalues;
-		T='Tonic spikes';
-	otherwise
-		errordlg('Spike Selection Error')
-		error('spike selection error in spikeset')
-	end
-	aerr=data.errormat;
-	if w(1)==0
-		s=a(1);
-		a=a-s;
-	else
-		errordlg('sorry, no 0 diameter, please calculate manually')
-		s=0;
-	end
-	[m,i]=max(a);
-	aerr=aerr./m;
-	a=a./m;
-	d=w(i);
-	figure;
-	areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
-	t=data.matrixtitle;
-	sv.titlehandle=title(t);
-	set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-	sv.ylabelhandle=ylabel('Normalized Firing Rate');
-	sv.xlabelhandle=xlabel('Diameter');
-	legend(T,0)
-	[xx,b]=ginput(2);
-	b=mean(b);
-	b=100-b*100;
-	o=[s,d,b]; %spontaneous - diameter - percent suppression
-	t1=['Spontaneous: ' sprintf('%0.5f',s)];
-	t2=['Optimal Diameter: ' sprintf('%0.5g',d)];
-	t3=['Surround Suppression: ' sprintf('%0.5f',b)];
-	tt={t1,t2,t3};
-	 gtext (tt);
-	%gtext(num2str(o))
-	s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
-	clipboard('Copy',s);
-
-elseif data.numvars==2 % Two Variable Condition
-		Y=get(gh('YHoldMenu'),'value');
-		YY=data.yvalues(Y);
-		switch get(gh('SpikeMenu'),'Value');
-		case 1 %all spikes
-		a=data.matrix(Y,:);
-		w=data.xvalues;
-		T='all spikes';
-		case 2 %burst spikes
-		a=data.bmatrix(Y,:);
-		w=data.xvalues;
-		T='Burst spikes';
-		case 3 %subtract burst from all to get tonic, only surfaces etc
-		a=data.tmatrix(Y,:);
-		w=data.xvalues;
-		T='Tonic spikes';
-		otherwise
-		errordlg('Spike Selection Error')
-		error('spike selection error in spikeset')
-		end
-aerr=data.errormat(Y,:);
-
-if w(1)==0
-	s=a(1);
-	a=a-s;
-else
-	errordlg('sorry, no 0 diameter, please calculate manually')
-	s=0;
-end
-
-[m,i]=max(a);
-aerr=aerr./m;
-a=a./m;
-d=w(i);
-figure;
-areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
-t=data.matrixtitle;
-yt=['----' data.ytitle ' ' sprintf('%0.5g',YY)];
-t=[t yt];
-sv.titlehandle=title(t);
-set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-sv.ylabelhandle=ylabel('Normalized Firing Rate');
-sv.xlabelhandle=xlabel('Diameter');
-legend(T,0)
-
-[xx,b]=ginput(2);
-b=mean(b);
-b=100-b*100;
-o=[s,d,b]; %spontaneous - diameter - percent suppression
-
- t1=['Spontaneous: ' sprintf('%0.5f',s)];
- t2=['Optimal Diameter: ' sprintf('%0.5g',d)];
- t3=['Surround Suppression: ' sprintf('%0.5f',b)];
- tt={t1,t2,t3};
- gtext (tt);
-%gtext(num2str(o))
-s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
-clipboard('Copy',s);
-end
-
-	%----------------------------Half-width at half-height calculation---------------
-case 'Copy Title'
-	%-------------------------------------------------------------------------
-	tit=data.matrixtitle;
-	tit=regexprep(tit,'\\newline','|');
-	tit=regexprep(tit,'\\pm','+-');
-	clipboard('copy',tit);
-
-	%----------------------------Half-width at half-height calculation---------------
-case 'Plot All ISIs'
-	%-------------------------------------------------------------------------
-	sv.isihandle=figure;
-	set(gcf,'Tag','isiplotfig');
-	figpos(1,[850 750]);
-	set(gcf,'Color',[1 1 1]);
-	window=str2double(get(gh('SISIWindow'),'String'));
-	
-	if data.wrapped==1
-		wrapped=1;
-	else
-		wrapped=0;
-	end
-	
-	switch data.numvars
-	case 0
+		spikes('Measure');
+		sv.loaded='yes';
 		
-	case 1
-		for i=1:data.xrange
-			isi=getisi(data.raw{i},window,0,Inf,wrapped);
-			subaxis(data.xrange,1,i,'S',0,'M',0.1,'P',0);
-			[y,x]=hist(isi,window);
-			h=bar(x,y,1,'k');
-			t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
-			[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'y');
-			[ax,h2]=suplabel('Time (ms)','x');
-			[ax,h3]=suplabel(t ,'t');
-		end			
-	case 2				
-		for i=1:data.yrange*data.xrange
-			isi=getisi(data.raw{i},window,0,Inf,wrapped);
-			subaxis(data.yrange,data.xrange,i,'S',0,'M',0.1,'P',0);
-			if isi == 0
-				y=zeros(1,window);
-				x=(1:window);
+		if isfield(data,'info') && ~strcmp(sv.auto,'report')
+			spikes('Data Info');
+			if isfield(data,'comments')
+				set(gh('DIComments'),'String',data.comments);
+			end
+		end
+		if ~strcmp(sv.auto,'report')
+			endclock=etime(clock,startclock);
+			endcpu=cputime-startcpu;
+			set(sv.uihandle,'Name', [sv.version ' | Loading matrix took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
+			time=[];
+		end
+		
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Save MAT'
+		%-----------------------------------------------------------------------------------------
+		oldpath=pwd;
+		%data.matrix=0;  %just so the user has to remeasure the data to get a matrix
+		if isfield(sv,'matsavepath') && ~isnumeric(sv.matsavepath)
+			cd(sv.matsavepath);
+		elseif isfield(sv,'matloadpath') && ~isnumeric(sv.matloadpath)
+			cd(sv.matloadpath);
+		end
+		if ~isempty(data);
+			[fn,pn]=uiputfile('*.mat','Save the Processed Matrix');
+			data.sv=sv;
+			sv.matsavepath=pn;
+			if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('Returned with Error'), end;
+			cd(pn);
+			save(fn,'data');
+			cd(oldpath);
+		else
+			errordlg('No Data has been Processed...');
+		end
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Save WK1'
+		%-----------------------------------------------------------------------------------------
+		
+		if ~isempty(data);
+			[fn,pn]=uiputfile('*.csv','Save the Current Surface Numerically as .CSV ');
+			if isequal(fn,0)||isequal(pn,0);errordlg('Sorry, no file selected');error('No file selected');end
+			if data.plottype == 4 %PSTH needed
+				mytitle=regexprep(data.matrixtitle,'\\newline',' ');
+				mytitle=regexprep(mytitle,'\\pm','+-');
+				dlmwrite([pn,fn],mytitle,'delimiter','');
+				myout=[data.time{sv.yval,sv.xval,sv.zval}',data.psth{sv.yval,sv.xval,sv.zval}'];
+				dlmwrite([pn,fn],myout,'delimiter',',','-append');
 			else
-				[y,x]=hist(isi,window);
+				dlmwrite([pn,fn],data.matrix,'delimiter',',');
+				dlmwrite([pn,fn],data.errormat,'delimiter',',','-append','roffset', 1);
 			end
-			bar(x,y,'k');	
-			if max(y)==0
-				axis([-inf inf 0 1]);
-			end
-			t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
-			%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
-			[ax,h2]=suplabel('Time (ms)','x');
-			[ax,h3]=suplabel(t ,'t');
-		end
-	end
-	
-	%----------------------------Half-width at half-height calculation---------------
-case 'Half-Width'
-	%-----------------------------------------------------------------------------------------
-
-	HwHH('go');
-
-	%--------------------Plateau Analysis for Helen calculation--------------------------------
-case 'Plateau Analysis'
-	%--------------------------------------------------------------------------------------------------
-
-	plateau('go');
-
-	%--------------------Plateau Analysis for Helen calculation--------------------------------
-case 'Temporal Analysis'
-	%--------------------------------------------------------------------------------------------------
-	
-	temporalanalysis(data);		
-
-	%---------------------------Run SPlot------------------------------------------------------------------
-case 'Plot Single PSTH'
-	%---------------------------------------------------------------------------------------------------
-
-	splot
-
-	%-----------------------------------------------------------------------------------------
-case 'Burst Ratio'
-	%-----------------------------------------------------------------------------------------
-
-	if data.measured~=1 || data.plotburst~=1
-		errordlg('You need to first measure all the spikes, then remeasure using the bursts before using this analysis')
-		error('Burst Ratio Error')
-	end
-
-	ratio=data.bmatrix./data.matrix;
-	a=find(ratio==inf | ratio==-inf);
-	ratio(a)=0;
-	ratio(isnan(ratio))=0;
-	figure
-	if data.numvars==1
-		plot(data.xvalues,data.matrix,'k-');
-		hold on
-		[ax,h1,h2]=plotyy(data.xvalues,data.bmatrix,data.xvalues,ratio);
-		hold off
-		sv.xlabelhandle=xlabel(data.xtitle);
-		axes(ax(1))
-		sv.ylabelhandle=ylabel('All Spikes (black) and Burst Spikes (blue)');
-		axes(ax(2))
-		sv.ylabelhandle=ylabel('Ratio of Burst to Total Spikes');
-		sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
-		set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-		data.ratio=ratio;
-		MR=mean(data.ratio);
-		save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
-	s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',ratio),sprintf('%0.6g\t',MR)];
-	clipboard('Copy',s);
-	else
-		pcolor(data.xvalues,data.yvalues,ratio);
-		shading interp
-		colormap(hot(256))
-		caxis([0 1])
-		sv.xlabelhandle=xlabel(data.xtitle);
-		sv.ylabelhandle=ylabel(data.ytitle);
-		sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
-		set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-		set(gca,'Tag','');
-		colorbar
-		Y=get(gh('YHoldMenu'),'value');
-		data.ratio=ratio;
-		R=data.ratio(Y,:);
-		MR=mean(R);
-		save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
-	s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',R),sprintf('%0.6g\t',MR)];
-	clipboard('Copy',s);
-	end
-
-	fixfig
-	RR=mean(mean(data.ratio));
-	RR=['Mean Burst Ratio:     ' sprintf('%0.6g',RR)]
-	gtext(RR)
-
-	%-----------------------------------------------------------------------------------------
-case 'Temporal Movie'
-	%-----------------------------------------------------------------------------------------
-	%calls external movie creation routine
-	CreateMovie;
-
-	%-----------------------------------------------------------------------------------------
-case '2D Curves'
-	%-----------------------------------------------------------------------------------------
-	if data.numvars<2
-		errordlg('Single independent variable file is Loaded - Cannot perform this analysis')
-		error('Returned with Error')
-	end
-	if isempty(data.matrix);
-		errordlg('You must first measure a portion of the PSTH to obtain a data matrix');
-		error('Returned with Error');
-	end
-	figure;
-	sv.xhold=get(gh('XHoldMenu'),'Value');
-	sv.yhold=get(gh('YHoldMenu'),'Value');
-	xcurve=data.matrix(sv.yhold,:);
-	xcurveerror=data.errormat(sv.yhold,:);
-	ycurve=data.matrix(:,sv.xhold);
-	ycurveerror=data.errormat(:,sv.xhold);
-	set(gcf, 'DefaultLineLineWidth', 1);
-	set(gcf, 'DefaultAxesLineWidth', 1);
-	x(:,1)=data.xvalues';
-	x(:,2)=data.yvalues';
-	y(:,1)=xcurve';
-	y(:,2)=ycurve;
-	e(:,1)=xcurveerror';
-	e(:,2)=ycurveerror;
-	hold on
-	areabar(x(:,1),y(:,1),e(:,1),[.85 .80 .80],'Color',[1 0 0],'Marker','o','MarkerSize',6,'MarkerFaceColor',[1 0 0])
-	areabar(x(:,2),y(:,2),e(:,2),[.80 .80 .85],'Color',[0 0 .6],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 .6])
-	plot(x(:,1),y(:,1),'Color',[1 0 0],'Marker','o','MarkerSize',6,'MarkerFaceColor',[1 0 0]);
-	plot(x(:,2),y(:,2),'Color',[0 0 .6],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 .6]);
-	hold off
-	box on
-	legend('X Axis','Y Axis')
-
-	%c=[[1 0 0];[0 0 1]];
-	%set(gca,'ColorOrder',c);
-	%set(gca,'NextPlot','replacechildren');
-	%errorbar(x,y,e);
-	xmax=max(xcurve);
-	ymax=max(ycurve);
-	x=find(xcurve==xmax);
-	y=find(ycurve==ymax);
-	if max(size(x))>1; x=x(1); end;  %select the first max if more than 1
-	if max(size(y))>1; y=y(1); end;
-	x=data.xvalues(x);
-	y=data.yvalues(y);
-	sv.titlehandle=title('Please measure the RED plot first, then the blue plot');
-	sv.xlabelhandle=xlabel('Spatial Position in X or Y coordinates (deg)');
-	sv.ylabelhandle=ylabel('Firing Rate (spikes/second)');
-	axval=axis;
-	line([axval(1) axval(2)],[xmax/2 xmax/2],'Color', [1 0 0],'LineStyle',':');
-	line([x x],[axval(3) axval(4)],'Color', [1 0 0],'LineStyle',':');
-	line([axval(1) axval(2)],[ymax/2 ymax/2],'Color', [0 0 .6],'LineStyle',':');
-	line([y y],[axval(3) axval(4)],'Color', [0 0 .6],'LineStyle',':');
-	[x y]=ginput(4);
-	xval=x(1:2);
-	yval=x(3:4);
-	xvals=max(xval)-min(xval);
-	yvals=max(yval)-min(yval);
-	avg=(xvals+yvals)/2;
-	if data.numvars==3
-		t=[ data.runname ' [' data.heldvar ':' num2str(data.heldvalue) ']'];
-		m=get(gh('SMinEdit'),'String');
-		n=get(gh('SMaxEdit'),'String');
-		Value=get(gh('AnalysisMenu'),'Value');
-		String=get(gh('AnalysisMenu'),'String');
-		o=String{Value};
-		t=[ t '[' o ':' m '-' n ']'];
-	else
-		m=get(gh('SMinEdit'),'String');
-		n=get(gh('SMaxEdit'),'String');
-		Value=get(gh('AnalysisMenu'),'Value');
-		String=get(gh('AnalysisMenu'),'String');
-		o=String{Value};
-		t=[ data.runname '[' o ':' m '-' n ']'];
-	end
-	t=[t ': X curve=' num2str(xvals) '   Y curve=' num2str(yvals) ' (mean=' num2str(avg) ')'];
-	sv.titlehandle=title(t);
-	set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-
-
-	%-----------------------------------------------------------------------------------------
-case 'Plot All Spikes'
-	%-----------------------------------------------------------------------------------------
-
-	data.areaplot=0;
-	automeasure=0;
-	data.plotburst=0;
-	data.plottonic=0;
-	set(gh('LoadText'),'String','Plot All Spikes ON');
-	set(gca,'Tag','SpikeFigMainAxes');
-	sv.AnalysisMethod=get(gh('AnalysisMenu'),'Value') ;
-
-	%-----------------------------------------------------------------------------------------
-case 'Area Analysis'
-	%-----------------------------------------------------------------------------------------
-	x=str2double(get(gh('ErrorEdit'),'String'));
-	if data.numvars<2
-		errordlg('Single independent variable file is Loaded - Cannot perform this analysis')
-		error('Error: Need X and Y variable data.')
-	end
-	if data.measured==0 && data.textload==0
-		errordlg('Sorry, you need to measure the PSTH first before you can perform an area analysis...')
-		error('Error: Please measure data before area analysis.')
-	end
-	if ~isfield(data,'spontaneous') && x==0
-		errordlg('You need to first measure a spontaneous point in the data using "Plot Single PSTH" and select the correct data point');
-		error('Error: Please measure spontaneous before area analysis.')
-	end
-	data.areaplot=1;
-	set(gh('SmoothingMenu'),'Value',4);
-	set(gh('SmoothingSlider'),'Value',5);
-	sv.SmoothType='linear';
-	sv.SmoothValue=5; 
-	set(findobj('Tag','SmoothingText'),'String',['Resolution: ' num2str(sv.SmoothValue)]);
-	set(gh('STypeMenu'),'Value',3);
-	set(gh('CMapMenu'),'Value',5);
-	set(gh('ShadingMenu'),'Value',3);
-	sv.PlotType='CheckerBoard';
-	sv.ShadingType='faceted';
-	sv.CMap='gray';
-	set(gh('ColorEdit'),'String','0');
-	Value=get(gh('ErrorMenu'),'Value');
-	String=get(gh('ErrorMenu'),'String');
-	sv.ErrorMode=String{Value};
-	data.anal.errormode=sv.ErrorMode;
-	
-	if x~=0
-		data.anal.error=x;
-	else
-		button=questdlg(['Do you want to use Mean+2*SD (' num2str(data.spontaneous.limitt) '), Mean+2*SE (' num2str(data.spontaneous.limitset) ') or 0.01 confidence interval of a poisson (' num2str(data.spontaneous.poissont) ')?'],'Area Analysis','2*SD','2*SE','Poisson','2*SD');
-		switch button
-			case '2*SD'
-				data.anal.error=data.spontaneous.limitt;		
-			case '2*SE'
-				data.anal.error=data.spontaneous.limitset;	
-			case 'Poisson'
-				data.anal.error=data.spontaneous.poissont;
-			case 'Cancel'
-				error('Area analysis cancelled');
-		end
-		if data.plotburst == 0
-			PlotDMatrix(data.matrix);
 		else
-			PlotDMatrix(data.bmatrix);
+			errordlg('No Data has been Plotted Yet...');
 		end
-	end
-	x=data.anal.xvals(2)-data.anal.xvals(1);
-	y=data.anal.yvals(2)-data.anal.yvals(1);
-	area=x*y;
-	a=find(data.anal.area>0);
-	data.anal.size=area*size(a,1);
-	x=axis;
-	g=text(x(1)-(x(1)/25),x(3)-(x(3)/25),num2str(data.anal.size));
-
-	set(g,'Color',[1 0 0],'Fontsize',12,'Fontweight','bold');
-
-	%-----------------------------------------------------------------
-	s1=data.anal.size;
-	v=get(gh('ErrorMenu'),'Value');
-	t1=String{v};
-	s2=data.anal.error; t=data.matrixtitle;
-	s=[sprintf('%s\t',t),sprintf('%0.6g\t',s1),sprintf('%s\t',t1),sprintf('%0.6g\t',s2)];
-	clipboard('Copy',s);
-
-	%-----------------------------------------------------------------------------------------
-case 'Spawn'
-	%-----------------------------------------------------------------------------------------
-
-	SpawnPlot(gca);
-
-	%-----------------------------------------------------------------------------------------
-case 'Load MAT'
-	%-----------------------------------------------------------------------------------------
-	startclock=clock;
-	startcpu=cputime;
-
-	oldpath=pwd;
-	if isfield(sv,'matsavepath') && ~isnumeric(sv.matsavepath)
-		cd(sv.matsavepath);
-	elseif isfield(sv,'matloadpath') && ~isnumeric(sv.matloadpath)
-		cd(sv.matloadpath);
-	end
-	if ~strcmp(sv.auto,'report')
-		[fn,pn]=uigetfile('*.mat','Load Processed Matrix');
-		if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('File is empty'); end
-	else
-		pn=sv.pn;
-		fn=sv.fn;
-	end
-	clear global data
-	sv.matloadpath=pn;
-	cd(pn);
-	load(fn);
-	cd(oldpath);
-	
-	set(gh('SBinWidth'),'String',num2str(data.binwidth));
-	sv.BinWidth=data.binwidth;
-	set(gh('WrappedMenu'),'Value',data.wrapped);
-	sv.Wrapped=data.wrapped;
-	set(gh('CellMenu'),'Value',data.cell);
-	sv.firstunit=data.cell;
-	
-	switch data.numvars
-		case 0
-			set(gh('HoldXText'),'String',' ');
-			set(gh('XHoldMenu'),'Value',1);
-			set(gh('XHoldMenu'),'String',' ');
-			set(gh('XHoldMenu'),'Enable','off');
-			set(gh('XHoldCheck'),'Enable','off');
-			set(gh('HoldYText'),'String',' ');
-			set(gh('YHoldMenu'),'Value',1);
-			set(gh('YHoldMenu'),'String',' ');
-			set(gh('YHoldMenu'),'Enable','off');
-			set(gh('YHoldCheck'),'Enable','off');
-			set(gh('HoldZText'),'String',' ');
-			set(gh('ZHoldMenu'),'Value',1);
-			set(gh('ZHoldMenu'),'String',' ');
-			set(gh('ZHoldMenu'),'Enable','off');
-			set(gh('ZHoldCheck'),'Enable','off');
-
-			%%%Disenables the 3D plotting options menus
-			set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Point'});
-			if get(gh('SPlotMenu'),'Value')>3; set(gh('SPlotMenu'),'Value',2+2); end
-			set(gh('STypeMenu'),'Enable','off');
-			set(gh('CMapMenu'),'Enable','off');
-			set(gh('ShadingMenu'),'Enable','off');
-			set(gh('LightMenu'),'Enable','off');
-			set(gh('LightingMenu'),'Enable','off');
-			set(gh('RotateButton'),'Enable','off');
-			set(gh('CMapButton'),'Enable','off');
-			set(gh('LabelButton'),'Enable','off');
-			set(gh('ColorEdit'),'Enable','off');
-			set(gh('CheckBox1'),'Enable','off');
-			set(gh('SmoothingMenu'),'Enable','off');
-			
-			sv.xval=1;
-			sv.yval=1;
-			sv.zval=1;
-			set(gh('XHoldCheck'),'Value',0);
-			set(gh('YHoldCheck'),'Value',0);
-			set(gh('ZHoldCheck'),'Value',0);
-			sv.xlock=0;
-			sv.ylock=0;
-			sv.zlock=0;
-			data.xtitle='';
-			data.xvalues=[];
-			data.xrange=1;
-			data.ytitle='';
-			data.yvalues=[];
-			data.yrange=1;
-			data.ztitle='';
-			data.zvalues=[];
-			data.zrange=1;
-            
-            set(gh('SXSlice'),'String',' ');
-            set(gh('SYSlice'),'String',' ');
-			
-		case 1
-			%%%Change Hold X & Hold Y pull down menu labels to something meaningful
-			set(gh('HoldXText'),'String','Held X Value');
-			set(gh('XHoldMenu'),'Value',1);
-			set(gh('XHoldMenu'),'String',' ');
-			set(gh('XHoldMenu'),'Enable','on');
-			set(gh('XHoldCheck'),'Enable','on');
-			set(gh('HoldYText'),'String','');
-			set(gh('YHoldMenu'),'Value',1);
-			set(gh('YHoldMenu'),'String',' ');
-			set(gh('YHoldMenu'),'Enable','off');
-			set(gh('YHoldCheck'),'Enable','off');
-			set(gh('HoldZText'),'String','');
-			set(gh('ZHoldMenu'),'Value',1);
-			set(gh('ZHoldMenu'),'String',' ');
-			set(gh('ZHoldMenu'),'Enable','off');
-			set(gh('ZHoldCheck'),'Enable','off');
-
-			%%%Set the plotting options
-			if get(gh('SPlotMenu'),'Value')>6; set(gh('SPlotMenu'),'Value',6); end
-			set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve'});
-			set(gh('STypeMenu'),'Enable','off');
-			set(gh('CMapMenu'),'Enable','off');
-			set(gh('ShadingMenu'),'Enable','off');
-			set(gh('LightMenu'),'Enable','off');
-			set(gh('LightingMenu'),'Enable','off');
-			set(gh('RotateButton'),'Enable','off');
-			set(gh('CMapButton'),'Enable','off');
-			set(gh('LabelButton'),'Enable','off');
-			set(gh('ColorEdit'),'Enable','off');
-			set(gh('CheckBox1'),'Enable','off');
-			set(gh('SmoothingMenu'),'String',{'none';'interpolated';'polynomial';'smoothed'});
-			set(gh('SmoothingMenu'),'Value',1);
-			set(gh('CheckBox1'),'Enable','on');
-			
-			set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
-			set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
-			sv.xval=get(gh('XHoldMenu'),'Value');
-			sv.yval=1;
-			sv.zval=1;
-			set(gh('YHoldCheck'),'Value',0);
-			set(gh('ZHoldCheck'),'Value',0);
-			sv.ylock=0;
-			sv.zlock=0;
-			data.ytitle='';
-			data.yvalues=[];
-			data.yrange=1;
-			data.ztitle='';
-			data.zvalues=[];
-			data.zrange=1;
-            
-            set(gh('SXSlice'),'String',num2str(data.xvalues));
-            set(gh('SYSlice'),'String',' ');
-			
-		case 2
-			set(gh('HoldXText'),'String','Hold X Value');
-			set(gh('XHoldMenu'),'Value',1);
-			set(gh('XHoldMenu'),'String',' ');
-			set(gh('XHoldMenu'),'Enable','on');
-			set(gh('XHoldCheck'),'Enable','on');
-			set(gh('HoldYText'),'String','Hold Y Value');
-			set(gh('YHoldMenu'),'Value',1);
-			set(gh('YHoldMenu'),'String',' ')
-			set(gh('YHoldMenu'),'Enable','on');
-			set(gh('YHoldCheck'),'Enable','on');
-			set(gh('HoldZText'),'String','Hold Z Value');
-			set(gh('ZHoldMenu'),'Value',1);
-			set(gh('ZHoldMenu'),'String',' ');
-			set(gh('ZHoldMenu'),'Enable','on');
-			set(gh('ZHoldCheck'),'Enable','on');
-
-			%%%Set the plotting options
-			set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
-			set(gh('SPlotMenu'),'Value',4+2);
-			set(gh('STypeMenu'),'Enable','on');
-			set(gh('CMapMenu'),'Enable','on');
-			set(gh('ShadingMenu'),'Enable','on');
-			set(gh('LightMenu'),'Enable','on');
-			set(gh('LightingMenu'),'Enable','on');
-			set(gh('RotateButton'),'Enable','on');
-			set(gh('CMapButton'),'Enable','on');
-			set(gh('LabelButton'),'Enable','on');
-			set(gh('ColorEdit'),'Enable','on');
-			set(gh('CheckBox1'),'Enable','on');
-			set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
-			set(gh('SmoothingMenu'),'Value',1);
-			set(gh('CheckBox1'),'Enable','on');
-			
-			set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
-			set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
-			set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
-			set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
-			sv.xval=get(gh('XHoldMenu'),'Value');
-			sv.yval=get(gh('YHoldMenu'),'Value');
-			sv.zval=1;
-			set(gh('ZHoldCheck'),'Value',0);
-			sv.zlock=0;
-			data.ztitle='';
-			data.zvalues=[];
-			data.zrange=1;
-            
-            set(gh('SXSlice'),'String',num2str(data.xvalues));
-            set(gh('SYSlice'),'String',num2str(data.yvalues));
-			
-		case 3
-			set(gh('HoldXText'),'String','Hold X Value');
-			set(gh('XHoldMenu'),'Value',1);
-			set(gh('XHoldMenu'),'String',' ');
-			set(gh('XHoldMenu'),'Enable','on');
-			set(gh('XHoldCheck'),'Enable','on');
-			set(gh('HoldYText'),'String','Hold Y Value');
-			set(gh('YHoldMenu'),'Value',1);
-			set(gh('YHoldMenu'),'String',' ')
-			set(gh('YHoldMenu'),'Enable','on');
-			set(gh('YHoldCheck'),'Enable','on');
-			set(gh('HoldZText'),'String','Hold Z Value');
-			set(gh('ZHoldMenu'),'Value',1);
-			set(gh('ZHoldMenu'),'String',' ');
-			set(gh('ZHoldMenu'),'Enable','on');
-			set(gh('ZHoldCheck'),'Enable','on');
-
-			%%%Set the plotting options
-			set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
-			set(gh('SPlotMenu'),'Value',4+2);
-			set(gh('STypeMenu'),'Enable','on');
-			set(gh('CMapMenu'),'Enable','on');
-			set(gh('ShadingMenu'),'Enable','on');
-			set(gh('LightMenu'),'Enable','on');
-			set(gh('LightingMenu'),'Enable','on');
-			set(gh('RotateButton'),'Enable','on');
-			set(gh('CMapButton'),'Enable','on');
-			set(gh('LabelButton'),'Enable','on');
-			set(gh('ColorEdit'),'Enable','on');
-			set(gh('CheckBox1'),'Enable','on');
-			set(gh('SmoothingMenu'),'String',{'none';'cubic';'spline';'linear';'nearest'});
-			set(gh('SmoothingMenu'),'Value',1);
-			set(gh('CheckBox1'),'Enable','on');
-			
-			set(gh('XHoldMenu'),'String',{num2str(data.xvalues')});
-			set(gh('XHoldMenu'),'Value',ceil(data.xrange/2));
-			set(gh('YHoldMenu'),'String',{num2str(data.yvalues')});
-			set(gh('YHoldMenu'),'Value',ceil(data.yrange/2));
-			set(gh('ZHoldMenu'),'String',{num2str(data.zvalues')});
-			set(gh('ZHoldMenu'),'Value',ceil(data.zrange/2));
-			sv.xval=get(gh('XHoldMenu'),'Value');
-			sv.yval=get(gh('YHoldMenu'),'Value');
-			sv.zval=get(gh('ZHoldMenu'),'Value');
-			
-			if ~isfield(data,'zvalues');
-				data.ztitle='';
-				data.zvalues=[];
-				data.zrange=1;
-            end
-            
-            set(gh('SXSlice'),'String',num2str(data.xvalues));
-            set(gh('SYSlice'),'String',num2str(data.yvalues));
-	end
-	
-	if isfield(data,'sv') %better if we can use old values
-		set(gh('SStartMod'),'String',num2str(data.sv.StartMod));
-		set(gh('SStartTrial'),'String',num2str(data.sv.StartTrial));
-		set(gh('SEndMod'),'String',num2str(data.sv.EndMod));
-		set(gh('SEndTrial'),'String',num2str(data.sv.EndTrial));
-		sv.StartMod=data.sv.StartMod;
-		sv.StartTrial=data.sv.StartTrial;
-		sv.EndMod=data.sv.EndMod;
-		sv.EndTrial=data.sv.EndTrial;
-		if isfield(data.sv,'mint')
-			set(gh('SMinEdit'),'String',num2str(data.sv.mint));
-			set(gh('SMaxEdit'),'String',num2str(data.sv.maxt));
-		end
-	elseif ~strcmp(sv.auto,'report')		
-		sv.EndTrial=data.raw{1}.numtrials;
-		sv.EndMod=data.raw{1}.nummods;
-		set(gh('SEndMod'),'String',num2str(sv.EndMod));
-		set(gh('SEndTrial'),'String',num2str(sv.EndTrial));
-	end
-	
-	
-	if ~isfield(data,'plottonic')
-		data.plottonic=0;
-	end
-	if ~isfield(data,'xvalueso')
-		data.xvalueso=data.xvalues;
-	end
-	if ~isfield(data,'yvalueso')
-		data.yvalueso=data.yvalues;
-	end
-	if ~isfield(data,'zvalueso')
-		data.zvalueso=data.zvalues;
-	end
-	if ~isfield(data,'runname')		
-		data.filename(data.filename=='\')='/';	%stops annoying TeX interpertation errors
-		t=find(data.filename=='/');
-		data.runname=data.filename((t(end-2))+1:t(end));
-	end
-	
-	set(gh('LoadText'),'String','Plot All Spikes ON');
-	set(gh('AnalMenu'),'Value',1);
-
-	set(gh('SMinEdit'),'UserData','yes');
-	set(gh('SMaxEdit'),'UserData','yes');
-	mint=str2double(get(gh('SMinEdit'),'String'));
-	maxt=str2double(get(gh('SMaxEdit'),'String'));
-	if isempty(mint) || str2double(mint)<min(data.time{1})
-		mint=min(data.time{1});
-		set(gh('SMinEdit'),'String',num2str(min(data.time{1})));
-	end
-	if isempty(maxt) || str2double(maxt)>max(data.time{1})
-		maxt=max(data.time{1});
-		set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
-	end
-	set(gca,'Tag','SpikeFigMainAxes');
-	spikes('Measure');
-	sv.loaded='yes';
-
-	if isfield(data,'info') && ~strcmp(sv.auto,'report')
-		spikes('Data Info');
-		if isfield(data,'comments')
-			set(gh('DIComments'),'String',data.comments);
-		end
-	end
-	if ~strcmp(sv.auto,'report')
-		endclock=etime(clock,startclock);
-		endcpu=cputime-startcpu;
-		set(sv.uihandle,'Name', [sv.version ' | Loading matrix took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
-		time=[];
-	end
-
-	
-	%-----------------------------------------------------------------------------------------
-case 'Save MAT'
-	%-----------------------------------------------------------------------------------------
-    oldpath=pwd;
-	%data.matrix=0;  %just so the user has to remeasure the data to get a matrix
-    if isfield(sv,'matsavepath') && ~isnumeric(sv.matsavepath)
-        cd(sv.matsavepath);
-    elseif isfield(sv,'matloadpath') && ~isnumeric(sv.matloadpath)
-        cd(sv.matloadpath);
-    end
-	if ~isempty(data);
-		[fn,pn]=uiputfile('*.mat','Save the Processed Matrix');
-        data.sv=sv;
-		sv.matsavepath=pn;
-		if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('Returned with Error'), end;
-        cd(pn);
-		save(fn,'data');
-        cd(oldpath);
-	else
-		errordlg('No Data has been Processed...');
-	end
-
-	%-----------------------------------------------------------------------------------------
-case 'Save WK1'
-	%-----------------------------------------------------------------------------------------
-
-	if ~isempty(data);
-		[fn,pn]=uiputfile('*.csv','Save the Current Surface Numerically as .CSV ');
-		if isequal(fn,0)||isequal(pn,0);errordlg('Sorry, no file selected');error('No file selected');end
-		if data.plottype == 4 %PSTH needed
-			mytitle=regexprep(data.matrixtitle,'\\newline',' ');
-			mytitle=regexprep(mytitle,'\\pm','+-');
-			dlmwrite([pn,fn],mytitle,'delimiter','');
-			myout=[data.time{sv.yval,sv.xval,sv.zval}',data.psth{sv.yval,sv.xval,sv.zval}'];
-			dlmwrite([pn,fn],myout,'delimiter',',','-append');
-		else
-			dlmwrite([pn,fn],data.matrix,'delimiter',',');
-			dlmwrite([pn,fn],data.errormat,'delimiter',',','-append','roffset', 1);
-		end
-	else
-		errordlg('No Data has been Plotted Yet...');
-	end
-
-	%-----------------------------------------------------------------------------------------
-case 'Data Info'
-	%-----------------------------------------------------------------------------------------
-
-	if ~isempty(gh('DataInfoBox'))
-		close(gh('DataInfoBox'));
-	end
-
-	if strcmp(data.filetype,'txt') || strcmp(data.filetype,'smr')
-		pos=get(gh('SpikeFig'),'Position');
-		h=datainfobox;
-		pos2=get(gh('DataInfoBox'),'Position');
-		x=pos(1)+pos(3)+2;
-		y=pos(2);
-		set(h,'Position',[x y pos2(3) pos(4)]);
-		if ~isempty(data.error)
-			errorc=cell(1);
-			for i=1:length(data.error)
-				a=1;
-				if ~isempty(data.error{i})
-					if a==1
-						errorc=data.error{i};
-					else
-						errorc=cat(1,errorc,data.error{i});
-					end;
-					a=a+1;
-				end
-			end
-			out=cat(1,errorc,data.info);
-		else
-			out=data.info;
-		end
-		set(gh('DITextDisplay'),'String',out);
-		figure(gh('SpikeFig'));
-	end
-	
-	
-	%-----------------------------------------------------------------------------------------
-case 'Polar Diagonals'
-	%-----------------------------------------------------------------------------------------
-	polardiagonal;
-	
-	%-----------------------------------------------------------------------------------------
-case 'Metric Space'
-	%-----------------------------------------------------------------------------------------
-	data.metricspace=metricspace(data,sv,0);
-	
-	%-----------------------------------------------------------------------------------------
-case 'Metric Space (Interval)'
-	%-----------------------------------------------------------------------------------------
-	data.metricspace=metricspace(data,sv,1);
-	
-	%-----------------------------------------------------------------------------------------
-case 'Binless'
-	%-----------------------------------------------------------------------------------------
-	
-	binlessspikes(data,sv)
-	
-	%-----------------------------------------------------------------------------------------
-case 'Direct Method'
-	%-----------------------------------------------------------------------------------------
-	
-	directspikes(data,sv)
-	
-	%-----------------------------------------------------------------------------------------
-case 'Plot PSTH'
-	%-----------------------------------------------------------------------------------------
-
-	PlotPSTH;
-
-	%-----------------------------------------------------------------------------------------
-case 'Plot All PSTHs'
-	%-----------------------------------------------------------------------------------------
-
-	PlotAllPSTHs;
-
-	%-----------------------------------------------------------------------------------------
-case 'Plot Burst'
-	%-----------------------------------------------------------------------------------------
-	data.plotburst=1;
-	data.plottonic=0;
-	set(gh('LoadText'),'String','Burst Analysis ON');
-
-	%-----------------------------------------------------------------------------------------
-case 'Plot Tonic'
-	%-----------------------------------------------------------------------------------------
-
-	data.plottonic=1;
-	data.plotburst=0;
-	set(gh('LoadText'),'String','TONIC Analysis ON');
-
-	%-----------------------------------------------------------------------------------------
-case 'PlotMatrix'
-	%-----------------------------------------------------------------------------------------
-	PlotDMatrix;
-
-	%-----------------------------------------------------------------------------------------
-case 'RePlot'
-	%-----------------------------------------------------------------------------------------
-	data.areaplot=0;
-	ChoosePlot;
-	
-	%------------------------------------------Load Text---------------------------------
-case 'Load Text'
-	%-----------------------------------------------------------------------------------------
-
-	set(gh('LoadText'),'String','Text Load - Remember, you cannot ''reanalyse''.');
-	if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
-	if ~exist([sv.matlabroot,'\user\various\cheat.mat'],'file')
-		errordlg('You need to put "Cheat.mat" in the "user\various" directory, or else this function will not work')
-		set(gh('LoadText'),'String','Text Load Cludge! Failed');
-		error('Text Load Cludge Failed!')
-	end
-	load([sv.matlabroot,'\user\various\cheat.mat'])
-	dos('"C:\Program Files\Frogbit\frogbitrun.exe" "C:\Program Files\Frogbit\tstrip.FB"')
-	cd('c:\');   %where frogbit saves the temporary info file
-	if ~exist('ttemp','file');errordlg('Sorry can''t find the Processed text file: Error 20');error('no ttemp file1'); end;
-	[header,var]=hdload('ttemp');  % Loads the frogbit data file
-	data.matrix=var(2:end,2:end);  %text files have 1st column/row as variable tags
-	data.filename=header;
-	data.plotburst=0;
-	data.plottonic=0;
-	data.textload=1;
-	data.areaplot=0;
-	data.xvalues=var(1,2:end);	 %here are the tags
-	a=find(data.xvalues < 0.001 & data.xvalues>-0.001);
-	data.xvalues(a)=0;
-	data.yvalues=var(2:end,1)';
-	a=find(data.yvalues < 0.001 & data.yvalues>-0.001);
-	data.yvalues(a)=0;
-	data.xrange=length(data.xvalues);
-	data.yrange=length(data.yvalues);
-	cla reset
-	sv.titlehandle=title('Click "Replot" to see text matrix data');
-	%---------------------------------------------------------------
-
-	%-----------------------------------------------------------------------------------------
-case 'Exit'
-	%-----------------------------------------------------------------------------------------
-	try
-		paths.init='';
-		if isfield(sv,'matsavepath')
-			paths.matsavepath=sv.matsavepath;
-		end
-		if isfield(sv,'matloadpath')
-			paths.matloadpath=sv.matloadpath;
-		end
-		if isfield(sv,'dataloadpath')
-			paths.dataloadpath=sv.dataloadpath;
-		end
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Data Info'
+		%-----------------------------------------------------------------------------------------
+		
 		if ~isempty(gh('DataInfoBox'))
 			close(gh('DataInfoBox'));
 		end
-		history=get(gh('spikehistory'),'String');
-		shistory=get(gh('SSliceHistory'),'String');
-		save([sv.historypath 'shistory.mat'],'shistory');
-		hsize=20;
-		if size(history,1)>1
-			if size(history,1)>hsize
-				history=history(1:hsize); %prunes the history list
-			elseif strcmp(history(end),' ')
-				history=history(1:end-1); %removes dummy space
+		
+		if strcmp(data.filetype,'txt') || strcmp(data.filetype,'smr')
+			pos=get(gh('SpikeFig'),'Position');
+			h=datainfobox;
+			pos2=get(gh('DataInfoBox'),'Position');
+			x=pos(1)+pos(3)+2;
+			y=pos(2);
+			set(h,'Position',[x y pos2(3) pos(4)]);
+			if ~isempty(data.error)
+				errorc=cell(1);
+				for i=1:length(data.error)
+					a=1;
+					if ~isempty(data.error{i})
+						if a==1
+							errorc=data.error{i};
+						else
+							errorc=cat(1,errorc,data.error{i});
+						end;
+						a=a+1;
+					end
+				end
+				out=cat(1,errorc,data.info);
+			else
+				out=data.info;
 			end
-			save([sv.historypath 'history.mat'],'history','paths');
+			set(gh('DITextDisplay'),'String',out);
+			figure(gh('SpikeFig'));
 		end
-		if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end;
+		
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Polar Diagonals'
+		%-----------------------------------------------------------------------------------------
+		polardiagonal;
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Metric Space'
+		%-----------------------------------------------------------------------------------------
+		data.metricspace=metricspace(data,sv,0);
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Metric Space (Interval)'
+		%-----------------------------------------------------------------------------------------
+		data.metricspace=metricspace(data,sv,1);
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Binless'
+		%-----------------------------------------------------------------------------------------
+		
+		binlessspikes(data,sv)
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Direct Method'
+		%-----------------------------------------------------------------------------------------
+		
+		directspikes(data,sv)
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Plot PSTH'
+		%-----------------------------------------------------------------------------------------
+		
+		PlotPSTH;
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Plot All PSTHs'
+		%-----------------------------------------------------------------------------------------
+		
+		PlotAllPSTHs;
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Plot Burst'
+		%-----------------------------------------------------------------------------------------
+		data.plotburst=1;
+		data.plottonic=0;
+		set(gh('LoadText'),'String','Burst Analysis ON');
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Plot Tonic'
+		%-----------------------------------------------------------------------------------------
+		
+		data.plottonic=1;
+		data.plotburst=0;
+		set(gh('LoadText'),'String','TONIC Analysis ON');
+		
+		%-----------------------------------------------------------------------------------------
+	case 'PlotMatrix'
+		%-----------------------------------------------------------------------------------------
+		PlotDMatrix;
+		
+		%-----------------------------------------------------------------------------------------
+	case 'RePlot'
+		%-----------------------------------------------------------------------------------------
+		data.areaplot=0;
+		ChoosePlot;
+		
+		%------------------------------------------Load Text---------------------------------
+	case 'Load Text'
+		%-----------------------------------------------------------------------------------------
+		
+		set(gh('LoadText'),'String','Text Load - Remember, you cannot ''reanalyse''.');
 		if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
-		clear data sv;
-		clear history shistory paths;
-		delete(gcf);
-	catch
-		clear data sv;
-		clear history shistory paths;
-		delete(gcf);
-		error('Couldn''t close down cleanly, history files not saved')
-	end
-
-	%-----------------------------------------------------------------------------------------
+		if ~exist([sv.matlabroot,'\user\various\cheat.mat'],'file')
+			errordlg('You need to put "Cheat.mat" in the "user\various" directory, or else this function will not work')
+			set(gh('LoadText'),'String','Text Load Cludge! Failed');
+			error('Text Load Cludge Failed!')
+		end
+		load([sv.matlabroot,'\user\various\cheat.mat'])
+		dos('"C:\Program Files\Frogbit\frogbitrun.exe" "C:\Program Files\Frogbit\tstrip.FB"')
+		cd('c:\');   %where frogbit saves the temporary info file
+		if ~exist('ttemp','file');errordlg('Sorry can''t find the Processed text file: Error 20');error('no ttemp file1'); end;
+		[header,var]=hdload('ttemp');  % Loads the frogbit data file
+		data.matrix=var(2:end,2:end);  %text files have 1st column/row as variable tags
+		data.filename=header;
+		data.plotburst=0;
+		data.plottonic=0;
+		data.textload=1;
+		data.areaplot=0;
+		data.xvalues=var(1,2:end);	 %here are the tags
+		a=find(data.xvalues < 0.001 & data.xvalues>-0.001);
+		data.xvalues(a)=0;
+		data.yvalues=var(2:end,1)';
+		a=find(data.yvalues < 0.001 & data.yvalues>-0.001);
+		data.yvalues(a)=0;
+		data.xrange=length(data.xvalues);
+		data.yrange=length(data.yvalues);
+		cla reset
+		sv.titlehandle=title('Click "Replot" to see text matrix data');
+		%---------------------------------------------------------------
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Exit'
+		%-----------------------------------------------------------------------------------------
+		try
+			paths.init='';
+			if isfield(sv,'matsavepath')
+				paths.matsavepath=sv.matsavepath;
+			end
+			if isfield(sv,'matloadpath')
+				paths.matloadpath=sv.matloadpath;
+			end
+			if isfield(sv,'dataloadpath')
+				paths.dataloadpath=sv.dataloadpath;
+			end
+			if ~isempty(gh('DataInfoBox'))
+				close(gh('DataInfoBox'));
+			end
+			history=get(gh('spikehistory'),'String');
+			shistory=get(gh('SSliceHistory'),'String');
+			save([sv.historypath 'shistory.mat'],'shistory');
+			hsize=20;
+			if size(history,1)>1
+				if size(history,1)>hsize
+					history=history(1:hsize); %prunes the history list
+				elseif strcmp(history(end),' ')
+					history=history(1:end-1); %removes dummy space
+				end
+				save([sv.historypath 'history.mat'],'history','paths');
+			end
+			if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end;
+			if exist([sv.historypath 'data.mat'],'file');delete([sv.historypath 'data.mat']); end;
+			clear data sv;
+			clear history shistory paths;
+			delete(gcf);
+		catch
+			clear data sv;
+			clear history shistory paths;
+			delete(gcf);
+			error('Couldn''t close down cleanly, history files not saved')
+		end
+		
+		%-----------------------------------------------------------------------------------------
 end  %end of spikes main program switch
 
 %#############################################################################
@@ -2446,8 +2492,8 @@ if strcmp (get(gcf,'Tag'),'SpikeFig') %stops errors coming from mmpolar plots
 end
 
 if regexpi(sv.PlotType,'(Normal|Polar)') %stops errors coming from curve > surface plots
-	Value=get(gh('STypeMenu'),'Value');          
-	String=get(gh('STypeMenu'),'String');        
+	Value=get(gh('STypeMenu'),'Value');
+	String=get(gh('STypeMenu'),'String');
 	sv.PlotType=String{Value};
 end
 
@@ -2467,45 +2513,45 @@ xlinear=x;
 ylinear=y;
 
 switch(sv.SmoothType)
-case 'none'
-	xx=x;
-	yy=y;
-	data.anal.xvals=xx;
-	data.anal.yvals=yy;
-	dd=zdata;
-	if strcmp(sv.PlotType,'Rectangle Plot');	ee=data.errormat; end
-case 'cubic'
-	xx=linspace(min(x),max(x),(length(x)*sv.SmoothValue));
-	yy=linspace(min(y),max(y),(length(y)*sv.SmoothValue));
-	data.anal.xvals=xx;
-	data.anal.yvals=yy;
-	[xx,yy]=meshgrid(xx,yy);
-	[x,y]=meshgrid(x,y);
-	dd=interp2(x,y,zdata,xx,yy,'cubic');
-case 'linear'
-	xx=linspace(min(data.xvalues),max(data.xvalues),(data.xrange*sv.SmoothValue));
-	yy=linspace(min(data.yvalues),max(data.yvalues),(data.yrange*sv.SmoothValue));
-	data.anal.xvals=xx;
-	data.anal.yvals=yy;
-	[xx,yy]=meshgrid(xx,yy);
-	[x,y]=meshgrid(data.xvalues,data.yvalues);
-	dd=interp2(x,y,zdata,xx,yy,'linear');
-case 'nearest'
-	xx=linspace(min(data.xvalues),max(data.xvalues),(data.xrange*sv.SmoothValue));
-	yy=linspace(min(data.yvalues),max(data.yvalues),(data.yrange*sv.SmoothValue));
-	data.anal.xvals=xx;
-	data.anal.yvals=yy;
-	[xx,yy]=meshgrid(xx,yy);
-	[x,y]=meshgrid(data.xvalues,data.yvalues);
-	dd=interp2(x,y,zdata,xx,yy,'nearest');
-case 'spline'
-	xx=linspace(min(data.xvalues),max(data.xvalues),(data.xrange*sv.SmoothValue));
-	yy=linspace(min(data.yvalues),max(data.yvalues),(data.yrange*sv.SmoothValue));
-	data.anal.xvals=xx;
-	data.anal.yvals=yy;
-	[xx,yy]=meshgrid(xx,yy);
-	[x,y]=meshgrid(data.xvalues,data.yvalues);
-	dd=interp2(x,y,zdata,xx,yy,'spline');
+	case 'none'
+		xx=x;
+		yy=y;
+		data.anal.xvals=xx;
+		data.anal.yvals=yy;
+		dd=zdata;
+		if strcmp(sv.PlotType,'Rectangle Plot');	ee=data.errormat; end
+	case 'cubic'
+		xx=linspace(min(x),max(x),(length(x)*sv.SmoothValue));
+		yy=linspace(min(y),max(y),(length(y)*sv.SmoothValue));
+		data.anal.xvals=xx;
+		data.anal.yvals=yy;
+		[xx,yy]=meshgrid(xx,yy);
+		[x,y]=meshgrid(x,y);
+		dd=interp2(x,y,zdata,xx,yy,'cubic');
+	case 'linear'
+		xx=linspace(min(data.xvalues),max(data.xvalues),(data.xrange*sv.SmoothValue));
+		yy=linspace(min(data.yvalues),max(data.yvalues),(data.yrange*sv.SmoothValue));
+		data.anal.xvals=xx;
+		data.anal.yvals=yy;
+		[xx,yy]=meshgrid(xx,yy);
+		[x,y]=meshgrid(data.xvalues,data.yvalues);
+		dd=interp2(x,y,zdata,xx,yy,'linear');
+	case 'nearest'
+		xx=linspace(min(data.xvalues),max(data.xvalues),(data.xrange*sv.SmoothValue));
+		yy=linspace(min(data.yvalues),max(data.yvalues),(data.yrange*sv.SmoothValue));
+		data.anal.xvals=xx;
+		data.anal.yvals=yy;
+		[xx,yy]=meshgrid(xx,yy);
+		[x,y]=meshgrid(data.xvalues,data.yvalues);
+		dd=interp2(x,y,zdata,xx,yy,'nearest');
+	case 'spline'
+		xx=linspace(min(data.xvalues),max(data.xvalues),(data.xrange*sv.SmoothValue));
+		yy=linspace(min(data.yvalues),max(data.yvalues),(data.yrange*sv.SmoothValue));
+		data.anal.xvals=xx;
+		data.anal.yvals=yy;
+		[xx,yy]=meshgrid(xx,yy);
+		[x,y]=meshgrid(data.xvalues,data.yvalues);
+		dd=interp2(x,y,zdata,xx,yy,'spline');
 end
 
 xmax=max(max(xx));
@@ -2534,137 +2580,137 @@ end
 
 cla reset;
 contourlevels=str2double(get(gh('SContourLevels'),'String'));
-	
+
 switch(sv.PlotType)	%For different plots
-
-case 'Raw Data'
-	imagesc(xlinear,ylinear,zdata);
-% 	if xlinear(1) > xlinear(end);set(gca,'XDir','normal');end
-	if ylinear(1) < ylinear(end);set(gca,'YDir','normal');end
-	%set(gca,'XTick',data.xvalues);
-	%set(gca,'YTick',data.yvalues);
-	%set(gca,'YDir','normal');
-	data.dim=0;
-
-case 'Mesh'
-	mesh(xx,yy,dd)
-	shading(sv.ShadingType);
-	grid off;
-	axis vis3d;
-	axis tight;
-	if a==0
-		if b==90
-			view([-45 45]);
+	
+	case 'Raw Data'
+		imagesc(xlinear,ylinear,zdata);
+		% 	if xlinear(1) > xlinear(end);set(gca,'XDir','normal');end
+		if ylinear(1) < ylinear(end);set(gca,'YDir','normal');end
+		%set(gca,'XTick',data.xvalues);
+		%set(gca,'YTick',data.yvalues);
+		%set(gca,'YDir','normal');
+		data.dim=0;
+		
+	case 'Mesh'
+		mesh(xx,yy,dd)
+		shading(sv.ShadingType);
+		grid off;
+		axis vis3d;
+		axis tight;
+		if a==0
+			if b==90
+				view([-45 45]);
+			end
+		else
+			view(a,b);
 		end
-	else
-		view(a,b);
-	end
-	data.dim=1;
-
-case 'CheckerBoard'
-	pcolor(xx,yy,dd);
-	shading(sv.ShadingType);
-	%colormap(sv.CMap);
-	data.dim=0;
-
-case 'CheckerBoard+Contour'
-	pcolor(xx,yy,dd);
-	shading(sv.ShadingType);
-	hold on;
-	if contourlevels>0
-		[c,h] = contour(xx,yy,dd,contourlevels); clabel(c,h);
-	else
-		[c,h] = contour(xx,yy,dd,'k'); clabel(c,h);
-	end
-	hold off;
-	data.dim=0;
-
-case 'Surface'
-	surf(xx,yy,dd,'FaceColor','interp','EdgeColor','none','FaceLighting',sv.Lighting);
-	material shiny;
-	shading(sv.ShadingType);
-	camlight headlight
-	grid off;
-	axis vis3d;
-	axis tight;
-	if a==0
-		if b==90
-			view([-45 45]);
-		end
-	else
-		view(a,b);
-	end
-	data.dim=1;
-
-
-case 'Lighted Surface'
-	surfl(xx,yy,dd);
-	shading(sv.ShadingType);
-	material metal;
-	colormap(bone(256));
-	grid off;
-	axis vis3d;
-	axis tight;
-	if a==0
-		if b==90
-			view([-45 45]);
-		end
-	else
-		view(a,b);
-	end
-	data.dim=1;
-
-case 'Surface+Contour'
-	surfc(xx,yy,dd);
-	shading(sv.ShadingType);
-	grid off;
-	axis vis3d;
-	axis tight;
-	if a==0
-		if b==90
-			view([-45 45]);
-		end
-	else
-		view(a,b);
-	end
-	data.dim=1;
-
-case 'Contour'
-	if contourlevels>0
-		[c,h] = contour(xx,yy,dd,contourlevels); clabel(c,h);
-	else
-		[c,h] = contour(xx,yy,dd); clabel(c,h);
-	end
-	data.dim=0;
-
-case 'Filled Contour'
+		data.dim=1;
+		
+	case 'CheckerBoard'
+		pcolor(xx,yy,dd);
+		shading(sv.ShadingType);
+		%colormap(sv.CMap);
+		data.dim=0;
+		
+	case 'CheckerBoard+Contour'
+		pcolor(xx,yy,dd);
+		shading(sv.ShadingType);
+		hold on;
 		if contourlevels>0
-		[c,h] = contourf(xx,yy,dd,contourlevels); %clabel(c,h);
-	else
-		[c,h] = contourf(xx,yy,dd); %clabel(c,h);
-	end
-	data.dim=0;
-
-case 'Waterfall'
-	waterfall(xx,yy,dd);
-	grid off;
-	axis vis3d;
-	if a==0
-		if b==90
-			view([-45 45])
+			[c,h] = contour(xx,yy,dd,contourlevels); clabel(c,h);
+		else
+			[c,h] = contour(xx,yy,dd,'k'); clabel(c,h);
 		end
-	else
-		view(a,b);
-	end
-	data.dim=1;
-
-case 'Rectangle Plot'
-	if strcmp(sv.SmoothType,'none')
-		rectplot(xx,yy,dd);
-	else
-		rectplot(xx,yy,dd);
-	end
-	data.dim=0;
+		hold off;
+		data.dim=0;
+		
+	case 'Surface'
+		surf(xx,yy,dd,'FaceColor','interp','EdgeColor','none','FaceLighting',sv.Lighting);
+		material shiny;
+		shading(sv.ShadingType);
+		camlight headlight
+		grid off;
+		axis vis3d;
+		axis tight;
+		if a==0
+			if b==90
+				view([-45 45]);
+			end
+		else
+			view(a,b);
+		end
+		data.dim=1;
+		
+		
+	case 'Lighted Surface'
+		surfl(xx,yy,dd);
+		shading(sv.ShadingType);
+		material metal;
+		colormap(bone(256));
+		grid off;
+		axis vis3d;
+		axis tight;
+		if a==0
+			if b==90
+				view([-45 45]);
+			end
+		else
+			view(a,b);
+		end
+		data.dim=1;
+		
+	case 'Surface+Contour'
+		surfc(xx,yy,dd);
+		shading(sv.ShadingType);
+		grid off;
+		axis vis3d;
+		axis tight;
+		if a==0
+			if b==90
+				view([-45 45]);
+			end
+		else
+			view(a,b);
+		end
+		data.dim=1;
+		
+	case 'Contour'
+		if contourlevels>0
+			[c,h] = contour(xx,yy,dd,contourlevels); clabel(c,h);
+		else
+			[c,h] = contour(xx,yy,dd); clabel(c,h);
+		end
+		data.dim=0;
+		
+	case 'Filled Contour'
+		if contourlevels>0
+			[c,h] = contourf(xx,yy,dd,contourlevels); %clabel(c,h);
+		else
+			[c,h] = contourf(xx,yy,dd); %clabel(c,h);
+		end
+		data.dim=0;
+		
+	case 'Waterfall'
+		waterfall(xx,yy,dd);
+		grid off;
+		axis vis3d;
+		if a==0
+			if b==90
+				view([-45 45])
+			end
+		else
+			view(a,b);
+		end
+		data.dim=1;
+		
+	case 'Rectangle Plot'
+		if strcmp(sv.SmoothType,'none')
+			rectplot(xx,yy,dd);
+		else
+			rectplot(xx,yy,dd);
+		end
+		data.dim=0;
 end
 
 if (sv.PropAxis==0 && strcmp(sv.SmoothType,'none')) || strcmp(sv.PlotType,'Raw Data')
@@ -2751,15 +2797,15 @@ if nargin<1
 end
 
 if sv.EndMod>data.raw{sv.xval*sv.yval*sv.zval}.nummods
-   if sv.EndMod==Inf
-	   resetmod=1;
-   end
-   sv.EndMod=data.raw{sv.xval*sv.yval*sv.zval}.nummods;   
+	if sv.EndMod==Inf
+		resetmod=1;
+	end
+	sv.EndMod=data.raw{sv.xval*sv.yval*sv.zval}.nummods;
 end
 if isfield(sv,'EndTrial')
 	if sv.EndTrial>data.raw{sv.xval*sv.yval*sv.zval}.endtrial
 		if sv.EndTrial==Inf
-		   resettrial=1;
+			resettrial=1;
 		end
 		sv.EndTrial=data.raw{sv.xval*sv.yval*sv.zval}.endtrial;
 	end
@@ -2906,7 +2952,7 @@ xvals=[];
 xname=[];
 
 if strcmp(get(gca,'tag'),'SpikeFigMainAxes');
-	mainaxis=1;	
+	mainaxis=1;
 	legend off;
 	cla reset;
 	set(gca,'Tag','SpikeFigMainAxes');
@@ -2918,7 +2964,7 @@ set(gca,'YTickMode','auto');
 set(gca,'YTickLabelMode','auto');
 tit=get(gh('LoadText'),'String');
 
-if strcmp(sv.auto,'no')	
+if strcmp(sv.auto,'no')
 	set(gh('LoadText'),'String','Replotting...');
 end
 
@@ -2929,7 +2975,7 @@ switch data.plottype
 	case {1,2,3,4,5}
 		if data.numvars>0; sv.xlock=1; set(gh('XHoldCheck'),'Value',1); end
 		if data.numvars>1; sv.ylock=1; set(gh('YHoldCheck'),'Value',1); end
-		if data.numvars>2; sv.zlock=1; set(gh('ZHoldCheck'),'Value',1); end	
+		if data.numvars>2; sv.zlock=1; set(gh('ZHoldCheck'),'Value',1); end
 	case 6 %tuning curve
 		if get(gh('STypeMenu'),'Value')>4; set(gh('STypeMenu'),'Value',1); end
 		set(gh('STypeMenu'),'String',{'Normal';'Polar+Means (Cartesian)';'Polar+Error (Cartesian)';'Polar+Error (Compass)'});
@@ -2940,7 +2986,7 @@ switch data.plottype
 		elseif sv.xlock==1 && sv.ylock==1 && data.numvars==2
 			sv.xlock=0;
 			set(gh('XHoldCheck'),'Value',0);
-		elseif sv.xlock==1 && sv.ylock==0 
+		elseif sv.xlock==1 && sv.ylock==0
 			sv.zlock=1; set(gh('ZHoldCheck'),'Value',1);
 		else
 			sv.xlock=0;	set(gh('XHoldCheck'),'Value',0);
@@ -2966,19 +3012,19 @@ end
 %--------We'll now iterate through all the possible variable variations---
 
 %----------------------------------------------------------no locks
-if sv.zlock==0 && sv.ylock==0 && sv.xlock==0 
+if sv.zlock==0 && sv.ylock==0 && sv.xlock==0
 	switch data.numvars
 		case 3
 			data.lockedtitle=[data.ztitle '=' num2str(data.zvalues(1))];
-			%if data.plottype<4 data.plottype=4; set(gh('SPlotMenu'),'Value',data.plottype); end			
+			%if data.plottype<4 data.plottype=4; set(gh('SPlotMenu'),'Value',data.plottype); end
 		case 2
 			%if data.plottype<4 data.plottype=4; set(gh('SPlotMenu'),'Value',data.plottype); end
 	end
 	data.matrix=matrixall(:,:,1);
 	data.errormat=data.errormatall(:,:,1);
 	
-%----------------------------------------------------------Z locked
-elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==0 
+	%----------------------------------------------------------Z locked
+elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==0
 	switch data.numvars
 		case 3
 			data.lockedtitle=[data.ztitle '=' num2str(data.zvalues(sv.zval))];
@@ -2989,8 +3035,8 @@ elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==0
 	data.matrix=matrixall(:,:,sv.zval);
 	data.errormat=data.errormatall(:,:,sv.zval);
 	
-%----------------------------------------------------------Z and Y locked
-elseif sv.zlock==1 && sv.ylock==1 && sv.xlock==0 
+	%----------------------------------------------------------Z and Y locked
+elseif sv.zlock==1 && sv.ylock==1 && sv.xlock==0
 	if data.numvars==3
 		data.lockedtitle=['\newline ' data.ztitle '=' num2str(data.zvalues(sv.zval)) '/' data.ytitle '=' num2str(data.yvalues(sv.yval))];
 	elseif data.numvars==2
@@ -3001,9 +3047,9 @@ elseif sv.zlock==1 && sv.ylock==1 && sv.xlock==0
 	if data.plottype>6; data.plottype=6; set(gh('SPlotMenu'),'Value',data.plottype); end
 	data.matrix=matrixall(sv.yval,:,sv.zval);
 	data.errormat=data.errormatall(sv.yval,:,sv.zval);
-
-%----------------------------------------------------------X and Y and Z locked
-elseif sv.zlock==1 && sv.ylock==1 && sv.xlock==1 
+	
+	%----------------------------------------------------------X and Y and Z locked
+elseif sv.zlock==1 && sv.ylock==1 && sv.xlock==1
 	if data.numvars==3
 		data.lockedtitle=[data.ztitle '=' num2str(data.zvalues(sv.zval)) '/' data.ytitle '=' num2str(data.yvalues(sv.yval)) '/' data.xtitle '=' num2str(data.xvalues(sv.xval))];
 	elseif data.numvars==2
@@ -3012,9 +3058,9 @@ elseif sv.zlock==1 && sv.ylock==1 && sv.xlock==1
 	if data.plottype>5; data.plottype=4; set(gh('SPlotMenu'),'Value',data.plottype); end
 	data.matrix=matrixall(sv.yval,sv.xval,sv.zval);
 	data.errormat=data.errormatall(sv.yval,sv.xval,sv.zval);
-
-%----------------------------------------------------------X and Y locked
-elseif sv.zlock==0 && sv.ylock==1 && sv.xlock==1 
+	
+	%----------------------------------------------------------X and Y locked
+elseif sv.zlock==0 && sv.ylock==1 && sv.xlock==1
 	if data.numvars==3
 		data.lockedtitle=['\newline ' data.ytitle '=' num2str(data.yvalues(sv.yval)) '/' data.xtitle '=' num2str(data.xvalues(sv.xval))];
 	elseif data.numvars==2
@@ -3023,13 +3069,13 @@ elseif sv.zlock==0 && sv.ylock==1 && sv.xlock==1
 	if data.plottype>6; data.plottype=6; set(gh('SPlotMenu'),'Value',data.plottype); end
 	data.matrix=matrixall(sv.yval,sv.xval,:);
 	data.errormat=data.errormatall(sv.yval,sv.xval,:);
-
-%----------------------------------------------------------Z and X locked
-elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==1 
+	
+	%----------------------------------------------------------Z and X locked
+elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==1
 	if data.numvars==3
 		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xzval)) '/' data.ytitle '=' num2str(data.yvalues(sv.yval))];
 	elseif data.numvars==2
-        data.lockedtitle=' r ';
+		data.lockedtitle=' r ';
 		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xval))];
 	end
 	if data.plottype>6; data.plottype=6; set(gh('SPlotMenu'),'Value',data.plottype); end
@@ -3037,9 +3083,9 @@ elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==1
 	xname=data.ytitle;
 	data.matrix=matrixall(:,sv.xval,sv.zval)';
 	data.errormat=data.errormatall(:,sv.xval,sv.zval)';
-
-%----------------------------------------------------------Y Locked
-elseif sv.zlock==0 && sv.ylock==1 && sv.xlock==0	
+	
+	%----------------------------------------------------------Y Locked
+elseif sv.zlock==0 && sv.ylock==1 && sv.xlock==0
 	switch data.numvars
 		case 3
 			data.lockedtitle=[data.ytitle '=' num2str(data.yvalues(sv.yval)) '/' data.ztitle '=' num2str(data.zvalues(sv.zval))];
@@ -3056,9 +3102,9 @@ elseif sv.zlock==0 && sv.ylock==1 && sv.xlock==0
 			data.matrix=matrixall(sv.yval,:,1);
 			data.errormat=data.errormatall(sv.yval,:,1);
 	end
-
-%----------------------------------------------------------X locked
-elseif sv.zlock==0 && sv.ylock==0 && sv.xlock==1 
+	
+	%----------------------------------------------------------X locked
+elseif sv.zlock==0 && sv.ylock==0 && sv.xlock==1
 	switch data.numvars
 		case 3
 			data.lockedtitle=[data.ytitle '=' num2str(data.yvalues(sv.yval)) '/' data.ztitle '=' num2str(data.zvalues(sv.zval))];
@@ -3164,7 +3210,7 @@ switch data.numvars
 		end
 end
 
-if strcmp(sv.auto,'no')	
+if strcmp(sv.auto,'no')
 	set(gh('LoadText'),'String',tit);
 end
 if mainaxis==1
@@ -3338,102 +3384,102 @@ mini=find(data.time{1}==str2double(mint));
 maxi=find(data.time{1}==str2double(maxt));
 
 switch data.numvars
-case 0
-	if ~strcmp(sv.auto,'report')
-		splot;
-		return;
-	end
-case 1
-	if get(gh('PSTHEdit'),'String')=='0'
-		m=1; %this will find the max value out of all the PSTH's and scale by this
-		for i=1:data.xrange
-			if m<=max(data.psth{data.xindex(i)})
-				m=max(data.psth{data.xindex(i)});
+	case 0
+		if ~strcmp(sv.auto,'report')
+			splot;
+			return;
+		end
+	case 1
+		if get(gh('PSTHEdit'),'String')=='0'
+			m=1; %this will find the max value out of all the PSTH's and scale by this
+			for i=1:data.xrange
+				if m<=max(data.psth{data.xindex(i)})
+					m=max(data.psth{data.xindex(i)});
+				end
 			end
+			m=round(m+m/20);  %just to scale a bit bigger than the maximum value
+			set(gh('PSTHText'),'String',num2str(m));
+		else
+			m=str2double(get(gh('PSTHEdit'),'String'));
+			set(gh('PSTHText'),'String',num2str(m));
 		end
-		m=round(m+m/20);  %just to scale a bit bigger than the maximum value
-		set(gh('PSTHText'),'String',num2str(m));
-	else
-		m=str2double(get(gh('PSTHEdit'),'String'));
-		set(gh('PSTHText'),'String',num2str(m));
-	end
-
-	for i=1:data.xrange
-		subaxis(data.xrange,1,i,'S',0,'P',0,'M',0.1);
-		h(1)=bar(data.time{data.xindex(i)}(mini:maxi),data.psth{data.xindex(i)}(mini:maxi),1,'k');
-		hold on;
-		h(2)=bar(data.time{data.xindex(i)}(mini:maxi),data.bpsth{data.xindex(i)}(mini:maxi),1,'r');
-		hold off;
-		set(h,'EdgeColor','none')
-		if i<data.xrange
-			set(gca,'XTickLabel',[]);
+		
+		for i=1:data.xrange
+			subaxis(data.xrange,1,i,'S',0,'P',0,'M',0.1);
+			h(1)=bar(data.time{data.xindex(i)}(mini:maxi),data.psth{data.xindex(i)}(mini:maxi),1,'k');
+			hold on;
+			h(2)=bar(data.time{data.xindex(i)}(mini:maxi),data.bpsth{data.xindex(i)}(mini:maxi),1,'r');
+			hold off;
+			set(h,'EdgeColor','none')
+			if i<data.xrange
+				set(gca,'XTickLabel',[]);
+			end
+			%text(5,(m-m/10), data.names{y(i)},'FontSize',4);
+			ylabel(num2str(data.xvalues(i)));
+			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 		end
-		%text(5,(m-m/10), data.names{y(i)},'FontSize',4);
-		ylabel(num2str(data.xvalues(i)));
-		axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-	end
-	t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
-	[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
-	[ax,h2]=suplabel(t ,'t');
-otherwise
-	xrange=length(data.xvalueso); %we'll ignore the subselection
-	yrange=length(data.yvalueso);
-	zrange=length(data.zvalueso);
-	
-	if data.numvars==3 %we need to correct the index for the third variable
-		if sv.zval==1
+		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
+		[ax,h2]=suplabel(t ,'t');
+	otherwise
+		xrange=length(data.xvalueso); %we'll ignore the subselection
+		yrange=length(data.yvalueso);
+		zrange=length(data.zvalueso);
+		
+		if data.numvars==3 %we need to correct the index for the third variable
+			if sv.zval==1
+				starti=1;
+				endi=xrange*yrange;
+			else
+				starti=(xrange*yrange*(sv.zval-1))+1;
+				endi=xrange*yrange*(zrange*(sv.zval-1));
+			end
+		else
 			starti=1;
 			endi=xrange*yrange;
-		else 
-			starti=(xrange*yrange*(sv.zval-1))+1;
-			endi=xrange*yrange*(zrange*(sv.zval-1));
 		end
-	else
-		starti=1;
-		endi=xrange*yrange;
-	end
-	
-	if get(gh('PSTHEdit'),'String')=='0'
-		m=1; %this will find the max value out of all the PSTH's and scale by this
-		for i=starti:endi
-			if m<=max(data.psth{i})
-				m=max(data.psth{i});
+		
+		if get(gh('PSTHEdit'),'String')=='0'
+			m=1; %this will find the max value out of all the PSTH's and scale by this
+			for i=starti:endi
+				if m<=max(data.psth{i})
+					m=max(data.psth{i});
+				end
 			end
+			m=round(m+m/20);  %just to scale a bit bigger than the maximum value
+			set(gh('PSTHText'),'String',num2str(m));
+		else
+			m=str2double(get(gh('PSTHEdit'),'String'));
+			set(gh('PSTHText'),'String',num2str(m));
 		end
-		m=round(m+m/20);  %just to scale a bit bigger than the maximum value
-		set(gh('PSTHText'),'String',num2str(m));
-	else
-		m=str2double(get(gh('PSTHEdit'),'String'));
-		set(gh('PSTHText'),'String',num2str(m));
-	end
-	%the problem is that our data is in rows, but subplot indexes in columns
-	%so we have to create an index that converts between the 2 as
-	%i want the data to look that same as it is loaded into the matrices
-	x=starti:endi;
-	y=reshape(x,data.yrange,data.xrange);
-	y=fliplr(y'); %order it so we can load our data to look like the surface plots
-	%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
-	a=1;
-	for i=1:length(x)
-		subaxis(yrange,xrange,i,'S',0,'M',0.1,'P',0);
-		h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
-		hold on
-		h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
-		hold off
-		set(h,'EdgeColor','none');
-		set(gca,'XTick',[]);
-		set(gca,'YTick',[]);
-		axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-		%text(5,(m-m/10), data.names{y(i)},'FontSize',5);
-		a=a+1;
-	end
-	t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
-	if data.numvars==3
-		t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
-	end
-	[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
-	[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
-	[ax,h3]=suplabel(t ,'t');
+		%the problem is that our data is in rows, but subplot indexes in columns
+		%so we have to create an index that converts between the 2 as
+		%i want the data to look that same as it is loaded into the matrices
+		x=starti:endi;
+		y=reshape(x,data.yrange,data.xrange);
+		y=fliplr(y'); %order it so we can load our data to look like the surface plots
+		%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
+		a=1;
+		for i=1:length(x)
+			subaxis(yrange,xrange,i,'S',0,'M',0.1,'P',0);
+			h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
+			hold on
+			h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
+			hold off
+			set(h,'EdgeColor','none');
+			set(gca,'XTick',[]);
+			set(gca,'YTick',[]);
+			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
+			%text(5,(m-m/10), data.names{y(i)},'FontSize',5);
+			a=a+1;
+		end
+		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		if data.numvars==3
+			t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
+		end
+		[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
+		[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
+		[ax,h3]=suplabel(t ,'t');
 end
 
 %----------------------------------END----------------------------------------
@@ -3478,7 +3524,7 @@ cv=finderror(data.raw{sv.yval,sv.xval,sv.zval},'Coefficient of Variation',mint,m
 af=finderror(data.raw{sv.yval,sv.xval,sv.zval},'Allan Factor',mint,maxt+data.binwidth,data.wrapped,0);
 
 clear pr rr;
-if data.wrapped==1 && ~isempty(data.tempfreq)	
+if data.wrapped==1 && ~isempty(data.tempfreq)
 	modtime=data.modtime/10000; %convert our modtime to seconds
 	pspikes=data.rawspikes{sv.yval,sv.xval,sv.zval}/1000; %same
 	pspikes=pspikes/modtime; %convert our spikes into modulation time
@@ -3486,7 +3532,7 @@ if data.wrapped==1 && ~isempty(data.tempfreq)
 	%[t,r,d]=circmean(pspikes);
 	if ~isempty(pspikes)
 		[t,rr]=circmean(pspikes);
-		[pr,rrr]=rayleigh(pspikes);	
+		[pr,rrr]=rayleigh(pspikes);
 	end
 end
 
@@ -3611,7 +3657,7 @@ if get(gh('PropBox'),'Value')==0 %use non proportional scale
 	xvals=1:length(xvals);
 end
 
-if strcmp (get(gcf,'Tag'),'SpikeFig') 
+if strcmp (get(gcf,'Tag'),'SpikeFig')
 	ax=gh('SpikeFigMainAxes'); %used for polar plots
 end
 
@@ -3619,7 +3665,7 @@ end
 %now we need to transform the data to make values >180 wrap to get just
 %the axis out
 pvals=data.matrix;
-pxvals = xvals;		
+pxvals = xvals;
 belowpiidx=find(pxvals<=180);
 abovepiidx=find(pxvals>180);
 pvalsbelow=pvals(belowpiidx);
@@ -3631,7 +3677,7 @@ pvalsabove=fliplr(pvalsabove);
 bidx=1;
 aidx=1;
 for i=1:length(unique([pxvalsbelow pxvalsabove])) %loop through
-
+	
 	if aidx>length(pxvalsabove)
 		pxvalsnew(i)=pxvalsbelow(bidx);
 		pvalsnew(i)=pvalsbelow(bidx);
@@ -3666,7 +3712,7 @@ if get(gh('SRemoveMean'),'Value')
 	pvals(pvals<0)=0;
 end
 pvalsmax=ceil(max(pvals));
-pxvals = ang2rad([xvals xvals(1)]);		
+pxvals = ang2rad([xvals xvals(1)]);
 perrors=[data.errormat data.errormat(1)];
 pmin=pvals-perrors;
 pmax=pvals+perrors;
@@ -3675,61 +3721,61 @@ pmax=pvals+perrors;
 pval=circ_rtest(pxvals,pvals);
 
 switch sv.SmoothType
-case 'none'
-	switch get(gh('STypeMenu'),'Value')
-	case 1 %normal
+	case 'none'
+		switch get(gh('STypeMenu'),'Value')
+			case 1 %normal
+				areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],'k.-','MarkerSize',15);
+			case 2
+				if strcmp (get(gcf,'Tag'),'SpikeFig')
+					set(gca,'NextPlot','replacechildren');
+					set(gcf,'NextPlot','add');
+				end
+				h=polar(pxvals,pvals,'ko-');
+				set(h,'MarkerFaceColor',[0 0 0]);
+				set(h,'LineWidth',2);
+				hold on
+				h=polar(pxvalsnew,pvalsnew,'r-.');
+				set(h,'Color',[1 0.6 0.6]);
+				polar(pxvals,pmin,'k-.');
+				polar(pxvals,pmax,'k-.');
+				polar([mu2 mu2],[0 pvalsmax],'r-');
+				if ~isnan(ll2)
+					polar([ll2 ll2],[0 pvalsmax],'r-.');
+				end
+				if ~isnan(ul2)
+					polar([ul2 ul2],[0 pvalsmax],'r-.');
+				end
+				polar([mu mu],[0 pvalsmax],'b-');
+				if ~isnan(ll)
+					%polar([ll ll],[0 pvalsmax],'b-.');
+				end
+				if ~isnan(ul)
+					%polar([ul ul],[0 pvalsmax],'b-.');
+				end
+				hold off
+			case 3
+				mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:');
+				hold on
+				mmpolar([mu mu],[0 pvalsmax],'r-')
+				hold off
+				set(gca,'Tag','SpikeFigMainAxes')
+			case 4
+				p.RGridColor=[0.7 0.7 0.7];
+				p.TGridColor=[0.7 0.7 0.7];
+				p.Style='compass';
+				p.Border='off';
+				mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);
+				hold on
+				mmpolar([mu mu],[0 pvalsmax],'r-',p)
+				hold off
+				set(gca,'Tag','SpikeFigMainAxes')
+		end
+	otherwise
+		[xax,dat] = fitdata(xvals,data.matrix','interpolated',sv.SmoothType);
 		areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],'k.-','MarkerSize',15);
-	case 2
-		if strcmp (get(gcf,'Tag'),'SpikeFig')
-			set(gca,'NextPlot','replacechildren');
-			set(gcf,'NextPlot','add');
-		end
-		h=polar(pxvals,pvals,'ko-');
-		set(h,'MarkerFaceColor',[0 0 0]);
-		set(h,'LineWidth',2);
-		hold on
-		h=polar(pxvalsnew,pvalsnew,'r-.');
-		set(h,'Color',[1 0.6 0.6]);
-		polar(pxvals,pmin,'k-.');
-		polar(pxvals,pmax,'k-.');
-		polar([mu2 mu2],[0 pvalsmax],'r-');
-		if ~isnan(ll2)
-			polar([ll2 ll2],[0 pvalsmax],'r-.');
-		end
-		if ~isnan(ul2)
-			polar([ul2 ul2],[0 pvalsmax],'r-.');
-		end
-		polar([mu mu],[0 pvalsmax],'b-');
-		if ~isnan(ll)
-			%polar([ll ll],[0 pvalsmax],'b-.');
-		end
-		if ~isnan(ul)
-			%polar([ul ul],[0 pvalsmax],'b-.');
-		end
-		hold off
-	case 3
-		mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:');
-		hold on
-		mmpolar([mu mu],[0 pvalsmax],'r-')
-		hold off
-		set(gca,'Tag','SpikeFigMainAxes')
-	case 4
-		p.RGridColor=[0.7 0.7 0.7];
-		p.TGridColor=[0.7 0.7 0.7];
-		p.Style='compass';
-		p.Border='off';
-		mmpolar(pxvals,pvals,'ko-',pxvals,pmin,'k:',pxvals,pmax,'k:',p);
-		hold on
-		mmpolar([mu mu],[0 pvalsmax],'r-',p)
-		hold off
-		set(gca,'Tag','SpikeFigMainAxes')
-	end
-otherwise
-	[xax,dat] = fitdata(xvals,data.matrix','interpolated',sv.SmoothType);
-	areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],'k.-','MarkerSize',15);
-	hold on;
-	plot(xax,dat,'r-');
-	hold off;
+		hold on;
+		plot(xax,dat,'r-');
+		hold off;
 end
 
 if get(gh('PropBox'),'Value')==0 %use non proportional scale
@@ -3738,12 +3784,12 @@ end
 MakeTitle('vector');
 sv.xlabelhandle=xlabel(xname);
 switch sv.AnalysisMethod
-case 4
-	sv.ylabelhandle=ylabel('Total Spike Count');
-case 6
-	data.matrixtitle=[data.matrixtitle,data.fftinfo];
-otherwise
-	sv.ylabelhandle=ylabel('Firing Rate (Hz)');
+	case 4
+		sv.ylabelhandle=ylabel('Total Spike Count');
+	case 6
+		data.matrixtitle=[data.matrixtitle,data.fftinfo];
+	otherwise
+		sv.ylabelhandle=ylabel('Firing Rate (Hz)');
 end
 
 if get(gh('STypeMenu'),'Value')>1
@@ -3792,23 +3838,23 @@ end
 % Curve fitting routine (Rowland)
 function [xaxisout,dataout] = fitdata(xaxisin,datain,fittype,fitdetail);
 switch fittype
-case 'interpolated'
-	xaxisout = min(xaxisin):0.01:max(xaxisin);
-	dataout = interp1(xaxisin,datain',xaxisout,fitdetail);
-case 'polynomial'
-	xaxisout = min(xaxisin):0.01:max(xaxisin);
-	polyinfo = polyfit(xaxisin,datain,fitdetail);
-	dataout = polyval(polyinfo,xaxisout);
-case 'smoothed'
-	%smooth calls an external smoothing routine
-	switch fitdetail
-	case 'none'
-		xaxisout=xaxisin;
-		dataout=smooth(datain,1);
-	otherwise
+	case 'interpolated'
 		xaxisout = min(xaxisin):0.01:max(xaxisin);
-		dataout = smooth(interp1(xaxisin,datain,xaxisout,fitdetail),100);
-	end
+		dataout = interp1(xaxisin,datain',xaxisout,fitdetail);
+	case 'polynomial'
+		xaxisout = min(xaxisin):0.01:max(xaxisin);
+		polyinfo = polyfit(xaxisin,datain,fitdetail);
+		dataout = polyval(polyinfo,xaxisout);
+	case 'smoothed'
+		%smooth calls an external smoothing routine
+		switch fitdetail
+			case 'none'
+				xaxisout=xaxisin;
+				dataout=smooth(datain,1);
+			otherwise
+				xaxisout = min(xaxisin):0.01:max(xaxisin);
+				dataout = smooth(interp1(xaxisin,datain,xaxisout,fitdetail),100);
+		end
 end
 %----------------------------------END----------------------------------------
 
@@ -3837,43 +3883,43 @@ ChoosePlot;
 set(gca,'Tag','Spawnfigaxis');
 
 switch data.numvars
-case 0
-% 	pos=get(gcf,'Position');
-% 	set(gcf,'Position',[pos(1)+(pos(3)*0.75)/2 pos(2) pos(3)*0.75 pos(4)]);
-% 	subplot(2,1,1)
-% 	PlotPoint;
-% 	set(gca,'FontSize',12);
-% 	set(gca,'LineWidth',2);
-% 	set(gca,'Tag','');
-% 	set(sv.titlehandle,'FontSize',12);
-% 	set(sv.xlabelhandle,'FontSize',12);
-% 	set(sv.ylabelhandle,'FontSize',12);
-% 	subplot(2,1,2)
-% 	PlotPSTH;
-% 	set(sv.titlehandle,'FontSize',12);
-% 	set(sv.xlabelhandle,'FontSize',12);
-% 	set(sv.ylabelhandle,'FontSize',12);
-% 	if sv.plottype==2; axis(x);	end
-case 1
-	axis(x);
-otherwise
-	colormap(cmap);
-	view(a,b);
-	axis(x);
-	if ~strcmp(sv.LightAdd,'none')
-		camlight(sv.LightAdd);
-	end;
-	if data.areaplot==1 %& data.textload==0
-		h=text((x(1)-(x(1)/25)),(x(3)-(x(3)/25)),num2str(data.anal.size));
-		set(h,'Color',[1 0 0],'Fontsize',12,'Fontweight','bold');
-	elseif strcmp(sv.PlotType,'Rectangle Plot')
-		set(sv.titlehandle,'String',[get(sv.titlehandle,'String') ' Max=' num2str(sv.rectanglemax)]);
-	elseif data.plottype==4
-		cbh=colorbar;
-	end
-	if data.xrange==data.yrange
-		axis square
-	end
+	case 0
+		% 	pos=get(gcf,'Position');
+		% 	set(gcf,'Position',[pos(1)+(pos(3)*0.75)/2 pos(2) pos(3)*0.75 pos(4)]);
+		% 	subplot(2,1,1)
+		% 	PlotPoint;
+		% 	set(gca,'FontSize',12);
+		% 	set(gca,'LineWidth',2);
+		% 	set(gca,'Tag','');
+		% 	set(sv.titlehandle,'FontSize',12);
+		% 	set(sv.xlabelhandle,'FontSize',12);
+		% 	set(sv.ylabelhandle,'FontSize',12);
+		% 	subplot(2,1,2)
+		% 	PlotPSTH;
+		% 	set(sv.titlehandle,'FontSize',12);
+		% 	set(sv.xlabelhandle,'FontSize',12);
+		% 	set(sv.ylabelhandle,'FontSize',12);
+		% 	if sv.plottype==2; axis(x);	end
+	case 1
+		axis(x);
+	otherwise
+		colormap(cmap);
+		view(a,b);
+		axis(x);
+		if ~strcmp(sv.LightAdd,'none')
+			camlight(sv.LightAdd);
+		end;
+		if data.areaplot==1 %& data.textload==0
+			h=text((x(1)-(x(1)/25)),(x(3)-(x(3)/25)),num2str(data.anal.size));
+			set(h,'Color',[1 0 0],'Fontsize',12,'Fontweight','bold');
+		elseif strcmp(sv.PlotType,'Rectangle Plot')
+			set(sv.titlehandle,'String',[get(sv.titlehandle,'String') ' Max=' num2str(sv.rectanglemax)]);
+		elseif data.plottype==4
+			cbh=colorbar;
+		end
+		if data.xrange==data.yrange
+			axis square
+		end
 end
 
 if data.numvars>0
@@ -3911,108 +3957,108 @@ end
 %Quick frames
 %
 function temporalanalysis(data)
-    
-    h=figure;
-    reset(h);
-    
-    if data.plotburst==0
-        psth=data.psth;
-    else
-        psth=data.bpsth;
-    end   
-    
-    timeslice=data.binwidth;
-    steps=max(size(data.time{1}));
-    
-    tmatrix=zeros(data.yrange,data.xrange,steps);
-    
-    for i=1:steps   %for each bin
-        for j=1:data.xrange
-            for k=1:data.yrange
-                tmatrix(k,j,i)=psth{k,j}(i);
-            end
-        end
-    end
-    
-    m=max(max(max(tmatrix)));
-    
-    for i=1:steps
-        d=tmatrix(:,:,i);
-        PlotDMatrix(d);
-		text(data.xvalues(end-1),data.yvalues(end-1),num2str(data.time{1}(i)),'Color',[1 1 1],'FontSize',16,'FontWeight','bold');
-		if data.dim==0
-			caxis([0 m]);
-		else
-			caxis([0 m]);
-			axis([-inf inf -inf inf 0 m]);
-			axis off;
+
+h=figure;
+reset(h);
+
+if data.plotburst==0
+	psth=data.psth;
+else
+	psth=data.bpsth;
+end
+
+timeslice=data.binwidth;
+steps=max(size(data.time{1}));
+
+tmatrix=zeros(data.yrange,data.xrange,steps);
+
+for i=1:steps   %for each bin
+	for j=1:data.xrange
+		for k=1:data.yrange
+			tmatrix(k,j,i)=psth{k,j}(i);
 		end
-        M(i) = getframe;
-        %L(i) = getindexedframe;
-    end
-    
-    %c=colormap;
-    
-	reset(h);
-	title('Playing movie 3 times, then will save to c:\\movie.mat and plot individual frames in a new figure.');
-    movie(M,3,8)
-    save([sv.historypath 'movie.mat'], 'M');
-    figure;
-	figpos(1,[600 600]);	%position the figure
-    
-    if steps <=16
-        m=4;
-        n=4;
-    elseif steps <=20
-        m=4;
-        n=5;
-    elseif steps <=25
-        m=5;
-        n=5;
-    elseif steps <=30
-        m=6;
-        n=5;
-    elseif steps <=36
-        m=6;
-        n=6;
-    elseif steps <=42
-        m=7;
-        n=6;
-    elseif steps <=49
-        m=7;
-        n=7;
-    elseif steps <=56
-        m=8;
-        n=7;
-    elseif steps <=64
-        m=8;
-        n=8;
-    elseif steps <=72
-        m=9;
-        n=8;
-    elseif steps <=81
-        m=9;
-        n=9;
-    elseif steps <=90
-        m=10;
-        n=9;
-    elseif steps <=100
-        m=10;
-        n=10;
-    else
-        errordlg('Sorry, too many movie frames for 1 figure');
-        error('Returned with Error')
-    end
-    
-    a=1;
-	for i=1:steps
-		subaxis(m,n,a,'S',0,'P',0,'M',0.1);
-		image(M(i).cdata);
-		axis square
-		a=a+1;
 	end
-	suptitle(data.matrixtitle);
-	
+end
+
+m=max(max(max(tmatrix)));
+
+for i=1:steps
+	d=tmatrix(:,:,i);
+	PlotDMatrix(d);
+	text(data.xvalues(end-1),data.yvalues(end-1),num2str(data.time{1}(i)),'Color',[1 1 1],'FontSize',16,'FontWeight','bold');
+	if data.dim==0
+		caxis([0 m]);
+	else
+		caxis([0 m]);
+		axis([-inf inf -inf inf 0 m]);
+		axis off;
+	end
+	M(i) = getframe;
+	%L(i) = getindexedframe;
+end
+
+%c=colormap;
+
+reset(h);
+title('Playing movie 3 times, then will save to c:\\movie.mat and plot individual frames in a new figure.');
+movie(M,3,8)
+save([sv.historypath 'movie.mat'], 'M');
+figure;
+figpos(1,[600 600]);	%position the figure
+
+if steps <=16
+	m=4;
+	n=4;
+elseif steps <=20
+	m=4;
+	n=5;
+elseif steps <=25
+	m=5;
+	n=5;
+elseif steps <=30
+	m=6;
+	n=5;
+elseif steps <=36
+	m=6;
+	n=6;
+elseif steps <=42
+	m=7;
+	n=6;
+elseif steps <=49
+	m=7;
+	n=7;
+elseif steps <=56
+	m=8;
+	n=7;
+elseif steps <=64
+	m=8;
+	n=8;
+elseif steps <=72
+	m=9;
+	n=8;
+elseif steps <=81
+	m=9;
+	n=9;
+elseif steps <=90
+	m=10;
+	n=9;
+elseif steps <=100
+	m=10;
+	n=10;
+else
+	errordlg('Sorry, too many movie frames for 1 figure');
+	error('Returned with Error')
+end
+
+a=1;
+for i=1:steps
+	subaxis(m,n,a,'S',0,'P',0,'M',0.1);
+	image(M(i).cdata);
+	axis square
+	a=a+1;
+end
+suptitle(data.matrixtitle);
+
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 %-----------------------------------------------------------------------------
@@ -4021,118 +4067,118 @@ function temporalanalysis(data)
 %
 function polardiagonal
 
-	global data sv;
-	
-	if data.numvars < 2
-		errordlg('You need at least 2 variables to get a diagonal out!');
-		error('You need at least 2 variables to get a diagonal out!');
-	end
-	
-	diagonal=diag(data.matrix)';
-	diagonalerror=diag(data.errormat)';
+global data sv;
 
-	pvals=[diagonal diagonal(1)];
-	pvalsmax=ceil(max(pvals));
-	if length(data.xvalues) > length(data.yvalues)
-		pxvals = ang2rad([data.xvalues(1:length(data.yvalues)) data.xvalues(1)]);
+if data.numvars < 2
+	errordlg('You need at least 2 variables to get a diagonal out!');
+	error('You need at least 2 variables to get a diagonal out!');
+end
+
+diagonal=diag(data.matrix)';
+diagonalerror=diag(data.errormat)';
+
+pvals=[diagonal diagonal(1)];
+pvalsmax=ceil(max(pvals));
+if length(data.xvalues) > length(data.yvalues)
+	pxvals = ang2rad([data.xvalues(1:length(data.yvalues)) data.xvalues(1)]);
+else
+	pxvals = ang2rad([data.xvalues data.xvalues(1)]);
+end
+perrors=[diagonalerror diagonalerror(1)];
+pmin=pvals-perrors;
+pmax=pvals+perrors;
+
+%so we need to do both radial and axial circular means:
+[mu,ll,ul]=circ_mean(pxvals,pvals); %standard circular mean
+pval=circ_rtest(pxvals,pvals,mean(diff(pxvals(1:end-1))));
+pval2=circ_vtest(pxvals,mu,pvals,mean(diff(pxvals(1:end-1))));
+
+if length(data.xvalues) > length(data.yvalues)
+	pxvals2 = [data.xvalues(1:length(data.yvalues)) data.xvalues(1)];
+else
+	pxvals2 = [data.xvalues data.xvalues(1)];
+end
+belowpiidx=find(pxvals2<=180);
+abovepiidx=find(pxvals2>180);
+pvalsbelow=pvals(belowpiidx);
+pvalsabove=pvals(abovepiidx);
+pxvalsbelow=pxvals2(belowpiidx);
+pxvalsabove=pxvals2(abovepiidx)-180;
+pvalsabove=fliplr(pvalsabove);
+
+if isempty(pvalsabove)
+	pvalsabove=0;
+	pxvalsabove=0;
+end
+
+bidx=1;
+aidx=1;
+for i=1:length(unique([pxvalsbelow pxvalsabove])) %loop through
+	
+	if aidx>length(pxvalsabove) && ~isempty(pxvalsabove)
+		pxvalsnew(i)=pxvalsbelow(bidx);
+		pvalsnew(i)=pvalsbelow(bidx);
+		bidx=bidx+1;
+	elseif bidx>length(pxvalsbelow)
+		pxvalsnew(i)=pxvalsabove(aidx);
+		pvalsnew(i)=pvalsabove(aidx);
+		aidx=aidx+1;
+	elseif pxvalsbelow(bidx)<pxvalsabove(aidx) || pxvalsbelow(bidx)>pxvalsabove(aidx)
+		pxvalsnew(i)=pxvalsbelow(bidx);
+		pvalsnew(i)=pvalsbelow(bidx);
+		bidx=bidx+1;
+	elseif pxvalsbelow(bidx)==pxvalsabove(aidx);
+		pxvalsnew(i)=pxvalsbelow(bidx);
+		pvalsnew(i)=pvalsbelow(bidx)+pvalsabove(aidx);
+		bidx=bidx+1;
+		aidx=aidx+1;
 	else
-		pxvals = ang2rad([data.xvalues data.xvalues(1)]);
+		pxvalsnew(i)=pxvalsabove(aidx);
+		pvalsnew(i)=pvalsabove(aidx);
+		aidx=aidx+1;
 	end
-	perrors=[diagonalerror diagonalerror(1)];
-	pmin=pvals-perrors;
-	pmax=pvals+perrors;
 	
-	%so we need to do both radial and axial circular means:
-	[mu,ll,ul]=circ_mean(pxvals,pvals); %standard circular mean
-	pval=circ_rtest(pxvals,pvals,mean(diff(pxvals(1:end-1))));
-	pval2=circ_vtest(pxvals,mu,pvals,mean(diff(pxvals(1:end-1))));
-	
-	if length(data.xvalues) > length(data.yvalues)
-		pxvals2 = [data.xvalues(1:length(data.yvalues)) data.xvalues(1)];
-	else
-		pxvals2 = [data.xvalues data.xvalues(1)];
-	end
-	belowpiidx=find(pxvals2<=180);
-	abovepiidx=find(pxvals2>180);
-	pvalsbelow=pvals(belowpiidx);
-	pvalsabove=pvals(abovepiidx);
-	pxvalsbelow=pxvals2(belowpiidx);
-	pxvalsabove=pxvals2(abovepiidx)-180;
-	pvalsabove=fliplr(pvalsabove);
-	
-	if isempty(pvalsabove)
-		pvalsabove=0;
-		pxvalsabove=0;
-	end
+end
 
-	bidx=1;
-	aidx=1;
-	for i=1:length(unique([pxvalsbelow pxvalsabove])) %loop through
+pxvalsnew=ang2rad(pxvalsnew);
+[mu2,ll2,ul2]=circ_mean(pxvalsnew,pvalsnew); %standard circular mean
 
-		if aidx>length(pxvalsabove) && ~isempty(pxvalsabove)
-			pxvalsnew(i)=pxvalsbelow(bidx);
-			pvalsnew(i)=pvalsbelow(bidx);
-			bidx=bidx+1;
-		elseif bidx>length(pxvalsbelow)
-			pxvalsnew(i)=pxvalsabove(aidx);
-			pvalsnew(i)=pvalsabove(aidx);
-			aidx=aidx+1;
-		elseif pxvalsbelow(bidx)<pxvalsabove(aidx) || pxvalsbelow(bidx)>pxvalsabove(aidx)
-			pxvalsnew(i)=pxvalsbelow(bidx);
-			pvalsnew(i)=pvalsbelow(bidx);
-			bidx=bidx+1;
-		elseif pxvalsbelow(bidx)==pxvalsabove(aidx);
-			pxvalsnew(i)=pxvalsbelow(bidx);
-			pvalsnew(i)=pvalsbelow(bidx)+pvalsabove(aidx);
-			bidx=bidx+1;
-			aidx=aidx+1;
-		else
-			pxvalsnew(i)=pxvalsabove(aidx);
-			pvalsnew(i)=pvalsabove(aidx);
-			aidx=aidx+1;
-		end
 
-	end
+figure;
 
-	pxvalsnew=ang2rad(pxvalsnew);
-	[mu2,ll2,ul2]=circ_mean(pxvalsnew,pvalsnew); %standard circular mean
-	
-	
-	figure;
-	
-	h=polar(pxvalsnew,pvalsnew,'ro-.');
-	set(h,'Color',[1 0.6 0.6]);
-	set(h,'MarkerFaceColor',[1 0.6 0.6]);
-	hold on
-	h=polar(pxvals,pvals,'ko-');
-	set(h,'MarkerFaceColor',[0 0 0]);
-	set(h,'LineWidth',2);
-	polar(pxvals,pmin,'k-.');
-	polar(pxvals,pmax,'k-.');
-	polar([mu mu],[0 pvalsmax],'b-');
-	if ~isnan(ll)
-		polar([ll ll],[0 pvalsmax],'b-.');
-	end
-	if ~isnan(ul)
-		polar([ul ul],[0 pvalsmax],'b-.');
-	end
-	polar([mu2 mu2],[0 pvalsmax],'r-');
-	if ~isnan(ll2)
-		polar([ll2 ll2],[0 pvalsmax],'r-.');
-	end
-	if ~isnan(ul2)
-		polar([ul2 ul2],[0 pvalsmax],'r-.');
-	end
-	hold off
-	
-	MakeTitle('vector');
-	xlabel(data.xtitle);
-	switch sv.AnalysisMethod
+h=polar(pxvalsnew,pvalsnew,'ro-.');
+set(h,'Color',[1 0.6 0.6]);
+set(h,'MarkerFaceColor',[1 0.6 0.6]);
+hold on
+h=polar(pxvals,pvals,'ko-');
+set(h,'MarkerFaceColor',[0 0 0]);
+set(h,'LineWidth',2);
+polar(pxvals,pmin,'k-.');
+polar(pxvals,pmax,'k-.');
+polar([mu mu],[0 pvalsmax],'b-');
+if ~isnan(ll)
+	polar([ll ll],[0 pvalsmax],'b-.');
+end
+if ~isnan(ul)
+	polar([ul ul],[0 pvalsmax],'b-.');
+end
+polar([mu2 mu2],[0 pvalsmax],'r-');
+if ~isnan(ll2)
+	polar([ll2 ll2],[0 pvalsmax],'r-.');
+end
+if ~isnan(ul2)
+	polar([ul2 ul2],[0 pvalsmax],'r-.');
+end
+hold off
+
+MakeTitle('vector');
+xlabel(data.xtitle);
+switch sv.AnalysisMethod
 	case 4
 		ylabel('Total Spike Count');
 	case 6
 		data.matrixtitle=[data.matrixtitle,data.fftinfo];
 	otherwise
 		ylabel('Firing Rate (Hz)');
-	end
-	title([data.matrixtitle 'DIAGONAL -- CircMean=' num2str(rad2ang(mu)) '  AxialMean=' num2str(rad2ang(mu2)) '  pR=' num2str(pval) ' pV=' num2str(pval2) ]);
+end
+title([data.matrixtitle 'DIAGONAL -- CircMean=' num2str(rad2ang(mu)) '  AxialMean=' num2str(rad2ang(mu2)) '  pR=' num2str(pval) ' pV=' num2str(pval2) ]);

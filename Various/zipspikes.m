@@ -1,6 +1,10 @@
+% ========================================================================
+%> @brief Zipspikes loads VS smr data from, and to, ZIP files
+%> ZIPSPIKES
+%>   
+% ========================================================================
 classdef zipspikes < handle
-% Spikes data ZIP read/write class
-
+	
 	properties
 		name='Zipspike file'
 		action='check'
@@ -12,28 +16,36 @@ classdef zipspikes < handle
 		filetype=''
 		sourcedir
 		userroot
+		verbose = true
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
+		rmCommand = 'rm -rf'
+		mkdirCommand = 'mkdir -p'
 		arch = 'OSX'
-		allowedProperties = '(action|tmp|sourcepath)'
+		allowedProperties = '(action|sourcepath|destpath)'
 	end
-
-	methods
+	
+	%=======================================================================
+	methods %------------------PUBLIC METHODS
+	%=======================================================================
+	
+		% ===================================================================
+		%> @brief Class constructor
+		%>
+		%> More detailed description of what the constructor does.
+		%>
+		%> @param args are passed as a structure of properties which is
+		%> parsed.
+		%> @return instance of the class.
+		% ===================================================================
 		function obj=zipspikes(args) %CONSTRUCTOR
+			
+			if ispc
+				obj.rmCommand = 'rmdir /s /q';
+				obj.mkdirCommand = 'mkdir';
+			end
 
-			if regexp(computer,'(MACI|MACI64)')
-				obj.arch='OSX';
-			else
-				obj.arch='WIN';
-			end
-			
-			obj.tmppath = tempname;
-						
-			if obj.hash==0 %make a random hash with which to create a directory
-				obj.hash=num2str(round(rand*1000000));
-			end
-			
 			%start to build our parameters
 			if exist('args','var') && isstruct(args)
 				fnames = fieldnames(args); %find our argument names
@@ -44,110 +56,118 @@ classdef zipspikes < handle
 					end
 				end
 			end
-				
-			 obj.userroot = fileparts(mfilename('fullpath'));
-			 p=regexp(obj.userroot,['(?<path>^.+\' filesep 'spikes\' filesep ')'],'names');
-			 obj.userroot = p.path;
 			
-			if isempty(obj.sourcepath)
-				[f,p]=uigetfile({'*.zip;*.gz','Archives (*.zip;*.gz)';'*.smr','SMR Files (*.smr)';'*.*',  'All Files (*.*)'},'Please select a compressed archive:');
-				[obj.sourcedir,~,obj.filetype]=fileparts([p,f]);
-				obj.sourcepath=[p,f];
+			if isempty(obj.tmppath)
+				obj.tmppath = tempname;
 			end
+
+			obj.userroot = fileparts(mfilename('fullpath'));
+			p=regexp(obj.userroot,['(?<path>^.+\' filesep 'spikes\' filesep ')'],'names');
+			obj.userroot = p.path;
 			
-			obj.salutation('Finished running zipspikes...');
 		end
 		
+		% ===================================================================
+		%> @brief Do the randomisation
+		%>
+		%> Do the randomisation
+		% ===================================================================
 		function generate(obj,~)
-			if ismac
-				error('You can only generate zip files on PC');
-			end
 			
-			if strcmpi(obj.filetype,'.smr')
-				cd(obj.sourcedir)
-				d=dir;
-				for i = 1:length(d)
-					if regexpi(d(i).name,'smr')
-						tmpname=[obj.sourcedir filesep d(i).name];
-						[p,f,e]=fileparts(tmpname);
-						if isdir([p filesep f]) %stops annoying "directory alread exists" messages
-							disp('Deleting existing directory...');
-							rmdir([p filesep f],'s');
+% 			if ismac
+% 				error('You can only generate zip files on PC');
+% 			end
+			
+			obj.sourcedir = uigetdir;
+
+			cd(obj.sourcedir)
+			d=dir;
+			for i = 1:length(d)
+				if d(i).isdir && ~strcmp(d(i).name,'.') && ~strcmp(d(i).name,'..')
+					cd(d(i).name)
+					dd=dir;
+					for j = 1:length(dd)
+						if regexpi(dd(j).name,'smr')
+							makeZip(dd(j).name)
 						end
-						if exist([f '.zip'],'file')
-							delete([f '.zip']);
-						end
-						[s,w]=dos(['"' obj.userroot 'various\vsx\vsx.exe" "' tmpname '"']);
-						if s>0; error(w); end
-						zip([obj.sourcedir filesep f '.zip'], {[f '.smr'],f});
-						rmdir([p filesep f],'s');
 					end
+					cd(obj.sourcedir)
+				elseif regexpi(d(i).name,'smr')
+					makeZip(d(i).name)
 				end
 			end
-		end
+			
+			function makeZip(name)
+				tmpname=[obj.sourcedir filesep name];
+				[p,f,e]=fileparts(tmpname);
+				if isdir([p filesep f]) %stops annoying "directory alread exists" messages
+					disp('Deleting existing directory...');
+					rmdir([p filesep f],'s');
+				end
+				if exist([f '.zip'],'file')
+					delete([f '.zip']);
+				end
+				[s,w]=dos(['"' obj.userroot 'various\vsx\vsx.exe" "' tmpname '"']);
+				if s>0; error(w); end
+				zip([obj.sourcedir filesep f '.zip'], {[f '.smr'],f});
+				rmdir([p filesep f],'s');
+			end
 
-		function readarchive(obj,~)
+		end
+		
+		% ===================================================================
+		%> @brief Do the randomisation
+		%>
+		%> Do the randomisation
+		% ===================================================================
+		function [meta,txtcomment,txtprotocol] = readarchive(obj,~)
 			%Class method to read a Zipped spikes file and get out the data to pass to
 			%spikes
 			olddir=pwd;
+			
+			if ~exist(obj.tmppath,'dir')
+				[status,values]=system([obj.mkdirCommand ' ' obj.tmppath]);
+				if status ~= 0;obj.salutation(['Couldn''t make temp install directory! - ' values]);end
+			end
+			
 			[p,f,e]=fileparts(obj.sourcepath);
-			cd(obj.tmppath);
+			
 			switch e
 				case '.zip'
-					unzip(obj.sourcepath);
+					unzip(obj.sourcepath,obj.tmppath);
 				case '.gz'
-					gunzip(obj.sourcepath);			
+					gunzip(obj.sourcepath,obj.tmppath);
 				otherwise
 			end
-			cd(olddir)
+			
+			meta=loadvstext(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'));
+			txtcomment=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.cmt'),'%s','delimiter','\n','whitespace','');
+			txtprotocol=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.prt'),'%s','delimiter','\n','whitespace','');
+			
 		end
-		
-		%%%Check if things are installed or not%%%
-		function check(obj,~)
-			obj.salutation('Check completed!');
-		end
-		
-		function clearthiscache(obj,~)
-			[s,m]=rmdir(obj.destpath,'s')
-			if s==1
-				obj.salutation('All zipspike temp files cleared!');
-			else
-				obj.salutation(['Couldn''t clear ' obj.destpath ' | Reason: ' m]);
-			end
-		end
-		
-		function clearcache(obj,~)
-			[s,m]=rmdir(obj.tmp,'s')
-			if s==1
-				obj.salutation('All zipspike temp files cleared!');
-			else
-				obj.salutation(['Couldn''t clear ' obj.tmp ' | Reason: ' m]);
-			end
-		end
-		
-% 		function display(obj)
-% 			% generic display function
-% 			disp('---------------');
-% 			disp('ZipSpike Object');
-% 			disp('---------------');
-% 			disp([inputname(1),' = '])
-% 			disp(' ');
-% 			disp(['Name: ' obj.name])
-% 			disp(['Source Path: ' obj.sourcepath])
-% 			disp(['Destination Path: ' obj.destpath])
-% 			disp(['Temp Path: ' obj.tmp])
-% 			disp(' ');
-% 		end
-	end
+	end %---END PUBLIC METHODS---%
 	
-	methods ( Access = private )
-		%%%Salutation%%%
-		function salutation(obj,in)
-			if ~exist('in','var')
-				
-			else
-				disp(sprintf('---> %s',in));
+	%=======================================================================
+	methods ( Access = private ) %-------PRIVATE METHODS-----%
+	%=======================================================================
+		% ===================================================================
+		%> @brief Prints messages dependent on verbosity
+		%>
+		%> Prints messages dependent on verbosity
+		%> @param in the calling function
+		%> @param message the message that needs printing to command window
+		% ===================================================================
+		function salutation(obj,in,message)
+			if obj.verbose==true
+				if ~exist('in','var')
+					in = 'undefined';
+				end
+				if exist('message','var')
+					fprintf([message ' | ' in '\n']);
+				else
+					fprintf(['Zipspikes: ' in '\n']);
+				end
 			end
 		end
-	end
+	end%---END PRIVATE METHODS---%
 end

@@ -1,5 +1,5 @@
 # Data filename
-datafile=/Users/iana/Code/spikes/spike/data/continuous.stad;
+datafile=/Users/ian/Code/spikes/spike/data/continuous.stad;
 #
 # Site metadata
 site=1; label=only one cell; recording_tag=continuous; time_scale=1.000000000000000; time_resolution=0.001000000000000; si_unit=volts; si_prefix=0.001000000000000;

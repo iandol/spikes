@@ -1,5 +1,5 @@
 # Data filename
-datafile=/Users/iana/Code/spikes/spike/data/synth.stad;
+datafile=/Users/ian/Code/spikes/spike/data/synth.stad;
 #
 # Site metadata
 site=1; label=only one cell; recording_tag=episodic; time_scale=1.000000; time_resolution=0.000000;
