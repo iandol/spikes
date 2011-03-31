@@ -317,6 +317,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					zs=[];
 				end
 				data=struct;
+				data.zipload = false;
 				data.zs=zs;
 				cla;  reset(gca);  set(gca,'Tag','SpikeFigMainAxes');	%this resets the axis
 				set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
