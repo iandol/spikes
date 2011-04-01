@@ -46,9 +46,9 @@ while acceptable==0 %acceptable values in the box???
    while choice==0
       pause(0.5);
    end
-   if get(ghft('SingleHarmonic'),'value')==1
+   if get(ghft('SingleHarmonic'),'Value')==1
       v=str2num(get(ghft('SingHarmnBox'),'String'));
-      if (~isempty(v) & v>=0)
+      if (~isempty(v) && v>=0)
          harmn1=v;
          harmn2=inf;
          infpoint=inf;

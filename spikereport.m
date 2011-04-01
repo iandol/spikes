@@ -23,7 +23,7 @@ function varargout = spikereport(varargin)
 % Edit the above text to modify the response to help spikereport
 global rlist;
 
-% Last Modified by GUIDE v2.5 21-Mar-2007 11:01:34
+% Last Modified by GUIDE v2.5 01-Apr-2011 15:01:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -231,6 +231,18 @@ for j=1:length(fn)
 		rlist.item{rlist.index}.cutamount=str2double(get(gh('RepCutAmount'),'String'));
 	end
 end
+UpdateFileList;
+FlushGUI;
+
+% --- Executes on button press in RepLoadMat.
+function RepLoadMat_Callback(hObject, eventdata, handles)
+% hObject    handle to RepLoadMat (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global rlist;
+[fn,pn]=uigetfile({'*.mat','Mat Files';'*.*','All Files'},'Select File Type to Load:','MultiSelect','off');
+
+load([pn fn]);
 UpdateFileList;
 FlushGUI;
 
@@ -1403,5 +1415,4 @@ function RepCutAmount_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 

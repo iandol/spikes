@@ -400,6 +400,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			t=find(data.sourcepath==filesep);
 			data.runname=data.sourcepath((t(end-2))+1:t(end));
 		end
+		data.runname=regexprep(data.runname,'(\\|\/)','>');
 		
 		silence_before_burst 	= str2double(get(gh('silence'),'String'))*10;
 		first_isi				= str2double(get(gh('firstisi'),'String'))*10;
@@ -1322,7 +1323,11 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				end
 				
 				%get our options from GUI box
-				vals=fftoptions(data.tempfreq);
+				if get(gh('FFTDefaults'),'Value')==0
+					vals=fftoptions(data.tempfreq);
+				else
+					vals = [1 Inf Inf 0];
+				end
 				
 				%call up fft finding routine and assign values
 				tmp=computefft(vals(1),vals(2),sv.ErrorMode,data.tempfreq,vals(3),vals(4));

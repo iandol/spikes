@@ -14,6 +14,7 @@ classdef zipspikes < handle
 		tmppath=''
 		tmp=''
 		filetype=''
+		pathfilter = '.*'
 		sourcedir
 		userroot
 		verbose = true
@@ -73,32 +74,36 @@ classdef zipspikes < handle
 		%> Do the randomisation
 		% ===================================================================
 		function generate(obj,~)
-			
-% 			if ismac
-% 				error('You can only generate zip files on PC');
-% 			end
-			
-			obj.sourcedir = uigetdir;
 
+			if ismac
+				error('You can only generate zip files on PC');
+			end
+			obj.sourcedir = uigetdir;
+			if obj.sourcedir == 0
+				disp('No directory selected')
+				return
+			end
 			cd(obj.sourcedir)
 			d=dir;
 			for i = 1:length(d)
-				if d(i).isdir && ~strcmp(d(i).name,'.') && ~strcmp(d(i).name,'..')
-					cd(d(i).name)
+				name=d(i).name;
+				if d(i).isdir && ~isempty(regexpi(name, obj.pathfilter)) && ~strcmp(name,'.') && ~strcmp(name,'..')
+					cd(name)
 					dd=dir;
 					for j = 1:length(dd)
-						if regexpi(dd(j).name,'smr')
-							makeZip(dd(j).name)
+						name2 = dd(j).name;
+						if regexpi(name2,'smr$')
+							makeZip(name2)
 						end
 					end
 					cd(obj.sourcedir)
-				elseif regexpi(d(i).name,'smr')
-					makeZip(d(i).name)
+				elseif regexpi(name,'smr$')
+					makeZip(name)
 				end
 			end
 			
 			function makeZip(name)
-				tmpname=[obj.sourcedir filesep name];
+				tmpname=[pwd filesep name];
 				[p,f,e]=fileparts(tmpname);
 				if isdir([p filesep f]) %stops annoying "directory alread exists" messages
 					disp('Deleting existing directory...');
@@ -109,7 +114,7 @@ classdef zipspikes < handle
 				end
 				[s,w]=dos(['"' obj.userroot 'various\vsx\vsx.exe" "' tmpname '"']);
 				if s>0; error(w); end
-				zip([obj.sourcedir filesep f '.zip'], {[f '.smr'],f});
+				zip([pwd filesep f '.zip'], {[f '.smr'],f});
 				rmdir([p filesep f],'s');
 			end
 
