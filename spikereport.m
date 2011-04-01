@@ -21,7 +21,6 @@ function varargout = spikereport(varargin)
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
 % Edit the above text to modify the response to help spikereport
-
 global rlist;
 
 % Last Modified by GUIDE v2.5 21-Mar-2007 11:01:34
@@ -60,21 +59,21 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+rlist=[];
 if ismac
 	if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
 		mkdir(['~' filesep 'MatlabFiles' filesep]);
 	end
 	rlist.usingmac=1;
 	rlist.basepath=['~' filesep 'MatlabFiles' filesep];
-elseif ispc
+else
 	if ~exist('c:\MatlabFiles','dir')
 		mkdir('c:\MatlabFiles')
 	end
 	rlist.usingmac=0;
 	rlist.basepath=['c:' filesep 'MatlabFiles' filesep];
 end
-rlist=[];
-rlist.format='DOC';
+rlist.format='PDF';
 rlist.size=1;
 rlist.index=1;
 rlist.tag=[];
@@ -174,7 +173,7 @@ cd(pn);
 for j=1:length(fn)
 	[p,n,e]=fileparts([pn fn{j}]);
 	if ~isempty(regexpi(e,'.matx'))
-		load([p '\' n e]);
+		load([p filesep n e]);
 	end
 	if ~isfield(rlist,'celllist') || isempty(rlist.celllist)
 		cellloop=1;
@@ -201,7 +200,7 @@ for j=1:length(fn)
 				rlist.item{rlist.index}.maxtrial=data.raw{1}.endtrial;
 				rlist.item{rlist.index}.binwidth=data.binwidth;
 			otherwise
-				rlist.item{rlist.index}.filename=[p '\' n e];
+				rlist.item{rlist.index}.filename=[p filesep n e];
 				rlist.item{rlist.index}.wrap=get(gh('RepWrapCheck'),'Value');
 				rlist.item{rlist.index}.mintrial=get(gh('RepMinTrials'),'String');
 				rlist.item{rlist.index}.maxtrial=get(gh('RepMaxTrials'),'String');
@@ -879,7 +878,7 @@ out=['report.' rlist.format];
 [fn,pn]=uiputfile('*.*','File to Save Report in',out);
 rlist.fn=fn;
 rlist.pn=pn;
-save([rlist.basepath  'report.mat'], rlist);
+save([rlist.basepath  'report.mat'], 'rlist');
 reportout=['-o' rlist.pn rlist.fn];
 reporttype=['-f' rlist.format];
 report('spikereport',reportout,reporttype);
@@ -1083,7 +1082,7 @@ function RepExit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global rlist
 
-save([rlist.basepath  'reportbackup.mat'], rlist);
+save([rlist.basepath  'reportbackup.mat'], 'rlist');
 close(gcf);
 
 
@@ -1158,7 +1157,7 @@ out=['reportSD.' rlist.format];
 [fn,pn]=uiputfile('*.*','File to Save Report in',out);
 rlist.fn=fn;
 rlist.pn=pn;
-save([rlist.basepath  'report.mat'], rlist);
+save([rlist.basepath  'report.mat'], 'rlist');
 reportout=['-o' rlist.pn rlist.fn];
 reporttype=['-f' rlist.format];
 report('spikereportSD',reportout,reporttype);
