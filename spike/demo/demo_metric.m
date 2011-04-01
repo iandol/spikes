@@ -28,26 +28,29 @@ opts.metric_family = 0;
 opts.parallel = 1;
 opts.possible_words = 'unique';
 
+oldp=pwd;
+cd('../data/')
+  
 if (strcmp(dataset,'drift'))
   opts.shift_cost = [0 2.^(-2:9)];
   opts.start_time = 0;
   opts.end_time = 0.475;
   
-  X=staread(strrep('../data/drift.stam','/',filesep));
+  X=staread('drift.stam');
 
 elseif (strcmp(dataset,'synth'))
   opts.shift_cost = [0 2.^(-2:9)];
   opts.start_time = 0;
   opts.end_time = 1;
   
-  X=staread(strrep('../data/synth.stam','/',filesep));
+  X=staread('synth.stam');
 
 elseif (strcmp(dataset,'taste'))
   opts.shift_cost = [0 2.^(-4:9)];
   opts.start_time = 10;
   opts.end_time = 12;
   
-  X=staread(strrep('../data/taste.stam','/',filesep));
+  X=staread('taste.stam');
   
 else
   clear dataset;

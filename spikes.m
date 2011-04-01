@@ -158,11 +158,12 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
 		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
-		set(gcf,'DefaultLineLineWidth',1.25);
-		set(gcf,'DefaultAxesLineWidth',1.25);
-		set(gcf,'defaultaxesfontname','Georgia');
-		set(gcf,'defaulttextfontname','Georgia');
-		set(gcf,'defaulttextfontsize',8);
+		set(gcf,'DefaultLineLineWidth',1);
+		set(gcf,'DefaultAxesLineWidth',1);
+		set(gcf,'DefaultAxesFontName','Georgia');
+		set(gcf,'DefaultTextFontName','Georgia');
+		set(gcf,'DefaultAxesFontSize',8);
+		set(gcf,'DefaultTextFontSize',9);
 		set(gca,'Layer','top');						%ticks go over data
 		set(gca,'TickDir','out');					%get ticks going out
 		set(gh('SMinEdit'),'UserData','no');		%these initialize the min and max time boxes
@@ -393,8 +394,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.dataloadpath=p;
 		data.meta.filename(data.meta.filename=='\')='/';	%stops annoying TeX interpertation errors
 		t=find(data.sourcepath==filesep);
-		if data.zipload == true
-			data.runname=[data.sourcepath((t(end-1))+1:end-4) '|'];
+		if ~isempty(regexpi(data.sourcepath,'(smr|zip)'));
+			data.runname=[data.sourcepath((t(end-1))+1:end-4) ' | '];
 		else
 			t=find(data.sourcepath==filesep);
 			data.runname=data.sourcepath((t(end-2))+1:t(end));
