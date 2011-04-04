@@ -19,10 +19,12 @@ else
 	out.M=int32(data.yrange);
 end
 out.N=int32(1);
-out.sites.label={data.matrixtitle};
-out.sites.recording_tag={'episodic'};
-out.sites.time_scale=1;
-out.sites.time_resolution=0.0001;
+out.sites.label = {data.matrixtitle};
+out.sites.recording_tag = {'episodic'};
+out.sites.time_scale = 1;
+out.sites.time_resolution = 0.0001;
+out.sites.si_unit = 'none';
+out.sites.si_prefix = 1;
 
 if ~exist('mintrial','var')
 	mintrial=1;
