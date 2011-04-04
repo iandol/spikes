@@ -2417,10 +2417,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		data.textload=1;
 		data.areaplot=0;
 		data.xvalues=var(1,2:end);	 %here are the tags
-		a=find(data.xvalues < 0.001 & data.xvalues>-0.001);
+		a=find(data.xvalues < 0.001 && data.xvalues>-0.001);
 		data.xvalues(a)=0;
 		data.yvalues=var(2:end,1)';
-		a=find(data.yvalues < 0.001 & data.yvalues>-0.001);
+		a=find(data.yvalues < 0.001 && data.yvalues>-0.001);
 		data.yvalues(a)=0;
 		data.xrange=length(data.xvalues);
 		data.yrange=length(data.yvalues);

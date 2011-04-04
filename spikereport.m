@@ -20,9 +20,6 @@ function varargout = spikereport(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help spikereport
-global rlist;
-
 % Last Modified by GUIDE v2.5 01-Apr-2011 15:01:37
 
 % Begin initialization code - DO NOT EDIT
@@ -74,6 +71,7 @@ else
 	rlist.basepath=['c:' filesep 'MatlabFiles' filesep];
 end
 rlist.format='PDF';
+set(handles.RepFormatMenu,'Value',2);
 rlist.size=1;
 rlist.index=1;
 rlist.tag=[];
@@ -323,17 +321,7 @@ end
 UpdateFileList;
 RepHoldCheck_Callback(gh('RepHoldCheck'));
 
-% --- Executes during object creation, after setting all properties.
-function RepCellMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepCellMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function RepMinMods_Callback(hObject, eventdata, handles)
 % hObject    handle to RepMinMods (see GCBO)
@@ -352,17 +340,6 @@ else
 	end
 end
 
-% --- Executes during object creation, after setting all properties.
-function RepMinMods_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepMinMods (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function RepMaxMods_Callback(hObject, eventdata, handles)
 % hObject    handle to RepMaxMods (see GCBO)
@@ -380,17 +357,6 @@ else
 	end
 end
 
-% --- Executes during object creation, after setting all properties.
-function RepMaxMods_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepMaxMods (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function RepMinTrials_Callback(hObject, eventdata, handles)
 % hObject    handle to RepMinTrials (see GCBO)
@@ -408,17 +374,6 @@ else
 	end
 end
 
-% --- Executes during object creation, after setting all properties.
-function RepMinTrials_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepMinTrials (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function RepMaxTrials_Callback(hObject, eventdata, handles)
 % hObject    handle to RepMaxTrials (see GCBO)
@@ -434,18 +389,6 @@ else
 	for i=1:length(rlist.tag)
 		rlist.item{rlist.tag(i)}.maxtrial=get(hObject,'String');
 	end
-end
-
-% --- Executes during object creation, after setting all properties.
-function RepMaxTrials_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepMaxTrials (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
 end
 
 % --- Executes on selection change in RepTypeMenu.
@@ -466,18 +409,6 @@ else
 	end
 end
 
-% --- Executes during object creation, after setting all properties.
-function RepTypeMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepTypeMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 function RepMinTime_Callback(hObject, eventdata, handles)
 % hObject    handle to RepMinTime (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -494,18 +425,6 @@ else
 	end
 end
 
-% --- Executes during object creation, after setting all properties.
-function RepMinTime_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepMinTime (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 function RepMaxTime_Callback(hObject, eventdata, handles)
 % hObject    handle to RepMaxTime (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -520,18 +439,6 @@ else
 	for i=1:length(rlist.tag)
 		rlist.item{rlist.tag(i)}.maxtime=get(hObject,'String');
 	end
-end
-
-% --- Executes during object creation, after setting all properties.
-function RepMaxTime_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepMaxTime (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
 end
 
 % --- Executes on button press in RepMoveUp.
@@ -729,18 +636,6 @@ else
 	end
 end	
 
-% --- Executes during object creation, after setting all properties.
-function RepBinWidth_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepBinWidth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 % --- Executes on button press in RepPlotPSTHCheck.
 function RepPlotPSTHCheck_Callback(hObject, eventdata, handles)
 % hObject    handle to RepPlotPSTHCheck (see GCBO)
@@ -792,18 +687,6 @@ else
 	end
 end	
 
-% --- Executes during object creation, after setting all properties.
-function RepXAxis_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepXAxis (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 function RepYAxis_Callback(hObject, eventdata, handles)
 % hObject    handle to RepYAxis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -821,18 +704,6 @@ else
 	end
 end	
 
-% --- Executes during object creation, after setting all properties.
-function RepYAxis_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepYAxis (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 function RepZAxis_Callback(hObject, eventdata, handles)
 % hObject    handle to RepZAxis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -849,18 +720,6 @@ else
 
 	end
 end	
-
-% --- Executes during object creation, after setting all properties.
-function RepZAxis_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepZAxis (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on button press in RepSave.
 function RepSave_Callback(hObject, eventdata, handles)
@@ -918,19 +777,6 @@ function RepFormatMenu_Callback(hObject, eventdata, handles)
 global rlist
 contents = get(hObject,'String');
 rlist.format=contents{get(hObject,'Value')};
-
-
-% --- Executes during object creation, after setting all properties.
-function RepFormatMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepFormatMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on button press in ShowInfoCheck.
 function ShowInfoCheck_Callback(hObject, eventdata, handles)
@@ -1074,26 +920,27 @@ function RepFileEdit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of RepFileEdit as text
 %        str2double(get(hObject,'String')) returns contents of RepFileEdit as a double
 
-
-% --- Executes during object creation, after setting all properties.
-function RepFileEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepFileEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 % --- Executes on button press in RepExit.
 function RepExit_Callback(hObject, eventdata, handles)
 % hObject    handle to RepExit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global rlist
-
+if ~isfield(rlist,'basepath')
+	if ismac
+		if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
+			mkdir(['~' filesep 'MatlabFiles' filesep]);
+		end
+		rlist.usingmac=1;
+		rlist.basepath=['~' filesep 'MatlabFiles' filesep];
+	else
+		if ~exist('c:\MatlabFiles','dir')
+			mkdir('c:\MatlabFiles')
+		end
+		rlist.usingmac=0;
+		rlist.basepath=['c:' filesep 'MatlabFiles' filesep];
+	end
+end
 save([rlist.basepath  'reportbackup.mat'], 'rlist');
 close(gcf);
 
@@ -1107,19 +954,6 @@ function RepCellList_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RepCellList as a double
 global rlist
 rlist.celllist=str2num(get(hObject,'String'));
-
-
-% --- Executes during object creation, after setting all properties.
-function RepCellList_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepCellList (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function RepRegEx_Callback(hObject, eventdata, handles)
 % hObject    handle to RepRegEx (see GCBO)
@@ -1143,21 +977,6 @@ else
 	rlist.tag=unique(rlist.tag);
 end
 UpdateFileList;
-
-% --- Executes during object creation, after setting all properties.
-function RepRegEx_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepRegEx (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 
 % --- Executes on button press in RepGenerate2.
 function RepGenerate2_Callback(hObject, eventdata, handles)
@@ -1209,18 +1028,6 @@ else
 	end
 end
 
-% --- Executes during object creation, after setting all properties.
-function RepErrorMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepErrorMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 % --- Executes on button press in RepHoldCheck.
 function RepHoldCheck_Callback(hObject, eventdata, handles)
 % hObject    handle to RepHoldCheck (see GCBO)
@@ -1263,17 +1070,6 @@ else
 		rlist.item{rlist.tag(i)}.holdvalx=str2double(get(hObject,'String'));
 	end
 end	
-% --- Executes during object creation, after setting all properties.
-function RepHoldValX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepHoldValX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function RepHoldValY_Callback(hObject, eventdata, handles)
 % hObject    handle to RepHoldValY (see GCBO)
@@ -1292,20 +1088,6 @@ else
 	end
 end	
 
-% --- Executes during object creation, after setting all properties.
-function RepHoldValY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepHoldValY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function RepHoldValZ_Callback(hObject, eventdata, handles)
 % hObject    handle to RepHoldValZ (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1322,19 +1104,6 @@ else
 		rlist.item{rlist.tag(i)}.holdvalz=str2double(get(hObject,'String'));
 	end
 end	
-
-% --- Executes during object creation, after setting all properties.
-function RepHoldValZ_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepHoldValZ (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on selection change in RepPlotMenu.
 function RepPlotMenu_Callback(hObject, eventdata, handles)
@@ -1353,21 +1122,6 @@ else
 		rlist.item{rlist.tag(i)}.plotmethod=get(hObject,'Value');
 	end
 end
-
-% --- Executes during object creation, after setting all properties.
-function RepPlotMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepPlotMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 
 % --- Executes on button press in RepCutTransient.
 function RepCutTransient_Callback(hObject, eventdata, handles)
@@ -1403,16 +1157,3 @@ else
 		rlist.item{rlist.tag(i)}.cutamount=str2double(get(hObject,'String'));
 	end
 end
-
-% --- Executes during object creation, after setting all properties.
-function RepCutAmount_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RepCutAmount (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
