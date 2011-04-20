@@ -1,6 +1,6 @@
-function t = circ_confmean(alpha, xi, w, d)
+function t = circ_confmean(alpha, xi, w, d, dim)
 %
-% mu = circ_mean(alpha, xi, w, d)
+% t = circ_mean(alpha, xi, w, d, dim)
 %   Computes the confidence limits on the mean for circular data.
 %
 %   Input:
@@ -10,7 +10,7 @@ function t = circ_confmean(alpha, xi, w, d)
 %     [d    spacing of bin centers for binned data, if supplied 
 %           correction factor is used to correct for bias in 
 %           estimation of r, in radians (!)]
-
+%     [dim  compute along this dimension, default is 1]
 %
 %   Output:
 %     t     mean +- d yields upper/lower (1-xi)% confidence limit
@@ -22,54 +22,57 @@ function t = circ_confmean(alpha, xi, w, d)
 %   Topics in circular statistics, S. R. Jammalamadaka et al. 
 %   Biostatistical Analysis, J. H. Zar
 %
-% Copyleft (c) 2008 Philipp Berens
+% Circular Statistics Toolbox for Matlab
+
+% By Philipp Berens, 2009
 % berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
 
-% check vector size
-if size(alpha,2) > size(alpha,1)
-	alpha = alpha';
+if nargin < 5
+  dim = 1;
 end
 
-% set confidence limit size to default
-if nargin<2 || isempty(xi)
-  xi = 0.05;
-end
-
-if nargin<3
-  % if no specific weighting has been specified
-  % assume no binning has taken place
-	w = ones(size(alpha));
-else
-  if size(w,2) > size(w,1)
-    w = w';
-  end 
-end
-
-if nargin<4
+if nargin < 4 || isempty(d)
   % per default do not apply correct for binned data
   d = 0;
 end
 
+if nargin < 3 || isempty(w)
+  % if no specific weighting has been specified
+  % assume no binning has taken place
+	w = ones(size(alpha));
+else
+  if size(w,2) ~= size(alpha,2) || size(w,1) ~= size(alpha,1) 
+    error('Input dimensions do not match');
+  end 
+end
+
+% set confidence limit size to default
+if nargin < 2 || isempty(xi)
+  xi = 0.05;
+end
+
 % compute ingredients for conf. lim.
-r = circ_r(alpha,w,d);
-n = sum(w);
-R = n*r;
+r = circ_r(alpha,w,d,dim);
+n = sum(w,dim);
+R = n.*r;
 c2 = chi2inv((1-xi),1);
 
 % check for resultant vector length and select appropriate formula
-if r < .9 && r > sqrt(c2/2/n)
-  t = sqrt((2*n*(2*R^2-n*c2))/(4*n-c2));  % equ. 26.24
-elseif r >= .9
-  t = sqrt(n^2-(n^2-R^2)*exp(c2/n));      % equ. 26.25
-else 
-  t = NaN;
-  warning('Resultant vector does not allow to specify confidence limits on mean. \nResults may be wrong or inaccurate.');
+t = zeros(size(r));
+
+for i = 1:numel(r)
+  if r(i) < .9 && r(i) > sqrt(c2/2/n(i))
+    t(i) = sqrt((2*n(i)*(2*R(i)^2-n(i)*c2))/(4*n(i)-c2));  % equ. 26.24
+  elseif r(i) >= .9
+    t(i) = sqrt(n(i)^2-(n(i)^2-R(i)^2)*exp(c2/n(i)));      % equ. 26.25
+  else 
+    t(i) = NaN;
+    warning('Requirements for confidence levels not met.');
+  end
 end
 
 % apply final transform
-t = acos(t/R);
+t = acos(t./R);
   
 
 

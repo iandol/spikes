@@ -16,10 +16,10 @@ function [rho pval] = circ_corrcc(alpha1, alpha2)
 %
 % PHB 6/7/2008
 %
-% Copyleft (c) 2008 Philipp Berens
+% Circular Statistics Toolbox for Matlab
+
+% By Philipp Berens, 2009
 % berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
 
 if size(alpha1,2) > size(alpha1,1)
 	alpha1 = alpha1';
@@ -27,6 +27,10 @@ end
 
 if size(alpha2,2) > size(alpha2,1)
 	alpha2 = alpha2';
+end
+
+if length(alpha1)~=length(alpha2)
+  error('Input dimensions do not match.')
 end
 
 % compute mean directions

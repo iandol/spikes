@@ -28,17 +28,17 @@ function [h mu ul ll] = circ_mtest(alpha, dir, xi, w, d)
 % References:
 %   Biostatistical Analysis, J. H. Zar
 %
-% Copyleft (c) 2008 Philipp Berens
+% Circular Statistics Toolbox for Matlab
+
+% By Philipp Berens, 2009
 % berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
 
 if size(alpha,2) > size(alpha,1)
 	alpha = alpha';
 end
 
 if nargin<3
-	xi=0.05;
+  xi = 0.05;
 end
 
 if nargin<4
@@ -49,6 +49,9 @@ else
   if size(w,2) > size(w,1)
     w = w';
   end 
+  if length(alpha)~=length(w)
+    error('Input dimensions do not match.')
+  end
 end
 
 if nargin<5
@@ -63,4 +66,4 @@ ul = mu + t;
 ll = mu - t;
 
 % compute test via confidence limits (example 27.3)
-h = abs(circ_dist(dir,mu)) < t;
+h = abs(circ_dist2(dir,mu)) > t;

@@ -1,110 +1,157 @@
-function [pval mu F] = circ_wwtest(alpha1, alpha2, w1, w2)
+function [pval table] = circ_wwtest(varargin)
+% [pval, table] = circ_wwtest(alpha, idx, [w])
+% [pval, table] = circ_wwtest(alpha1, alpha2, [w1, w2])
+%   Parametric Watson-Williams multi-sample test for equal means. Can be
+%   used as a one-way ANOVA test for circular data.
 %
-% [pval, F] = circ_wwtest(alpha1, alpha2, w1, w2)
-%   Parametric Watson-Williams two-sample test for equal means.
-%   H0: the two populations have equal means
-%   HA: the two populations have unequal means
+%   H0: the s populations have equal means
+%   HA: the s populations have unequal means
 %
 %   Note: 
 %   Use with binned data is only advisable if binning is finer than 10 deg.
-%   In this case, alpha1 and alpha2 are assumed to be equal and correspond
+%   In this case, alpha is assumed to correspond
 %   to bin centers.
 %
 %   The Watson-Williams two-sample test assumes underlying von-Mises
-%   distributrions.
+%   distributrions. All groups are assumed to have a common concentration
+%   parameter k.
 %
 %   Input:
-%     alpha1	sample of angles in radians of population 1
-%     alpha2	sample of angles in radians of population 2
-%     [w1     number of incidences in case of binned angle data]
-%     [w2     number of incidences in case of binned angle data]
+%     alpha   angles in radians
+%     idx     indicates which population the respective angle in alpha
+%             comes from, 1:s
+%     [w      number of incidences in case of binned angle data]
 %
 %   Output:
-%     pval    p-value of the Watson-Williams two-sample test. Discard H0 if
+%     pval    p-value of the Watson-Williams multi-sample test. Discard H0 if
 %             pval is small.
-%     mu      best estimate of shared population mean if H0 is not
-%             discarded at the 0.05 level and NaN otherwise.
-%     F       test statistic of the Watson-Williams test.
+%     table   cell array containg the ANOVA table
 %
-%
-% PHB 7/6/2008
+% PHB 3/19/2009
 %
 % References:
 %   Biostatistical Analysis, J. H. Zar
 %
-% Copyleft (c) 2008 Philipp Berens
+% Circular Statistics Toolbox for Matlab
+
+% By Philipp Berens, 2009
 % berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
 
-if size(alpha1,2) > size(alpha1,1)
-	alpha1 = alpha1';
-end
+[alpha, idx, w] = processInput(varargin{:});
 
-if size(alpha2,2) > size(alpha2,1)
-	alpha2 = alpha2';
-end
-
-
-if nargin<3
-  % if no specific weighting has been specified
-  % assume no binning has taken place
-	w1 = ones(size(alpha1));
-  w2 = ones(size(alpha2));
-  alpha = [alpha1; alpha2];
-  w = ones(size(alpha));
-else
-  if size(w1,2) > size(w1,1)
-    w1 = w1';
-  end 
-  if size(w2,2) > size(w2,1)
-    w2 = w2';
-  end 
-  alpha = alpha1;     % here we assume both bin centers to be equal
-  w = w1+w2;
-end
+% number of groups
+u = unique(idx);
+s = length(u);
 
 % number of samples
-n1 = sum(w1);
-n2 = sum(w2);
-n = n1 + n2;
+n = sum(w);
 
-% resultant vector lengths
-r1 = circ_r(alpha1,w1);
-r2 = circ_r(alpha2,w2);
+% compute relevant quantitites
+pn = zeros(s,1); pr = pn;
+for t=1:s
+  pidx = idx == u(t);
+  pn(t) = sum(pidx.*w);
+  pr(t) = circ_r(alpha(pidx),w(pidx));
+end
+
 r = circ_r(alpha,w);
-rw = (n1*r1 + n2*r2)/n;
+rw = sum(pn.*pr)/n;
 
-% check for assumptions
-if  rw < .7 || n/2 < 10
-  error('Test not applicable. Numer of samples to low or average resultant vector length to low.')
+% make sure assumptions are satisfied
+checkAssumption(rw,mean(pn))
+
+% test statistic
+kk = circ_kappa(rw);
+beta = 1+3/(8*kk);    % correction factor
+A = sum(pr.*pn) - r*n;
+B = n - sum(pr.*pn);
+
+F = beta * (n-s) * A / (s-1) / B;
+pval = 1 - fcdf(F,s-1,n-s);
+
+na = nargout;
+if na < 2
+  printTable;
+end
+prepareOutput;
+
+
+  function printTable
+    
+    fprintf('\nANALYSIS OF VARIANCE TABLE (WATSON-WILLIAMS TEST)\n\n');
+    fprintf('%s\t\t\t\t%s\t%s\t\t%s\t\t%s\t\t\t%s\n', ' ' ,'d.f.', 'SS', 'MS', 'F', 'P-Value');
+    fprintf('--------------------------------------------------------------------\n');
+    fprintf('%s\t\t\t%u\t\t%.2f\t%.2f\t%.2f\t\t%.4f\n', 'Columns', s-1 , A, A/(s-1), F, pval);
+    fprintf('%s\t\t%u\t\t%.2f\t%.2f\n', 'Residual ', n-s, B, B/(n-s));
+    fprintf('--------------------------------------------------------------------\n');
+    fprintf('%s\t\t%u\t\t%.2f', 'Total   ',n-1,A+B);
+    fprintf('\n\n')
+
+  end
+
+  function prepareOutput
+    
+    if na > 1
+      table = {'Source','d.f.','SS','MS','F','P-Value'; ...
+               'Columns', s-1 , A, A/(s-1), F, pval; ...
+               'Residual ', n-s, B, B/(n-s), [], []; ...
+               'Total',n-1,A+B,[],[],[]};
+    end
+  end
 end
 
-% compute test statistic (equ. 27.14)
-F = ktable(rw) * ((n-2)*(n1*r1+n2*r2-n*r)/(n-n1*r1-n2*r2)); 
-pval = 1-fcdf(F,1,n-2);
 
-% compute estimate of population mean
-if pval > 0.05
-  mu = circ_mean(alpha,w);
-else 
-  mu = NaN;
+
+function checkAssumption(rw,n)
+
+  if n > 10 && rw<.45
+    warning('Test not applicable. Average resultant vector length < 0.45.') %#ok<WNTAG>
+  elseif n > 6 && rw<.5
+    warning('Test not applicable. Average number of samples per population < 11 and average resultant vector length < 0.5.') %#ok<WNTAG>
+  elseif n >=5 && rw<.55
+    warning('Test not applicable. Average number of samples per population < 7 and average resultant vector length < 0.55.') %#ok<WNTAG>
+  elseif n < 5
+    warning('Test not applicable. Average number of samples per population < 5.') %#ok<WNTAG>
+  end
+
 end
 
 
+function [alpha, idx, w] = processInput(varargin)
 
-
-function k = ktable(rw)
-
-% Colum 2 from table B37 in Zar, JH. 
-% The first entry corresponds to r=.7, the last one to r=1.
-k = [1.1851 1.1794 1.1738 1.1682 1.1627 1.1572 1.1517 1.1461 1.1406 ...
-1.1351 1.1285 1.1239 1.1182 1.1124 1.1066 1.1007 1.0947 1.0885 1.0823 ...
-1.0759 1.0694 1.0627 1.0560 1.0491 1.0422 1.0351 1.0279 1.0207 1.0134 ...
-1.0060 1];
-
-idx = round((rw-.7)*100)+1;
-k = k(idx);
-
-
+  if nargin == 4
+    alpha1 = varargin{1}(:);
+    alpha2 = varargin{2}(:);
+    w1 = varargin{3}(:);
+    w2 = varargin{4}(:);
+    alpha = [alpha1; alpha2];
+    idx = [ones(size(alpha1)); ones(size(alpha2))];
+    w = [w1; w2];
+  elseif nargin==2 && sum(abs(round(varargin{2})-varargin{2}))>1e-5
+    alpha1 = varargin{1}(:);
+    alpha2 = varargin{2}(:);
+    alpha = [alpha1; alpha2];
+    idx = [ones(size(alpha1)); 2*ones(size(alpha2))];
+    w = ones(size(alpha));
+  elseif nargin==2
+    alpha = varargin{1}(:);
+    idx = varargin{2}(:);
+    if ~(size(idx,1)==size(alpha,1))
+      error('Input dimensions do not match.')
+    end
+    w = ones(size(alpha));  
+  elseif nargin==3
+    alpha = varargin{1}(:);
+    idx = varargin{2}(:);
+    w = varargin{3}(:);
+    if ~(size(idx,1)==size(alpha,1))
+      error('Input dimensions do not match.')
+    end
+    if ~(size(w,1)==size(alpha,1))
+      error('Input dimensions do not match.')
+    end  
+  else
+    error('Invalid use of circ_wwtest. Type help circ_wwtest.')
+  end
+end
 

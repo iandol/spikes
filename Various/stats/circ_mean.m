@@ -1,4 +1,4 @@
-function [mu ul ll] = circ_mean(alpha, w)
+function [mu ul ll] = circ_mean(alpha, w, dim)
 %
 % mu = circ_mean(alpha, w)
 %   Computes the mean direction for circular data.
@@ -6,6 +6,10 @@ function [mu ul ll] = circ_mean(alpha, w)
 %   Input:
 %     alpha	sample of angles in radians
 %     [w		weightings in case of binned angle data]
+%     [dim  compute along this dimension, default is 1]
+%
+%     If dim argument is specified, all other optional arguments can be
+%     left empty: circ_mean(alpha, [], dim)
 %
 %   Output:
 %     mu		mean direction
@@ -19,35 +23,34 @@ function [mu ul ll] = circ_mean(alpha, w)
 %   Topics in circular statistics, S. R. Jammalamadaka et al. 
 %   Biostatistical Analysis, J. H. Zar
 %
-% Copyleft (c) 2008 Philipp Berens
-% berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
+% Circular Statistics Toolbox for Matlab
 
-% check vector size
-if size(alpha,2) > size(alpha,1)
-	alpha = alpha';
+% By Philipp Berens, 2009
+% berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
+
+if nargin < 3
+  dim = 1;
 end
 
-if nargin<2
+if nargin < 2 || isempty(w)
   % if no specific weighting has been specified
   % assume no binning has taken place
 	w = ones(size(alpha));
 else
-  if size(w,2) > size(w,1)
-    w = w';
+  if size(w,2) ~= size(alpha,2) || size(w,1) ~= size(alpha,1) 
+    error('Input dimensions do not match');
   end 
 end
 
 % compute weighted sum of cos and sin of angles
-r = w'*exp(1i*alpha);
+r = sum(w.*exp(1i*alpha),dim);
 
 % obtain mean by
 mu = angle(r);
 
 % confidence limits if desired
 if nargout > 1
-  t = circ_confmean(alpha,0.05,w);
+  t = circ_confmean(alpha,0.05,w,[],dim);
   ul = mu + t;
   ll = mu - t;
 end

@@ -1,4 +1,4 @@
-function r = circ_r(alpha, w, d)
+function r = circ_r(alpha, w, d, dim)
 % r = circ_r(alpha, w, d)
 %   Computes mean resultant vector length for circular data.
 %
@@ -8,6 +8,10 @@ function r = circ_r(alpha, w, d)
 %     [d    spacing of bin centers for binned data, if supplied 
 %           correction factor is used to correct for bias in 
 %           estimation of r, in radians (!)]
+%     [dim  compute along this dimension, default is 1]
+%
+%     If dim argument is specified, all other optional arguments can be
+%     left empty: circ_r(alpha, [], [], dim)
 %
 %   Output:
 %     r		mean resultant length
@@ -19,36 +23,35 @@ function r = circ_r(alpha, w, d)
 %   Topics in circular statistics, S.R. Jammalamadaka et al. 
 %   Biostatistical Analysis, J. H. Zar
 %
-% Copyleft (c) 2008 Philipp Berens
-% berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
+% Circular Statistics Toolbox for Matlab
 
-% check vector size
-if size(alpha,2) > size(alpha,1)
-	alpha = alpha';
+% By Philipp Berens, 2009
+% berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
+
+if nargin < 4
+  dim = 1;
 end
 
-if nargin<2
+if nargin < 2 || isempty(w) 
   % if no specific weighting has been specified
   % assume no binning has taken place
 	w = ones(size(alpha));
 else
-  if size(w,2) > size(w,1)
-    w = w';
+  if size(w,2) ~= size(alpha,2) || size(w,1) ~= size(alpha,1) 
+    error('Input dimensions do not match');
   end 
 end
 
-if nargin<3
+if nargin < 3 || isempty(d)
   % per default do not apply correct for binned data
   d = 0;
 end
 
 % compute weighted sum of cos and sin of angles
-r = w'*exp(1i*alpha);
+r = sum(w.*exp(1i*alpha),dim);
 
 % obtain length 
-r = abs(r)/sum(w);
+r = abs(r)./sum(w,dim);
 
 % for data with known spacing, apply correction factor to correct for bias
 % in the estimation of r (see Zar, p. 601, equ. 26.16)

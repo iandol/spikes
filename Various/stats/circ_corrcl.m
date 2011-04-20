@@ -17,10 +17,11 @@ function [rho pval] = circ_corrcl(alpha, x)
 %
 % PHB 6/7/2008
 %
-% Copyleft (c) 2008 Philipp Berens
+% Circular Statistics Toolbox for Matlab
+
+% By Philipp Berens, 2009
 % berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
+
 
 if size(alpha,2) > size(alpha,1)
 	alpha = alpha';
@@ -28,6 +29,10 @@ end
 
 if size(x,2) > size(x,1)
 	x = x';
+end
+
+if length(alpha)~=length(x)
+  error('Input dimensions do not match.')
 end
 
 n = length(alpha);
@@ -41,5 +46,5 @@ rcs = corr(sin(alpha),cos(alpha));
 rho = sqrt((rxc^2 + rxs^2 - 2*rxc*rxs*rcs)/(1-rcs^2));
 
 % compute pvalue
-pval = chi2pdf(n*rho^2,2);
+pval = 1 - chi2cdf(n*rho^2,2);
 

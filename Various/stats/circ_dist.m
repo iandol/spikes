@@ -1,24 +1,28 @@
 function r =  circ_dist(x,y)
 %
-% r = circ_dist(alpha, x)
-%   Difference x-y around the circle computed efficiently.
+% r = circ_dist(alpha, beta)
+%   Pairwise difference x_i-y_i around the circle computed efficiently.
 %
 %   Input:
-%     x       sample of linear random variable
-%     y       sample of linear random variable
+%     alpha      sample of linear random variable
+%     beta       sample of linear random variable or one single angle
 %
 %   Output:
-%     r       matrix with pairwise differences
+%     r       matrix with differences
 %
 % References:
 %     Biostatistical Analysis, J. H. Zar, p. 651
 %
-% PHB 6/7/2008
+% PHB 3/19/2009
 %
-% Copyleft (c) 2008 Philipp Berens
-% berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
+% Circular Statistics Toolbox for Matlab
 
-r = angle(repmat(exp(1i*x),length(x),1) ...
-       ./ repmat(exp(1i*y'),1,length(x)));
+% By Philipp Berens, 2009
+% berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
+
+
+if size(x,1)~=size(y,1) && size(x,2)~=size(y,2) && length(y)~=1
+  error('Input dimensions do not match.')
+end
+
+r = angle(exp(1i*x)./exp(1i*y));

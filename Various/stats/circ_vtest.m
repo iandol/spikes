@@ -1,6 +1,6 @@
-function [pval z] = circ_vtest(alpha, dir, w, d)
+function [pval v] = circ_vtest(alpha, dir, w, d)
 %
-% [pval, z] = circ_vtest(alpha, dir, w, d)
+% [pval, v] = circ_vtest(alpha, dir, w, d)
 %   Computes V test for non-uniformity of circular data with a specified 
 %   mean direction dir.
 %   H0: the population is uniformly distributed around the circle
@@ -31,10 +31,11 @@ function [pval z] = circ_vtest(alpha, dir, w, d)
 % References:
 %   Biostatistical Analysis, J. H. Zar
 %
-% Copyleft (c) 2008 Philipp Berens
+% Circular Statistics Toolbox for Matlab
+
+% By Philipp Berens, 2009
 % berens@tuebingen.mpg.de - www.kyb.mpg.de/~berens/circStat.html
-% Distributed under GPLv3 with no liability
-% http://www.gnu.org/copyleft/gpl.html
+
 
 if size(alpha,2) > size(alpha,1)
 	alpha = alpha';
@@ -48,6 +49,9 @@ else
   if size(w,2) > size(w,1)
     w = w';
   end 
+  if length(alpha)~=length(w)
+    error('Input dimensions do not match.')
+  end
 end
 
 if nargin<4
@@ -70,4 +74,4 @@ v = R * cos(mu-dir);
 u = v * sqrt(2/n);
 
 % compute p-value from one tailed normal approximation
-pval = normcdf(u);
+pval = 1 - normcdf(u);
