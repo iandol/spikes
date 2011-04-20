@@ -133,13 +133,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		history='';
 		shistory='';
 		paths='';
-		if exist([sv.historypath 'history.mat'],'file') == 2
+		if exist([sv.historypath 'history.mat'],'file')
 			load([sv.historypath 'history.mat']);
 			set(gh('spikehistory'),'String',history);
 		else
 			set(gh('spikehistory'),'String',' ');
 		end
-		if exist([sv.historypath 'shistory.mat'],'file') == 2
+		if exist([sv.historypath 'shistory.mat'],'file')
 			load([sv.historypath 'shistory.mat']);
 			if length(shistory)>10
 				set(gh('SSliceHistory'),'String',shistory(end-9:end));
@@ -173,7 +173,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		if exist([sv.historypath 'spiketemp'],'file');delete([sv.historypath 'spiketemp']); end %delete any previous data
 		
 		if isfield(paths,'matsavepath')
-			cv.matsavepath=paths.matsavepath;
+			sv.matsavepath=paths.matsavepath;
 		end
 		if isfield(paths,'matloadpath')
 			sv.matloadpath=paths.matloadpath;
@@ -2417,10 +2417,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		data.textload=1;
 		data.areaplot=0;
 		data.xvalues=var(1,2:end);	 %here are the tags
-		a=find(data.xvalues < 0.001 & data.xvalues>-0.001);
+		a=find(data.xvalues < 0.001 && data.xvalues>-0.001);
 		data.xvalues(a)=0;
 		data.yvalues=var(2:end,1)';
-		a=find(data.yvalues < 0.001 & data.yvalues>-0.001);
+		a=find(data.yvalues < 0.001 && data.yvalues>-0.001);
 		data.yvalues(a)=0;
 		data.xrange=length(data.xvalues);
 		data.yrange=length(data.yvalues);

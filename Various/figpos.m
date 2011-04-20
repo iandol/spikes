@@ -1,11 +1,18 @@
-function figpos(position,size);
+function figpos(position,size,mult)
 
 if nargin<1;
 	position=1;
 end
-if nargin<2;
+if nargin<2 || isempty(size);
 	pos=get(gcf,'Position');
 	size=[pos(3) pos(4)];
+end
+if nargin < 3
+	mult=1;
+end
+
+if mult ~=1
+	size = size .* mult;
 end
 
 scr=get(0,'ScreenSize');
