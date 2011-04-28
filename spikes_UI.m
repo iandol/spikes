@@ -302,7 +302,8 @@ if Value==1
 	set(findobj('UserData','AxesEdit'),'String','-inf inf');     
 	set(findobj('UserData','AxesEdit'),'Enable','off');          
 else                                                         
-	set(findobj('UserData','AxesEdit'),'Enable','on');           
+	set(findobj('UserData','AxesEdit'),'Enable','on');
+	set(findobj('UserData','AxesEdit'),'BackgroundColor',[0.3 0.3 0.3]);
 end 
 
 % --------------------------------------------------------------------
@@ -448,6 +449,7 @@ if Value==0
 	set(handles.GaussEdit,'Enable','off')
 else
 	set(handles.GaussEdit,'Enable','on')
+	set(handles.GaussEdit,'Backgroundcolor',[0.3 0.3 0.3])
 end
 
 % --------------------------------------------------------------------
@@ -840,6 +842,7 @@ if get(hObject,'Value')==0
 	set(handles.STransientValue,'Enable','off')
 else
 	set(handles.STransientValue,'Enable','on')
+	set(handles.STransientValue,'Backgroundcolor',[0.3 0.3 0.3])
 end
 
 

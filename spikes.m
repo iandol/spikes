@@ -58,7 +58,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv=[];
 		data=[];
 		rlist=[];
-		sv.version='SPIKES: V1.90b';
+		sv.version = 1.903;
+		sv.title=['SPIKES: V' num2str(sv.version)];
 		if ismac
 			if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
 				mkdir(['~' filesep 'MatlabFiles' filesep]);
@@ -86,7 +87,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			javax.swing.UIManager.setLookAndFeel(oldlook);
 		end
 		figpos(2);	%position the figure
-		set(sv.uihandle,'Name', [sv.version ' | Started at ' datestr(now)]);
+		set(sv.uihandle,'Name', [sv.title ' | Started at ' datestr(now)]);
 		colormap(jet(256)); %this gives us a much higher resolution colormap
 		%-------The following sv structure sets up the GUI interface structure--
 		sv.BinWidth=10;
@@ -179,8 +180,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			sv.matloadpath=paths.matloadpath;
 		end
 		if isfield(paths,'dataloadpath')
-			sv.dataloadpath=paths.dataloadpath;
-			cd(sv.dataloadpath);
+			%sv.dataloadpath=paths.dataloadpath;
+			%cd(sv.dataloadpath);
 		end
 		
 		%-----------------------------------------------------------------------------------------
@@ -306,8 +307,12 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					sv.reload='no';
 				else %we need the user to specify a file
 					[fn,pn]=uigetfile({'*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.zip *.smr *.txt *.doc)'; ...
-						'*.smr','VS RAW DATA File (SMR)';'*.txt','VSX Output File (TXT)'; ...
-						'*.doc','XCor Output File (DOC)';'*.*','All Files'},'Select File Type to Load:');
+						'*.zip','VS RAW DATA File (ZIP)';...
+						'*.smr','VS RAW DATA File (SMR)';...
+						'*.txt','VSX Output File (TXT)'; ...
+						'*.doc','XCor Output File (DOC)';...
+						'*.*','All Files'},...
+						'Select File Type to Load:');
 					if isequal(fn,0)||isequal(pn,0);set(gh('LoadText'),'String','No Data Loaded');errordlg('No File Selected or Found!');error('File was not selected by user / not found.');end
 					[p,basefilename,e]=fileparts([pn fn]);
 				end
@@ -389,9 +394,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					error('File selection error, unsupported file type loaded!')
 				end
 		end
-		[p,basefilename,e]=fileparts(data.meta.filename);	%seperate out the file from the path
-		cd(p);												%change to the directory where all the spike time files live
-		sv.dataloadpath=p;
+		[p,basefilename,~]=fileparts(data.meta.filename);	%seperate out the file from the path
+		cd(p);	%change to the directory where all the spike time files live
+		if data.zipload == true
+			sv.dataloadpath = pn;
+		else
+			sv.dataloadpath=p;
+		end
 		data.meta.filename(data.meta.filename=='\')='/';	%stops annoying TeX interpertation errors
 		t=find(data.sourcepath==filesep);
 		if ~isempty(regexpi(data.sourcepath,'(smr|zip)'));
@@ -983,7 +992,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		if ~strcmp(sv.auto,'report')
 			endclock=etime(clock,startclock);
 			endcpu=cputime-startcpu;
-			set(sv.uihandle,'Name', [sv.version ' | Loading took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
+			set(sv.uihandle,'Name', [sv.title ' | Loading took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
 			time=[];
 		end
 		
@@ -2234,6 +2243,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gca,'Tag','SpikeFigMainAxes');
 		spikes('Measure');
 		sv.loaded='yes';
+		sv.reload='no';
 		
 		if isfield(data,'info') && ~strcmp(sv.auto,'report')
 			spikes('Data Info');
@@ -2244,7 +2254,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		if ~strcmp(sv.auto,'report')
 			endclock=etime(clock,startclock);
 			endcpu=cputime-startcpu;
-			set(sv.uihandle,'Name', [sv.version ' | Loading matrix took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
+			set(sv.uihandle,'Name', [sv.title ' | Loading matrix took: ' num2str(endclock) 'secs / CPU time:' num2str(endcpu) 'secs']);
 			time=[];
 		end
 		
