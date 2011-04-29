@@ -22,7 +22,7 @@ function varargout = rfdiff_UI(varargin)
 
 % Edit the above text to modify the response to help rfdiff_UI
 
-% Last Modified by GUIDE v2.5 26-Jan-2010 19:31:59
+% Last Modified by GUIDE v2.5 29-Apr-2011 11:13:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,48 +80,6 @@ function RFDLoad_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 rfdiff('Load')
 
-% --- Executes on button press in checkbox2.
-function checkbox2_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of checkbox2
-
-
-% --- Executes on button press in checkbox3.
-function checkbox3_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of checkbox3
-
-
-
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 
 % --- Executes on button press in RFDExit.
 function RFDExit_Callback(hObject, eventdata, handles)
@@ -129,7 +87,6 @@ function RFDExit_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close(gcf);
-
 
 
 % --- Executes on button press in RFDMeasure.
@@ -148,7 +105,6 @@ function RFDDoStats_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-
 function RFDStartRun_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDStartRun (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -156,19 +112,6 @@ function RFDStartRun_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RFDStartRun as text
 %        str2double(get(hObject,'String')) returns contents of RFDStartRun as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDStartRun_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDStartRun (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 
@@ -179,19 +122,6 @@ function RFDEndRun_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RFDEndRun as text
 %        str2double(get(hObject,'String')) returns contents of RFDEndRun as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDEndRun_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDEndRun (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in RFDDOn.
@@ -213,20 +143,6 @@ function RFDDX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDDX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDDX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDDX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function RFDDY_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDDY (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -235,18 +151,6 @@ function RFDDY_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of RFDDY as text
 %        str2double(get(hObject,'String')) returns contents of RFDDY as a double
 
-
-% --- Executes during object creation, after setting all properties.
-function RFDDY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDDY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in RFDEOn.
@@ -268,20 +172,6 @@ function RFDEX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDEX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDEX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDEX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function RFDEY_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDEY (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -289,19 +179,6 @@ function RFDEY_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RFDEY as text
 %        str2double(get(hObject,'String')) returns contents of RFDEY as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDEY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDEY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in RFDFOn.
@@ -323,19 +200,6 @@ function RFDFX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDFX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDFX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDFX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 
 function RFDFY_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDFY (see GCBO)
@@ -344,19 +208,6 @@ function RFDFY_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RFDFY as text
 %        str2double(get(hObject,'String')) returns contents of RFDFY as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDFY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDFY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in RFDGOn.
@@ -378,18 +229,6 @@ function RFDGX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDGX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDGX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDGX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function RFDGY_Callback(hObject, eventdata, handles)
@@ -399,19 +238,6 @@ function RFDGY_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RFDGY as text
 %        str2double(get(hObject,'String')) returns contents of RFDGY as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDGY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDGY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 
@@ -435,17 +261,6 @@ function RFDX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 
@@ -457,18 +272,6 @@ function RFDY_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of RFDY as text
 %        str2double(get(hObject,'String')) returns contents of RFDY as a double
 
-
-% --- Executes during object creation, after setting all properties.
-function RFDY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in RFDHOn.
@@ -490,18 +293,6 @@ function RFDHX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDHX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDHX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDHX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function RFDHY_Callback(hObject, eventdata, handles)
@@ -511,20 +302,6 @@ function RFDHY_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RFDHY as text
 %        str2double(get(hObject,'String')) returns contents of RFDHY as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDHY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDHY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on button press in RFDIOn.
 function RFDIOn_Callback(hObject, eventdata, handles)
@@ -545,19 +322,6 @@ function RFDIX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDIX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDIX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDIX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 
 function RFDIY_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDIY (see GCBO)
@@ -567,18 +331,6 @@ function RFDIY_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of RFDIY as text
 %        str2double(get(hObject,'String')) returns contents of RFDIY as a double
 
-
-% --- Executes during object creation, after setting all properties.
-function RFDIY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDIY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in RFDZValue1.
@@ -591,19 +343,6 @@ function RFDZValue1_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from RFDZValue1
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDZValue1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDZValue1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on selection change in RFDZValue2.
 function RFDZValue2_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDZValue2 (see GCBO)
@@ -613,18 +352,6 @@ function RFDZValue2_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns RFDZValue2 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from RFDZValue2
 
-
-% --- Executes during object creation, after setting all properties.
-function RFDZValue2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDZValue2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in RFDZValue3.
@@ -637,17 +364,6 @@ function RFDZValue3_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from RFDZValue3
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDZValue3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDZValue3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in RFDStatsTest.
@@ -660,19 +376,6 @@ function RFDStatsTest_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from RFDStatsTest
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDStatsTest_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDStatsTest (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on selection change in RFDYValue1.
 function RFDYValue1_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDYValue1 (see GCBO)
@@ -683,17 +386,6 @@ function RFDYValue1_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from RFDYValue1
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDYValue1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDYValue1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in popupmenu7.
@@ -706,18 +398,6 @@ function popupmenu7_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from popupmenu7
 
 
-% --- Executes during object creation, after setting all properties.
-function popupmenu7_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu7 (seet GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on selection change in RFDYValue3.
 function RFDYValue3_Callback(hObject, eventdata, handles)
@@ -729,19 +409,6 @@ function RFDYValue3_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from RFDYValue3
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDYValue3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDYValue3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on selection change in RFDYValue2.
 function RFDYValue2_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDYValue2 (see GCBO)
@@ -750,20 +417,6 @@ function RFDYValue2_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns RFDYValue2 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from RFDYValue2
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDYValue2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDYValue2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on button press in RFDYToggle.
 function RFDYToggle_Callback(hObject, eventdata, handles)
@@ -816,19 +469,6 @@ function RFDFFTHarmonic_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDFFTHarmonic as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDFFTHarmonic_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDFFTHarmonic (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on button press in RFDJOn.
 function RFDJOn_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDJOn (see GCBO)
@@ -848,20 +488,6 @@ function RFDJX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDJX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDJX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDJX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function RFDJY_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDJY (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -869,19 +495,6 @@ function RFDJY_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RFDJY as text
 %        str2double(get(hObject,'String')) returns contents of RFDJY as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function RFDJY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDJY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in RFDKOn.
@@ -903,20 +516,6 @@ function RFDKX_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDKX as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDKX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDKX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function RFDKY_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDKY (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -926,14 +525,9 @@ function RFDKY_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RFDKY as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function RFDKY_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RFDKY (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% --- Executes on button press in RFDMetricSpace.
+function RFDMetricSpace_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDMetricSpace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

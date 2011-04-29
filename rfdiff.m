@@ -19,6 +19,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 case 'Initialize'
 	%-----------------------------------------------------------------------------------------	
 	rfd=[];
+	rfd.version=0.901
 	rfd.reload=0;
 	set(0,'DefaultTextFontSize',7);
 	set(0,'DefaultAxesLayer','top');
@@ -26,8 +27,8 @@ case 'Initialize'
 	set(0,'DefaultAxesTickDirMode','manual');
 	
 	if ismac
-		rfd.oldlook=javax.swing.UIManager.getLookAndFeel;
-		javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
+		%rfd.oldlook=javax.swing.UIManager.getLookAndFeel;
+		%javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
 	elseif ispc
 		
 	end
@@ -35,10 +36,10 @@ case 'Initialize'
 	rfd.fighandle=rfdiff_UI; %this is the GUI figure
 	
 	if ismac
-		javax.swing.UIManager.setLookAndFeel(rfd.oldlook);
+		%javax.swing.UIManager.setLookAndFeel(rfd.oldlook);
 	end
 	
-	set(rfd.fighandle,'Name', 'RF Diff V0.86a');
+	set(rfd.fighandle,'Name', ['RF Diff V' num2str(rfd.version)]);
 	rfd.ax1pos=get(gh('RFDCell1Axis'),'Position');
 	rfd.ax2pos=get(gh('RFDCell2Axis'),'Position');
 	rfd.ax3pos=get(gh('RFDCell3Axis'),'Position');
