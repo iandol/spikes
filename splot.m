@@ -339,6 +339,7 @@ case 'Get Spontaneous'
 	
 	x=get(gh('XBox'),'Value');
 	y=get(gh('YBox'),'Value');
+	z=sv.zval;
 	datatype=get(gh('DataBox'),'Value');
 	plottype=get(gh('TypeBox'),'Value');
 	
@@ -419,6 +420,7 @@ case 'Latency Analysis'
 		
 	x=get(gh('XBox'),'Value');
 	y=get(gh('YBox'),'Value');
+	z=sv.zval;
 	datatype=get(gh('DataBox'),'Value');
 	plottype=get(gh('TypeBox'),'Value');
 	
@@ -523,6 +525,7 @@ case 'Linearity Test'
 	
 	x=get(gh('XBox'),'Value');
 	y=get(gh('YBox'),'Value');
+	z=sv.zval;
 	
 	rawspikes=data.rawspikes{y,x,z}/1000; %get raw spikes in seconds
 	spikesInStim=length(rawspikes);
@@ -548,6 +551,7 @@ case 'FFT Power Spectrum'
 	figure
 	x=get(gh('XBox'),'Value');
 	y=get(gh('YBox'),'Value');
+	z=sv.zval;
 	maxtime=(max(data.time{1})+data.binwidth)/1000;
 	numtrials=data.raw{y,x,z}.numtrials;
 	nummods=data.raw{y,x,z}.nummods;

@@ -66,7 +66,8 @@ for m=1:X.M
   end
   cur_end = idx;
   h = text(((range(2)-range(1))/4)+range(1),(cur_start+cur_end)/2,X.categories(m).label);
-  set(h,'verticalalignment','middle','horizontalalignment','center');
+  %set(h,'verticalalignment','middle','horizontalalignment','center');
+  set(h,'FontName','Georgia','FontSize',11);
 end
 hold off;
 box on;

@@ -19,10 +19,10 @@ end
 path(path,'..');
 
 % Smaller dataset - use this to get results quickly
-% X=staread(strrep('../data/phase_small.stam','/',filesep));
+%X=staread(strrep('/Users/ian/Code/spikes/spike/data/phase_small.stam','/',filesep));
 
 % Larger dataset
-X=staread(strrep('../data/phase.stam','/',filesep));
+X=staread(strrep('/Users/ian/Code/spikes/spike/data/phase.stam','/',filesep));
 
 AB_array = multisitearray(X);
 A = AB_array(1);

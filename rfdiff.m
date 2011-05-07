@@ -19,24 +19,25 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 case 'Initialize'
 	%-----------------------------------------------------------------------------------------	
 	rfd=[];
-	rfd.version=0.901
+	rfd.version=0.902;
+	rfd.mversion = str2num(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 	rfd.reload=0;
 	set(0,'DefaultTextFontSize',7);
 	set(0,'DefaultAxesLayer','top');
 	set(0,'DefaultAxesTickDir','out');
 	set(0,'DefaultAxesTickDirMode','manual');
 	
-	if ismac
-		%rfd.oldlook=javax.swing.UIManager.getLookAndFeel;
-		%javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
+	if ismac && rfd.mversion < 7.12
+		rfd.oldlook=javax.swing.UIManager.getLookAndFeel;
+		javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
 	elseif ispc
 		
 	end
 	
 	rfd.fighandle=rfdiff_UI; %this is the GUI figure
 	
-	if ismac
-		%javax.swing.UIManager.setLookAndFeel(rfd.oldlook);
+	if ismac && rfd.mversion < 7.12
+		javax.swing.UIManager.setLookAndFeel(rfd.oldlook);
 	end
 	
 	set(rfd.fighandle,'Name', ['RF Diff V' num2str(rfd.version)]);
@@ -445,7 +446,11 @@ case 'Load'
 	
 	startrun=str2num(get(gh('RFDStartRun'),'String'));
 	endrun=str2num(get(gh('RFDEndRun'),'String'));
-	if endrun==Inf; endrun=length(rfd.cell1.sums{rfd.cell1max(1),rfd.cell1max(2),zval1}); end
+	if endrun==Inf; 
+		endrun1=length(rfd.cell1.sums{rfd.cell1max(1),rfd.cell1max(2),zval1});
+		endrun2=length(rfd.cell2.sums{rfd.cell1max(1),rfd.cell1max(2),zval1});
+		endrun=min([endrun1 endrun2]);
+	end
 	if get(gh('RFDYToggle'),'Value')==0
 		rfd.comparea.cell1=rfd.cell1.sums{rfd.cell1max(1),rfd.cell1max(2),zval1}(startrun:endrun).*timemultiplier;
 		rfd.comparea.cell2=rfd.cell2.sums{rfd.cell1max(1),rfd.cell1max(2),zval2}(startrun:endrun).*timemultiplier;		
@@ -479,7 +484,11 @@ case 'Load'
 	
 	
 	endrun=str2num(get(gh('RFDEndRun'),'String'));
-	if endrun==Inf; endrun=length(rfd.cell1.sums{rfd.cell2max(1),rfd.cell2max(2),zval1}); end
+	if endrun==Inf; 
+		endrun1=length(rfd.cell1.sums{rfd.cell1max(1),rfd.cell1max(2),zval1});
+		endrun2=length(rfd.cell2.sums{rfd.cell1max(1),rfd.cell1max(2),zval1});
+		endrun=min([endrun1 endrun2]);
+	end
 	if get(gh('RFDYToggle'),'Value')==0
 		rfd.compareb.cell1=rfd.cell1.sums{rfd.cell2max(1),rfd.cell2max(2),zval1}(startrun:endrun).*timemultiplier;
 		rfd.compareb.cell2=rfd.cell2.sums{rfd.cell2max(1),rfd.cell2max(2),zval2}(startrun:endrun).*timemultiplier;
@@ -512,7 +521,11 @@ case 'Load'
 	end
 	
 	endrun=str2num(get(gh('RFDEndRun'),'String'));
-	if endrun==Inf; endrun=length(rfd.cell1.sums{rfd.cell2max(1),rfd.cell2max(2),zval1}); end
+	if endrun==Inf; 
+		endrun1=length(rfd.cell1.sums{rfd.cell1max(1),rfd.cell1max(2),zval1});
+		endrun2=length(rfd.cell2.sums{rfd.cell1max(1),rfd.cell1max(2),zval1});
+		endrun=min([endrun1 endrun2]);
+	end
 	if get(gh('RFDYToggle'),'Value')==0
 		rfd.comparec.cell1=rfd.cell1.sums{rfd.diffmax(1),rfd.diffmax(2),zval1}(startrun:endrun).*timemultiplier;
 		rfd.comparec.cell2=rfd.cell2.sums{rfd.diffmax(1),rfd.diffmax(2),zval2}(startrun:endrun).*timemultiplier;
@@ -544,16 +557,16 @@ case 'Load'
 			ypos=ypos-(ypos/10);
 			rfd.xy{3}=[rfd.cell1.xvalues(rfd.diffmax(2))];
 			if get(gh('RFDHideABC'),'Value')==0
-				text(rfd.cell1.xvalueso(rfd.cell1max(2))+0.1,ypos,'a','FontSize',12);
+				text(rfd.cell1.xvalueso(rfd.cell1max(2)),ypos+rand,'a','FontSize',12);
 				text(rfd.cell2.xvalueso(rfd.cell2max(2)),ypos,'b','FontSize',12);
-				text(rfd.cell1.xvalueso(rfd.diffmax(2))-0.1,ypos,'c','FontSize',12);
+				text(rfd.cell1.xvalueso(rfd.diffmax(2)),ypos-rand,'c','FontSize',12);
 			end
 		otherwise
 			rfd.xy{3}=[rfd.cell1.xvalues(rfd.diffmax(2)) rfd.cell1.yvalues(rfd.diffmax(1))];
 			if get(gh('RFDHideABC'),'Value')==0
-				text(rfd.cell1.xvalueso(rfd.cell1max(2))+0.1,rfd.cell1.yvalueso(rfd.cell1max(1))+0.1,'a','FontSize',12);
+				text(rfd.cell1.xvalueso(rfd.cell1max(2))+0.1,rfd.cell1.yvalueso(rfd.cell1max(1))+rand,'a','FontSize',12);
 				text(rfd.cell2.xvalueso(rfd.cell2max(2)),rfd.cell2.yvalueso(rfd.cell2max(1)),'b','FontSize',12);
-				text(rfd.cell1.xvalueso(rfd.diffmax(2))-0.1,rfd.cell1.yvalueso(rfd.diffmax(1))-0.1,'c','FontSize',12);
+				text(rfd.cell1.xvalueso(rfd.diffmax(2))-0.1,rfd.cell1.yvalueso(rfd.diffmax(1))-rand,'c','FontSize',12);
 			end
 	end	
 		
@@ -573,7 +586,11 @@ case 'Load'
 				y=find(rfd.cell1.yvalues==y);
 		end	
 		endrun=str2num(get(gh('RFDEndRun'),'String'));
-		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if endrun==Inf; 
+			endrun1=length(rfd.cell1.sums{y,x,zval1});
+			endrun2=length(rfd.cell2.sums{y,x,zval1});
+			endrun=min([endrun1 endrun2]);
+		end
 		if get(gh('RFDYToggle'),'Value')==0
 			rfd.compared.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
 			rfd.compared.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
@@ -596,7 +613,7 @@ case 'Load'
 			[rfd.compared.cell3ff]=stderr(rfd.compared.cell3,'F',1); %fano factor
 			[h,rfd.compared.ttestr]=dostatstest((rfd.compared.cell1-rfd.compared.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDDX'),'String')),str2num(get(gh('RFDDY'),'String')),'d','FontSize',12);
+		text(str2num(get(gh('RFDDX'),'String')),str2num(get(gh('RFDDY'),'String'))+rand,'d','FontSize',12);
 	end
 	
 	if get(gh('RFDEOn'),'Value')==1 && rfd.cell1.numvars>0
@@ -615,7 +632,11 @@ case 'Load'
 				y=find(rfd.cell1.yvalues==y);
 		end	
 		endrun=str2num(get(gh('RFDEndRun'),'String'));
-		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if endrun==Inf; 
+			endrun1=length(rfd.cell1.sums{y,x,zval1});
+			endrun2=length(rfd.cell2.sums{y,x,zval1});
+			endrun=min([endrun1 endrun2]);
+		end
 		if get(gh('RFDYToggle'),'Value')==0
 			rfd.comparee.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
 			rfd.comparee.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
@@ -638,7 +659,7 @@ case 'Load'
 			[rfd.comparee.cell3ff]=stderr(rfd.comparee.cell3,'F',1); %fano factor
 			[h,rfd.comparee.ttestr]=dostatstest((rfd.comparee.cell1-rfd.comparee.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDEX'),'String')),str2num(get(gh('RFDEY'),'String')),'e','FontSize',12);
+		text(str2num(get(gh('RFDEX'),'String')),str2num(get(gh('RFDEY'),'String'))+rand,'e','FontSize',12);
 	end
 	
 	if get(gh('RFDFOn'),'Value')==1 && rfd.cell1.numvars>0
@@ -657,7 +678,11 @@ case 'Load'
 				y=find(rfd.cell1.yvalues==y);
 		end	
 		endrun=str2num(get(gh('RFDEndRun'),'String'));
-		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if endrun==Inf; 
+			endrun1=length(rfd.cell1.sums{y,x,zval1});
+			endrun2=length(rfd.cell2.sums{y,x,zval1});
+			endrun=min([endrun1 endrun2]);
+		end
 		if get(gh('RFDYToggle'),'Value')==0
 			rfd.comparef.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
 			rfd.comparef.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
@@ -680,7 +705,7 @@ case 'Load'
 			[rfd.comparef.cell3ff]=stderr(rfd.comparef.cell3,'F',1); %fano factor
 			[h,rfd.comparef.ttestr]=dostatstest((rfd.comparef.cell1-rfd.comparef.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDFX'),'String')),str2num(get(gh('RFDFY'),'String')),'f','FontSize',12);
+		text(str2num(get(gh('RFDFX'),'String')),str2num(get(gh('RFDFY'),'String'))+rand,'f','FontSize',12);
 	end
 	
 	if get(gh('RFDGOn'),'Value')==1 && rfd.cell1.numvars>0
@@ -699,7 +724,11 @@ case 'Load'
 				y=find(rfd.cell1.yvalues==y);
 		end	
 		endrun=str2num(get(gh('RFDEndRun'),'String'));
-		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if endrun==Inf; 
+			endrun1=length(rfd.cell1.sums{y,x,zval1});
+			endrun2=length(rfd.cell2.sums{y,x,zval1});
+			endrun=min([endrun1 endrun2]);
+		end
 		if get(gh('RFDYToggle'),'Value')==0
 			rfd.compareg.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
 			rfd.compareg.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
@@ -722,7 +751,7 @@ case 'Load'
 			[rfd.compareg.cell3ff]=stderr(rfd.compareg.cell3,'F',1); %fano factor
 			[h,rfd.compareg.ttestr]=dostatstest((rfd.compareg.cell1-rfd.compareg.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDGX'),'String')),str2num(get(gh('RFDGY'),'String')),'g','FontSize',12);
+		text(str2num(get(gh('RFDGX'),'String')),str2num(get(gh('RFDGY'),'String'))+rand,'g','FontSize',12);
 	end	
 	
 	if get(gh('RFDHOn'),'Value')==1 && rfd.cell1.numvars>0
@@ -741,7 +770,11 @@ case 'Load'
 				y=find(rfd.cell1.yvalues==y);
 		end	
 		endrun=str2num(get(gh('RFDEndRun'),'String'));
-		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if endrun==Inf; 
+			endrun1=length(rfd.cell1.sums{y,x,zval1});
+			endrun2=length(rfd.cell2.sums{y,x,zval1});
+			endrun=min([endrun1 endrun2]);
+		end
 		if get(gh('RFDYToggle'),'Value')==0
 			rfd.compareh.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
 			rfd.compareh.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
@@ -764,7 +797,7 @@ case 'Load'
 			[rfd.compareh.cell3ff]=stderr(rfd.compareh.cell3,'F',1); %fano factor
 			[h,rfd.compareh.ttestr]=dostatstest((rfd.compareh.cell1-rfd.compareh.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDHX'),'String')),str2num(get(gh('RFDHY'),'String')),'h','FontSize',12);
+		text(str2num(get(gh('RFDHX'),'String')),str2num(get(gh('RFDHY'),'String'))+rand,'h','FontSize',12);
 		end	
 	
 	if get(gh('RFDIOn'),'Value')==1 && rfd.cell1.numvars>0
@@ -783,7 +816,11 @@ case 'Load'
 				y=find(rfd.cell1.yvalues==y);
 		end	
 		endrun=str2num(get(gh('RFDEndRun'),'String'));
-		if endrun==Inf; endrun=length(rfd.cell1.sums{y,x,zval1}); end
+		if endrun==Inf; 
+			endrun1=length(rfd.cell1.sums{y,x,zval1});
+			endrun2=length(rfd.cell2.sums{y,x,zval1});
+			endrun=min([endrun1 endrun2]);
+		end
 		if get(gh('RFDYToggle'),'Value')==0
 			rfd.comparei.cell1=rfd.cell1.sums{y,x,zval1}(startrun:endrun).*timemultiplier;
 			rfd.comparei.cell2=rfd.cell2.sums{y,x,zval2}(startrun:endrun).*timemultiplier;
@@ -806,7 +843,7 @@ case 'Load'
 			[rfd.comparei.cell3ff]=stderr(rfd.comparei.cell3,'F',1); %fano factor
 			[h,rfd.comparei.ttestr]=dostatstest((rfd.comparei.cell1-rfd.comparei.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDIX'),'String')),str2num(get(gh('RFDIY'),'String')),'i','FontSize',12);
+		text(str2num(get(gh('RFDIX'),'String')),str2num(get(gh('RFDIY'),'String'))+rand,'i','FontSize',12);
 	end
 	
 	if get(gh('RFDJOn'),'Value')==1 && rfd.cell1.numvars>0
@@ -833,10 +870,10 @@ case 'Load'
 			rfd.comparej.cell1=rfd.cell1.sums{yval1,x,zval1}(startrun:endrun).*timemultiplier;
 			rfd.comparej.cell2=rfd.cell2.sums{yval2,x,zval2}(startrun:endrun).*timemultiplier;
 		end
-		[rfd.comparej.cell1mean,rfd.comparej.cell1error]=stderr(rfd.comparei.cell1);
-		[rfd.comparej.cell2mean,rfd.comparej.cell2error]=stderr(rfd.comparei.cell2);
-		[rfd.comparej.cell1ff]=stderr(rfd.comparei.cell1,'F',1); %fano factor
-		[rfd.comparej.cell2ff]=stderr(rfd.comparei.cell2,'F',1); %fano factor
+		[rfd.comparej.cell1mean,rfd.comparej.cell1error]=stderr(rfd.comparej.cell1);
+		[rfd.comparej.cell2mean,rfd.comparej.cell2error]=stderr(rfd.comparej.cell2);
+		[rfd.comparej.cell1ff]=stderr(rfd.comparej.cell1,'F',1); %fano factor
+		[rfd.comparej.cell2ff]=stderr(rfd.comparej.cell2,'F',1); %fano factor
 		[h,rfd.comparej.ttest]=dostatstest((rfd.comparej.cell1-rfd.comparej.cell2),0,0.05);
 		if rfd.ignorerecovery==0
 			if get(gh('RFDYToggle'),'Value')==0
@@ -848,7 +885,7 @@ case 'Load'
 			[rfd.comparej.cell3ff]=stderr(rfd.comparej.cell3,'F',1); %fano factor
 			[h,rfd.comparej.ttestr]=dostatstest((rfd.comparej.cell1-rfd.comparej.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDJX'),'String')),str2num(get(gh('RFDJY'),'String')),'j','FontSize',12);
+		text(str2num(get(gh('RFDJX'),'String')),str2num(get(gh('RFDJY'),'String'))+rand,'j','FontSize',12);
 	end
 	
 	if get(gh('RFDKOn'),'Value')==1 && rfd.cell1.numvars>0
@@ -890,7 +927,7 @@ case 'Load'
 			[rfd.comparek.cell3ff]=stderr(rfd.comparek.cell3,'F',1); %fano factor
 			[h,rfd.comparek.ttestr]=dostatstest((rfd.comparek.cell1-rfd.comparek.cell3),0,0.05);
 		end
-		text(str2num(get(gh('RFDKX'),'String')),str2num(get(gh('RFDKY'),'String')),'i','FontSize',12);
+		text(str2num(get(gh('RFDKX'),'String')),str2num(get(gh('RFDKY'),'String'))+rand,'i','FontSize',12);
 	end
 	
 	
@@ -1009,7 +1046,6 @@ case 'Load'
 		label=[label;{'k'}];
 	end
 	
-	
 	axes(gh('RFDOutputAxis'));
 	cla;
 	if ~isempty(out)
@@ -1039,13 +1075,17 @@ case 'Load'
 		end
 	end		
 	
-	toffset=0.75;
+	if rfd.ignorerecovery==0;
+		toffset=0.75;
+	else
+		toffset=0.85;
+	end
 	if get(gh('RFDHideABC'),'Value')==0		
-		text(toffset,0,['p = ' num2str(rfd.comparea.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+		text(toffset,0,['p = ' num2str(rfd.comparea.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		toffset=toffset+1;
-		text(toffset,0,['p = ' num2str(rfd.compareb.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+		text(toffset,0,['p = ' num2str(rfd.compareb.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		toffset=toffset+1;
-		text(toffset,0,['p = ' num2str(rfd.comparec.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+		text(toffset,0,['p = ' num2str(rfd.comparec.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 	end
 	if rfd.ignorerecovery==0
 		outtext={rfd.cell1.matrixtitle;rfd.cell2.matrixtitle;rfd.cell3.matrixtitle};
@@ -1065,55 +1105,56 @@ case 'Load'
 			if toffset>0.75;
 				toffset=toffset+1;
 			end
-			text(toffset,0,['p = ' num2str(rfd.compared.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.compared.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDEOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.comparee.ttest)];
 			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.comparee.ttestr)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparee.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparee.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDFOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.comparef.ttest)];
 			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.comparef.ttestr)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparef.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparef.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDGOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.compareg.ttest)];
 			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.compareg.ttestr)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.compareg.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.compareg.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDHOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.compareh.ttest)];
 			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.compareh.ttestr)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.compareh.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.compareh.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDIOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.comparei.ttest)];
 			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.comparei.ttestr)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparei.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparei.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDJOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.comparej.ttest)];
 			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.comparej.ttestr)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparej.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparej.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDKOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{4}=[outtext{4} sprintf('%2.3f\t',rfd.comparek.ttest)];
 			outtext{5}=[outtext{5} sprintf('%2.3f\t',rfd.comparek.ttestr)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparek.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparek.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 	else
 		outtext={rfd.cell1.matrixtitle;rfd.cell2.matrixtitle};
 		if get(gh('RFDHideABC'),'Value')==0	
 			outtext{3}=[sprintf('%s\t','P:') sprintf('%2.3f\t',rfd.comparea.ttest) sprintf('%2.3f\t',rfd.compareb.ttest) sprintf('%2.3f\t',rfd.comparec.ttest)];
 		else
+			toffset = 0.75;
 			outtext{3}=[sprintf('%s\t','P:')];
 		end
 		outtext{4}=[sprintf('%s\t','means:') meanstext];
@@ -1126,42 +1167,42 @@ case 'Load'
 			else
 				toffset=toffset+0.08;
 			end
-			text(toffset,0,['p = ' num2str(rfd.compared.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.compared.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDEOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparee.ttest)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparee.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparee.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDFOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparef.ttest)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparef.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparef.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDGOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.compareg.ttest)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.compareg.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.compareg.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDHOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.compareh.ttest)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.compareh.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.compareh.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDIOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparei.ttest)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparei.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparei.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDJOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparej.ttest)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparej.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparej.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 		if get(gh('RFDKOn'),'Value')==1 && rfd.cell1.numvars>0
 			outtext{3}=[outtext{3} sprintf('%2.3f\t',rfd.comparek.ttest)];
 			toffset=toffset+1;
-			text(toffset,0,['p = ' num2str(rfd.comparek.ttest)],'Rotation',90,'FontSize',8,'FontName','verdana');
+			text(toffset,0,['p = ' num2str(rfd.comparek.ttest)],'Rotation',90,'FontSize',9,'FontName','verdana');
 		end
 	end
 	
@@ -1186,6 +1227,7 @@ case 'Load'
 	
 	outtext{length(outtext)+1}=thetatext;
 	outtext{length(outtext)+1}=rhotext;
+	outtext{length(outtext)+1} = ['Diameters: ' num2str(rfd.cell1.xvalues)];
 	
 	set(gh('RFDOutputText'),'String',outtext);
 	
@@ -1215,15 +1257,212 @@ case 'Measure'
 		[time2(i),psth2(i),rawl2(i),sm2(i),raws2(i)]=binit(raw(i).cell2,binwidth*10,1,inf,startrun,endrun,wrapped);
 	end
 	
+	%-----------------------------------------------------------------------------------------
+	case 'MetricSpace'
+	%-----------------------------------------------------------------------------------------
+	
+	global X;
+	X = [];
+	family = get(gh('RFDMetricInterval'),'Value'); %metric space family 0=spike 1=interval
+	startrun=str2num(get(gh('RFDStartRun'),'String'));
+	endrun=str2num(get(gh('RFDEndRun'),'String'));
+
+	hwait=waitbar(0,'Metric Space data loading');
+	pos=get(hwait,'Position');
+	set(hwait,'Position',[0 0 pos(3) pos(4)]);
+	opts.clustering_exponent = -2;
+	opts.unoccupied_bins_strategy = 0;
+	opts.metric_family = family;
+	opts.parallel = 1;
+	opts.possible_words = 'unique';
+	%opts.tpmc_possible_words_strategy = 0;
+	opts.shift_cost = [0 2.^(-2:10)];
+	%opts.start_time = sv.mint/1000;
+	%opts.end_time = sv.maxt/1000;
+	margins = 0.05;
+	
+	if isempty(rfd.cell3)
+		m=2;
+	else 
+		m=3;
+	end
+	
+	if length(rfd.xy)<4
+		x=rfd.xy{3};
+	else
+		x=rfd.xy{4};
+	end
+	x=find(rfd.cell1.xvalues==x);
+	
+	for i = 1:m
+		data=rfd.(['cell' num2str(i)]);
+		sv=rfd.cell1.sv;
+		Xtmp=makemetric(data,sv,startrun,endrun);
+		X.M = int32(i);
+		X.N = Xtmp.N;
+		X.sites = Xtmp.sites;
+		X.categories(i)=Xtmp.categories(x);
+		X.categories(i).label = {cell2mat([data.runname X.categories(i).label])};
+	end
+	
+	opts.start_time = min([X.categories(1).trials(:).start_time]);
+	opts.end_time = max([X.categories(1).trials(:).end_time]);
+
+	waitbar(0.1,hwait,'Plotting Rasters');
+	clear out out_unshuf shuf out_unjk jk;
+	clear info_plugin info_tpmc info_jack info_unshuf info_unjk;
+	clear temp_info_shuf temp_info_jk;
+
+	h=figure;
+	figpos(1,[],2);
+	set(gcf,'name','Metric Space Analysis'); 
+
+	subplot_tight(2,2,1,margins,'Parent',h);
+	staraster(X,[opts.start_time opts.end_time]);
+	title('Raster plot');
+
+	%%% Simple analysis
+	drawnow;
+	waitbar(0.2,hwait,'Performing Metric space measurement');
+	opts.entropy_estimation_method = {'plugin','tpmc','jack'};
+	[out,opts_used] = metric(X,opts);
+
+	for q_idx=1:length(opts.shift_cost)
+	  info_plugin(q_idx) = out(q_idx).table.information(1).value;
+	  info_tpmc(q_idx) = out(q_idx).table.information(2).value;
+	  info_jack(q_idx) = out(q_idx).table.information(3).value;
+	end
+
+	drawnow
+	waitbar(0.4,hwait,'Plotting matrix and Information');
+
+	subplot_tight(2,2,2,margins,'Parent',h);
+	%set(gca,'FontName','georgia','FontSize',11);
+	[max_info,max_info_idx]=max(info_plugin);
+	imagesc(out(max_info_idx).d);
+	xlabel('Spike train index');
+	ylabel('Spike train index');
+	title('Distance matrix at maximum information');
+
+	subplot_tight(2,2,3,margins,'Parent',h);
+	%set(gca,'FontName','georgia','FontSize',11);
+	plot(1:length(opts.shift_cost),info_plugin);
+	hold on;
+	plot(1:length(opts.shift_cost),info_tpmc,'--');
+	plot(1:length(opts.shift_cost),info_jack,'-.');
+	hold off;
+	set(gca,'xtick',1:length(opts.shift_cost));
+	set(gca,'xticklabel',opts.shift_cost);
+	set(gca,'xlim',[1 length(opts.shift_cost)]);
+	set(gca,'ylim',[-0.5 max(info_plugin)+1]);
+	xlabel('Temporal precision (1/sec)');
+	ylabel('Information (bits)');
+	legend('No correction','TPMC correction','Jackknife correction',...
+		   'location','best');
+
+	drawnow
+	waitbar(0.5,hwait,'Performing Shuffle');
+	%%% Shuffling
+
+	opts.entropy_estimation_method = {'plugin'};
+	rand('state',0);
+	S=10;
+	[out_unshuf,shuf,opts_used] = metric_shuf(X,opts,S);
+	shuf = shuf';
+	for q_idx=1:length(opts.shift_cost)
+	  info_unshuf(q_idx)= out_unshuf(q_idx).table.information.value;
+	  for s=1:S
+		temp_info_shuf(s,q_idx) = shuf(s,q_idx).table.information.value;
+	  end
+	end
+	info_shuf = mean(temp_info_shuf,1);
+	info_shuf_std = std(temp_info_shuf,[],1);
+	info_shuf_sem = sqrt((S-1)*var(temp_info_shuf,1,1));
+
+	waitbar(0.7,hwait,'Performing JackKnife');
+	%%% leave-one-out Jackknife 
+	[out_unjk,jk,opts_used] = metric_jack(X,opts);
+	waitbar(0.9,hwait,'Final Calculations');
+	P_total = size(jk,1);
+	temp_info_jk = zeros(P_total,length(opts.shift_cost));
+	for q_idx=1:length(opts.shift_cost)
+	  info_unjk(q_idx)= out_unjk(q_idx).table.information.value;
+	  for p=1:P_total
+		temp_info_jk(p,q_idx) = jk(p,q_idx).table.information.value;
+	  end
+	end
+	info_jk_std = std(temp_info_jk,[],1);
+	info_jk_sem = sqrt((P_total-1)*var(temp_info_jk,1,1));
+
+	%%% Plot results
+
+	subplot_tight(2,2,4,margins,'Parent',h);
+	%set(gca,'FontName','georgia','FontSize',11);
+	errorbar(1:length(opts.shift_cost),info_unjk,info_jk_sem);
+	hold on;
+	errorbar(1:length(opts.shift_cost),info_shuf,2*info_shuf_std,'r');
+	hold off;
+	set(gca,'xtick',1:length(opts.shift_cost));
+	set(gca,'xticklabel',opts.shift_cost);
+	set(gca,'xlim',[1 length(opts.shift_cost)]);
+	%set(gca,'ylim',[-0.5 3.5]);
+	xlabel('Temporal precision (1/sec)');
+	ylabel('Information (bits)');
+	legend('Original data(Jackknife\pmSE)','Shuffled data(\pm2SD)');
+
+	if family==0
+		family='\fontname{georgia}\fontsize{12}D^{spike}';
+	else
+		family='\fontname{georgia}\fontsize{12}D^{interval}';
+	end
+	
+	dataname=regexprep(data.matrixtitle,'\d\d\s\|',' \|');
+
+	suplabel([family '\rightarrow' dataname '| Anal Trials: ' num2str(startrun) ':' num2str(endrun)],'t',[.01 .01 .96 .96]);
+ 	close(hwait);
+
+	mout.X=X;
+	mout.shift_cost=opts.shift_cost;
+	mout.info_plugin=info_plugin;
+	mout.info_tpmc=info_tpmc;
+	mout.info_jack=info_jack;
+	mout.info_unjk=info_unjk;
+	mout.info_jk_sem=info_jk_sem;
+	mout.info_shuf=info_shuf;
+	mout.info_shuf_std=info_shuf_std;
+	mout.title=data.matrixtitle;
+
+	x=[opts.shift_cost;info_unjk;info_jk_sem;info_shuf;info_shuf_std];
+	midx=find(x(2,:)==max(x(2,:)), 1, 'last' ); %max information value
+	idx=[];
+	for i=1:length(opts.shift_cost)
+		unjk=x(2,i);
+		if unjk>(x(4,i)+(x(5,i)*2))
+			idx=[idx i];
+		end
+	end
+	idx=max(idx);
+	if isempty(idx) %nothing significantly over shuffle
+		idx=1;
+	end
+	vals=[x(1,1) x(2,1) x(3,1) x(1,idx) x(2,idx) x(3,idx) x(1,midx) x(2,midx) x(3,midx)]
+	clipboard('Copy',sprintf('%.3g\t',vals));
+	
+	
 end %end of main switch
 
+%-----------------------------------------------------------------------------------------
 function [h,p]=dostatstest(data,m,a)
-test=get(gh('RFDStatsTest'),'Value');
-switch test
-	case 1
-		[h,p]=ttest(data,m,a);
-	case 2
-		[p,h]=signrank(data,m,'alpha',a);
-	case 3
-		[p,h]=signtest(data,m,'alpha',a);
+%-----------------------------------------------------------------------------------------
+	test=get(gh('RFDStatsTest'),'Value');
+	switch test
+		case 1
+			[h,p]=ttest(data,m,a);
+		case 2
+			[p,h]=signrank(data,m,'alpha',a);
+		case 3
+			[p,h]=signtest(data,m,'alpha',a);
+	end
+end
+
 end

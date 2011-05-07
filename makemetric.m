@@ -1,4 +1,4 @@
-function out=makemetric(data,sv)
+function out=makemetric(data,sv,mintrial,maxtrial)
 %
 % makemetric takes Spikes data structures data and sv and makes a Metric space
 % analysis structure. This pulls in variables selected in spikes 
@@ -29,7 +29,13 @@ out.sites.si_prefix = 1;
 if ~exist('mintrial','var')
 	mintrial=1;
 end
-if ~exist('maxtrial','var')
+if ~exist('maxtrial','var') || maxtrial == Inf
+	maxtrial=data.raw{1}.numtrials;
+end
+if maxtrial < 0
+	maxtrial=data.raw{1}.numtrials-maxtrial;
+end
+if maxtrial == mintrial
 	maxtrial=data.raw{1}.numtrials;
 end
 if ~exist('minmod','var')

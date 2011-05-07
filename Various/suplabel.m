@@ -7,12 +7,13 @@ function [ax,h]=suplabel(text,whichLabel,supAxes)
 % returns a handle to the axis only.
 %  suplabel(text) with one input argument assumes whichLabel='x'
 %
-% whichLabel is any of 'x', 'y', or 't', specifying whether the 
-% text is to be the xlable, ylabel, or title respectively.
+% whichLabel is any of 'x', 'y', 'yy', or 't', specifying whether the 
+% text is to be the xlable, ylabel, right side y-label, 
+% or title respectively.
 %
 % supAxes is an optional argument specifying the Position of the 
 %  "super" axes surrounding the subplots. 
-%  supAxes defaults to [.075 .075 .85 .85]
+%  supAxes defaults to [.08 .08 .84 .84]
 %  specify supAxes if labels get chopped or overlay subplots
 %
 % EXAMPLE:
@@ -20,15 +21,22 @@ function [ax,h]=suplabel(text,whichLabel,supAxes)
 %  subplot(2,2,2);ylabel('ylabel2');title('title2')
 %  subplot(2,2,3);ylabel('ylabel3');xlabel('xlabel3')
 %  subplot(2,2,4);ylabel('ylabel4');xlabel('xlabel4')
-%  [ax,h1]=suplabel('super X label');
-%  [ax,h2]=suplabel('super Y label','y');
-%  [ax,h3]=suplabel('super Title'  ,'t');
+%  [ax1,h1]=suplabel('super X label');
+%  [ax2,h2]=suplabel('super Y label','y');
+%  [ax3,h2]=suplabel('super Y label (right)','yy');
+%  [ax4,h3]=suplabel('super Title'  ,'t');
 %  set(h3,'FontSize',30)
 %
 % SEE ALSO: text, title, xlabel, ylabel, zlabel, subplot,
 %           suptitle (Matlab Central)
 
 % Author: Ben Barrowes <barrowes@alum.mit.edu>
+
+%modified 3/16/2010 by IJW to make axis behavior re "zoom" on exit same as
+%at beginning. Requires adding tag to the invisible axes
+
+
+currax=findobj(gcf,'type','axes','-not','tag','suplabel');
 
 if nargin < 3
  supAxes=[.08 .08 .84 .84];
@@ -59,7 +67,7 @@ if ~isstr(text) | ~isstr(whichLabel)
 end
 whichLabel=lower(whichLabel);
 
-ax=axes('Units','Normal','Position',supAxes,'Visible','off');
+ax=axes('Units','Normal','Position',supAxes,'Visible','off','tag','suplabel');
 if strcmp('t',whichLabel)
   set(get(ax,'Title'),'Visible','on')
   title(text);
@@ -69,7 +77,14 @@ elseif strcmp('x',whichLabel)
 elseif strcmp('y',whichLabel)
   set(get(ax,'YLabel'),'Visible','on')
   ylabel(text);
+elseif strcmp('yy',whichLabel)
+  set(get(ax,'YLabel'),'Visible','on')
+  ylabel(text);
+  set(ax,'YAxisLocation','right')
 end
+
+for k=1:length(currax), axes(currax(k));end % restore all other axes
+
 if (nargout < 2)
   return
 end
@@ -78,7 +93,7 @@ if strcmp('t',whichLabel)
   set(h,'VerticalAlignment','middle')
 elseif strcmp('x',whichLabel)
   h=get(ax,'XLabel');
-elseif strcmp('y',whichLabel)
+elseif strcmp('y',whichLabel) | strcmp('yy',whichLabel)
   h=get(ax,'YLabel');
 end
 

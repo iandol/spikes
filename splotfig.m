@@ -3,7 +3,7 @@ function varargout = splotfig(varargin)
 %    FIG = SPLOTFIG launch splotfig GUI.
 %    SPLOTFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 05-Sep-2006 23:07:19
+% Last Modified by GUIDE v2.5 07-May-2011 13:16:49
 
 if nargin == 0  % LAUNCH GUI
 
@@ -120,4 +120,3 @@ function YBox_Callback(hObject, eventdata, handles)
 global spdata
 spdata.linfo=[];
 spdata.changetitle=0;splot('Plot');
-

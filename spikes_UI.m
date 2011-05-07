@@ -296,16 +296,15 @@ sv.ErrorMode=String{Value};
 
 % --------------------------------------------------------------------
 function varargout = AxisBox_Callback(h, eventdata, handles, varargin)
-
 Value=get(h,'Value');                                     
 if Value==1                                                  
 	set(findobj('UserData','AxesEdit'),'String','-inf inf');     
 	set(findobj('UserData','AxesEdit'),'Enable','off');          
 else                                                         
 	set(findobj('UserData','AxesEdit'),'Enable','on');
-	set(findobj('UserData','AxesEdit'),'BackgroundColor',[0.3 0.3 0.3]);
 end 
-
+set(findobj('UserData','AxesEdit'),'BackgroundColor',[1,1,1]);
+set(findobj('UserData','AxesEdit'),'ForegroundColor',[0,0,0]);
 % --------------------------------------------------------------------
 function varargout = IndPSTHMes_Callback(h, eventdata, handles, varargin)
 
@@ -449,8 +448,9 @@ if Value==0
 	set(handles.GaussEdit,'Enable','off')
 else
 	set(handles.GaussEdit,'Enable','on')
-	set(handles.GaussEdit,'Backgroundcolor',[0.3 0.3 0.3])
 end
+set(handles.GaussEdit,'Backgroundcolor',[1,1,1])
+set(handles.GaussEdit,'Foregroundcolor',[0,0,0])
 
 % --------------------------------------------------------------------
 function varargout = PropBox_Callback(h, eventdata, handles, varargin)
@@ -609,17 +609,6 @@ function SContourLevels_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SContourLevels as text
 %        str2double(get(hObject,'String')) returns contents of SContourLevels as a double
 
-% --- Executes during object creation, after setting all properties.
-function SContourLevels_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SContourLevels (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function SISIWindow_Callback(hObject, eventdata, handles)
 % hObject    handle to SISIWindow (see GCBO)
@@ -629,17 +618,6 @@ function SISIWindow_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SISIWindow as text
 %        str2double(get(hObject,'String')) returns contents of SISIWindow as a double
 
-% --- Executes during object creation, after setting all properties.
-function SISIWindow_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SISIWindow (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function SISIShift_Callback(hObject, eventdata, handles)
 % hObject    handle to SISIShift (see GCBO)
@@ -648,18 +626,6 @@ function SISIShift_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of SISIShift as text
 %        str2double(get(hObject,'String')) returns contents of SISIShift as a double
-
-% --- Executes during object creation, after setting all properties.
-function SISIShift_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SISIShift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in SShowError.
@@ -682,20 +648,6 @@ function SXSlice_Callback(hObject, eventdata, handles)
 spikes('RePlot');
 
 
-% --- Executes during object creation, after setting all properties.
-function SXSlice_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SXSlice (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function SYSlice_Callback(hObject, eventdata, handles)
 % hObject    handle to SYSlice (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -704,18 +656,6 @@ function SYSlice_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SYSlice as text
 %        str2double(get(hObject,'String')) returns contents of SYSlice as a double
 spikes('RePlot');
-
-% --- Executes during object creation, after setting all properties.
-function SYSlice_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SYSlice (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in SSliceHistory.
@@ -738,19 +678,6 @@ elseif ~strcmp(contents,' ')
 	set(gh('SYSlice'),'String',contents(a+1:end));
 end
 spikes('ChoosePlot');
-	
-% --- Executes during object creation, after setting all properties.
-function SSliceHistory_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SSliceHistory (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on button press in SSliceSave.
 function SSliceSave_Callback(hObject, eventdata, handles)
@@ -818,19 +745,6 @@ function STransientValue_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of STransientValue as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function STransientValue_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to STransientValue (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on button press in SCutTransient.
 function SCutTransient_Callback(hObject, eventdata, handles)
 % hObject    handle to SCutTransient (see GCBO)
@@ -842,10 +756,9 @@ if get(hObject,'Value')==0
 	set(handles.STransientValue,'Enable','off')
 else
 	set(handles.STransientValue,'Enable','on')
-	set(handles.STransientValue,'Backgroundcolor',[0.3 0.3 0.3])
 end
-
-
+set(handles.STransientValue,'BackgroundColor',[0.95,0.95,0.95])
+set(handles.STransientValue,'ForegroundColor',[0,0,0])
 
 
 function SWindow_Callback(hObject, eventdata, handles)
@@ -855,19 +768,6 @@ function SWindow_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of SWindow as text
 %        str2double(get(hObject,'String')) returns contents of SWindow as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function SWindow_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SWindow (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in SUseWindow.

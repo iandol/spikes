@@ -58,7 +58,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv=[];
 		data=[];
 		rlist=[];
-		sv.version = 1.903;
+		sv.version = 1.905;
+		sv.mversion = str2num(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title=['SPIKES: V' num2str(sv.version)];
 		if ismac
 			if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
@@ -69,7 +70,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			sv.historypath=['~' filesep 'MatlabFiles' filesep];
 			sv.temppath=tempdir;
 			oldlook=javax.swing.UIManager.getLookAndFeel;
-			javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
+			if sv.mversion<7.12
+				javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
+			end
 		elseif ispc
 			if ~exist(['c:' filesep 'MatlabFiles' filesep],'dir')
 				mkdir(['c:' filesep 'MatlabFiles' filesep])
@@ -84,7 +87,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		
 		sv.uihandle=spikes_UI; %our GUI file
 		if ismac
-			javax.swing.UIManager.setLookAndFeel(oldlook);
+			if sv.mversion<7.12
+				javax.swing.UIManager.setLookAndFeel(oldlook);
+			end
 		end
 		figpos(2);	%position the figure
 		set(sv.uihandle,'Name', [sv.title ' | Started at ' datestr(now)]);
@@ -126,6 +131,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.xholdold=0;
 		sv.yholdold=0;
 		sv.zholdold=0;
+		sv.labelsize = 10;
 		%-----------------------------------------------------------------------
 		sv.mint=0;
 		sv.maxt=inf;
@@ -161,10 +167,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
-		set(gcf,'DefaultAxesFontName','Georgia');
-		set(gcf,'DefaultTextFontName','Georgia');
-		set(gcf,'DefaultAxesFontSize',8);
-		set(gcf,'DefaultTextFontSize',9);
+		set(gcf,'DefaultAxesFontName','Helvetica');
+		set(gcf,'DefaultTextFontName','Helvetica');
+		set(gcf,'DefaultAxesFontSize',9);
+		set(gcf,'DefaultTextFontSize',10);
 		set(gca,'Layer','top');						%ticks go over data
 		set(gca,'TickDir','out');					%get ticks going out
 		set(gh('SMinEdit'),'UserData','no');		%these initialize the min and max time boxes
@@ -180,7 +186,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			sv.matloadpath=paths.matloadpath;
 		end
 		if isfield(paths,'dataloadpath')
-			%sv.dataloadpath=paths.dataloadpath;
+			sv.dataloadpath=paths.dataloadpath;
 			%cd(sv.dataloadpath);
 		end
 		
@@ -306,6 +312,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('CellMenu'),'Value',str2double(n.num));
 					sv.reload='no';
 				else %we need the user to specify a file
+					if isfield(sv,'dataloadpath');cd(sv.dataloadpath);end
 					[fn,pn]=uigetfile({'*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.zip *.smr *.txt *.doc)'; ...
 						'*.zip','VS RAW DATA File (ZIP)';...
 						'*.smr','VS RAW DATA File (SMR)';...
@@ -397,7 +404,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		[p,basefilename,~]=fileparts(data.meta.filename);	%seperate out the file from the path
 		cd(p);	%change to the directory where all the spike time files live
 		if data.zipload == true
-			sv.dataloadpath = pn;
+			sv.dataloadpath = fileparts(data.sourcepath);
 		else
 			sv.dataloadpath=p;
 		end
@@ -417,7 +424,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		number_burst			= str2double(get(gh('numberspikes'),'String'));
 		
 		if (get(gh('SCutTransient'),'Value')>0) %this gets a time for optinally cutting the first transient out of the data
-			cuttime=str2double(get(gh('STransientValue'),'String'))*10; %*10 converts into raw timebase from milliseconds
+			cuttime=str2num(get(gh('STransientValue'),'String'))*10; %*10 converts into raw timebase from milliseconds
 		else
 			cuttime=0;
 		end
@@ -1152,7 +1159,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		tmat=zeros(data.yrange,data.xrange,data.zrange);	%the data matrix
 		emat=zeros(data.yrange,data.xrange,data.zrange);	%the error matrix
 		
-		if isfield(data,'plotonic') && data.plottonic==1
+		if isfield(data,'plottonic') && data.plottonic==1
 			sv.AnalysisMethod=7;
 		end
 		%axes(gh('SpikeFigMainAxes'));
@@ -2944,6 +2951,8 @@ switch data.numvars
 		end
 end
 
+data.matrixtitle = ['\fontname{Helvetica}\fontsize{12}' data.matrixtitle];
+
 sv.EndMod=str2double(get(gh('SEndMod'),'String'));
 sv.EndTrial=str2double(get(gh('SEndTrial'),'String'));
 if resetmod==1
@@ -3288,8 +3297,8 @@ hold off;
 axis tight;
 legend('fano factor','CV','Allan Factor');
 MakeTitle('raster');
-sv.xlabelhandle=xlabel('Time (ms)');
-sv.ylabelhandle=ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)]);
+sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
+sv.ylabelhandle=ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)],'FontSize',sv.labelsize);
 sv.titlehandle=title(data.matrixtitle);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 
@@ -3314,8 +3323,8 @@ data.matrixtitle = [data.matrixtitle '\newline Coefficient of Variation C_v = ' 
 clipboard('copy',sprintf('%2.3f',c_v));
 sv.titlehandle=title(data.matrixtitle);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-sv.xlabelhandle=xlabel('Time (ms)');
-sv.ylabelhandle=ylabel('Number of Intervals');
+sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
+sv.ylabelhandle=ylabel('Number of Intervals','FontSize',sv.labelsize);
 val=get(gh('AxisBox'), 'Value');  % Check axes
 if val == 1
 	axis tight;
@@ -3346,8 +3355,8 @@ set(gca,'YDir','Normal')
 MakeTitle('raster');
 sv.titlehandle=title(data.matrixtitle);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-sv.xlabelhandle=xlabel('Time (ms)');
-sv.ylabelhandle=ylabel([num2str(window) 'ms window - '  num2str(shift) 'ms steps']);
+sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
+sv.ylabelhandle=ylabel([num2str(window) 'ms window - '  num2str(shift) 'ms steps'],'FontSize',sv.labelsize);
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -3364,12 +3373,12 @@ MakeTitle('raster');
 nr=sum(data.psth{sv.yval, sv.xval, sv.zval});
 bnr=sum(data.bpsth{sv.yval, sv.xval, sv.zval});
 err=finderror(data.raw{sv.yval,sv.xval,sv.zval},'Fano Factor',0,inf,data.wrapped,0);
-data.matrixtitle = [data.matrixtitle '\newlinefano factor = ' num2str(err) ' #: ' num2str(nr) ' #_b: ' num2str(bnr) ' B_r:' num2str(bnr/nr)];
+data.matrixtitle = [data.matrixtitle '\newlinefano factor = ' num2str(err) ' #: ' num2str(nr) ' #b: ' num2str(bnr) ' Bratio:' num2str(bnr/nr)];
 clipboard('copy',[sprintf('%2.3f\t',err) sprintf('%d\t',nr) sprintf('%2.3f\t',bnr) sprintf('%2.3f\t',(bnr/nr)) sprintf('%2.3f',data.raw{sv.yval,sv.xval,sv.zval}.numtrials)]);
 sv.titlehandle=title(data.matrixtitle);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-sv.xlabelhandle=xlabel('Time (s)');
-sv.ylabelhandle=ylabel('Trials');
+sv.xlabelhandle=xlabel('Time (s)','FontSize',sv.labelsize);
+sv.ylabelhandle=ylabel('Trials','FontSize',sv.labelsize);
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -3563,15 +3572,15 @@ hold on;
 h(2)=bar(time,bpsth,1,'r');
 hold off;
 set(h,'EdgeColor','none')
-sv.xlabelhandle=xlabel('Time (ms)');
-sv.ylabelhandle=ylabel('Spikes/Bin');
+sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
+sv.ylabelhandle=ylabel('Spikes/Bin','FontSize',sv.labelsize);
 MakeTitle('psth');
-data.matrixtitle = [data.matrixtitle '\newlineFF:' sprintf('%2.2f',ff)];
+data.matrixtitle = [data.matrixtitle '\newlineFF: ' sprintf('%2.2f',ff)];
 if exist('pr','var')
-	data.matrixtitle = [data.matrixtitle ' VS:' sprintf('%2.2f',rr) ' R:' sprintf('%0.2g',pr) ' Mean:' sprintf('%3.2f',data.matrix) '\pm' sprintf('%2.2f',data.errormat) ' #:' num2str(nr) ' #b:' num2str(bnr) ' B_r:' num2str(bnr/nr)];
+	data.matrixtitle = [data.matrixtitle ' VS: ' sprintf('%2.2f',rr) ' R: ' sprintf('%0.2g',pr) ' Mean: ' sprintf('%3.2f',data.matrix) ' (\pm ' sprintf('%2.2f',data.errormat) ') #: ' num2str(nr) ' #b: ' num2str(bnr) ' B_r: ' num2str(bnr/nr)];
 	clipboard('copy',[sprintf('%2.3f\t',ff) sprintf('%2.3f\t',cv) sprintf('%2.3f\t',rr) sprintf('%0.5g\t',pr) sprintf('%d\t',nr) sprintf('%2.3f\t',data.matrix) sprintf('%2.3f\t',data.errormat) sprintf('%2.3f\t',bnr) sprintf('%2.3f\t',(bnr/nr)) sprintf('%2.3f',data.raw{sv.yval,sv.xval,sv.zval}.numtrials)]);
 else
-	data.matrixtitle = [data.matrixtitle ' Mean:' sprintf('%3.2f',data.matrix) '\pm' sprintf('%2.2f',data.errormat) ' #:' num2str(nr) ' #b:' num2str(bnr) ' B_r:' num2str(bnr/nr)];
+	data.matrixtitle = [data.matrixtitle ' Mean: ' sprintf('%3.2f',data.matrix) '(+-' sprintf('%2.2f',data.errormat) ') #: ' num2str(nr) ' #b: ' num2str(bnr) ' Bratio: ' num2str(bnr/nr)];
 	clipboard('copy',[sprintf('%2.3f\t',ff) sprintf('%2.3f\t',data.matrix) sprintf('%2.3f\t',data.errormat) sprintf('%2.3f\t',bnr) sprintf('%2.3f\t',(bnr/nr)) sprintf('%2.3f',data.raw{sv.yval,sv.xval,sv.zval}.numtrials)]);
 end
 sv.titlehandle=title(data.matrixtitle);

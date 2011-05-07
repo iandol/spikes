@@ -116,8 +116,14 @@ for i=starttrial:endtrial %run through each trial
     for j=1:sd.nummods
         x=find(sd.raw(lmods(j)+1:lmods(j+1)-1,1)==cell+10)+lmods(j); %this finds the lines for the specified cell for the specific modulation
         n{j}=sd.raw(x,2)-sd.trial(a).basetime; %assigns it as a cell matrix with time relative to trial start  
-		if j==1 && cuttime>0
-			n{j}=n{j}(find(n{j}>cuttime));
+		if j==1 && cuttime(1)>0
+			if length(cuttime) == 1
+				n{j}=n{j}(n{j}>cuttime);
+			else
+				c1=n{j}(n{j}<cuttime(1));
+				c2=n{j}(n{j}>cuttime(2));
+				n{j}=[c1;c2];
+			end
 		end			
     end
     sd.trial(a).mod=n; 

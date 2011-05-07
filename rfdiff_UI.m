@@ -524,10 +524,9 @@ function RFDKY_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of RFDKY as text
 %        str2double(get(hObject,'String')) returns contents of RFDKY as a double
 
-
-
 % --- Executes on button press in RFDMetricSpace.
 function RFDMetricSpace_Callback(hObject, eventdata, handles)
 % hObject    handle to RFDMetricSpace (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+rfdiff('MetricSpace')

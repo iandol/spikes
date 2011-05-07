@@ -1,5 +1,5 @@
 function mout=metricspace(data,sv,family)
-
+global X
 
 hwait=waitbar(0,'Metric Space data loading');
 pos=get(hwait,'Position');
