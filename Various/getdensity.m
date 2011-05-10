@@ -1,6 +1,7 @@
 function getdensity(x,y,nboot,fhandle,alpha,legendtxt,dogauss,columnlabels,dooutlier)
 
-%getdensity computes bootstrapped density estimates
+%getdensity computes bootstrapped density estimates and full stats for two
+%groups
 %getdensity(x,y,nboot,fhandle,alpha,legend,gauss,columnlabel,dooutlier)
 
 bartype='grouped';
@@ -8,6 +9,15 @@ barwidth=1.25;
 xouttext='';
 youttext='';
 rosnern=2; %rosner outlier number of outliers
+margin = 0.075;
+
+if max(isnan(x)) == 1 %remove any nans
+	x = x(isnan(x)==0);
+end
+
+if ~exist('y','var') || isempty(y)
+	y=zeros(size(x));
+end
 
 if ~exist('nboot','var') || isempty(nboot)
 	nboot=1000;
@@ -29,7 +39,11 @@ if ~exist('columnlabels','var') || isempty(columnlabels)
 end
 if ~exist('dooutlier','var') || isempty(dooutlier)
 	dooutlier='none';
-end	
+end
+
+if max(isnan(y)) == 1
+	y = y(isnan(y)==0);
+end
 
 if size(x,1)==1
 	x=x';
@@ -170,24 +184,31 @@ for i=1:size(x,2) %iterate through columns
 	set(gcf,'Color',[1 1 1])
 	
 	if suba == 1
-		figpos(1,[900,400]);
+		figpos(1,[1200,600]);
 	else
-		figpos(1,[900,700]);
+		figpos(1,[1200,1000]);
 	end
 	
-	subplot(suba,subb,1)
+	subplot_tight(suba,subb,1,margin)
 	
+	if ystd > 0
 	h=bar([hbins',hbins'],[xn',yn'],barwidth,bartype);
 	set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
 	set(h(2),'FaceColor',[0.7 0 0],'EdgeColor',[0.7 0 0]);
+	else
+		h=bar([hbins'],[xn'],barwidth,bartype);
+		set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
+	end
 	ylabel('Number of Cells');
 	if ~strcmp(columnlabels,''); xlabel(columnlabels{i}); end
 	axis tight;
 	lim=ylim;	
 	text(xmean,lim(2),'\downarrow','Color',[0 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
-	text(ymean,lim(2),'\downarrow','Color',[0.8 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
 	text(xmedian,lim(2),'\nabla','Color',[0 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
-	text(ymedian,lim(2),'\nabla','Color',[0.8 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
+	if ystd > 0
+		text(ymean,lim(2),'\downarrow','Color',[0.8 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
+		text(ymedian,lim(2),'\nabla','Color',[0.8 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
+	end
 	box off;
 	
 	if dogauss>0
@@ -199,7 +220,7 @@ for i=1:size(x,2) %iterate through columns
 			catch
 			end
 		end
-		if length(find(yn>0))>1
+		if ystd > 0 && length(find(yn>0))>1 
 			try
 				f2=fit(hbins',yn','gauss1');
 				plot(f2,'r');
@@ -211,9 +232,15 @@ for i=1:size(x,2) %iterate through columns
 	end
 	
 	if suba>1
-	subplot(suba,subb,2)
+	subplot_tight(suba,subb,2,margin)
+	if exist('distributionPlot')
+		hold on
+		distributionPlot({xcol,ycol},0.3);
+	end
 	boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',legendtxt,'colors','k')
-	subplot(suba,subb,3)
+	hold off
+	
+	subplot_tight(suba,subb,3,margin)
 	[r,p]=corr(xcol,ycol);
 	[r2,p2]=corr(xcol,ycol,'type','spearman');
 	plot(xcol,ycol,'r.','MarkerSize',15);
@@ -226,34 +253,53 @@ for i=1:size(x,2) %iterate through columns
 	end
 
 	t=['Mn/Mdn: ' sprintf('%0.3g', xmean) '\pm' sprintf('%0.3g', xstderr) '/' sprintf('%0.3g', xmedian) ' | ' sprintf('%0.3g', ymean) '\pm' sprintf('%0.3g', ystderr) ' / ' sprintf('%0.3g', ymedian)];
-
-	[h,p1]=ttest2(xcol,ycol,alpha);
-	[p2,h]=ranksum(xcol,ycol,'alpha',alpha);
-	if length(xcol)==length(ycol)
-		[h,p3]=ttest(xcol,ycol,alpha);
-		[p4,h]=signrank(xcol,ycol,'alpha',alpha);
-		[p5,h]=signtest(xcol,ycol,'alpha',alpha);
-	end
-	[h,p6]=jbtest(xcol,alpha);
-	[h,p7]=jbtest(ycol,alpha);
-	if length(xcol)>4
-		[h,p8]=lillietest(xcol);
+	
+	if ystd > 0
+		[h,p1]=ttest(xcol,alpha);
+		[p2,h]=ranksum(xcol,ycol,'alpha',alpha);
+		if ystd > 0 && length(xcol)==length(ycol)
+			[h,p3]=ttest(xcol,ycol,alpha);
+			[p4,h]=signrank(xcol,ycol,'alpha',alpha);
+			[p5,h]=signtest(xcol,ycol,'alpha',alpha);
+		end
+		[h,p6]=jbtest(xcol,alpha);
+		[h,p7]=jbtest(ycol,alpha);
+		if length(xcol)>4
+			[h,p8]=lillietest(xcol);
+		else
+			p8=NaN;
+		end
+		if length(ycol)>4
+			[h,p9]=lillietest(ycol);
+		else
+			p9=NaN;
+		end
+		[h,p10]=kstest2(xcol,ycol,alpha);
 	else
-		p8=NaN;
+		[h,p1]=ttest(xcol,alpha);
+		[p2,h]=signrank(xcol,0,'alpha',alpha);
+		p3=0;
+		p4=0;
+		[p5,h]=signtest(xcol,0,'alpha',alpha);
+		[h,p6]=jbtest(xcol,alpha);
+		p7=0;
+		if length(xcol)>4
+			[h,p8]=lillietest(xcol);
+		else
+			p8=NaN;
+		end
+		p9=0;
+		p10=kstest(xcol);
 	end
-	if length(ycol)>4
-		[h,p9]=lillietest(ycol);
-	else
-		p9=NaN;
-	end
-	[h,p10]=kstest2(xcol,ycol,alpha);
 	
 	t=[t '\newlineT-test: ' sprintf('%0.3g', p1) '\newline'];
 	t=[t 'Wilcox: ' sprintf('%0.3g', p2) '\newline'];
-	if exist('p3','var')
+	if exist('p3','var') && ystd > 0
 		t=[t 'Pair ttest: ' sprintf('%0.3g', p3) '\newline'];
 		t=[t 'Pair wilcox: ' sprintf('%0.3g', p4) '\newline'];
 		t=[t 'Pair sign: ' sprintf('%0.3g', p5) '\newline'];
+	else
+		t=[t 'Sign: ' sprintf('%0.3g', p5) '\newline'];
 	end
 	t=[t 'Jarque-Bera: ' sprintf('%0.3g', p6) ' / ' sprintf('%0.3g', p7) '\newline'];
 	t=[t 'Lilliefors: ' sprintf('%0.3g', p8) ' / ' sprintf('%0.3g', p9) '\newline'];
@@ -273,14 +319,16 @@ for i=1:size(x,2) %iterate through columns
 % 	t=[t 'BS Rank: ' num2str(p2)];
 	
 	if suba>1
-		subplot(2,2,4);
+		subplot_tight(2,2,4,margin);
 	else
-		subplot(1,2,2);
+		subplot_tight(1,2,2,margin);
 	end
 	plot(xax,fx,'k-','linewidth',1.5);
-	hold on
-	plot(yax,fy,'r-','linewidth',1.5);
-	hold off
+	if ystd > 0
+		hold on
+		plot(yax,fy,'r-','linewidth',1.5);
+		hold off
+	end
 	axis tight
 	box off
 	
@@ -315,7 +363,10 @@ for i=1:size(x,2) %iterate through columns
 	h=line([yci(1),ymean,yci(2);yci(1),ymean,yci(2);],[yl(1),yl(1),yl(1);yl(2),yl(2),yl(2)]);
 	set(h,'Color',[1 0.5 0.5],'LineStyle',':');
 
-	text(xl(1)+xfrag,yl(2)-yfrag,t,'FontSize',8,'FontName','arial','FontWeight','bold','VerticalAlignment','top');
+	text(xl(1)+xfrag,yl(2)-yfrag,t,'FontSize',10,'FontName','helvetica','FontWeight','bold','VerticalAlignment','top');
 	%legend(legendtxt);
+
+	
+	
 end;
 end

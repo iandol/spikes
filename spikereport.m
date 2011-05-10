@@ -20,7 +20,7 @@ function varargout = spikereport(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 01-Apr-2011 15:01:37
+% Last Modified by GUIDE v2.5 10-May-2011 14:31:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;

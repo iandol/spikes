@@ -132,6 +132,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.yholdold=0;
 		sv.zholdold=0;
 		sv.labelsize = 10;
+		sv.autosave = 0;
 		%-----------------------------------------------------------------------
 		sv.mint=0;
 		sv.maxt=inf;
@@ -2271,21 +2272,30 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 		oldpath=pwd;
 		%data.matrix=0;  %just so the user has to remeasure the data to get a matrix
-		if isfield(sv,'matsavepath') && ~isnumeric(sv.matsavepath)
-			cd(sv.matsavepath);
-		elseif isfield(sv,'matloadpath') && ~isnumeric(sv.matloadpath)
-			cd(sv.matloadpath);
-		end
-		if ~isempty(data);
-			[fn,pn]=uiputfile('*.mat','Save the Processed Matrix');
+		if sv.autosave == true
+			cd(sv.dataloadpath)
+			sv.matsavepath = sv.dataloadpath;
 			data.sv=sv;
-			sv.matsavepath=pn;
-			if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('Returned with Error'), end;
-			cd(pn);
-			save(fn,'data');
-			cd(oldpath);
+			fname = [data.runname 'Cell=' num2str(data.cell) ' Wrap=' num2str(data.wrapped) ' T=' num2str(sv.StartTrial) '-' num2str(sv.EndTrial)];
+			fprintf('Saving to path: %s with name: %s\n',sv.dataloadpath,fname);
+			save(fname,'data');
 		else
-			errordlg('No Data has been Processed...');
+			if isfield(sv,'matsavepath') && ~isnumeric(sv.matsavepath)
+				cd(sv.matsavepath);
+			elseif isfield(sv,'matloadpath') && ~isnumeric(sv.matloadpath)
+				cd(sv.matloadpath);
+			end
+			if ~isempty(data);
+				[fn,pn]=uiputfile('*.mat','Save the Processed Matrix');
+				data.sv=sv;
+				sv.matsavepath=pn;
+				if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('Returned with Error'), end;
+				cd(pn);
+				save(fn,'data');
+				cd(oldpath);
+			else
+				errordlg('No Data has been Processed...');
+			end
 		end
 		
 		%-----------------------------------------------------------------------------------------
