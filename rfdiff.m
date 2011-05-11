@@ -76,6 +76,8 @@ case 'Load'
 			new = {''};
 			cd(path);
 			new = {''};
+			mrep = [];
+			zrep = [];
 			for i = 1: length(file)
 				tname= ['cell' num2str(i)];
 				op=pwd;
@@ -90,15 +92,21 @@ case 'Load'
 				midx=find(diff(rfd.(tname).xvalues)<0);
 				zidx=find(diff(rfd.(tname).xvalues)==0);
 				if ~isempty(midx)
-					prompt = ['X Value ' num2str(midx) ' wrong ( ' num2str(rfd.cell1.xvalues) ' ) | Enter New Value: '];
-					prompt=regexprep(prompt,'\s+', ' ');
-					new = inputdlg(prompt,'Replace X Values',1,new);
-					rfd.(tname).xvalues(midx)=str2num(new{1});
+					if isempty(mrep)
+						prompt = ['X Value ' num2str(midx) ' wrong ( ' num2str(rfd.cell1.xvalues) ' ) | Enter New Value: '];
+						prompt=regexprep(prompt,'\s+', ' ');
+						new = inputdlg(prompt,'Replace X Values',1,new);
+						mrep = str2num(new{1});
+					end
+					rfd.(tname).xvalues(midx)=mrep;;
 				elseif ~isempty(zidx)
-					prompt = ['X Value ' num2str(zidx+1) ' wrong ( ' num2str(rfd.cell1.xvalues) ' ) | Enter New Value: '];
-					prompt=regexprep(prompt,'\s+', ' ');
-					new = inputdlg(prompt,'Replace X Values',1,new);
-					rfd.(tname).xvalues(zidx+1)=str2num(new{1});
+					if isempty(zrep)
+						prompt = ['X Value ' num2str(zidx+1) ' wrong ( ' num2str(rfd.cell1.xvalues) ' ) | Enter New Value: '];
+						prompt=regexprep(prompt,'\s+', ' ');
+						new = inputdlg(prompt,'Replace X Values',1,new);
+						zrep = str2num(new{1});
+					end
+					rfd.(tname).xvalues(zidx+1)=zrep;
 				end
 				clear s;
 			end
