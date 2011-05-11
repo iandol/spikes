@@ -103,10 +103,11 @@ case 'Load'
 				clear s;
 			end
 			if i == 3
+				rfd.ignorerecovery=0;
+				
+			else
 				rfd.ignorerecovery=1;
 				rfd.cell3=[];
-			else
-				rfd.ignorerecovery=0;
 			end
 		else
 			new = {''};
