@@ -71,80 +71,119 @@ case 'Load'
 		rfd.cell1=[];
 		rfd.cell2=[];
 		rfd.cell3=[];
-		[file path]=uigetfile('*.*','Load 1st Processed Matrix:');
-		if file==0; error('1st File appears empty.'); end;
-		cd(path);
-		op=pwd;
-		[~,~,ext]=fileparts(file);	
-		s1=load(file);
-		t=find(s1.data.filename=='/');
-		s1.data.filename=[s1.data.filename((t(end-2))+1:t(end)) ':' num2str(s1.data.cell)];
-		rfd.cell1=s1.data;
-		rfd.cell1.sumsorig=rfd.cell1.sums;
-		midx=find(diff(rfd.cell1.xvalues)<0);
-		zidx=find(diff(rfd.cell1.xvalues)==0);
-		if ~isempty(midx)
-			prompt = ['X Value ' num2str(midx) ' wrong: ' num2str(rfd.cell1.xvalues) ' | Enter New Value:'];
-			prompt=regexprep(prompt,' +', ' ');
-			new = inputdlg(prompt);
-			rfd.cell1.xvalues(midx)=str2num(new{1});
-		elseif ~isempty(zidx)
-			prompt = ['X Value ' num2str(zidx+1) ' wrong: ' num2str(rfd.cell1.xvalues) ' | Enter New Value:'];
-			prompt=regexprep(prompt,' +', ' ');
-			new = inputdlg(prompt);
-			rfd.cell1.xvalues(zidx+1)=str2num(new{1});
-		end
-		clear s1
-
-		[file path]=uigetfile('*.*','Load 2nd Processed Matrix:');
-		if file==0; error('2nd File appears empty.'); end;
-		cd(path);
-		[~,~,ext]=fileparts(file);
-		s2=load(file);
-		t=find(s2.data.filename=='/');
-		s2.data.filename=[s2.data.filename((t(end-2))+1:t(end)) ':' num2str(s2.data.cell)];
-		rfd.cell2=s2.data;
-		rfd.cell2.sumsorig=rfd.cell2.sums;
-		midx=find(diff(rfd.cell2.xvalues)<0);
-		zidx=find(diff(rfd.cell2.xvalues)==0);
-		if ~isempty(midx)
-			prompt = ['X Value ' num2str(midx) ' wrong: ' num2str(rfd.cell2.xvalues) ' | Enter New Value:'];
-			prompt=regexprep(prompt,' +', ' ');
-			new = inputdlg(prompt);
-			rfd.cell2.xvalues(midx)=str2num(new{1});
-		elseif ~isempty(zidx)
-			prompt = ['X Value ' num2str(zidx+1) ' wrong: ' num2str(rfd.cell2.xvalues) ' | Enter New Value:'];
-			prompt=regexprep(prompt,' +', ' ');
-			new = inputdlg(prompt);
-			rfd.cell2.xvalues(zidx+1)=str2num(new{1});
-		end
-		clear s2
-
-		[file path]=uigetfile('*.*','Load 3rd Processed Matrix:');
-		if file==0
-			rfd.ignorerecovery=1;
-			rfd.cell3=[];
+		[file path]=uigetfile('*.*','Load Processed Matrix (one or more):','Multiselect','on');
+		if length(file) == 2 || length(file) == 3
+			new = {''};
+			cd(path);
+			new = {''};
+			for i = 1: length(file)
+				tname= ['cell' num2str(i)];
+				op=pwd;
+				[~,~,ext]=fileparts(file{i});
+				s=load(file{i});
+				t=find(s.data.filename=='/');
+				s.data.filename=[s.data.filename((t(end-2))+1:t(end)) ':' num2str(s.data.cell)];
+				rfd.(tname)=s.data;
+				rfd.(tname).matrixtitle = regexprep(rfd.(tname).matrixtitle, '\\fontname\{Helvetica\}\\fontsize\{12\}','');
+				rfd.(tname).matrixtitle = [rfd.(tname).meta.protocol '>' rfd.(tname).matrixtitle];
+				rfd.(tname).sumsorig=rfd.(tname).sums;
+				midx=find(diff(rfd.(tname).xvalues)<0);
+				zidx=find(diff(rfd.(tname).xvalues)==0);
+				if ~isempty(midx)
+					prompt = ['X Value ' num2str(midx) ' wrong ( ' num2str(rfd.cell1.xvalues) ' ) | Enter New Value: '];
+					prompt=regexprep(prompt,'\s+', ' ');
+					new = inputdlg(prompt,'Replace X Values',1,new);
+					rfd.(tname).xvalues(midx)=str2num(new{1});
+				elseif ~isempty(zidx)
+					prompt = ['X Value ' num2str(zidx+1) ' wrong ( ' num2str(rfd.cell1.xvalues) ' ) | Enter New Value: '];
+					prompt=regexprep(prompt,'\s+', ' ');
+					new = inputdlg(prompt,'Replace X Values',1,new);
+					rfd.(tname).xvalues(zidx+1)=str2num(new{1});
+				end
+				clear s;
+			end
+			if i == 3
+				rfd.ignorerecovery=1;
+				rfd.cell3=[];
+			else
+				rfd.ignorerecovery=0;
+			end
 		else
-			rfd.ignorerecovery=0;
+			new = {''};
+			if file==0; error('1st File appears empty.'); end;
+			cd(path);
+			op=pwd;
+			[~,~,ext]=fileparts(file);	
+			s1=load(file);
+			t=find(s1.data.filename=='/');
+			s1.data.filename=[s1.data.filename((t(end-2))+1:t(end)) ':' num2str(s1.data.cell)];
+			rfd.cell1=s1.data;
+			rfd.cell1.sumsorig=rfd.cell1.sums;
+			midx=find(diff(rfd.cell1.xvalues)<0);
+			zidx=find(diff(rfd.cell1.xvalues)==0);
+			if ~isempty(midx)
+				prompt = ['X Value ' num2str(midx) ' wrong: ' num2str(rfd.cell1.xvalues) ' | Enter New Value:'];
+				prompt=regexprep(prompt,' +', ' ');
+				new = inputdlg(prompt);
+				rfd.cell1.xvalues(midx)=str2num(new{1});
+			elseif ~isempty(zidx)
+				prompt = ['X Value ' num2str(zidx+1) ' wrong: ' num2str(rfd.cell1.xvalues) ' | Enter New Value:'];
+				prompt=regexprep(prompt,' +', ' ');
+				new = inputdlg(prompt);
+				rfd.cell1.xvalues(zidx+1)=str2num(new{1});
+			end
+			clear s1
+
+			[file path]=uigetfile('*.*','Load 2nd Processed Matrix:');
+			if file==0; error('2nd File appears empty.'); end;
 			cd(path);
 			[~,~,ext]=fileparts(file);
-			s3=load(file);
-			t=find(s3.data.filename=='/');
-			s3.data.filename=[s3.data.filename((t(end-2))+1:t(end)) ':' num2str(s3.data.cell)];
-			rfd.cell3=s3.data;
-			rfd.cell3.sumsorig=rfd.cell3.sums;
-			midx=find(diff(rfd.cell3.xvalues)<0);
-			zidx=find(diff(rfd.cell3.xvalues)==0);
+			s2=load(file);
+			t=find(s2.data.filename=='/');
+			s2.data.filename=[s2.data.filename((t(end-2))+1:t(end)) ':' num2str(s2.data.cell)];
+			rfd.cell2=s2.data;
+			rfd.cell2.sumsorig=rfd.cell2.sums;
+			midx=find(diff(rfd.cell2.xvalues)<0);
+			zidx=find(diff(rfd.cell2.xvalues)==0);
 			if ~isempty(midx)
-				prompt = ['X Value ' num2str(midx) ' wrong: ' num2str(rfd.cell3.xvalues) ' | Enter New Value:'];
+				prompt = ['X Value ' num2str(midx) ' wrong: ' num2str(rfd.cell2.xvalues) ' | Enter New Value:'];
+				prompt=regexprep(prompt,' +', ' ');
 				new = inputdlg(prompt);
-				rfd.cell3.xvalues(midx)=str2num(new{1});
+				rfd.cell2.xvalues(midx)=str2num(new{1});
 			elseif ~isempty(zidx)
-				prompt = ['X Value ' num2str(zidx+1) ' wrong: ' num2str(rfd.cell3.xvalues) ' | Enter New Value:'];
+				prompt = ['X Value ' num2str(zidx+1) ' wrong: ' num2str(rfd.cell2.xvalues) ' | Enter New Value:'];
+				prompt=regexprep(prompt,' +', ' ');
 				new = inputdlg(prompt);
-				rfd.cell3.xvalues(zidx+1)=str2num(new{1});
+				rfd.cell2.xvalues(zidx+1)=str2num(new{1});
 			end
-			clear s3
+			clear s2
+
+			[file path]=uigetfile('*.*','Load 3rd Processed Matrix:');
+			if file==0
+				rfd.ignorerecovery=1;
+				rfd.cell3=[];
+			else
+				rfd.ignorerecovery=0;
+				cd(path);
+				[~,~,ext]=fileparts(file);
+				s3=load(file);
+				t=find(s3.data.filename=='/');
+				s3.data.filename=[s3.data.filename((t(end-2))+1:t(end)) ':' num2str(s3.data.cell)];
+				rfd.cell3=s3.data;
+				rfd.cell3.sumsorig=rfd.cell3.sums;
+				midx=find(diff(rfd.cell3.xvalues)<0);
+				zidx=find(diff(rfd.cell3.xvalues)==0);
+				if ~isempty(midx)
+					prompt = ['X Value ' num2str(midx) ' wrong: ' num2str(rfd.cell3.xvalues) ' | Enter New Value:'];
+					new = inputdlg(prompt);
+					rfd.cell3.xvalues(midx)=str2num(new{1});
+				elseif ~isempty(zidx)
+					prompt = ['X Value ' num2str(zidx+1) ' wrong: ' num2str(rfd.cell3.xvalues) ' | Enter New Value:'];
+					new = inputdlg(prompt);
+					rfd.cell3.xvalues(zidx+1)=str2num(new{1});
+				end
+				clear s3
+			end
 		end
 		switch rfd.cell1.numvars
 		case 3
@@ -1227,7 +1266,7 @@ case 'Load'
 	
 	outtext{length(outtext)+1}=thetatext;
 	outtext{length(outtext)+1}=rhotext;
-	outtext{length(outtext)+1} = ['Diameters: ' num2str(rfd.cell1.xvalues)];
+	outtext{length(outtext)+1} = ['X Values: ' num2str(rfd.cell1.xvalues)];
 	
 	set(gh('RFDOutputText'),'String',outtext);
 	
