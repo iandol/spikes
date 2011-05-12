@@ -19,7 +19,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 case 'Initialize'
 	%-----------------------------------------------------------------------------------------	
 	rfd=[];
-	rfd.version=0.902;
+	rfd.version=0.904;
 	rfd.mversion = str2num(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 	rfd.reload=0;
 	set(0,'DefaultTextFontSize',7);
@@ -50,7 +50,7 @@ case 'Initialize'
 	%-----------------------------------------------------------------------------------------
 case 'Load'
 	%-----------------------------------------------------------------------------------------	
-	set(gh('RFDOutputText'),'String','Please Wait...');
+	%set(gh('RFDOutputText'),'String','Please Wait...');
 	if rfd.reload==0
 		set(gh('RFDUseFFT'),'Value',0);
 		set(gh('RFDHideABC'),'Value',0);
@@ -127,6 +127,8 @@ case 'Load'
 			t=find(s1.data.filename=='/');
 			s1.data.filename=[s1.data.filename((t(end-2))+1:t(end)) ':' num2str(s1.data.cell)];
 			rfd.cell1=s1.data;
+			rfd.cell1.matrixtitle = regexprep(rfd.cell1.matrixtitle, '\\fontname\{Helvetica\}\\fontsize\{12\}','');
+			rfd.cell1.matrixtitle = [rfd.cell1.meta.protocol '>' rfd.cell1.matrixtitle];
 			rfd.cell1.sumsorig=rfd.cell1.sums;
 			midx=find(diff(rfd.cell1.xvalues)<0);
 			zidx=find(diff(rfd.cell1.xvalues)==0);
@@ -151,6 +153,8 @@ case 'Load'
 			t=find(s2.data.filename=='/');
 			s2.data.filename=[s2.data.filename((t(end-2))+1:t(end)) ':' num2str(s2.data.cell)];
 			rfd.cell2=s2.data;
+			rfd.cell2.matrixtitle = regexprep(rfd.cell2.matrixtitle, '\\fontname\{Helvetica\}\\fontsize\{12\}','');
+			rfd.cell2.matrixtitle = [rfd.cell2.meta.protocol '>' rfd.cell2.matrixtitle];
 			rfd.cell2.sumsorig=rfd.cell2.sums;
 			midx=find(diff(rfd.cell2.xvalues)<0);
 			zidx=find(diff(rfd.cell2.xvalues)==0);
@@ -179,6 +183,8 @@ case 'Load'
 				t=find(s3.data.filename=='/');
 				s3.data.filename=[s3.data.filename((t(end-2))+1:t(end)) ':' num2str(s3.data.cell)];
 				rfd.cell3=s3.data;
+				rfd.cell3.matrixtitle = regexprep(rfd.cell3.matrixtitle, '\\fontname\{Helvetica\}\\fontsize\{12\}','');
+				rfd.cell3.matrixtitle = [rfd.cell3.meta.protocol '>' rfd.cell3.matrixtitle];
 				rfd.cell3.sumsorig=rfd.cell3.sums;
 				midx=find(diff(rfd.cell3.xvalues)<0);
 				zidx=find(diff(rfd.cell3.xvalues)==0);
@@ -1340,7 +1346,12 @@ case 'Measure'
 	else
 		x=rfd.xy{4};
 	end
-	x=find(rfd.cell1.xvalues==x);
+	
+	if rfd.cell1.numvars == 0
+		x=1;
+	else
+		x=find(rfd.cell1.xvalues==x);
+	end
 	
 	for i = 1:m
 		data=rfd.(['cell' num2str(i)]);

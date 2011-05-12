@@ -73,10 +73,18 @@ end
 for vari=1:out.M %for each x variable
 	if useFirstVariable==true
 		xdata=data.raw{sv.yval,data.xindex(vari),sv.zval};
-		out.categories(vari,1).label={[data.xtitle ':' num2str(data.xvalues(vari))]};
+		if data.numvars == 0
+			out.categories(vari,1).label={[data.meta.protocol]};
+		else
+			out.categories(vari,1).label={[data.xtitle ':' num2str(data.xvalues(vari))]};
+		end
 	else
 		xdata=data.raw{data.yindex(vari),sv.xval,sv.zval};
-		out.categories(vari,1).label={[data.ytitle ':' num2str(data.yvalues(vari))]};
+		if data.numvars == 0
+			out.categories(vari,1).label={[data.meta.protocol]};
+		else
+			out.categories(vari,1).label={[data.ytitle ':' num2str(data.yvalues(vari))]};
+		end
 	end
 	switch wrapped
 	case 1
