@@ -25,6 +25,7 @@ case 'Initialize'
 	
 	version=['Single PSTH Plot: V1.0.3 | Started - ',datestr(now)];
 	splotfig;			%our GUI file
+	figpos;
 	set(gcf,'Name', version);
 	spdata.spont=[]; %initialise spontaneous measurement
 	spdata.latency=0;

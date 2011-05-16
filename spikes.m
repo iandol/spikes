@@ -59,7 +59,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		data=[];
 		rlist=[];
 		sv.version = 1.905;
-		sv.mversion = str2num(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
+		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title=['SPIKES: V' num2str(sv.version)];
 		if ismac
 			if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')

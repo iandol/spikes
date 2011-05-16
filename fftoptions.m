@@ -32,6 +32,7 @@ global choice
 
 %loads GUI
 fftoptionbox;
+figpos(1);
 set(ghft('TempFreqBox'),'String',num2str(tf));
 
 %choice is only set to 1 when user clicks on one of the buttons
