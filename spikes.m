@@ -2277,6 +2277,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			data.sv=sv;
 			fname = regexprep(data.runname,'\s\|\s','');
 			fname = [fname '>' data.meta.protocol '|Cell=' num2str(data.cell) ' Wrap=' num2str(data.wrapped) ' T=' num2str(sv.StartTrial) '-' num2str(sv.EndTrial)];
+			fname = regexprep(fname,'(\>|\|)','_');
 			fprintf('Saving to path: %s with name: %s\n',sv.dataloadpath,fname);
 			save(fname,'data');
 		else
@@ -2290,11 +2291,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			if ~isempty(data);
 				fname = regexprep(data.runname,'\s\|\s','');
 				fname = [fname '>' data.meta.protocol '|Cell=' num2str(data.cell) ' Wrap=' num2str(data.wrapped) ' T=' num2str(sv.StartTrial) '-' num2str(sv.EndTrial)];
-				if ismac
-					[fn,pn]=uiputfile('*.mat','Save the Processed Matrix',fname);
-				else
-					[fn,pn]=uiputfile('*.mat','Save the Processed Matrix');
-				end
+				fname = regexprep(fname,'(\>|\|)','_');
+				[fn,pn]=uiputfile('*.mat','Save the Processed Matrix',fname);
 				data.sv=sv;
 				sv.matsavepath=pn;
 				if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('Returned with Error'), end;
