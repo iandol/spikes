@@ -20,7 +20,7 @@ function varargout = spikereport(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 10-May-2011 14:31:23
+% Last Modified by GUIDE v2.5 17-May-2011 13:26:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,6 +77,7 @@ rlist.index=1;
 rlist.tag=[];
 rlist.celllist=[];
 rlist.guilock=0;
+rlist.saveMatFiles = 1;
 rlist.item{1}.filename='Template -';
 rlist.item{1}.cell=1;
 rlist.item{1}.minmod='1';
@@ -1157,3 +1158,13 @@ else
 		rlist.item{rlist.tag(i)}.cutamount=str2double(get(hObject,'String'));
 	end
 end
+
+% --- Executes on button press in RepSaveMatFiles.
+function RepSaveMatFiles_Callback(hObject, eventdata, handles)
+% hObject    handle to RepSaveMatFiles (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RepSaveMatFiles
+global rlist;
+rlist.saveMatFiles = get(hObject,'Value');
