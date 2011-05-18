@@ -20,7 +20,7 @@ function varargout = spikereport(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 17-May-2011 13:26:05
+% Last Modified by GUIDE v2.5 18-May-2011 19:48:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,6 +79,7 @@ rlist.celllist=[];
 rlist.guilock=0;
 rlist.saveMatFiles = 1;
 rlist.item{1}.filename='Template -';
+rlist.item{1}.matfile = [];
 rlist.item{1}.cell=1;
 rlist.item{1}.minmod='1';
 rlist.item{1}.maxmod='inf';
@@ -128,7 +129,11 @@ varargout{1} = handles.output;
 function UpdateFileList()
 global rlist
 for i=1:rlist.size
-	filelist{i}=[rlist.item{i}.filename ' | Cell ' num2str(rlist.item{i}.cell)];
+	if ~isempty(rlist.item{i}.matfile)
+		filelist{i}=[rlist.item{i}.matfile];
+	else
+		filelist{i}=[rlist.item{i}.filename ' | Cell ' num2str(rlist.item{i}.cell)];
+	end
 	if i==rlist.index
 		filelist{i}=[filelist{i} '  *'];
 	end
@@ -171,7 +176,7 @@ cd(pn);
 
 for j=1:length(fn)
 	[p,n,e]=fileparts([pn fn{j}]);
-	if ~isempty(regexpi(e,'.matx'))
+	if ~isempty(regexpi(e,'.mat'))
 		load([p filesep n e]);
 	end
 	if ~isfield(rlist,'celllist') || isempty(rlist.celllist)
@@ -189,17 +194,20 @@ for j=1:length(fn)
 		end			
 		switch e
 			case '.mat'
-				rlist.item{rlist.index}.filename=data.filename;
+				rlist.item{rlist.index}.filename=data.sourcepath;
+				rlist.item{rlist.index}.matfile = [p filesep n e];
+				rlist.item{rlist.index}.cell = data.cell;
 				if data.wrapped==1
-					rlist.item{rlist.index}.wrap=1
+					rlist.item{rlist.index}.wrap=1;
 				else
-					rlist.item{rlist.index}.wrap=1
+					rlist.item{rlist.index}.wrap=0;
 				end
 				rlist.item{rlist.index}.mintrial=data.raw{1}.starttrial;
 				rlist.item{rlist.index}.maxtrial=data.raw{1}.endtrial;
 				rlist.item{rlist.index}.binwidth=data.binwidth;
 			otherwise
 				rlist.item{rlist.index}.filename=[p filesep n e];
+				rlist.item{rlist.index}.matfile = [];
 				rlist.item{rlist.index}.wrap=get(gh('RepWrapCheck'),'Value');
 				rlist.item{rlist.index}.mintrial=get(gh('RepMinTrials'),'String');
 				rlist.item{rlist.index}.maxtrial=get(gh('RepMaxTrials'),'String');
@@ -754,6 +762,22 @@ save([rlist.basepath  'report.mat'], 'rlist');
 reportout=['-o' rlist.pn rlist.fn];
 reporttype=['-f' rlist.format];
 report('spikereport',reportout,reporttype);
+
+% --- Executes on button press in RepGenerateRFD.
+function RepGenerateRFD_Callback(hObject, eventdata, handles)
+% hObject    handle to RepGenerateRFD (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global rlist;
+if isfield(rlist,'pn'); cd(rlist.pn); end;
+out=['rfdiffreport.' rlist.format];
+[fn,pn]=uiputfile('*.*','File to Save Report in',out);
+rlist.fn=fn;
+rlist.pn=pn;
+save([rlist.basepath  'rfdiffreport.mat'], 'rlist');
+reportout=['-o' rlist.pn rlist.fn];
+reporttype=['-f' rlist.format];
+report('rfdiffreport',reportout,reporttype);
 
 
 % --- Executes on button press in RepLockGUI.

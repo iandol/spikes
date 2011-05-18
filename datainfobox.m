@@ -1,9 +1,9 @@
-function varargout = datainfobox2(varargin)
-% DATAINFOBOX2 Application M-file for datainfobox2.fig
+function varargout = datainfobox(varargin)
+% DATAINFOBOX2 Application M-file for datainfobox.fig
 %    FIG = DATAINFOBOX2 launch datainfobox2 GUI.
 %    DATAINFOBOX2('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 20-Dec-2006 12:23:05
+% Last Modified by GUIDE v2.5 18-May-2011 13:17:23
 
 if nargin == 0  % LAUNCH GUI
 
@@ -78,18 +78,3 @@ function DIComments_Callback(hObject, eventdata, handles)
 global data
 
 data.comments=get(hObject,'String');
-
-
-% --- Executes during object creation, after setting all properties.
-function DIComments_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to DIComments (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
