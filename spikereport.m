@@ -20,7 +20,7 @@ function varargout = spikereport(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 19-May-2011 08:37:23
+% Last Modified by GUIDE v2.5 19-May-2011 11:18:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -93,6 +93,7 @@ rlist.item{1}.mintime='0';
 rlist.item{1}.maxtime='inf';
 rlist.item{1}.plotpsth=1;
 rlist.item{1}.plotisi=1;
+rlist.item{1}.plotmetric=0;
 rlist.item{1}.tuningcurve=0;
 rlist.item{1}.xaxis='-inf inf';
 rlist.item{1}.yaxis='-inf inf';
@@ -134,12 +135,12 @@ for i=1:rlist.size
 	else
 		filelist{i}=[rlist.item{i}.filename ' | Cell ' num2str(rlist.item{i}.cell)];
 	end
+	if i==rlist.index
+		%filelist{i}=[filelist{i} '  *'];
+	end
 	if max(rlist.tag==i)>0
 		filelist{i}=['@' filelist{i}];
     end
-	if i==rlist.index
-		%filelist{i}=['*' filelist{i}];
-	end
     if isfield(rlist.item{i},'notes') 
         note=rlist.item{i}.notes;
         if ~strcmp(note,' ')
@@ -547,17 +548,30 @@ function RepEdit_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global rlist;
-newname=inputdlg('Edit Filename:','Spikes Report Generator Edit Filename:',1,{rlist.item{rlist.index}.filename});
-if ~isempty(newname)
-	if isempty(rlist.tag)
+options.Resize='on';
+options.WindowStyle='normal';
+options.Interpreter='none';
+if isempty(rlist.tag)
+	if isempty(rlist.item{rlist.index}.matfile)
+		newname=inputdlg('Edit Filename:','Report Generator Edit Filename:',1,{rlist.item{rlist.index}.filename},options);
 		rlist.item{rlist.index}.filename=newname{1};
 	else
-		for i=1:length(rlist.tag)
+		newname=inputdlg('Edit Filename:','Report Generator Edit Filename:',1,{rlist.item{rlist.index}.matfile},options);
+		rlist.item{rlist.index}.matfile=newname{1};
+	end
+
+else
+	for i=1:length(rlist.tag)
+		if isempty(rlist.item{rlist.index}.matfile)
+			newname=inputdlg('Edit Filename:','Report Generator Edit Filename:',1,{rlist.item{rlist.tag(i)}.filename},options);
 			rlist.item{rlist.tag(i)}.filename=newname{1};
+		else
+			newname=inputdlg('Edit Filename:','Report Generator Edit Filename:',1,{rlist.item{rlist.tag(i)}.matfile},options);
+			rlist.item{rlist.tag(i)}.matfile=newname{1};
 		end
 	end
-	UpdateFileList;
 end
+UpdateFileList;
 
 % --- Executes on button press in RepReplace.
 function RepReplace_Callback(hObject, eventdata, handles)
@@ -566,7 +580,23 @@ function RepReplace_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global rlist;
 regex=inputdlg({'FIND TEXT','REPLACE TEXT'},'Report Generator RegExp Replace:');
-if ~isempty(regex{1})
+if ~isempty(regex) && ~isempty(regex{1})
+	
+	if ~isempty(regexp(regex{1},'^@','match')) %special parse string
+		matches1=regexp(regex{1},'@(\w|\d)+','match');
+		matches2=regexp(regex{2},'@(\w|\d)+','match');
+		if length(matches1) == length(matches2)
+			for i = 1:length(matches1)
+				m1{i} = matches1{i}(2:end);
+				m2{i} = matches2{i}(2:end);
+			end
+			regex{1}=m1;
+			regex{2}=m2;
+		else
+			error('Wrong length for input and output');		
+		end
+	end
+	
 	if isempty(rlist.tag)
 		if isempty(rlist.item{rlist.index}.matfile)
 			rlist.item{rlist.index}.filename = regexprep(rlist.item{rlist.index}.filename,regex{1},regex{2});
@@ -579,15 +609,20 @@ if ~isempty(regex{1})
 			if isempty(rlist.item{rlist.tag(i)}.matfile)
 				rlist.item{rlist.tag(i)}.filename = regexprep(rlist.item{rlist.tag(i)}.filename,regex{1},regex{2});
 			else
-				rlist.item{rlist.tag(i)}.filename = regexprep(rlist.item{rlist.tag(i)}.filename,regex{1},regex{2});
-				rlist.item{rlist.tag(i)}.matfile = regexprep(rlist.item{rlist.tag(i)}.matfile,regex{1},regex{2});
+				if iscell(regex{1})
+					for j=1:length(regex{1})
+						rlist.item{rlist.tag(i)}.filename = regexprep(rlist.item{rlist.tag(i)}.filename,regex{1}{j},regex{2}{j});
+						rlist.item{rlist.tag(i)}.matfile = regexprep(rlist.item{rlist.tag(i)}.matfile,regex{1}{j},regex{2}{j});
+					end
+				else
+					rlist.item{rlist.tag(i)}.filename = regexprep(rlist.item{rlist.tag(i)}.filename,regex{1},regex{2});
+					rlist.item{rlist.tag(i)}.matfile = regexprep(rlist.item{rlist.tag(i)}.matfile,regex{1},regex{2});
+				end
 			end
 		end
 	end
 	UpdateFileList;
 end
-
-
 
 % --- Executes on button press in RepNote.
 function RepNote_Callback(hObject, eventdata, handles)
@@ -1238,3 +1273,23 @@ function RepSaveMatFiles_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of RepSaveMatFiles
 global rlist;
 rlist.saveMatFiles = get(hObject,'Value');
+
+
+% --- Executes when spikereport is resized.
+function spikereport_ResizeFcn(hObject, eventdata, handles)
+% hObject    handle to spikereport (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fpos=get(gcf,'Position');
+fwidth=fpos(3);
+fheight=fpos(4);
+for i=1:4
+	g=get(handles.(['RepPanel' num2str(i)]),'Position');
+	g(1)=fwidth-g(3);
+	set(handles.(['RepPanel' num2str(i)]),'Position',g);
+end
+gg=g(3);
+g=get(handles.RepFileList,'Position');
+g(3)=fwidth-gg;
+g(4)=fheight-23;
+set(handles.RepFileList,'Position',g);

@@ -2277,7 +2277,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			data.sv=sv;
 			fname = regexprep(data.runname,'\s\|\s','');
 			fname = [fname '_' data.meta.protocol ' Cell=' num2str(data.cell) ' Wrap=' num2str(data.wrapped) ' T=' num2str(sv.StartTrial) '-' num2str(sv.EndTrial)];
-			fname = regexprep(fname,'(\>|\|)','_');
+			fname = regexprep(fname,'(>|\|)','}');
 			fprintf('Saving to path: %s with name: %s\n',sv.dataloadpath,fname);
 			save(fname,'data');
 		else
