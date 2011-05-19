@@ -3999,6 +3999,7 @@ end
 %Quick frames
 %
 function temporalanalysis(data)
+global sv
 
 h=figure;
 reset(h);
@@ -4027,7 +4028,7 @@ m=max(max(max(tmatrix)));
 for i=1:steps
 	d=tmatrix(:,:,i);
 	PlotDMatrix(d);
-	text(data.xvalues(end-1),data.yvalues(end-1),num2str(data.time{1}(i)),'Color',[1 1 1],'FontSize',16,'FontWeight','bold');
+	text(data.xvalues(end-1),data.yvalues(end-1),m,num2str(data.time{1}(i)),'Color',[1 1 0],'FontSize',16,'FontWeight','bold');
 	if data.dim==0
 		caxis([0 m]);
 	else
@@ -4096,7 +4097,7 @@ a=1;
 for i=1:steps
 	subaxis(m,n,a,'S',0,'P',0,'M',0.1);
 	image(M(i).cdata);
-	axis square
+	axis off
 	a=a+1;
 end
 suptitle(data.matrixtitle);

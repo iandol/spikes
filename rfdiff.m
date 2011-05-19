@@ -22,8 +22,10 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		rfd.version=0.91;
 		rfd.auto = 0;
 		rfd.path = [];
+		rfd.filelist = [];
 		rfd.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		rfd.reload=0;
+		rfd.msfinish = 0;
 		set(0,'DefaultTextFontSize',8);
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
@@ -81,6 +83,8 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 			rfd.cell1=[];
 			rfd.cell2=[];
 			rfd.cell3=[];
+			rfd.msfinish = 0;
+			
 			if rfd.auto == 1
 				file = rfd.filelist;
 				path = rfd.path;
@@ -1133,6 +1137,12 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 			%axis tight;
 		end
 		
+		rfd.out = [];
+		rfd.outerror =  [];
+		rfd.outff = [];
+		rfd.outp = [];
+		rfd.outrp = [];
+		
 		meanstext='';
 		errorstext='';
 		fftext='';
@@ -1143,6 +1153,10 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 				fftext=[fftext sprintf('%2.3f\t',outff(i,j))];
 			end
 		end
+		
+		rfd.out = out(1,:);
+		rfd.outerror =  outerror(1,:);
+		rfd.outff = outff(1,:);
 		
 		if rfd.ignorerecovery==0;
 			toffset=0.75;
@@ -1159,8 +1173,10 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		if rfd.ignorerecovery==0
 			outtext={rfd.cell1.matrixtitle;rfd.cell2.matrixtitle;rfd.cell3.matrixtitle};
 			if get(gh('RFDHideABC'),'Value')==0
-				outtext{4}=[sprintf('%s\t','P:') sprintf('%2.3f\t',rfd.comparea.ttest) sprintf('%2.3f\t',rfd.compareb.ttest) sprintf('%2.3f\t',rfd.comparec.ttest)];
-				outtext{5}=[sprintf('%s\t','Recovery P:') sprintf('%2.3f\t',rfd.comparea.ttestr) sprintf('%2.3f\t',rfd.compareb.ttestr) sprintf('%2.3f\t',rfd.comparec.ttestr)];
+				rfd.outp = [sprintf('%2.3f\t',rfd.comparea.ttest) sprintf('%2.3f\t',rfd.compareb.ttest) sprintf('%2.3f\t',rfd.comparec.ttest)];
+				outtext{4}=[sprintf('%s\t','P:') rfd.outp];
+				rfd.outrp = [sprintf('%2.3f\t',rfd.comparea.ttestr) sprintf('%2.3f\t',rfd.compareb.ttestr) sprintf('%2.3f\t',rfd.comparec.ttestr)];
+				outtext{5}=[sprintf('%s\t','Recovery P:')];
 			else
 				outtext{4}=[sprintf('%s\t','P:')];
 				outtext{5}=[sprintf('%s\t','Recovery P:')];
@@ -1221,7 +1237,8 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		else
 			outtext={rfd.cell1.matrixtitle;rfd.cell2.matrixtitle};
 			if get(gh('RFDHideABC'),'Value')==0
-				outtext{3}=[sprintf('%s\t','P:') sprintf('%2.3f\t',rfd.comparea.ttest) sprintf('%2.3f\t',rfd.compareb.ttest) sprintf('%2.3f\t',rfd.comparec.ttest)];
+				rfd.outp = [sprintf('%2.3f\t',rfd.comparea.ttest) sprintf('%2.3f\t',rfd.compareb.ttest) sprintf('%2.3f\t',rfd.comparec.ttest)];
+				outtext{3}=[sprintf('%s\t','P:') rfd.outp];
 			else
 				toffset = 0.75;
 				outtext{3}=[sprintf('%s\t','P:')];
@@ -1299,6 +1316,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		outtext{length(outtext)+1} = ['X Values: ' num2str(rfd.cell1.xvalues)];
 		
 		set(gh('RFDOutputText'),'String',outtext);
+		rfd.outtext = outtext;
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Measure'
@@ -1331,14 +1349,17 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		%-----------------------------------------------------------------------------------------
 		
 		global X;
+		rfd.msfinish = 0;
 		X = [];
 		family = get(gh('RFDMetricInterval'),'Value'); %metric space family 0=spike 1=interval
 		startrun=str2num(get(gh('RFDStartRun'),'String'));
 		endrun=str2num(get(gh('RFDEndRun'),'String'));
 		
-		hwait=waitbar(0,'Metric Space data loading');
-		pos=get(hwait,'Position');
-		set(hwait,'Position',[0 0 pos(3) pos(4)]);
+		if rfd.auto == 0
+			hwait=waitbar(0,'Metric Space data loading');
+			pos=get(hwait,'Position');
+			set(hwait,'Position',[0 0 pos(3) pos(4)]);
+		end
 		opts.clustering_exponent = -2;
 		opts.unoccupied_bins_strategy = 0;
 		opts.metric_family = family;
@@ -1382,22 +1403,21 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		opts.start_time = min([X.categories(1).trials(:).start_time]);
 		opts.end_time = max([X.categories(1).trials(:).end_time]);
 		
-		waitbar(0.1,hwait,'Plotting Rasters');
+		if rfd.auto==0;waitbar(0.1,hwait,'Plotting Rasters');end
 		clear out out_unshuf shuf out_unjk jk;
 		clear info_plugin info_tpmc info_jack info_unshuf info_unjk;
 		clear temp_info_shuf temp_info_jk;
 		
-		h=figure;
+		rfd.mshandle=figure;
 		figpos(1,[],2);
 		set(gcf,'name','Metric Space Analysis');
 		
-		subplot_tight(2,2,1,margins,'Parent',h);
+		subplot_tight(2,2,1,margins,'Parent',rfd.mshandle);
 		staraster(X,[opts.start_time opts.end_time]);
 		title('Raster plot');
 		
 		%%% Simple analysis
-		drawnow;
-		waitbar(0.2,hwait,'Performing Metric space measurement');
+		if rfd.auto==0;drawnow;waitbar(0.2,hwait,'Performing Metric space measurement');end
 		opts.entropy_estimation_method = {'plugin','tpmc','jack'};
 		[out,opts_used] = metric(X,opts);
 		
@@ -1407,10 +1427,9 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 			info_jack(q_idx) = out(q_idx).table.information(3).value;
 		end
 		
-		drawnow
-		waitbar(0.4,hwait,'Plotting matrix and Information');
+		if rfd.auto==0;drawnow;waitbar(0.4,hwait,'Plotting matrix and Information');end
 		
-		subplot_tight(2,2,2,margins,'Parent',h);
+		subplot_tight(2,2,2,margins,'Parent',rfd.mshandle);
 		%set(gca,'FontName','georgia','FontSize',11);
 		[max_info,max_info_idx]=max(info_plugin);
 		imagesc(out(max_info_idx).d);
@@ -1418,7 +1437,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		ylabel('Spike train index');
 		title('Distance matrix at maximum information');
 		
-		subplot_tight(2,2,3,margins,'Parent',h);
+		subplot_tight(2,2,3,margins,'Parent',rfd.mshandle);
 		%set(gca,'FontName','georgia','FontSize',11);
 		plot(1:length(opts.shift_cost),info_plugin);
 		hold on;
@@ -1434,8 +1453,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		legend('No correction','TPMC correction','Jackknife correction',...
 			'location','best');
 		
-		drawnow
-		waitbar(0.5,hwait,'Performing Shuffle');
+		if rfd.auto==0;drawnow;waitbar(0.5,hwait,'Performing Shuffle');end
 		%%% Shuffling
 		
 		opts.entropy_estimation_method = {'plugin'};
@@ -1453,10 +1471,10 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		info_shuf_std = std(temp_info_shuf,[],1);
 		info_shuf_sem = sqrt((S-1)*var(temp_info_shuf,1,1));
 		
-		waitbar(0.7,hwait,'Performing JackKnife');
+		if rfd.auto==0;waitbar(0.7,hwait,'Performing JackKnife');end
 		%%% leave-one-out Jackknife
 		[out_unjk,jk,opts_used] = metric_jack(X,opts);
-		waitbar(0.9,hwait,'Final Calculations');
+		if rfd.auto==0;waitbar(0.9,hwait,'Final Calculations');end
 		P_total = size(jk,1);
 		temp_info_jk = zeros(P_total,length(opts.shift_cost));
 		for q_idx=1:length(opts.shift_cost)
@@ -1470,7 +1488,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		
 		%%% Plot results
 		
-		subplot_tight(2,2,4,margins,'Parent',h);
+		subplot_tight(2,2,4,margins,'Parent',rfd.mshandle);
 		%set(gca,'FontName','georgia','FontSize',11);
 		errorbar(1:length(opts.shift_cost),info_unjk,info_jk_sem);
 		hold on;
@@ -1493,7 +1511,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		dataname=regexprep(data.matrixtitle,'\d\d\s\|',' \|');
 		
 		suplabel([family '\rightarrow' dataname '| Anal Trials: ' num2str(startrun) ':' num2str(endrun)],'t',[.01 .01 .96 .96]);
-		close(hwait);
+		if rfd.auto==0;close(hwait);end
 		
 		mout.X=X;
 		mout.shift_cost=opts.shift_cost;
@@ -1519,9 +1537,10 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		if isempty(idx) %nothing significantly over shuffle
 			idx=1;
 		end
-		vals=[x(1,1) x(2,1) x(3,1) x(1,idx) x(2,idx) x(3,idx) x(1,midx) x(2,midx) x(3,midx)]
+		vals=[x(1,1) x(2,1) x(3,1) x(1,idx) x(2,idx) x(3,idx) x(1,midx) x(2,midx) x(3,midx)];
+		rfd.msvalues = vals;
 		clipboard('Copy',sprintf('%.3g\t',vals));
-		
+		rfd.msfinish = 1;
 		
 end %end of main switch
 

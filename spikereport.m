@@ -20,7 +20,7 @@ function varargout = spikereport(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 18-May-2011 19:48:02
+% Last Modified by GUIDE v2.5 19-May-2011 08:37:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -134,12 +134,12 @@ for i=1:rlist.size
 	else
 		filelist{i}=[rlist.item{i}.filename ' | Cell ' num2str(rlist.item{i}.cell)];
 	end
-	if i==rlist.index
-		filelist{i}=[filelist{i} '  *'];
-	end
 	if max(rlist.tag==i)>0
-		filelist{i}=[filelist{i} ' @'];
+		filelist{i}=['@' filelist{i}];
     end
+	if i==rlist.index
+		%filelist{i}=['*' filelist{i}];
+	end
     if isfield(rlist.item{i},'notes') 
         note=rlist.item{i}.notes;
         if ~strcmp(note,' ')
@@ -559,6 +559,35 @@ if ~isempty(newname)
 	UpdateFileList;
 end
 
+% --- Executes on button press in RepReplace.
+function RepReplace_Callback(hObject, eventdata, handles)
+% hObject    handle to RepReplace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global rlist;
+regex=inputdlg({'FIND TEXT','REPLACE TEXT'},'Report Generator RegExp Replace:');
+if ~isempty(regex{1})
+	if isempty(rlist.tag)
+		if isempty(rlist.item{rlist.index}.matfile)
+			rlist.item{rlist.index}.filename = regexprep(rlist.item{rlist.index}.filename,regex{1},regex{2});
+		else
+			rlist.item{rlist.index}.filename = regexprep(rlist.item{rlist.index}.filename,regex{1},regex{2});
+			rlist.item{rlist.index}.matfile = regexprep(rlist.item{rlist.index}.matfile,regex{1},regex{2});
+		end
+	else
+		for i=1:length(rlist.tag)
+			if isempty(rlist.item{rlist.tag(i)}.matfile)
+				rlist.item{rlist.tag(i)}.filename = regexprep(rlist.item{rlist.tag(i)}.filename,regex{1},regex{2});
+			else
+				rlist.item{rlist.tag(i)}.filename = regexprep(rlist.item{rlist.tag(i)}.filename,regex{1},regex{2});
+				rlist.item{rlist.tag(i)}.matfile = regexprep(rlist.item{rlist.tag(i)}.matfile,regex{1},regex{2});
+			end
+		end
+	end
+	UpdateFileList;
+end
+
+
 
 % --- Executes on button press in RepNote.
 function RepNote_Callback(hObject, eventdata, handles)
@@ -659,6 +688,23 @@ if isempty(rlist.tag)
 else
 	for i=1:length(rlist.tag)
 		rlist.item{rlist.tag(i)}.plotpsth=get(hObject,'Value');
+	end
+end	
+
+% --- Executes on button press in RepPlotMetricCheck.
+function RepPlotMetricCheck_Callback(hObject, eventdata, handles)
+% hObject    handle to RepPlotMetricCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RepPlotMetricCheck
+global rlist;
+
+if isempty(rlist.tag)
+	rlist.item{rlist.index}.plotmetric=get(hObject,'Value');
+else
+	for i=1:length(rlist.tag)
+		rlist.item{rlist.tag(i)}.plotmetric=get(hObject,'Value');
 	end
 end	
 
