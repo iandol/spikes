@@ -91,8 +91,8 @@ rlist.item{1}.gaussian=0;
 rlist.item{1}.analmethod=1;
 rlist.item{1}.mintime='0';
 rlist.item{1}.maxtime='inf';
-rlist.item{1}.plotpsth=1;
-rlist.item{1}.plotisi=1;
+rlist.item{1}.plotpsth=0;
+rlist.item{1}.plotisi=0;
 rlist.item{1}.plotmetric=0;
 rlist.item{1}.tuningcurve=0;
 rlist.item{1}.xaxis='-inf inf';
@@ -132,6 +132,7 @@ global rlist
 for i=1:rlist.size
 	if ~isempty(rlist.item{i}.matfile)
 		filelist{i}=[rlist.item{i}.matfile];
+		filelist{i}=regexprep(filelist{i},'^\/Users\/[^/]+','~');
 	else
 		filelist{i}=[rlist.item{i}.filename ' | Cell ' num2str(rlist.item{i}.cell)];
 	end
@@ -221,6 +222,7 @@ for j=1:length(fn)
 		rlist.item{rlist.index}.mintime=get(gh('RepMinTime'),'String');
 		rlist.item{rlist.index}.maxtime=get(gh('RepMaxTime'),'String');
 		rlist.item{rlist.index}.plotpsth=get(gh('RepPlotPSTHCheck'),'Value');
+		rlist.item{rlist.index}.plotmetric=get(gh('RepPlotMetricCheck'),'Value');
 		rlist.item{rlist.index}.plotisi=get(gh('RepPlotISICheck'),'Value');
 		rlist.item{rlist.index}.tuningcurve=get(gh('RepPlotTCCheck'),'Value');
 		rlist.item{rlist.index}.xaxis=get(gh('RepXAxis'),'String');
@@ -249,8 +251,9 @@ function RepLoadMat_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global rlist;
 [fn,pn]=uigetfile({'*.mat','Mat Files';'*.*','All Files'},'Select File Type to Load:','MultiSelect','off');
-
-load([pn fn]);
+if ischar(fn)
+	load([pn fn]);
+end
 UpdateFileList;
 FlushGUI;
 
