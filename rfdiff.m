@@ -19,7 +19,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 	case 'Initialize'
 		%-----------------------------------------------------------------------------------------
 		rfd=[];
-		rfd.version=0.91;
+		rfd.version=0.92;
 		rfd.auto = 0;
 		rfd.path = [];
 		rfd.filelist = [];
@@ -1176,7 +1176,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 				rfd.outp = [sprintf('%2.3f\t',rfd.comparea.ttest) sprintf('%2.3f\t',rfd.compareb.ttest) sprintf('%2.3f\t',rfd.comparec.ttest)];
 				outtext{4}=[sprintf('%s\t','P:') rfd.outp];
 				rfd.outrp = [sprintf('%2.3f\t',rfd.comparea.ttestr) sprintf('%2.3f\t',rfd.compareb.ttestr) sprintf('%2.3f\t',rfd.comparec.ttestr)];
-				outtext{5}=[sprintf('%s\t','Recovery P:')];
+				outtext{5}=[sprintf('%s\t','Recovery P:') rfd.outrp];
 			else
 				outtext{4}=[sprintf('%s\t','P:')];
 				outtext{5}=[sprintf('%s\t','Recovery P:')];
