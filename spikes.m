@@ -636,7 +636,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
 					filename = [basefilename '.' int2str(i)];
-					data.names{i}=filename;
+					filenamet = [filename num2str(data.meta.matrix(i,end))];
+					filenamet = regexprep(filenamet,'\s+',' ');
+					data.names{i}=filenamet;
 					switch data.filetype
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
@@ -760,7 +762,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
 					filename = strcat(basefilename,'.',int2str(i));
-					data.names{i}=filename;
+					filenamet = [filename num2str(data.meta.matrix(i,end-1:end))];
+					filenamet = regexprep(filenamet,'\s+',' ');
+					data.names{i}=filenamet;
 					switch data.filetype
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
@@ -892,7 +896,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
 					drawnow;
 					filename = [basefilename '.' int2str(i)];
-					data.names{yi,xi,zi}=filename;
+					filename = strcat(basefilename,'.',int2str(i));
+					filenamet = [filename num2str(data.meta.matrix(i,end-2:end))];
+					filenamet = regexprep(filenamet,'\s+',' ');
+					data.names{yi,xi,zi}=filenamet;
 					switch data.filetype
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
@@ -1649,6 +1656,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		figpos(1,[850 750]);
 		set(gcf,'Color',[1 1 1]);
 		window=str2double(get(gh('SISIWindow'),'String'));
+		maxm=10;
 		
 		if data.wrapped==1
 			wrapped=1;
@@ -1656,21 +1664,39 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			wrapped=0;
 		end
 		
+		p = panel('defer');
+		
 		switch data.numvars
 			case 0
 				
 			case 1
+				p.pack(data.xrange,1);
 				for i=1:data.xrange
-					isi=getisi(data.raw{i},window,0,Inf,wrapped);
-					subaxis(data.xrange,1,i,'S',0,'M',0.1,'P',0);
-					[y,x]=hist(isi,window);
-					h=bar(x,y,1,'k');
-					t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
-					[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'y');
-					[ax,h2]=suplabel('Time (ms)','x');
-					[ax,h3]=suplabel(t ,'t');
+					isi{i}=getisi(data.raw{i},window,0,Inf,wrapped);
+					m=max(isi{i});
+					if m > maxm
+						maxm=m;
+					end
 				end
+				for i=1:data.xrange
+					p(i,1).select();
+					[y,x]=hist(isi{i},window);
+					bar(x,y,1,'k');
+					axis([-inf inf 0 maxm]);
+					box off
+					if i < data.xrange
+						set(gca,'XTick',[], 'YTick', []);
+					end
+				end
+				t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
+				p.ylabel([data.xtitle ' (' num2str(data.xvalues) ')']);
+				p.xlabel('Time (ms)');
+				p.title(t);
+				p.de.margin = 2;
+				p.margin = [15 15 5 15];
+
 			case 2
+				p.pack(data.yrange, data.xrange);
 				for i=1:data.yrange*data.xrange
 					isi=getisi(data.raw{i},window,0,Inf,wrapped);
 					subaxis(data.yrange,data.xrange,i,'S',0,'M',0.1,'P',0);
@@ -1684,12 +1710,15 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					if max(y)==0
 						axis([-inf inf 0 1]);
 					end
-					t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
-					%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
-					[ax,h2]=suplabel('Time (ms)','x');
-					[ax,h3]=suplabel(t ,'t');
 				end
+				t=[data.runname ' Cell:' num2str(sv.firstunit) '{ISI Plots}'];
+				%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
+				[ax,h2]=suplabel('Time (ms)','x');
+				[ax,h3]=suplabel(t ,'t');
 		end
+		
+		% because we 'defer'red, we have to refresh.
+		p.refresh();
 		
 		%----------------------------Half-width at half-height calculation---------------
 	case 'Half-Width'
@@ -3425,6 +3454,8 @@ end
 mini=find(data.time{1}==str2double(mint));
 maxi=find(data.time{1}==str2double(maxt));
 
+
+
 switch data.numvars
 	case 0
 		if ~strcmp(sv.auto,'report')
@@ -3432,11 +3463,13 @@ switch data.numvars
 			return;
 		end
 	case 1
+		p=panel(sv.psthhandle,'defer');
 		if get(gh('PSTHEdit'),'String')=='0'
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=1:data.xrange
-				if m<=max(data.psth{data.xindex(i)})
-					m=max(data.psth{data.xindex(i)});
+				maxm = max(data.psth{data.xindex(i)});
+				if m<=maxm
+					m=maxm;
 				end
 			end
 			m=round(m+m/20);  %just to scale a bit bigger than the maximum value
@@ -3446,8 +3479,10 @@ switch data.numvars
 			set(gh('PSTHText'),'String',num2str(m));
 		end
 		
+		p.pack(data.xrange,1);
 		for i=1:data.xrange
-			subaxis(data.xrange,1,i,'S',0,'P',0,'M',0.1);
+			p(i,1).select();
+			%subaxis(data.xrange,1,i,'S',0,'P',0,'M',0.1);
 			h(1)=bar(data.time{data.xindex(i)}(mini:maxi),data.psth{data.xindex(i)}(mini:maxi),1,'k');
 			hold on;
 			h(2)=bar(data.time{data.xindex(i)}(mini:maxi),data.bpsth{data.xindex(i)}(mini:maxi),1,'r');
@@ -3456,14 +3491,23 @@ switch data.numvars
 			if i<data.xrange
 				set(gca,'XTickLabel',[]);
 			end
-			%text(5,(m-m/10), data.names{y(i)},'FontSize',4);
+			text(5,(m-m/10), data.names{data.xindex(i)},'FontSize',10);
 			ylabel(num2str(data.xvalues(i)));
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
-		[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
-		[ax,h2]=suplabel(t ,'t');
+		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
+		%[ax,h2]=suplabel(t ,'t');
+		p.xlabel('Time (ms)');
+		p.title(t);
+		p.de.margin = 0;
+		p.margin = [15 15 5 15];
+		p.fontsize = 12;
+		p.de.fontsize = 10;
+		% because we 'defer'red, we have to refresh.
+		p.refresh();
 	otherwise
+		p=panel(sv.psthhandle,'defer');
 		xrange=length(data.xvalueso); %we'll ignore the subselection
 		yrange=length(data.yvalueso);
 		zrange=length(data.zvalueso);
@@ -3474,21 +3518,22 @@ switch data.numvars
 				endi=xrange*yrange;
 			else
 				starti=(xrange*yrange*(sv.zval-1))+1;
-				endi=xrange*yrange*(zrange*(sv.zval-1));
+				endi=xrange*yrange*sv.zval;
 			end
 		else
 			starti=1;
 			endi=xrange*yrange;
 		end
 		
-		if get(gh('PSTHEdit'),'String')=='0'
+		if strcmp(get(gh('PSTHEdit'),'String'),'0')
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=starti:endi
-				if m<=max(data.psth{i})
-					m=max(data.psth{i});
+				maxm=max(data.psth{i});
+				if m < maxm
+					m = maxm;
 				end
 			end
-			m=round(m+m/20);  %just to scale a bit bigger than the maximum value
+			m=round(m+m/10);  %just to scale a bit bigger than the maximum value
 			set(gh('PSTHText'),'String',num2str(m));
 		else
 			m=str2double(get(gh('PSTHEdit'),'String'));
@@ -3499,29 +3544,42 @@ switch data.numvars
 		%i want the data to look that same as it is loaded into the matrices
 		x=starti:endi;
 		y=reshape(x,data.yrange,data.xrange);
-		y=fliplr(y'); %order it so we can load our data to look like the surface plots
+		%y=fliplr(y'); %order it so we can load our data to look like the surface plots
 		%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
 		a=1;
+		p.pack(data.yrange,data.xrange);
 		for i=1:length(x)
-			subaxis(yrange,xrange,i,'S',0,'M',0.1,'P',0);
+			[i1,i2] = ind2sub([data.yrange,data.xrange],x(i));
+			p(i1,i2).select();
+			%subaxis(yrange,xrange,i,'S',0,'M',0.1,'P',0);
 			h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
-			hold on
+			p(i1,i2).hold('on')
 			h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
-			hold off
+			p(i1,i2).hold('off')
 			set(h,'EdgeColor','none');
 			set(gca,'XTick',[]);
 			set(gca,'YTick',[]);
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-			%text(5,(m-m/10), data.names{y(i)},'FontSize',5);
+			text(5,(m-m/10), data.names{y(i)},'FontSize',10);
 			a=a+1;
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
 		if data.numvars==3
 			t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
 		end
-		[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
-		[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
-		[ax,h3]=suplabel(t ,'t');
+		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
+		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
+		p.title(t);
+		p.de.margin = 0;
+		p.margin = [15 15 5 15];
+		p.fontsize = 12;
+		p.de.fontsize = 10;
+		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
+		%[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
+		%[ax,h3]=suplabel(t ,'t');
+		%set(h1,'FontSize',12)
+		% because we 'defer'red, we have to refresh.
+		p.refresh();
 end
 
 %----------------------------------END----------------------------------------
@@ -3596,7 +3654,7 @@ if exist('pr','var')
 	data.matrixtitle = [data.matrixtitle ' VS: ' sprintf('%2.2f',rr) ' R: ' sprintf('%0.2g',pr) ' Mean: ' sprintf('%3.2f',data.matrix) ' (\pm ' sprintf('%2.2f',data.errormat) ') #: ' num2str(nr) ' #b: ' num2str(bnr) ' B_r: ' num2str(bnr/nr)];
 	clipboard('copy',[sprintf('%2.3f\t',ff) sprintf('%2.3f\t',cv) sprintf('%2.3f\t',rr) sprintf('%0.5g\t',pr) sprintf('%d\t',nr) sprintf('%2.3f\t',data.matrix) sprintf('%2.3f\t',data.errormat) sprintf('%2.3f\t',bnr) sprintf('%2.3f\t',(bnr/nr)) sprintf('%2.3f',data.raw{sv.yval,sv.xval,sv.zval}.numtrials)]);
 else
-	data.matrixtitle = [data.matrixtitle ' Mean: ' sprintf('%3.2f',data.matrix) '(+-' sprintf('%2.2f',data.errormat) ') #: ' num2str(nr) ' #b: ' num2str(bnr) ' Bratio: ' num2str(bnr/nr)];
+	data.matrixtitle = [data.matrixtitle ' Mean: ' sprintf('%3.2f',data.matrix) '(\pm' sprintf('%2.2f',data.errormat) ') #: ' num2str(nr) ' #b: ' num2str(bnr) ' B_r: ' num2str(bnr/nr)];
 	clipboard('copy',[sprintf('%2.3f\t',ff) sprintf('%2.3f\t',data.matrix) sprintf('%2.3f\t',data.errormat) sprintf('%2.3f\t',bnr) sprintf('%2.3f\t',(bnr/nr)) sprintf('%2.3f',data.raw{sv.yval,sv.xval,sv.zval}.numtrials)]);
 end
 sv.titlehandle=title(data.matrixtitle);
