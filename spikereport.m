@@ -57,6 +57,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 rlist=[];
+rlist.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 if ismac
 	if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
 		mkdir(['~' filesep 'MatlabFiles' filesep]);
@@ -122,7 +123,7 @@ function varargout = spikereport_OutputFcn(hObject, eventdata, handles)
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+global rlist
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
@@ -298,6 +299,9 @@ set(gh('RepTypeMenu'),'Value',rlist.item{rlist.index}.analmethod);
 set(gh('RepMinTime'),'String',rlist.item{rlist.index}.mintime);
 set(gh('RepMaxTime'),'String',rlist.item{rlist.index}.maxtime);
 set(gh('RepPlotPSTHCheck'),'Value',rlist.item{rlist.index}.plotpsth);
+if isfield(rlist.item{rlist.index},'plotmetric')
+	set(gh('RepPlotMetricCheck'),'Value',rlist.item{rlist.index}.plotmetric);
+end
 if isfield(rlist.item{rlist.index},'plotisi')
 	set(gh('RepPlotISICheck'),'Value',rlist.item{rlist.index}.plotisi);
 end
@@ -1050,6 +1054,7 @@ if ~isfield(rlist,'basepath')
 		rlist.basepath=['c:' filesep 'MatlabFiles' filesep];
 	end
 end
+rlist.oldlook = [];
 save([rlist.basepath  'reportbackup.mat'], 'rlist');
 close(gcf);
 
