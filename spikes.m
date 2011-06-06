@@ -165,7 +165,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
 		set(gcf,'DefaultAxesFontName','Helvetica');
@@ -2429,6 +2429,28 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 		
 		PlotAllPSTHs;
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Plot Fano'
+		%-----------------------------------------------------------------------------------------
+		
+		fp = fanoPlotter;
+		fp.convertSpikesFormat(data,sv);
+		try
+			fp.matchReps = 1;
+			fp.compute;
+			fp.plot;
+			fp.movie;
+		catch
+			fprintf('\nPlot Fano mean matching failed! Falling back to non-mean matched fano plot...\n');
+			try
+				fp.matchReps = 0;
+				fp.compute;
+				fp.plot;
+				fp.movie;
+			end
+		end
+		
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Plot Burst'
