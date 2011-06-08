@@ -23,7 +23,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 case 'Initialize'
 	%---------------------------------------------------------------------------------
 	
-	version=['Single PSTH Plot: V1.0.3 | Started - ',datestr(now)];
+	version=['Single PSTH Plot: V1.1.0 | Started - ',datestr(now)];
 	splotfig;			%our GUI file
 	figpos;
 	set(gcf,'Name', version);
@@ -32,9 +32,25 @@ case 'Initialize'
 	spdata.linfo=[];
 	spdata.changetitle=0;
 	
-	if ~exist('data','var')
+	if ~exist('data','var') || isempty(data)
 		errordlg('Sorry, cannot find data. You need to call this after you have loaded data using Spikes');
 		return
+	end
+	
+	if ismac
+		if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
+			mkdir(['~' filesep 'MatlabFiles' filesep]);
+		end
+		spdata.savepath = ['~' filesep 'MatlabFiles' filesep];
+		spdata.matlabroot=matlabroot;
+		spdata.temppath=tempdir;
+	elseif ispc
+		if ~exist(['c:' filesep 'MatlabFiles' filesep],'dir')
+			mkdir(['c:' filesep 'MatlabFiles' filesep])
+		end
+		spdata.savepath = ['c:' filesep 'MatlabFiles' filesep];
+		spdata.matlabroot=regexprep(matlabroot,'Program files','Progra~1','ignorecase');
+		spdata.temppath=tempdir;
 	end
 	
 	if data.numvars > 1
@@ -347,18 +363,18 @@ case 'Get Spontaneous'
 	[mint,maxt]=measure(data,x,y);
 	%this if loop selects where are data is (depends on whether it was smoothed etc)	
 	if datatype==2 %bursts
-		if plottype==1 | plottype==2 %no smoothing so just raw psths
+		if plottype==1 || plottype==2 %no smoothing so just raw psths
 			time=data.time{y,x,z};
-			psth=data.psth{y,x,z};
+			psth=data.bpsth{y,x,z};
 		elseif plottype==3
 			time=data.time{y,x,z};
-			psth=spdata.psths;
+			psth=spdata.bpsths;
 		elseif plottype==4
 			time=spdata.times;
-			psth=spdata.psths;
+			psth=spdata.bpsths;
 		end
 	else %all spikes
-		if plottype==1 | plottype==2 %no smoothing so just raw psths
+		if plottype==1 || plottype==2 %no smoothing so just raw psths
 			time=data.time{y,x,z};
 			psth=data.psth{y,x,z};
 		elseif plottype==3
@@ -389,13 +405,6 @@ case 'Get Spontaneous'
     spdata.spont.bin3=spdata.spont.ci05(2);
     %--------------------------------------------------------------
     
-    t1=['Spontaneous is: ' num2str(spdata.spont.mean) '+-' num2str(spdata.spont.sd) 'S.D. spikes/bin'];
-    t2=['2*S.D. Significance Limit: ' num2str(spdata.spont.mean+(2*spdata.spont.sd)) ' spikes/bin'];
-    cil=num2str(spdata.spont.ci01(1));
-    ciu=num2str(spdata.spont.ci01(2));
-    t3=['0.01 Confidence Interval from a Poisson: ' cil '-' ciu ' spikes/bin'];
-    t4=['These Values has been stored in the data structure, and can automatically be used with the latency analysis'];
-    t={t1;t2;t3;t4};
 	
 	data.spontaneous.mean=spdata.spont.mean;
 	data.spontaneous.sd=spdata.spont.sd;
@@ -411,6 +420,16 @@ case 'Get Spontaneous'
 	data.spontaneous.limitset=converttotime(spdata.spont.mean+(2*spdata.spont.se));
 	data.spontaneous.poissont=converttotime(spdata.spont.ci01(2));
     
+	
+	t1=['Spontaneous is: ' num2str(spdata.spont.mean) '+-' num2str(spdata.spont.sd) 'S.D. spikes/bin (' num2str(data.spontaneous.meant) 'Hz)'];
+    t2=['2*S.D. Limit: ' num2str(data.spontaneous.limit) ' spikes/bin (' num2str(data.spontaneous.limitt) 'Hz)'];
+	t3=['2*S.E. Limit: ' num2str(data.spontaneous.limitse) ' spikes/bin (' num2str(data.spontaneous.limitset) 'Hz)'];
+    cil=num2str(spdata.spont.ci01(1));
+    ciu=num2str(spdata.spont.ci01(2));
+    t4=['0.01 Confidence Interval from a Poisson: ' cil '-' ciu ' spikes/bin (' num2str(data.spontaneous.poissont) 'Hz)'];
+    t5=['These Values has been stored in the data structure, and can automatically be used with the latency analysis'];
+    t={t1;t2;t3;t4;t5};
+	
     helpdlg(t,'Spontaneous Values');
     
     %------------------------------------------------------------------------------------------

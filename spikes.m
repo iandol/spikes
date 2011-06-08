@@ -1407,10 +1407,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		
 		if data.plotburst==1
 			data.bmatrixall=tmat;
+			data.bmatrix = data.bmatrixall;
 		elseif data.plotburst==0 && data.plottonic==0
 			data.matrixall=tmat;
+			data.matrix = data.matrixall;
 		else
 			data.tmatrixall=tmat;
+			data.tmatrix = data.tmatrixall;
 		end
 		
 		data.errormatall=emat;
@@ -1934,7 +1937,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.ErrorMode=String{Value};
 		data.anal.errormode=sv.ErrorMode;
 		
-		if x~=0
+		if isempty(x) || x > 0
 			data.anal.error=x;
 		else
 			button=questdlg(['Do you want to use Mean+2*SD (' num2str(data.spontaneous.limitt) '), Mean+2*SE (' num2str(data.spontaneous.limitset) ') or 0.01 confidence interval of a poisson (' num2str(data.spontaneous.poissont) ')?'],'Area Analysis','2*SD','2*SE','Poisson','2*SD');
@@ -1948,11 +1951,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				case 'Cancel'
 					error('Area analysis cancelled');
 			end
-			if data.plotburst == 0
-				PlotDMatrix(data.matrix);
-			else
-				PlotDMatrix(data.bmatrix);
-			end
+			
+			PlotDMatrix(data.matrix);
+			
 		end
 		x=data.anal.xvals(2)-data.anal.xvals(1);
 		y=data.anal.yvals(2)-data.anal.yvals(1);
