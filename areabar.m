@@ -17,6 +17,8 @@ if nargin <4 || isempty(c1)
 	c1=[0.8 0.8 0.8];
 end
 
+alpha = 0.8;
+
 x=size(xvalues);
 y=size(ydata);
 e=size(error);
@@ -38,8 +40,8 @@ err(x+1:x+x,1)=flipud(ydata-error);
 areax=zeros(x+x,1);
 areax(1:x,1)=xvalues;
 areax(x+1:x+x,1)=flipud(xvalues);
+fill(areax,err,c1,'EdgeColor',c1,'FaceAlpha',alpha);
 hold on;
-fill(areax,err,c1,'EdgeColor',c1);
 plot(xvalues,ydata,varargin{:});
 hold off;
 
