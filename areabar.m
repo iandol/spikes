@@ -8,7 +8,7 @@ function areabar(xvalues,ydata,error,c1,varargin)
 %     where c1 is the colour of the shaded options and plotoptions are
 %     passed to the line plot
 
-if min(size(xvalues)) > 1 | min(size(ydata)) > 1 | min(size(error)) > 1
+if min(size(xvalues)) > 1 || min(size(ydata)) > 1 || min(size(error)) > 1
    errordlg('Sorry, you can only plot vector data.')
    error('Areabar error')
 end
@@ -40,8 +40,11 @@ err(x+1:x+x,1)=flipud(ydata-error);
 areax=zeros(x+x,1);
 areax(1:x,1)=xvalues;
 areax(x+1:x+x,1)=flipud(xvalues);
+axis auto
 fill(areax,err,c1,'EdgeColor',c1,'FaceAlpha',alpha);
-hold on;
+set(gca,'NextPlot','add');
 plot(xvalues,ydata,varargin{:});
+set(gca,'NextPlot','replacechildren');
+set(gca,'PlotBoxAspectRatioMode','manual');
 hold off;
 
