@@ -77,7 +77,7 @@ for i=1:size(x,2) %iterate through columns
 		case 'none'
 		case 'quantiles'
 			idx1=qoutliers(xcol);
-			idx2=qoutliers(ycol);			
+			idx2=qoutliers(ycol);
 			if suba>1
 				idx=idx1+idx2;
 				xouttext=sprintf('%0.3g ',xcol(idx>0)');
@@ -92,19 +92,21 @@ for i=1:size(x,2) %iterate through columns
 			end
 		case 'rosner'
 			idx1=outlier(xcol,0.05,rosnern);
-			idx2=outlier(ycol,0.05,rosnern);			
-			if suba>1
-				idx=unique([idx1;idx2]);
-				xouttext=sprintf('%0.3g ',xcol(idx)');
-				youttext=sprintf('%0.3g ',ycol(idx)');
-				xcol(idx)=[];
-				ycol(idx)=[];
-				
-			else
-				xouttext=sprintf('%0.3g ',xcol(idx1)');
-				youttext=sprintf('%0.3g ',ycol(idx2)');
-				xcol(idx1)=[];
-				ycol(idx2)=[];
+			idx2=outlier(ycol,0.05,rosnern);
+			if ~isempty(idx1) || ~isempty(idx2)
+				if suba>1
+					idx=unique([idx1;idx2]);
+					xouttext=sprintf('%0.3g ',xcol(idx)');
+					youttext=sprintf('%0.3g ',ycol(idx)');
+					xcol(idx)=[];
+					ycol(idx)=[];
+					
+				else
+					xouttext=sprintf('%0.3g ',xcol(idx1)');
+					youttext=sprintf('%0.3g ',ycol(idx2)');
+					xcol(idx1)=[];
+					ycol(idx2)=[];
+				end
 			end
 		case 'grubb'
 			[out,idx1]=deleteoutliers(xcol,0.05);
@@ -161,8 +163,8 @@ for i=1:size(x,2) %iterate through columns
 				xcol(idx1>0)=[];
 				ycol(idx2>0)=[];
 			end
-	end	
-		
+	end
+	
 	xmean=nanmean(xcol);
 	xmedian=nanmedian(xcol);
 	ymean=nanmean(ycol);
@@ -192,9 +194,9 @@ for i=1:size(x,2) %iterate through columns
 	subplot_tight(suba,subb,1,margin)
 	
 	if ystd > 0
-	h=bar([hbins',hbins'],[xn',yn'],barwidth,bartype);
-	set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
-	set(h(2),'FaceColor',[0.7 0 0],'EdgeColor',[0.7 0 0]);
+		h=bar([hbins',hbins'],[xn',yn'],barwidth,bartype);
+		set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
+		set(h(2),'FaceColor',[0.7 0 0],'EdgeColor',[0.7 0 0]);
 	else
 		h=bar([hbins'],[xn'],barwidth,bartype);
 		set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
@@ -202,7 +204,7 @@ for i=1:size(x,2) %iterate through columns
 	ylabel('Number of Cells');
 	if ~strcmp(columnlabels,''); xlabel(columnlabels{i}); end
 	axis tight;
-	lim=ylim;	
+	lim=ylim;
 	text(xmean,lim(2),'\downarrow','Color',[0 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
 	text(xmedian,lim(2),'\nabla','Color',[0 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
 	if ystd > 0
@@ -220,7 +222,7 @@ for i=1:size(x,2) %iterate through columns
 			catch
 			end
 		end
-		if ystd > 0 && length(find(yn>0))>1 
+		if ystd > 0 && length(find(yn>0))>1
 			try
 				f2=fit(hbins',yn','gauss1');
 				plot(f2,'r');
@@ -232,26 +234,26 @@ for i=1:size(x,2) %iterate through columns
 	end
 	
 	if suba>1
-	subplot_tight(suba,subb,2,margin)
-	if exist('distributionPlot')
-		hold on
-		distributionPlot({xcol,ycol},0.3);
+		subplot_tight(suba,subb,2,margin)
+		if exist('distributionPlot')
+			hold on
+			distributionPlot({xcol,ycol},0.3);
+		end
+		boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',legendtxt,'colors','k')
+		hold off
+		
+		subplot_tight(suba,subb,3,margin)
+		[r,p]=corr(xcol,ycol);
+		[r2,p2]=corr(xcol,ycol,'type','spearman');
+		plot(xcol,ycol,'r.','MarkerSize',15);
+		title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ')']);
+		axis equal
+		try
+			lsline
+		catch
+		end
 	end
-	boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',legendtxt,'colors','k')
-	hold off
 	
-	subplot_tight(suba,subb,3,margin)
-	[r,p]=corr(xcol,ycol);
-	[r2,p2]=corr(xcol,ycol,'type','spearman');
-	plot(xcol,ycol,'r.','MarkerSize',15);
-	title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ')']);
-	axis equal
-	try
-		lsline
-	catch
-	end
-	end
-
 	t=['Mn/Mdn: ' sprintf('%0.3g', xmean) '\pm' sprintf('%0.3g', xstderr) '/' sprintf('%0.3g', xmedian) ' | ' sprintf('%0.3g', ymean) '\pm' sprintf('%0.3g', ystderr) ' / ' sprintf('%0.3g', ymedian)];
 	
 	if ystd > 0
@@ -309,14 +311,14 @@ for i=1:size(x,2) %iterate through columns
 	[yci,ymean,ypop]=bootci(nboot,{fhandle,ycol},'alpha',alpha);
 	
 	t=[t 'BootStrap: ' sprintf('%0.2g', xci(1)) ' < ' sprintf('%0.2g', xmean) ' > ' sprintf('%0.2g', xci(2)) ' | ' sprintf('%0.2g', yci(1)) ' < ' sprintf('%0.2g', ymean) ' > ' sprintf('%0.2g', yci(2))];
-
+	
 	[fx,xax]=ksdensity(xpop);
 	[fy,yax]=ksdensity(ypop);
-
-% 	[h,p1]=ttest2(xpop,ypop,alpha);
-% 	[p2,h]=ranksum(xpop,ypop,'alpha',alpha);
-% 	t=[t 'BS T: ' num2str(p1) '\newline'];
-% 	t=[t 'BS Rank: ' num2str(p2)];
+	
+	% 	[h,p1]=ttest2(xpop,ypop,alpha);
+	% 	[p2,h]=ranksum(xpop,ypop,'alpha',alpha);
+	% 	t=[t 'BS T: ' num2str(p1) '\newline'];
+	% 	t=[t 'BS Rank: ' num2str(p2)];
 	
 	if suba>1
 		subplot_tight(2,2,4,margin);
@@ -332,7 +334,7 @@ for i=1:size(x,2) %iterate through columns
 	axis tight
 	box off
 	
-	if size(x,2)>1; 
+	if size(x,2)>1;
 		if ~isempty(columnlabels)
 			supt=['Column: ' columnlabels{i} ' | n = ' num2str(length(xcol)) '[' num2str(length(x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(y(:,i))) ']'];
 		else
@@ -350,23 +352,23 @@ for i=1:size(x,2) %iterate through columns
 	end
 	
 	suptitle(supt)
-
+	
 	xl=xlim;
 	yl=ylim;
-
+	
 	xfrag=(xl(2)-xl(1))/40;
 	yfrag=(yl(2)-yl(1))/40;
-
+	
 	h=line([xci(1),xmean,xci(2);xci(1),xmean,xci(2);],[yl(1),yl(1),yl(1);yl(2),yl(2),yl(2)]);
 	set(h,'Color',[0.5 0.5 0.5],'LineStyle','--');
-
+	
 	h=line([yci(1),ymean,yci(2);yci(1),ymean,yci(2);],[yl(1),yl(1),yl(1);yl(2),yl(2),yl(2)]);
 	set(h,'Color',[1 0.5 0.5],'LineStyle',':');
-
+	
 	text(xl(1)+xfrag,yl(2)-yfrag,t,'FontSize',10,'FontName','helvetica','FontWeight','bold','VerticalAlignment','top');
 	%legend(legendtxt);
-
 	
 	
-end;
+	
+end
 end

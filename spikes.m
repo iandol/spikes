@@ -313,7 +313,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('CellMenu'),'Value',str2double(n.num));
 					sv.reload='no';
 				else %we need the user to specify a file
-					if isfield(sv,'dataloadpath');cd(sv.dataloadpath);end
+					if isfield(sv,'dataloadpath') && exist(sv.dataloadpath,'dir');cd(sv.dataloadpath);end
 					[fn,pn]=uigetfile({'*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.zip *.smr *.txt *.doc)'; ...
 						'*.zip','VS RAW DATA File (ZIP)';...
 						'*.smr','VS RAW DATA File (SMR)';...
@@ -321,7 +321,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 						'*.doc','XCor Output File (DOC)';...
 						'*.*','All Files'},...
 						'Select File Type to Load:');
-					if isequal(fn,0)||isequal(pn,0);set(gh('LoadText'),'String','No Data Loaded');errordlg('No File Selected or Found!');error('File was not selected by user / not found.');end
+					if isequal(fn,0)||isequal(pn,0);set(gh('LoadText'),'String','No Data Loaded');helpdlg('No File Selected or Found!');error('File was not selected by user / not found.');return;end
 					[p,basefilename,e]=fileparts([pn fn]);
 				end
 				%we have a file so we reset our data and axes
@@ -2321,16 +2321,16 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			if ~isempty(data);
 				fname = regexprep(data.runname,'\s\|\s','');
 				fname = [fname '_' data.meta.protocol ' Cell=' num2str(data.cell) ' Wrap=' num2str(data.wrapped) ' T=' num2str(sv.StartTrial) '-' num2str(sv.EndTrial)];
-				fname = regexprep(fname,'(\>|\|)','_');
+				fname = regexprep(fname,'(>|\|)','_');
 				[fn,pn]=uiputfile('*.mat','Save the Processed Matrix',fname);
 				data.sv=sv;
 				sv.matsavepath=pn;
-				if isequal(fn,0)||isequal(pn,0), errordlg('Sorry, no file selected'),error('Returned with Error'), end;
+				if isequal(fn,0)||isequal(pn,0); helpdlg('Sorry, no file selected'); return; end
 				cd(pn);
 				save(fn,'data');
 				cd(oldpath);
 			else
-				errordlg('No Data has been Processed...');
+				warndlg('No Data has been Processed...');
 			end
 		end
 		

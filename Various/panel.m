@@ -1,4 +1,68 @@
 
+% INTRODUCTION
+% 
+% Panel Version 1 was released in 2008. It has been in use
+% since, and improved, and converted into a classdef (single
+% file) implementation. Panel Version 2 is a public release
+% of these changes.
+% 
+% 
+% 
+% INSTALLATION
+% 
+% To install panel, place the file "panel.m" on your Matlab
+% path.
+% 
+% 
+% 
+% DOCUMENTATION
+% 
+% Documentation is provided in three forms.
+% 
+% 1) The folder "docs" contains introductory information.
+% 2) "doc panel" at the Matlab prompt provides reference
+% information.
+% 3) The folder "demo" contains scripts which you can review
+% one by one to learn how to use Panel - this constitutes
+% the User Guide.
+% 
+% 
+% 
+% CHANGE LOG
+% 
+% 22/05/2011 First Public Release Version 2.0
+% 
+% 23/05/2011
+% 	Incorporated an LP solver, since the one we were using
+% 	"linprog()" is not available to users who do not have
+% 	the Optimisation Toolbox installed.
+% 
+% 21/06/2011
+% 	Added -opdf option, and changed PageSize to be equal to
+% 	PaperPosition.
+%
+% 12/07/2011
+%   Made some linprog optimisations, inspired by "Ian" on
+%   Matlab central. Tested against subplot using
+%   demopanel2(N=9). Subplot is faster, by about 20%, but
+%   panel is better :). For my money, 20% isn't much of a
+%   hit for the extra functionality. NB: Using Jeff Stuart's
+%   linprog (unoptimised), panel is much slower (especially
+%   for large N problems); we will probably have to offer a
+%   faster solver at some point (optimise Jeff's?).
+%
+% NOTES: You will see a noticeable delay, also, on resize.
+% That's the price of using physical units for the layout,
+% because we have to recalculate everything when the
+% physical canvas size changes. I suppose in the future, we
+% could offer an option so that physical units are only used
+% during export; that would make resizes fast, and the user
+% may not care so much about layout on screen, if they are
+% aiming for print figures.
+%
+% 20/07/2011 Release Version 2.1
+
+
 
 
 classdef (Sealed = true) panel < handle
@@ -60,6 +124,12 @@ classdef (Sealed = true) panel < handle
 		% margin values. align can usually be left at false, but
 		% may need to be set to true for particular panels in
 		% some layouts where mixed margins are used.
+		%
+		% NB: it's possible that there are no circumstances
+		% where you would need this, so don't use it unless you
+		% feel you have to. if you come up with a scenario in
+		% which you definitely do need it, please let me know so
+		% that i can add a demo.
 		%
 		% access: read/write
 		% default: false
@@ -919,9 +989,9 @@ classdef (Sealed = true) panel < handle
 			%   X is the output format - choose from most of the
 			%   built-in image device drivers supported by "print"
 			%   (try "help print"). this includes "png", "jpg",
-			%   "tif", and "eps". note that "eps"/"ps" resolve to
-			%   "epsc2"/"psc2", for convenience. to use the
-			%   "eps"/"ps" devices, use "-oeps!"/"-ops!".
+			%   "tif", "eps" and "pdf". note that "eps"/"ps"
+			%   resolve to "epsc2"/"psc2", for convenience. to use
+			%   the "eps"/"ps" devices, use "-oeps!"/"-ops!".
 			%
 			%
 			%
@@ -1098,6 +1168,7 @@ classdef (Sealed = true) panel < handle
 									'epsc' 'epsc' 'eps'
 									'eps2' 'eps2' 'eps'
 									'epsc2' 'epsc2' 'eps'
+									'pdf' 'pdf' 'pdf'
 									};
 								index = isin(fmts(:, 1), val);
 								if index
@@ -1171,6 +1242,14 @@ classdef (Sealed = true) panel < handle
 			w = (sz(1) + pars.intercolumnspacing) / pars.cols - pars.intercolumnspacing;
 			sz(1) = w;
 			
+			% explicit measurements override automatics
+			if pars.width
+				sz(1) = pars.width;
+			end
+			if pars.height
+				sz(2) = pars.height;
+			end
+			
 			% apply fill / aspect ratio
 			if pars.fill > 0
 				% fill fraction
@@ -1189,19 +1268,11 @@ classdef (Sealed = true) panel < handle
 				set(p.h_figure, 'PaperOrientation', 'portrait')
 			end
 			
-			% explicit measurements override automatics
-			if pars.width
-				sz(1) = pars.width;
-			end
-			if pars.height
-				sz(2) = pars.height;
-			end
-			
 			% set size of figure
 			set(p.h_figure, ...
 				'PaperUnits', 'centimeters', ...
 				'PaperPosition', [0 0 sz] / 10, ...
-				'PaperSize', sz * 1.5 / 10 ...
+				'PaperSize', sz / 10 ... % * 1.5 / 10 ... % CHANGED 21/06/2011 so that -opdf works correctly - why was this * 1.5, anyway? presumably was spurious...
 				);
 			psz = sz / 25.4 * pars.dpi;
 			disp(['exporting to ' int2str(sz(1)) 'x' int2str(sz(2)) 'mm (' int2str(psz(1)) 'x' int2str(psz(2)) 'px)'])
@@ -1231,6 +1302,16 @@ classdef (Sealed = true) panel < handle
 			% PaperPositionMode to auto during this operation -
 			% we're setting it explicitly.
 			w = warning('off', 'MATLAB:Print:CustomResizeFcnInPrint');
+			
+			% select smoothing
+			if pars.smooth > 1
+				switch pars.fmt
+					case {'png' 'tiff' 'jpeg'}
+					otherwise
+						disp(['smoothing ignored for format "' pars.fmt '"']);
+						pars.smooth = 1;
+				end
+			end
 			
 			% handle smoothing
 			if pars.smooth > 1
@@ -1742,6 +1823,13 @@ classdef (Sealed = true) panel < handle
 			% if wrapped object is an axis, and no output args, make it current
 			if isaxis(p.h_object) && ~nargout
 				set(p.h_figure, 'CurrentAxes', p.h_object);
+				
+				% 12/07/11: this call is slow, because it implies "drawnow"
+% 				figure(p.h_figure);
+
+				% 12/07/11: this call is fast, because it doesn't
+				set(0, 'CurrentFigure', p.h_figure);
+				
 			end
 			
 			% and return it
@@ -2606,9 +2694,11 @@ classdef (Sealed = true) panel < handle
 			%   within them on their outside edges, perpendicular
 			%   to the packing dimension, must align. these are
 			%   equality constraints.
-			t0 = clock();
-			t_linprog = 0;
-			r_linprog = [];
+			
+			
+% 			t0 = clock();
+% 			t_linprog = 0;
+% 			r_linprog = [];
 			
 			% index all sizeable panels (keep references to them
 			% as well so that we can give them their rect when
@@ -2638,91 +2728,128 @@ classdef (Sealed = true) panel < handle
 				allPanels{i}.state.index = i;
 			end
 			
-			% prepare parameters of linear programming problem
-			p.state.lin = [];
-			p.state.lin.numVars = numVars;
-			p.state.lin.context_size_in_mm = context.size_in_mm;
-			p.state.lin.A = zeros(0, numVars);
-			p.state.lin.b = zeros(0, 1);
-			p.state.lin.Aeq = zeros(0, numVars);
-			p.state.lin.beq = zeros(0, 1);
+			% create LP problem
+			lp = linprog_create(numVars);
+			p.state.lp = repmat(lp, 1, 2);
+			p.state.lp(1).size_in_mm = context.size_in_mm(1);
+			p.state.lp(2).size_in_mm = context.size_in_mm(2);
 			
-			% there are two problems, one for each dimension
-			p.state.lin(2) = p.state.lin(1);
+% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
+% LINPROG() IF NECESSARY
+%
+% 			% prepare parameters of linear programming problem
+% 			p.state.lin = [];
+% 			p.state.lin.numVars = numVars;
+% 			p.state.lin.context_size_in_mm = context.size_in_mm;
+% 			p.state.lin.A = zeros(0, numVars);
+% 			p.state.lin.b = zeros(0, 1);
+% 			p.state.lin.Aeq = zeros(0, numVars);
+% 			p.state.lin.beq = zeros(0, 1);
+% 			
+% 			% there are two problems, one for each dimension
+% 			p.state.lin(2) = p.state.lin(1);
 			
 			% add constraints
 			p.addConstraints(p, [1 1]);
 			p.addConstraintsFigureEdge();
 			
+			% add maximization
+			for dim = 1:2
+				for n = 1:numPanels
+					i2 = n * 2;
+					i1 = i2 - 1;
+					p.state.lp(dim) = linprog_addmaxim(p.state.lp(dim), i1, i2);
+				end
+			end
+			
 			% data for panels
 			xxyy = [];
 			
-			% construct linprog problems. there are two separate
-			% problems, one for x and one for y, and they are
-			% independent. yippee. for each dimension, we have
-			% 2*numPanels variables (for the d1 and d2 position of that
-			% dimension).
-			for dim = 1:2
-				
-				% get parameters
-				A = p.state.lin(dim).A;
-				b = p.state.lin(dim).b;
-				Aeq = p.state.lin(dim).Aeq;
-				beq = p.state.lin(dim).beq;
-				
-				% if we've no constraints, can't do this
-				if isempty(A) && isempty(Aeq)
-					disp('not refreshing (no constraints)...');
-					continue
+			% solve lp problems
+			p.state.lp(1) = linprog_solve(p.state.lp(1));
+			p.state.lp(2) = linprog_solve(p.state.lp(2));
+			opt_success = ~isempty(p.state.lp(1).x) && ~isempty(p.state.lp(2).x);
+			
+			% if successful
+			if opt_success
+			
+				% distribute solution amongst panels
+				for dim = 1:2
+					xxyy(:, dim*2+[-1 0]) = reshape(p.state.lp(dim).x, 2, numPanels)' / context.size_in_mm(dim);
 				end
-				
-				% finalise problem
-				lb = zeros(1, numVars);
-				ub = ones(1, numVars) * context.size_in_mm(dim);
-				f = repmat([1 -1], 1, numPanels);
-				opt = optimset('Display', 'off');
-				
-				% and solve it
-				ti = clock();
-				r_linprog = [r_linprog sprintf('%i (%i)', size(A, 1), size(Aeq, 1)) ' '];
-				x = linprog(f, A, b, Aeq, beq, lb, ub, [], opt);
-				tf = clock();
-				t_linprog = t_linprog + etime(tf, ti);
-				
-				% store result
-				xxyy(:, dim*2+[-1 0]) = reshape(x(1:numVars), 2, numPanels)' / context.size_in_mm(dim);
-				
+
+	% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
+	% LINPROG() IF NECESSARY
+	%
+	% 			% construct linprog problems. there are two separate
+	% 			% problems, one for x and one for y, and they are
+	% 			% independent. yippee. for each dimension, we have
+	% 			% 2*numPanels variables (for the d1 and d2 position of that
+	% 			% dimension).
+	% 			for dim = 1:2
+	% 				
+	% 				% get parameters
+	% 				A = p.state.lin(dim).A;
+	% 				b = p.state.lin(dim).b;
+	% 				Aeq = p.state.lin(dim).Aeq;
+	% 				beq = p.state.lin(dim).beq;
+	% 				
+	% 				% if we've no constraints, can't do this
+	% 				if isempty(A) && isempty(Aeq)
+	% 					disp('not refreshing (no constraints)...');
+	% 					continue
+	% 				end
+	% 				
+	% 				% finalise problem
+	% 				lb = zeros(1, numVars);
+	% 				ub = ones(1, numVars) * context.size_in_mm(dim);
+	% 				f = repmat([1 -1], 1, numPanels);
+	% 				opt = optimset('Display', 'off');
+	% 				
+	% 				% and solve it
+	% 				ti = clock();
+	% 				r_linprog = [r_linprog sprintf('%i (%i)', size(A, 1), size(Aeq, 1)) ' '];
+	% 				x = linprog(f, A, b, Aeq, beq, lb, ub, [], opt);
+	% % 				max(abs(diff([x p.state.lp(dim).x], 1, 2)))
+	% 				tf = clock();
+	% 				t_linprog = t_linprog + etime(tf, ti);
+	% 				
+	% 				% store result
+	% 				xxyy(:, dim*2+[-1 0]) = reshape(x(1:numVars), 2, numPanels)' / context.size_in_mm(dim);
+	% 				
+	% 			end
+
+				% because we pack top-bottom (zero to one), but the
+				% actual object positions in matlab are +ve is upwards,
+				% we have to flip the y data, here.
+				yy = xxyy(:, [3 4]);
+				yy = fliplr(1 - yy);
+				xxyy(:, [3 4]) = yy;
+
+				% pass context to each panel
+				for n = 1:numPanels
+					context.rect = [xxyy(n, [1 3]) xxyy(n, [2 4])-xxyy(n, [1 3])];
+					allPanels{n}.m_context = context;
+				end
+
+				% pass context to abs panels
+				for n = 1:length(absPanels)
+					context.rect = [];
+					absPanels{n}.m_context = context;
+				end
+
+				% clear h_showAxis
+				if ~isempty(p.h_showAxis)
+					delete(p.h_showAxis);
+					p.h_showAxis = [];
+				end
+
+	% 			% timing report
+	% 			tf = clock();
+	% 			t_total = etime(tf, t0);
+	%  			disp(['LINPROG: ' sprintf('%dms (%dms)', round([t_total*1000 t_linprog*1000])), ' constraints ' r_linprog]);
+	
 			end
-			
-			% because we pack top-bottom (zero to one), but the
-			% actual object positions in matlab are +ve is upwards,
-			% we have to flip the y data, here.
-			yy = xxyy(:, [3 4]);
-			yy = fliplr(1 - yy);
-			xxyy(:, [3 4]) = yy;
-			
-			% pass context to each panel
-			for n = 1:numPanels
-				context.rect = [xxyy(n, [1 3]) xxyy(n, [2 4])-xxyy(n, [1 3])];
-				allPanels{n}.m_context = context;
-			end
-			
-			% pass context to abs panels
-			for n = 1:length(absPanels)
-				context.rect = [];
-				absPanels{n}.m_context = context;
-			end
-			
-			% clear h_showAxis
-			if ~isempty(p.h_showAxis)
-				delete(p.h_showAxis);
-				p.h_showAxis = [];
-			end
-			
-			% timing report
-			tf = clock();
-			t_total = etime(tf, t0);
-% 			disp(['LINPROG: ' sprintf('%dms (%dms)', round([t_total*1000 t_linprog*1000])), ' constraints ' r_linprog]);
 			
 			% now we can begin rendering into that context
 			p.renderPanel('recurse');
@@ -2868,28 +2995,24 @@ classdef (Sealed = true) panel < handle
 				end
 			end
 
-			% property it
-			set(p.h_object, ...
+			% apply properties to object
+			h = p.h_object;
+			
+			% and to labels/title, if it's an axis
+			if isaxis(p.h_object)
+				h = [h ...
+					get(p.h_object, 'xlabel') ...
+					get(p.h_object, 'ylabel') ...
+					get(p.h_object, 'title') ...
+					];
+			end
+			
+			% apply
+			set(h, ...
 				'fontname', p.getPropertyValue('fontname'), ...
 				'fontsize', p.getPropertyValue('fontsize'), ...
 				'fontweight', p.getPropertyValue('fontweight') ...
 				);
-
-			% handle labels/title
-			if isaxis(p.h_object)
-
-				% property them
-				set([ ...
-					get(p.h_object, 'xlabel') ...
-					get(p.h_object, 'ylabel') ...
-					get(p.h_object, 'title') ...
-					], ...
-					'fontname', p.getPropertyValue('fontname'), ...
-					'fontsize', p.getPropertyValue('fontsize'), ...
-					'fontweight', p.getPropertyValue('fontweight') ...
-					);
-
-			end
 
 		end
 			
@@ -3031,20 +3154,33 @@ classdef (Sealed = true) panel < handle
 % 				'align on edge ' edgestr(edgespec) ...
 % 				]);
 			
-			% get dims
-			numVars = p.state.lin(edgespec(1)).numVars;
+% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
+% LINPROG() IF NECESSARY
+%
+% 			% get dims
+% 			numVars = p.state.lin(edgespec(1)).numVars;
+% 			
+% 			% form constraint
+% 			a = zeros(1, numVars);
+% 			p1 = p1.state.index;
+% 			p2 = p2.state.index;
+% 			i1 = (p1-1) * 2 + edgespec(2);
+% 			i2 = (p2-1) * 2 + edgespec(2);
+% 			a(i1) = -1;
+% 			a(i2) = 1;
+% 			b = 0;
+% 			
+% 			% store constraint
+% 			p.state.lin(edgespec(1)).Aeq = [p.state.lin(edgespec(1)).Aeq; a];
+% 			p.state.lin(edgespec(1)).beq = [p.state.lin(edgespec(1)).beq; b];
 			
-			% form constraint
-			a = zeros(1, numVars);
+			% add
+			dim = edgespec(1);
 			p1 = p1.state.index;
 			p2 = p2.state.index;
-			a((p1-1) * 2 + edgespec(2)) = -1;
-			a((p2-1) * 2 + edgespec(2)) = 1;
-			b = 0;
-			
-			% store constraint
-			p.state.lin(edgespec(1)).Aeq = [p.state.lin(edgespec(1)).Aeq; a];
-			p.state.lin(edgespec(1)).beq = [p.state.lin(edgespec(1)).beq; b];
+			i1 = (p1-1) * 2 + edgespec(2);
+			i2 = (p2-1) * 2 + edgespec(2);
+			p.state.lp(dim) = linprog_equality(p.state.lp(dim), i1, i2);
 			
 		end
 		
@@ -3060,22 +3196,39 @@ classdef (Sealed = true) panel < handle
 % 				sprintf('%i  %.3f', dim, ratio) ...
 % 				]);
 			
-			% get dims
-			numVars = p.state.lin(dim).numVars;
-			
-			% form constraint
-			a = zeros(1, numVars);
+% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
+% LINPROG() IF NECESSARY
+%
+% 			% get dims
+% 			numVars = p.state.lin(dim).numVars;
+% 			
+% 			p1 = p1.state.index;
+% 			p2 = p2.state.index;
+% 			i1 = p1*2-1;
+% 			i2 = p1*2;
+% 			i3 = p2*2-1;
+% 			i4 = p2*2;
+% 			
+% 			% form constraint
+% 			a = zeros(1, numVars);
+% 			a(i1) = -ratio;
+% 			a(i2) = ratio;
+% 			a(i3) = 1;
+% 			a(i4) = -1;
+% 			b = 0;
+% 			
+% 			% store constraint
+% 			p.state.lin(dim).Aeq = [p.state.lin(dim).Aeq; a];
+% 			p.state.lin(dim).beq = [p.state.lin(dim).beq; b];
+
+			% add
 			p1 = p1.state.index;
 			p2 = p2.state.index;
-			a(p1*2-1) = -ratio;
-			a(p1*2) = ratio;
-			a(p2*2-1) = 1;
-			a(p2*2) = -1;
-			b = 0;
-			
-			% store constraint
-			p.state.lin(dim).Aeq = [p.state.lin(dim).Aeq; a];
-			p.state.lin(dim).beq = [p.state.lin(dim).beq; b];
+			i1 = p1*2-1;
+			i2 = p1*2;
+			i3 = p2*2-1;
+			i4 = p2*2;
+			p.state.lp(dim) = linprog_addrelsize(p.state.lp(dim), i1, i2, i3, i4, ratio);
 			
 		end
 		
@@ -3095,54 +3248,78 @@ classdef (Sealed = true) panel < handle
 % 				sprintf('[margin = %i]', margin) ...
 % 				]);
 			
-			% get dims
-			numVars = p.state.lin(dim).numVars;
-			
-			% form constraint
-			a = zeros(1, numVars);
-			b = -margin;
-			
-			% does p1 indicate figure or panel?
-			if isempty(p1)
- 				b = - (0 + margin);
-			else
-				a((p1.state.index-1) * 2 + e1) = 1;
-			end
-			
-			% does p2 indicate figure or panel?
-			if isempty(p2)
- 				b = p.state.lin(dim).context_size_in_mm(dim) - margin;
-			else
-				a((p2.state.index-1) * 2 + e2) = -1;
-			end
-			
-% 			% THIS OPTIMISATION ONLY PLACES A CONSTRAINT IF A
-% 			% TIGHTER ONE DOES NOT ALREADY EXIST. it's a
-% 			% trade-off; more complex preparation of the linprog
-% 			% problem, but a simpler linprog problem when we're
-% 			% done. however, the linprog is so fast, this is
-% 			% probably actually a performance hit, so i'm leaving
-% 			% it out for now (it works, though).
+% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
+% LINPROG() IF NECESSARY
+%
+% 			% get dims
+% 			numVars = p.state.lin(dim).numVars;
 % 			
-% 			% if constraint is already there, replace or ignore
-% 			A = p.state.lin(dim).A;
-% 			B = p.state.lin(dim).b;
-% 			for j = 1:size(A, 1)
-% 				if all(a == A(j, :))
-% 					if b < p.state.lin(dim).b(j)
-% 						% constraint is tighter, replace
-% 						p.state.lin(dim).b(j) = b;
-% 						return
-% 					else
-% 						% constraint is same or looser, ignore
-% 						return
-% 					end
-% 				end
+% 			% form constraint
+% 			a = zeros(1, numVars);
+% 			b = -margin;
+% 			
+% 			% does p1 indicate figure or panel?
+% 			if isempty(p1)
+%  				b = - (0 + margin);
+% 			else
+% 				p1 = p1.state.index;
+% 				a((p1-1) * 2 + e1) = 1;
 % 			end
+% 			
+% 			% does p2 indicate figure or panel?
+% 			if isempty(p2)
+%  				b = p.state.lin(dim).context_size_in_mm(dim) - margin;
+% 			else
+% 				p2 = p2.state.index;
+% 				a((p2-1) * 2 + e2) = -1;
+% 			end
+% 			
+% % 			% THIS OPTIMISATION ONLY PLACES A CONSTRAINT IF A
+% % 			% TIGHTER ONE DOES NOT ALREADY EXIST. it's a
+% % 			% trade-off; more complex preparation of the linprog
+% % 			% problem, but a simpler linprog problem when we're
+% % 			% done. however, the linprog is so fast, this is
+% % 			% probably actually a performance hit, so i'm leaving
+% % 			% it out for now (it works, though).
+% % 			
+% % 			% if constraint is already there, replace or ignore
+% % 			A = p.state.lin(dim).A;
+% % 			B = p.state.lin(dim).b;
+% % 			for j = 1:size(A, 1)
+% % 				if all(a == A(j, :))
+% % 					if b < p.state.lin(dim).b(j)
+% % 						% constraint is tighter, replace
+% % 						p.state.lin(dim).b(j) = b;
+% % 						return
+% % 					else
+% % 						% constraint is same or looser, ignore
+% % 						return
+% % 					end
+% % 				end
+% % 			end
+% 			
+% 			% store constraint
+% 			p.state.lin(dim).A = [p.state.lin(dim).A; a];
+% 			p.state.lin(dim).b = [p.state.lin(dim).b; b];
 			
-			% store constraint
-			p.state.lin(dim).A = [p.state.lin(dim).A; a];
-			p.state.lin(dim).b = [p.state.lin(dim).b; b];
+			
+			
+			
+			% add
+			if isempty(p1)
+				i1 = {0};
+			else
+ 				p1 = p1.state.index;
+				i1 = (p1-1) * 2 + e1;
+			end
+			if isempty(p2)
+				i2 = {p.state.lp(dim).size_in_mm};
+			else
+ 				p2 = p2.state.index;
+				i2 = (p2-1) * 2 + e2;
+			end
+			p.state.lp(dim) = linprog_addmargin(p.state.lp(dim), i1, i2, margin);
+
 			
 		end
 		
@@ -4128,6 +4305,532 @@ end
 function b = isaxis(h)
 
 b = ishandle(h) && strcmp(get(h, 'type'), 'axes');
+
+end
+
+
+
+
+
+
+%% LINPROG PROBLEM
+%
+% NB: This could really replace the functions above
+%
+% addConstraint_Alignment
+% addConstraint_RelativeSize
+% addConstraint_EdgeMargin
+%
+% in a later version, so long as everything is working
+% correctly then we can get rid of all lines with the old
+% implementation tag "lin" in them.
+		
+function lp = linprog_create(N)
+
+lp = [];
+lp.N = N;
+lp.A = zeros(0, N);
+lp.b = [];
+lp.c = [];
+lp.x = [];
+lp.xo = [];
+
+% collect constraints
+lp.margins = {};
+lp.relsizes = {};
+
+end
+
+function lp = linprog_addrelsize(lp, i1, i2, i3, i4, relsize)
+
+% set (x(i4) - x(i3)) - (relsize * (x(i2) - x(i1))) = 0
+
+% store
+lp.relsizes{end+1} = [i1 i2 i3 i4 relsize];
+
+end
+
+function lp = linprog_processrelsizes(lp)
+
+for m = 1:length(lp.relsizes)
+
+	relsize = lp.relsizes{m};
+	i1 = relsize(1);
+	i2 = relsize(2);
+	i3 = relsize(3);
+	i4 = relsize(4);
+	relsize = relsize(5);
+	
+	row = size(lp.A, 1) + 1;
+	lp.A(row, i4) = 1;
+	lp.A(row, i3) = -1;
+	lp.A(row, i2) = -relsize;
+	lp.A(row, i1) = relsize;
+	lp.b(row, 1) = 0;
+
+end
+
+end
+
+function lp = linprog_addmaxim(lp, i1, i2)
+
+% maximise x(i2) - x(i1)
+
+if (length(lp.c) >= i1 && lp.c(i1)) || (length(lp.c) >= i2 && lp.c(i2))
+	error('assumption that maxims are only introduced once has broken');
+end
+
+lp.c(i2, 1) = 1;
+lp.c(i1, 1) = -1;
+
+end
+
+function lp = linprog_addmargin(lp, i1, i2, margin)
+
+% set x(i2) - x(i1) >= margin
+
+% for convenience of the caller, we allow these to build up
+% one by one into this cell array.
+%
+% for efficiency of constructing the A matrix, we actually
+% don't modify the A and b and c matrix until at the end, in
+% linprog_processmargins, avoiding lots of spurious copies
+% of a large lp object.
+lp.margins{end+1} = {i1 i2 margin};
+
+end
+
+function lp = linprog_processmargins(lp)
+
+% number of margins we will add
+N = length(lp.margins);
+
+% count up indices
+row = size(lp.A, 1);
+i3 = size(lp.A, 2);
+
+% pre-allocate expanded A array
+sz = size(lp.A) + N;
+lp.A(sz(1), sz(2)) = 0;
+
+% for each margin
+for m = 1:length(lp.margins)
+	
+	% extract
+	margin = lp.margins{m};
+	i1 = margin{1};
+	i2 = margin{2};
+	margin = margin{3};
+
+	% introduce a slack variable
+	i3 = i3 + 1;
+	row = row + 1;
+
+	% then x(i2) - x(i1) - x(i3) = margin
+	bval = margin;
+
+	% if i1 or i2 is a cell, it's a constant, so treat it thus
+	if iscell(i2)
+		bval = bval - i2{1};
+		i2 = [];
+	end
+	if iscell(i1)
+		bval = bval + i1{1};
+		i1 = [];
+	end
+
+	% add the constraint
+	lp.b(row, 1) = bval;
+	lp.A(row, i3) = -1;
+	lp.A(row, i2) = 1;
+	lp.A(row, i1) = -1;
+
+	% augment c
+	lp.c(i3, 1) = 0;
+
+end
+
+end
+
+function lp = linprog_equality(lp, i1, i2)
+
+% set x(i2) - x(i1) = 0
+
+row = size(lp.A, 1) + 1;
+lp.A(row, i2) = 1;
+lp.A(row, i1) = -1;
+lp.b(row, 1) = 0;
+
+end
+
+function lp = linprog_solve(lp)
+
+lp = linprog_processrelsizes(lp);
+lp = linprog_processmargins(lp);
+
+persistent have_opt_toolbox have_warned
+if isempty(have_opt_toolbox)
+	have_opt_toolbox = ~isempty(which('linprog'));
+end
+
+if have_opt_toolbox
+
+	% find using linprog() (Optimization Toolbox)
+	NN = size(lp.A, 2);
+	opt = optimset('Display', 'off');
+	x = linprog(-lp.c, -eye(NN), zeros(NN, 1), lp.A, lp.b, [], [], [], opt);
+	
+else
+	
+% 	c1 = clock();
+	
+	% make sure all constraints have non-negative b
+	f = find(lp.b < 0);
+	lp.A(f, :) = -lp.A(f, :);
+	lp.b(f) = -lp.b(f);
+	
+	% find using Jeff Stuart's implementation
+	x = js_linprog_stub(lp.A, lp.b, lp.c');
+	
+% 	c2 = clock();
+% 	
+% 	T = etime(c2, c1);
+% 	if T > 1 && isempty(have_warned)
+% 		disp(['Panel warning: rendering is slow because optimization toolbox is not installed.']);
+% 		have_warned = true;
+% 	end
+
+end
+
+if isempty(x)
+	lp.x = [];
+else
+	lp.x = x(1:lp.N);
+	if any(isnan(lp.x))
+		% something wrong - let's give up rather than bother the
+		% user
+% 		error('some NaNs in lp.x');
+		lp.x = [];
+	end
+end
+
+end
+
+
+
+
+
+
+
+%% LINPROG SOLVER
+%
+% this LP solver is due to Jeff Stuart (was at USM). i
+% incorporated it here in version 2.1 so that users no
+% longer need the Optimization Toolbox to run this. thanks
+% to "Daniel" at Matlab Central for pointing out this
+% problem.
+
+
+
+function x = js_linprog_stub(A, b, c)
+
+% this is a stub written by ben mitch to interface the LP
+% problem that panel has to solve with Jeff Stuart's code
+% for solving an LP problem in standard form. i've hacked
+% Jeff's code around to remove all the messaging and what
+% have you, and to simply raise an error if something goes
+% awry, on the grounds that the LP problem solved by panel
+% either works, or does not have a feasible solution (which
+% means we can't do the resizing according to the user's
+% constraints at the current window size).
+
+
+try
+
+	[zmax,PHIiter,PHIIiter,xbasic,ibasic] = js_linprog(A,b,c);
+
+	x = NaN(size(A, 2), 1);
+	x(ibasic) = xbasic;
+	
+catch err
+	
+ 	switch err.identifier
+		
+		case 'panel:InfeasibleLP'
+			% no solution - figure window too small, probably
+			x = [];
+			return
+			
+		otherwise
+			rethrow(err);
+			
+	end
+	
+end
+
+end
+
+
+
+
+function [zmax,PHIiter,PHIIiter,xbasic,ibasic] = js_linprog(A,b,c);
+%
+%LINPROG uses the two phase simplex method to solve the linear
+%program maximize cx subject to the constraints Ax = b and x >= 0 ,
+%where A is m x n , rank(A) = m , and b >= 0 .    The output vector
+%is [zmax,PHIiter,PHIIiter,xbasic,ibasic], where zmax is the maximal
+%objective value, PHIiter and PHIIiter are the phase I and phase II
+%iteration counts, respectively, where xbasic is the vector of basic
+%x variables at optimality, and where ibasic is the indices of the
+%optimal basis columns in A (and hence the indices for the entries
+%in xbasic).  LINPROG detects infeasibility and unboundedness, and
+%provides appropriate output messages in such cases.  LINPROG also
+%contains a heuristic check for cycling, terminating the algorithm
+%when m Phase II iterations occur without a change in the objective
+%value.  See also PHASEI and PHASEII.
+%
+%Written for MATLAB version 5.0
+%
+%Written by Jeff Stuart, Department of Mathematics,
+%University of Southern Mississippi, Hattiesburg, MS 39406.
+%December, 1993.  Revised, October, 1997.
+%jeffrey.stuart@usm.edu
+%
+[m,n]=size(A);
+if max(size(b) ~=[m 1]);
+	disp('The dimensions of b do not match the dimensions of A.')
+	return
+end
+if min(b) < 0;
+	disp('The RHS vector b must be nonnegative.')
+	return
+end
+if max(size(c) ~=[1 n]);
+	disp('The dimensions of c do not match the dimensions of A.')
+	return
+end
+if rank(A) ~=m;
+	disp('A does not have full row rank.')
+	return
+end
+PHIiter=0;
+PHIIiter=0;
+tol=eps;
+xbasic=zeros(1,n);
+[wmax,ibasic,PHIiter]=js_linprog_phase1(A,b);
+if wmax < -tol
+	error('panel:InfeasibleLP', 'LP is infeasible');
+	%      disp('The original LP is infeasible.  Infeasibility was')
+	%      disp('detected during Phase I.  The total number of phase')
+	%      disp('one iterations performed was: '), disp(PHIiter)
+else
+% 	disp('Phase I completed.  Original LP is feasible.')
+% 	disp('The total number of Phase I iterations was: '),disp(PHIiter)
+% 	disp('Starting Phase II.')
+	[zmax,xbasic,ibasic,ienter,PHIIiter,PCOL,OPTEST,CYCTEST]=js_linprog_phase2(A,b,c,ibasic);
+	xbasic=xbasic';
+% 	if CYCTEST==1;
+% 		return
+% 	end
+% 	if OPTEST == 0;
+% 		disp('The orginal LP is unbounded. An unbounded ray was')
+% 		disp('detected during Phase II.  The output objective')
+% 		disp('value is for the last basic solution found.')
+% 		disp('The number of Phase II iterations was: '),disp(PHIIiter)
+% 		disp('Last objective value is '),disp(zmax)
+% 		disp('The last basic solution, xbasic is '),disp(xbasic)
+% 		disp('The column indices for the last basis: '),disp(ibasic)
+% 		disp('The index of the unbounded entering variable: '),disp(ienter)
+% 		disp('The unbounded ray column is: '),disp(PCOL)
+% 	else
+% 		disp('The original LP has an optimal solution.')
+% 		disp('The number of Phase II iterations was: '),disp(PHIIiter)
+% 		disp('The optimal objective value is '),disp(zmax)
+% 		disp('The indices for the basic columns: '),disp(ibasic)
+% 		disp('The optimal, basic solution is '),disp(xbasic)
+% 	end
+end
+
+end
+
+
+
+
+
+
+
+
+
+function [wmax,ibasic,PHIiter] = js_linprog_phase1(A,b)
+%PHASEI performs Phase I of the simplex method on the constraints
+%Ax = b and x >= 0 (where A is m x n, rank(A) = m , and b >= 0)
+%to determine whether there is a feasible point.  The function
+%output is wmax, the artificial objective value; ibasic, the
+%indices of the basic variables at optimality; and PHIiter, the
+%number of Phase I iterations performed.  If  wmax < 0 ,then the
+%original LP is infeasible.  If wmax = 0 , the original LP is
+%feasible, and ibasic is the index set for a feasible basis.
+%To allow for round-off error, the tests are  wmax < -tol  for
+%infeasibility, and  wmax >= -tol  for feasibility, where "tol"
+% is a preset tolerance (see the initialization value in the fourth
+%line below).  At the expense of additional computation, an adaptive
+%choice for "tol" based on A and b could be selected.
+%
+%See also PHASEII and LINPROG.
+%Written for MATLAB version 5.0 .
+%Written by Jeff Stuart, Department of Mathematics, University of
+%Southern Mississippi, Hattiesburg, MS 39406.  October, 1997.
+%jeff.stuart@usm.edu
+
+[m,n]=size(A);
+A=[A,eye(m)];
+PHIiter=0;
+tol=0.0000001;
+ztol=0.0000001;
+X=zeros(1,n+m);
+J=[zeros(1,n),ones(1,m)];
+c=-J;
+K=[1:n+m];
+J=logical(J);
+ibasic=K(J);
+inon=K(~J);
+B=eye(m);
+xbasic=b;
+w=-sum(xbasic);
+X(ibasic)=b;
+Cred= ones(1,m)*A(:,inon);
+loop =1;
+while loop ==1;
+	if max(Cred) > ztol ;
+		PHIiter=PHIiter + 1;
+		[Maxcost,j]=max(Cred);
+		ienter=inon(j);
+		PCOL=B\A(:,ienter);
+		J(ienter)=1;
+		TESTROWS=find(PCOL > ztol);
+		TESTCOL=PCOL(TESTROWS);
+		[minrat,j]=min(xbasic(TESTROWS)./TESTCOL);
+		iexit=ibasic(TESTROWS(j));
+		J(iexit)=0;
+		if minrat > 0;
+			xbasic=xbasic - minrat*PCOL;
+		end
+		X(ibasic)=xbasic;
+		X(ienter)=minrat;
+		X(iexit)=0;
+		w=w + Maxcost*minrat;
+		ibasic=K(J);
+		inon=K(~J);
+		B=A(:,ibasic);
+		xbasic=X(ibasic)';
+		Cred=c(inon) - (c(ibasic)/B)*A(:,inon);
+	elseif Cred <= ztol;
+		loop = 0;
+	end
+end
+wmax=-sum(X(n+1:n+m));
+if wmax >= -tol;
+	X=X(1:n);
+	last=ibasic(m);
+	K=K(1:last);
+	ibasic=K(J(1:last));
+	while last > n;
+		J=J(1:last);
+		K=[1:last];
+		inon=K(~J);
+		B=A(:,ibasic);
+		inon=inon(inon <= n);
+		j=find(([zeros(1,m-1),1]/B)*A(:,inon));
+		ienter=inon(j(1));
+		J(ienter)=1;
+		J(last)=0;
+		ibasic=K(J);
+		last=ibasic(m);
+		PHIiter=PHIiter+1;
+	end
+end
+
+end
+
+
+
+
+function [z,xbasic,ibasic,ienter,iter,PCOL,OPTEST,CYCTEST] = js_linprog_phase2(A,b,c,ibasic);
+%PHASEII performs phase II of the simplex method starting with the basic
+%columns specified by the vector ibasic.
+%
+%See also PHASEI and LINPROG.
+%Written for Matlab version 5.0.
+%
+%Written by Jeff Stuart, Department of Mathematics, University of Southern Mississippi,
+%Hattiesburg, MS 39406. October, 1993. Revised October, 1997.
+%jeffrey.stuart@usm.edu
+
+[m,n]=size(A);
+PCOL=[];
+ienter=[];
+iter=0;
+cycle=0;
+CYCTEST=0;
+X=zeros(1,n);
+J=X;
+J(ibasic)=ones(1,m);
+K=[1:n];
+inon=K(~J);
+B=A(:,ibasic);
+xbasic=B\b;
+z=c(ibasic)*xbasic;
+OPTEST=0;
+if m<n;
+	X(ibasic)=xbasic;
+	Cred=c(inon) - (c(ibasic)/B)*A(:,inon);
+	OPTEST=1;
+	loop =1;
+	while loop ==1;
+		if max(Cred) > 0;
+			iter=iter + 1;
+			[Maxcost,j]=max(Cred);
+			ienter=inon(j);
+			PCOL=B\A(:,ienter);
+			if PCOL <= 0 , OPTEST = 0;
+				loop = 0;
+			else
+				J(ienter)=1;
+				TESTROWS=find(PCOL > 0);
+				TESTCOL=PCOL(TESTROWS);
+				[minrat,j]=min(xbasic(TESTROWS)./TESTCOL);
+				if minrat <=0, cycle = cycle+1;
+					if cycle > m;
+						error('panel:ExcessiveCycling', 'excessive cycling');
+% 						disp('Algorithm terminated due to excessive cycling.')
+% 						disp('Restart algorithm from phase II using a perturbed')
+% 						disp(' RHS vector b and the current basis.')
+% 						disp(ibasic)
+% 						CYCTEST=1;
+% 						break
+					end
+				else
+					cycle = 0;
+				end
+				iexit=ibasic(TESTROWS(j));
+				J(iexit)=0;
+				xbasic=xbasic - minrat*PCOL;
+				X(ibasic)=xbasic;
+				X(ienter)=minrat;
+				X(iexit)=0;
+				z=z + Maxcost*minrat;
+				J=logical(J);
+				ibasic=K(J);
+				inon=K(~J);
+				B=A(:,ibasic);
+				xbasic=X(ibasic)';
+				Cred=c(inon) - (c(ibasic)/B)*A(:,inon);
+			end
+		else
+			loop = 0;
+		end
+	end
+end
 
 end
 
