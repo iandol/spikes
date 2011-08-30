@@ -2798,7 +2798,7 @@ switch(sv.PlotType)	%For different plots
 		
 	case 'Rectangle Plot'
 		if strcmp(sv.SmoothType,'none')
-			rectplot(xx,yy,dd);
+			rectplot(xx,yy,dd,ee);
 		else
 			rectplot(xx,yy,dd);
 		end
@@ -3565,14 +3565,16 @@ switch data.numvars
 		%the problem is that our data is in rows, but subplot indexes in columns
 		%so we have to create an index that converts between the 2 as
 		%i want the data to look that same as it is loaded into the matrices
-		x=starti:endi;
-		y=reshape(x,data.yrange,data.xrange);
+		x = starti:endi;
+		xx = x - (xrange*yrange*(sv.zval-1));
+		y = reshape(x,data.yrange,data.xrange);
+		yy = reshape(xx,data.yrange,data.xrange);
 		%y=fliplr(y'); %order it so we can load our data to look like the surface plots
 		%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
 		a=1;
 		p.pack(data.yrange,data.xrange);
 		for i=1:length(x)
-			[i1,i2] = ind2sub([data.yrange,data.xrange],x(i));
+			[i1,i2] = ind2sub([data.yrange,data.xrange],xx(i));
 			p(i1,i2).select();
 			%subaxis(yrange,xrange,i,'S',0,'M',0.1,'P',0);
 			h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
@@ -4064,9 +4066,11 @@ if ~strcmp(sv.PlotType,'Rectangle Plot'); fixfig; end %fixes surface plots
 set(gca,'tag','Spawnfig');
 
 if get(gh('SpikeMenu'),'Value')==2
-	s1=mean(mean(data.ratio)); t='mean burst ratio:  ';
-	s=[sprintf('%s',t), sprintf('%0.5g',s1)];
-	gtext(s);
+	if isfield(data,'ratio')
+		s1=mean(mean(data.ratio)); t='mean burst ratio:  ';
+		s=[sprintf('%s',t), sprintf('%0.5g',s1)];
+		gtext(s);
+	end
 end
 
 if get(gh('STypeMenu'), 'Value')==1
