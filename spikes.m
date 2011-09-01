@@ -2360,16 +2360,17 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 		
 		if ~isempty(gh('DataInfoBox'))
-			close(gh('DataInfoBox'));
+			%close(gh('DataInfoBox'));
+		else
+			sv.infoboxhandle=datainfobox;
 		end
 		
 		if strcmp(data.filetype,'txt') || strcmp(data.filetype,'smr')
 			pos=get(gh('SpikeFig'),'Position');
-			h=datainfobox;
 			pos2=get(gh('DataInfoBox'),'Position');
 			x=pos(1)+pos(3)+2;
 			y=pos(2);
-			set(h,'Position',[x y pos2(3) pos(4)]);
+			set(gh('DataInfoBox'),'Position',[x y pos2(3) pos(4)]);
 			if ~isempty(data.error)
 				errorc=cell(1);
 				for i=1:length(data.error)
@@ -2388,7 +2389,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				out=data.info;
 			end
 			set(gh('DITextDisplay'),'String',out);
-			figure(gh('SpikeFig'));
+			%figure(gh('SpikeFig'));
 		end
 		
 		

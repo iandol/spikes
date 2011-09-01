@@ -1,5 +1,6 @@
 function figpos(position,size,mult)
-
+oldunits = get(gcf,'Units');
+set(gcf,'Units','pixels');
 if nargin<1;
 	position=1;
 end
@@ -33,3 +34,4 @@ case 2 %a third off
 	if y<1 y=0; end
 	set(gcf,'Position',[x y size(1) size(2)]);
 end
+set(gcf,'Units',oldunits);

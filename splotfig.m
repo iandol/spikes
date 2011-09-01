@@ -3,7 +3,7 @@ function varargout = splotfig(varargin)
 %    FIG = SPLOTFIG launch splotfig GUI.
 %    SPLOTFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 07-May-2011 13:16:49
+% Last Modified by GUIDE v2.5 01-Sep-2011 14:24:46
 
 if nargin == 0  % LAUNCH GUI
 
@@ -106,6 +106,8 @@ function XBox_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from XBox
 global spdata
 spdata.linfo=[];
+spdata.latency = [];
+spdata.bars = [];
 spdata.changetitle=0;
 splot('Plot');
 
@@ -119,4 +121,98 @@ function YBox_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from YBox
 global spdata
 spdata.linfo=[];
+spdata.latency = [];
+spdata.bars = [];
 spdata.changetitle=0;splot('Plot');
+
+
+% --- Executes on selection change in SPBARSpriorid.
+function SPBARSpriorid_Callback(hObject, eventdata, handles)
+% hObject    handle to SPBARSpriorid (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns SPBARSpriorid contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SPBARSpriorid
+
+
+% --- Executes during object creation, after setting all properties.
+function SPBARSpriorid_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SPBARSpriorid (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function SPBARSdparams_Callback(hObject, eventdata, handles)
+% hObject    handle to SPBARSdparams (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SPBARSdparams as text
+%        str2double(get(hObject,'String')) returns contents of SPBARSdparams as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function SPBARSdparams_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SPBARSdparams (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function SPBARSburniter_Callback(hObject, eventdata, handles)
+% hObject    handle to SPBARSburniter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SPBARSburniter as text
+%        str2double(get(hObject,'String')) returns contents of SPBARSburniter as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function SPBARSburniter_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SPBARSburniter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function SPBARSconflevel_Callback(hObject, eventdata, handles)
+% hObject    handle to SPBARSconflevel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SPBARSconflevel as text
+%        str2double(get(hObject,'String')) returns contents of SPBARSconflevel as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function SPBARSconflevel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SPBARSconflevel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

@@ -1,9 +1,9 @@
-function varargout = LAOptions(varargin)
+function varargout = laoptions(varargin)
 % LAOPTIONS Application M-file for LAOptions.fig
 %    FIG = LAOPTIONS launch LAOptions GUI.
 %    LAOPTIONS('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 03-Jul-2002 16:50:44
+% Last Modified by GUIDE v2.5 30-Aug-2011 11:21:57
 
 global spdata
 
@@ -13,27 +13,27 @@ if nargin == 0  % LAUNCH GUI
     
     % Generate a structure of handles to pass to callbacks, and store it. 
     handles = guihandles(fig);
-    set(handles.LAPopup1,'String',{'2 STDDEVS';'3 STDDEVS';'p<0.05';'p<0.01';'p<0.005';'p<0.001'}) 
+    set(handles.LAMeasurementTypeMenu,'String',{'2 STDDEVS';'3 STDDEVS';'p<0.05';'p<0.01';'p<0.005';'p<0.001'}) 
     if isfield(spdata.spont,'mean')
         handles.spont.mean=spdata.spont.mean;
         handles.spont.sd=spdata.spont.sd;
         handles.spont.bin1=spdata.spont.bin1;
         handles.spont.bin2=spdata.spont.bin2;
         handles.spont.bin3=spdata.spont.bin3;
-        set(handles.LAEdit1,'String',num2str(spdata.spont.mean))
-        set(handles.LAEdit2,'String',num2str(spdata.spont.sd))
-        set(handles.Bin1Edit,'String',num2str(spdata.spont.bin1))
-        set(handles.Bin2Edit,'String',num2str(spdata.spont.bin2))
-        set(handles.Bin3Edit,'String',num2str(spdata.spont.bin3))
+        set(handles.LASpontaneousEdit,'String',num2str(spdata.spont.mean))
+        set(handles.LASDEdit,'String',num2str(spdata.spont.sd))
+        set(handles.LABin1Edit,'String',num2str(spdata.spont.bin1))
+        set(handles.LABin2Edit,'String',num2str(spdata.spont.bin2))
+        set(handles.LABin3Edit,'String',num2str(spdata.spont.bin3))
     else
-        handles.spont.mean=str2num(get(handles.LAEdit1,'String'));
-        handles.spont.sd=str2num(get(handles.LAEdit2,'String'));
-        handles.spont.bin1=str2num(get(handles.Bin1Edit,'String'));
-        handles.spont.bin2=str2num(get(handles.Bin2Edit,'String'));
-        handles.spont.bin3=str2num(get(handles.Bin3Edit,'String'));
+        handles.spont.mean=str2num(get(handles.LASpontaneousEdit,'String'));
+        handles.spont.sd=str2num(get(handles.LASDEdit,'String'));
+        handles.spont.bin1=str2num(get(handles.LABin1Edit,'String'));
+        handles.spont.bin2=str2num(get(handles.LABin2Edit,'String'));
+        handles.spont.bin3=str2num(get(handles.LABin3Edit,'String'));
     end
-    s=get(handles.LAPopup1,'String');
-    v=get(handles.LAPopup1,'Value');
+    s=get(handles.LAMeasurementTypeMenu,'String');
+    v=get(handles.LAMeasurementTypeMenu,'Value');
     handles.method=s{v};
     guidata(fig, handles);
     
@@ -96,44 +96,44 @@ end
 
 
 % --------------------------------------------------------------------
-function varargout = LAEdit1_Callback(h, eventdata, handles, varargin)
+function varargout = LASpontaneousEdit_Callback(h, eventdata, handles, varargin)
 
 handles.spont.mean=str2num(get(h,'String'));
 guidata(handles.LAFig, handles)
 
 % --------------------------------------------------------------------
-function varargout = LAEdit2_Callback(h, eventdata, handles, varargin)
+function varargout = LASDEdit_Callback(h, eventdata, handles, varargin)
 
 handles.spont.sd=str2num(get(h,'String'));
 guidata(handles.LAFig, handles)
 
 % --------------------------------------------------------------------
-function varargout = Bin1Edit_Callback(h, eventdata, handles, varargin)
+function varargout = LABin1Edit_Callback(h, eventdata, handles, varargin)
 
 handles.spont.bin1=str2num(get(h,'String'));
 guidata(handles.LAFig, handles)
 
 % --------------------------------------------------------------------
-function varargout = Bin2Edit_Callback(h, eventdata, handles, varargin)
+function varargout = LABin2Edit_Callback(h, eventdata, handles, varargin)
 
 handles.spont.bin2=str2num(get(h,'String'));
 guidata(handles.LAFig, handles)
 
 % --------------------------------------------------------------------
-function varargout = Bin3Edit_Callback(h, eventdata, handles, varargin)
+function varargout = LABin3Edit_Callback(h, eventdata, handles, varargin)
 
 handles.spont.bin3=str2num(get(h,'String'));
 guidata(handles.LAFig, handles)
 
 % --------------------------------------------------------------------
-function varargout = LAPopup1_Callback(h, eventdata, handles, varargin)
+function varargout = LAMeasurementTypeMenu_Callback(h, eventdata, handles, varargin)
 
 global spdata
 
 s=get(h,'String');
 v=get(h,'Value');
 handles.method=s{v};
-if strcmp(handles.method,'2 STDDEVS') |  strcmp(handles.method,'3 STDDEVS')
+if strcmp(handles.method,'2 STDDEVS') ||  strcmp(handles.method,'3 STDDEVS')
     set(findobj('UserData','LABin'),'Enable','off');
     set(findobj('UserData','LASD'),'Enable','on');
 else
@@ -144,36 +144,36 @@ else
 		handles.spont.bin1=spdata.spont.ci05(2);
 		handles.spont.bin2=spdata.spont.ci05(2);
 		handles.spont.bin3=spdata.spont.ci05(2);
-		set(handles.Bin1Edit,'String',num2str(handles.spont.bin1));
-		set(handles.Bin2Edit,'String',num2str(handles.spont.bin2));
-		set(handles.Bin3Edit,'String',num2str(handles.spont.bin3));
+		set(handles.LABin1Edit,'String',num2str(handles.spont.bin1));
+		set(handles.LABin2Edit,'String',num2str(handles.spont.bin2));
+		set(handles.LABin3Edit,'String',num2str(handles.spont.bin3));
 	case 'p<0.01'
 		handles.spont.bin1=spdata.spont.ci01(2);
 		handles.spont.bin2=spdata.spont.ci01(2);
 		handles.spont.bin3=spdata.spont.ci05(2);
-		set(handles.Bin1Edit,'String',num2str(handles.spont.bin1));
-		set(handles.Bin2Edit,'String',num2str(handles.spont.bin2));
-		set(handles.Bin3Edit,'String',num2str(handles.spont.bin3));
+		set(handles.LABin1Edit,'String',num2str(handles.spont.bin1));
+		set(handles.LABin2Edit,'String',num2str(handles.spont.bin2));
+		set(handles.LABin3Edit,'String',num2str(handles.spont.bin3));
 	case 'p<0.005'
 		handles.spont.bin1=spdata.spont.ci005(2);
 		handles.spont.bin2=spdata.spont.ci005(2);
 		handles.spont.bin3=spdata.spont.ci025(2);
-		set(handles.Bin1Edit,'String',num2str(handles.spont.bin1));
-		set(handles.Bin2Edit,'String',num2str(handles.spont.bin2));
-		set(handles.Bin3Edit,'String',num2str(handles.spont.bin3));
+		set(handles.LABin1Edit,'String',num2str(handles.spont.bin1));
+		set(handles.LABin2Edit,'String',num2str(handles.spont.bin2));
+		set(handles.LABin3Edit,'String',num2str(handles.spont.bin3));
 	case 'p<0.001'
 		handles.spont.bin1=spdata.spont.ci001(2);
 		handles.spont.bin2=spdata.spont.ci001(2);
 		handles.spont.bin3=spdata.spont.ci005(2);
-		set(handles.Bin1Edit,'String',num2str(handles.spont.bin1));
-		set(handles.Bin2Edit,'String',num2str(handles.spont.bin2));
-		set(handles.Bin3Edit,'String',num2str(handles.spont.bin3));
+		set(handles.LABin1Edit,'String',num2str(handles.spont.bin1));
+		set(handles.LABin2Edit,'String',num2str(handles.spont.bin2));
+		set(handles.LABin3Edit,'String',num2str(handles.spont.bin3));
 	end
 end
 guidata(handles.LAFig, handles)
 
 % --------------------------------------------------------------------
-function varargout = LAButton_Callback(h, eventdata, handles, varargin)
+function varargout = LARunAnalysis_Callback(h, eventdata, handles, varargin)
 
 global spdata
 spdata.spont.mean=handles.spont.mean;
