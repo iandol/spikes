@@ -105,7 +105,6 @@ for i=1:size(x,2) %iterate through columns
 	ystd=nanstd(ycol);
 	
 	switch dooutlier
-		case 'none'
 		case 'quantiles'
 			idx1=qoutliers(xcol);
 			idx2=qoutliers(ycol);
@@ -194,6 +193,8 @@ for i=1:size(x,2) %iterate through columns
 				xcol(idx1>0)=[];
 				ycol(idx2>0)=[];
 			end
+		otherwise
+			
 	end
 	
 	xmean=nanmean(xcol);
@@ -317,18 +318,18 @@ for i=1:size(x,2) %iterate through columns
 		axrange = [(mn - (mn/10)) (mx + (mx/10))];
 		
 		t = 'Group: ';
-        
-        if exist('cases','var')
-            if length(xcol) == length(cases)
-                 uniquecases = unique(cases);
-                 for jj = 1:length(uniquecases)
-                    idx = find(strcmpi(cases,uniquecases{jj}));
-                    colours(idx,1) = jj; 
+		
+		if exist('cases','var')
+			if length(xcol) == length(cases)
+				uniquecases = unique(cases);
+				for jj = 1:length(uniquecases)
+					idx = find(strcmpi(cases,uniquecases{jj}));
+					colours(idx,1) = jj;
 					t = [t num2str(jj) '=' uniquecases{jj} ' '];
-                end
-            end
-        else
-            colours = [0 0 0];
+				end
+			end
+		else
+			colours = [0 0 0];
 		end
 		
 		cmap = [0 0 0;0 0 1;0 1 0;1 0 1;0 1 1;1 0 0];
@@ -336,7 +337,7 @@ for i=1:size(x,2) %iterate through columns
 		hold on
 		h=scatter(xcolout,ycolout,repmat(80,length(xcol),1),colours);
 		colormap(cmap);
-        axis([axrange axrange])
+		axis([axrange axrange])
 		axis square
 		%ch = get(h,'Children');
 		%set(ch,'FaceAlpha',0.1,'EdgeAlpha',1);
