@@ -20,18 +20,43 @@ scr=get(0,'ScreenSize');
 width=scr(3);
 height=scr(4);
 
-switch(position)	
-case 1 %centre it	
-	x=(width/2)-(size(1)/2);
-	y=(height/2)-((size(2)+40)/2);
-	if x<1 x=0; end
-	if y<1 y=0; end
-	set(gcf,'Position',[x y size(1) size(2)]);
+if size(1) > width;	size(1) = width;	end
+if size(2) > height;	size(2) = height;	end
+
+switch(position)
 case 2 %a third off
 	x=(width/3)-(size(1)/2);
 	y=(height/2)-(size(2)/2);
-	if x<1 x=0; end
-	if y<1 y=0; end
+	if x < 1; x=0; end
+	if y < 1; y=0; end
+	set(gcf,'Position',[x y size(1) size(2)]);
+case 3 %full height
+	size(2) = height;
+	x=(width/3)-(size(1)/2);
+	y=(height/2)-(size(2)/2);
+	if x < 1; x=0; end
+	if y < 1; y=0; end
+	set(gcf,'Position',[x y size(1) size(2)]);
+case 4 %full width
+	size(1) = width;
+	x=(width/3)-(size(1)/2);
+	y=(height/2)-(size(2)/2);
+	if x < 1; x=0; end
+	if y < 1; y=0; end
+	set(gcf,'Position',[x y size(1) size(2)]);
+case 5 %full screen
+	size(1) = width;
+	size(2) = height;
+	x=(width/3)-(size(1)/2);
+	y=(height/2)-(size(2)/2);
+	if x < 1; x=0; end
+	if y < 1; y=0; end
+	set(gcf,'Position',[x y size(1) size(2)]);
+otherwise %center it
+	x=(width/2)-(size(1)/2);
+	y=(height/2)-((size(2)+40)/2);
+	if x < 1; x=0; end
+	if y < 1; y=0; end
 	set(gcf,'Position',[x y size(1) size(2)]);
 end
 set(gcf,'Units',oldunits);

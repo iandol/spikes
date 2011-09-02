@@ -1,4 +1,4 @@
-function getdensity(x,y,nboot,fhandle,alpha,legendtxt,dogauss,columnlabels,dooutlier)
+function outs = getdensity(x,y,nboot,fhandle,alpha,legendtxt,dogauss,columnlabels,dooutlier,addjitter)
 
 %getdensity computes bootstrapped density estimates and full stats for two
 %groups
@@ -9,7 +9,13 @@ barwidth=1.25;
 xouttext='';
 youttext='';
 rosnern=2; %rosner outlier number of outliers
-margin = 0.075;
+outlierp = 0.001; %p to use for outlier removal for rosner and grubb
+scalefactor = 100; %scalefactor for jitter of scatter plot
+
+outs = struct();
+
+singleplots = true;
+showoriginalscatter = false;
 
 if max(isnan(x)) == 1 %remove any nans
 	x = x(isnan(x)==0);
@@ -35,10 +41,14 @@ if ~exist('dogauss','var') || isempty(dogauss)
 	dogauss=1;
 end
 if ~exist('columnlabels','var') || isempty(columnlabels)
-	columnlabels='';
+	columnlabels={'Set 1'};
 end
 if ~exist('dooutlier','var') || isempty(dooutlier)
 	dooutlier='none';
+end
+
+if ~exist('addjitter','var') || isempty(addjitter)
+	addjitter = 'none';
 end
 
 if max(isnan(y)) == 1
@@ -56,14 +66,35 @@ if size(x,2)~=size(y,2)
 end
 
 if length(x(:,1))~=length(y(:,1))
-	suba=1;
-	subb=2;
+	suba=3;
+	subb=1;
 else
 	suba=2;
 	subb=2;
 end
 
+if size(x,2) > length(columnlabels)
+	for i = length(columnlabels)+1 : size(x,2)
+		columnlabels{i} = ['Set ' num2str(i)];
+	end
+end
+
+outs.x = x;
+outs.y = y;
+
 for i=1:size(x,2) %iterate through columns
+	
+	h=figure;
+	set(h,'Color',[1 1 1])
+	
+	if suba == 3
+		figpos(3,[600 1200]);
+	else
+		figpos(1,[1200,1000]);
+	end
+	
+	pn = panel();
+	pn.pack(suba,subb);
 	
 	xcol=x(:,i);
 	ycol=y(:,i);
@@ -91,8 +122,8 @@ for i=1:size(x,2) %iterate through columns
 				ycol(idx2>0)=[];
 			end
 		case 'rosner'
-			idx1=outlier(xcol,0.05,rosnern);
-			idx2=outlier(ycol,0.05,rosnern);
+			idx1=outlier(xcol,outlierp,rosnern);
+			idx2=outlier(ycol,outlierp,rosnern);
 			if ~isempty(idx1) || ~isempty(idx2)
 				if suba>1
 					idx=unique([idx1;idx2]);
@@ -109,8 +140,8 @@ for i=1:size(x,2) %iterate through columns
 				end
 			end
 		case 'grubb'
-			[out,idx1]=deleteoutliers(xcol,0.05);
-			[out,idx2]=deleteoutliers(ycol,0.05);
+			[out,idx1]=deleteoutliers(xcol,outlierp);
+			[out,idx2]=deleteoutliers(ycol,outlierp);
 			if suba>1
 				idx=unique([idx1;idx2]);
 				xouttext=sprintf('%0.3g ',xcol(idx)');
@@ -182,16 +213,8 @@ for i=1:size(x,2) %iterate through columns
 	[xn,hbins]=hist(xcol,histax);
 	yn=hist(ycol,histax);
 	
-	figure;
-	set(gcf,'Color',[1 1 1])
-	
-	if suba == 1
-		figpos(1,[1200,600]);
-	else
-		figpos(1,[1200,1000]);
-	end
-	
-	subplot_tight(suba,subb,1,margin)
+	%subplot_tight(suba,subb,1,margin)
+	pn(1,1).select();
 	
 	if ystd > 0
 		h=bar([hbins',hbins'],[xn',yn'],barwidth,bartype);
@@ -205,13 +228,17 @@ for i=1:size(x,2) %iterate through columns
 	if ~strcmp(columnlabels,''); xlabel(columnlabels{i}); end
 	axis tight;
 	lim=ylim;
-	text(xmean,lim(2),'\downarrow','Color',[0 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
-	text(xmedian,lim(2),'\nabla','Color',[0 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
+	text(xmean,lim(2),'\downarrow','Color',[0 0 0],'HorizontalAlignment','center',...
+		'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
+	text(xmedian,lim(2),'\nabla','Color',[0 0 0],'HorizontalAlignment','center',...
+		'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
 	if ystd > 0
-		text(ymean,lim(2),'\downarrow','Color',[0.8 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
-		text(ymedian,lim(2),'\nabla','Color',[0.8 0 0],'HorizontalAlignment','center','VerticalAlignment','bottom');
+		text(ymean,lim(2),'\downarrow','Color',[0.8 0 0],'HorizontalAlignment','center',...
+			'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
+		text(ymedian,lim(2),'\nabla','Color',[0.8 0 0],'HorizontalAlignment','center',...
+			'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
 	end
-	box off;
+	box on;
 	
 	if dogauss>0
 		hold on
@@ -231,35 +258,102 @@ for i=1:size(x,2) %iterate through columns
 		end
 		legend off
 		hold off
+		pn(1,1).xlabel(legendtxt{i});
 	end
 	
 	if suba>1
-		subplot_tight(suba,subb,2,margin)
+		%subplot_tight(suba,subb,2,margin)
+		if suba == 3; pn(2,1).select();end
+		if suba == 2; pn(1,2).select();end
 		if exist('distributionPlot')
 			hold on
 			distributionPlot({xcol,ycol},0.3);
 		end
-		boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',legendtxt,'colors','k')
+		if length(xcol)==length(ycol)
+			boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',legendtxt,'colors','k')
+		end
 		hold off
-		
-		subplot_tight(suba,subb,3,margin)
+		box on
+	end
+	
+	xcolout = xcol;
+	ycolout = ycol;
+	
+	if ystd > 0 && length(xcol)==length(ycol)
+		%subplot_tight(suba,subb,3,margin)
+		pn(2,1).select()
 		[r,p]=corr(xcol,ycol);
 		[r2,p2]=corr(xcol,ycol,'type','spearman');
-		plot(xcol,ycol,'r.','MarkerSize',15);
-		title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ')']);
-		axis equal
-		try
-			lsline
-		catch
+		xrange = max(xcol) - min(xcol);
+		yrange = max(ycol) - min(ycol);
+		xjitter = (randn(length(xcol),1))*(xrange/scalefactor);
+		yjitter = (randn(length(ycol),1))*(yrange/scalefactor);
+		bothjitter = (randn(length(xcol),1))*(max(xrange,yrange)/scalefactor);
+		switch addjitter
+			case 'x'
+				sc = true;
+				xcolout = xcol + xjitter;
+				ycolout = ycol;
+			case 'y'
+				sc = true;
+				xcolout = xcol;
+				ycolout = ycol + yjitter;
+			case 'equal'
+				sc = true;
+				xcolout = xcol + bothjitter;
+				ycolout = ycol + bothjitter;
+			case 'both'
+				sc = true;
+				xcolout = xcol + xjitter;
+				ycolout = ycol + yjitter;
+			otherwise
+				sc = false';
+				xcolout = xcol;
+				ycolout = ycol;
 		end
+		
+		mn = min(min(xcol),min(ycol));
+		mx = max(max(xcol),max(ycol));
+		axrange = [(mn - (mn/10)) (mx + (mx/10))];
+		
+		hold on
+		h=scatter(xcolout,ycolout,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0 0 0],'MarkerFaceColor','none');
+		axis([axrange axrange])
+		axis square
+		%ch = get(h,'Children');
+		%set(ch,'FaceAlpha',0.1,'EdgeAlpha',1);
+		try %#ok<TRYNC>
+			h = lsline;
+			set(h,'Color',[0 0 1],'LineStyle','--','LineWidth',2)
+			if r >= 0
+				h = line([mn mx],[mn mx]);
+				set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
+			else
+				h = line([mx mn],[mn mx]);
+				set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
+			end
+		end
+		if sc == true && showoriginalscatter == true
+			scatter(xcol,ycol,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0.9 0.9 0.9]);
+		end
+		pn(2,1).xlabel(legendtxt{1})
+		pn(2,1).ylabel(legendtxt{2})
+		pn(2,1).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ')']);
+		hold off
+		box on
+		set(gca,'Layer','top');
 	end
 	
 	t=['Mn/Mdn: ' sprintf('%0.3g', xmean) '\pm' sprintf('%0.3g', xstderr) '/' sprintf('%0.3g', xmedian) ' | ' sprintf('%0.3g', ymean) '\pm' sprintf('%0.3g', ystderr) ' / ' sprintf('%0.3g', ymedian)];
 	
 	if ystd > 0
-		[h,p1]=ttest(xcol,alpha);
+		if length(xcol) == length(ycol)
+			[h,p1]=ttest2(xcol,ycol,alpha);
+		else
+			[h,p1]=ttest2(xcol,ycol,alpha);
+		end
 		[p2,h]=ranksum(xcol,ycol,'alpha',alpha);
-		if ystd > 0 && length(xcol)==length(ycol)
+		if length(xcol) == length(ycol)
 			[h,p3]=ttest(xcol,ycol,alpha);
 			[p4,h]=signrank(xcol,ycol,'alpha',alpha);
 			[p5,h]=signtest(xcol,ycol,'alpha',alpha);
@@ -300,7 +394,7 @@ for i=1:size(x,2) %iterate through columns
 		t=[t 'Pair ttest: ' sprintf('%0.3g', p3) '\newline'];
 		t=[t 'Pair wilcox: ' sprintf('%0.3g', p4) '\newline'];
 		t=[t 'Pair sign: ' sprintf('%0.3g', p5) '\newline'];
-	else
+	elseif exist('p5','var')
 		t=[t 'Sign: ' sprintf('%0.3g', p5) '\newline'];
 	end
 	t=[t 'Jarque-Bera: ' sprintf('%0.3g', p6) ' / ' sprintf('%0.3g', p7) '\newline'];
@@ -320,19 +414,19 @@ for i=1:size(x,2) %iterate through columns
 	% 	t=[t 'BS T: ' num2str(p1) '\newline'];
 	% 	t=[t 'BS Rank: ' num2str(p2)];
 	
-	if suba>1
-		subplot_tight(2,2,4,margin);
-	else
-		subplot_tight(1,2,2,margin);
-	end
+	if suba == 2;	pn(2,2).select();	end
+	if suba == 3;	pn(3,1).select();	end
+	
 	plot(xax,fx,'k-','linewidth',1.5);
 	if ystd > 0
 		hold on
 		plot(yax,fy,'r-','linewidth',1.5);
 		hold off
 	end
+	set(gca,'Layer','top');
 	axis tight
-	box off
+	title(['BootStrap Density Plots; using: ' func2str(fhandle)]);
+	box on
 	
 	if size(x,2)>1;
 		if ~isempty(columnlabels)
@@ -351,7 +445,8 @@ for i=1:size(x,2) %iterate through columns
 		supt=[supt ' | 2 = ' youttext];
 	end
 	
-	suptitle(supt)
+	h = suptitle(supt);
+	set(h,'FontName','Consolas','FontSize',16,'FontWeight','bold')
 	
 	xl=xlim;
 	yl=ylim;
@@ -365,10 +460,49 @@ for i=1:size(x,2) %iterate through columns
 	h=line([yci(1),ymean,yci(2);yci(1),ymean,yci(2);],[yl(1),yl(1),yl(1);yl(2),yl(2),yl(2)]);
 	set(h,'Color',[1 0.5 0.5],'LineStyle',':');
 	
-	text(xl(1)+xfrag,yl(2)-yfrag,t,'FontSize',10,'FontName','helvetica','FontWeight','bold','VerticalAlignment','top');
+	text(xl(1)+xfrag,yl(2)-yfrag,t,'FontSize',13,'FontName','Consolas','FontWeight','bold','VerticalAlignment','top');
 	%legend(legendtxt);
 	
+	pn.select('all')
+	pn.fontname = 'Helvetica';
+	pn.fontsize = 12;
+	pn.margin = 20;
 	
+	fieldn = ['set' num2str(i)];
+	
+	outs.(fieldn).pn = pn;
+	outs.(fieldn).xcol = xcol;
+	outs.(fieldn).ycol = ycol;
+	outs.(fieldn).xcolout = xcolout;
+	outs.(fieldn).ycolout = ycolout;
+	outs.(fieldn).text = t;
+	
+	if singleplots == true
+		if suba == 2;
+			h = figure;
+			p = copyobj(pn(1,1).axis,h);
+			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+			h = figure;
+			p = copyobj(pn(1,2).axis,h);
+			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+			h = figure;
+			p = copyobj(pn(2,1).axis,h);
+			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+			h=figure;
+			p = copyobj(pn(2,2).axis,h);
+			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+		elseif suba == 3;
+			h = figure;
+			p = copyobj(pn(1,1).axis,h);
+			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+			h = figure;
+			p = copyobj(pn(2,1).axis,h);
+			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+			h = figure;
+			p = copyobj(pn(3,1).axis,h);
+			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+		end
+	end
 	
 end
 end
