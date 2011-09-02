@@ -1,4 +1,4 @@
-function outs = getdensity(x,y,nboot,fhandle,alpha,legendtxt,dogauss,columnlabels,dooutlier,addjitter)
+function outs = getdensity(x,y,nboot,fhandle,alpha,legendtxt,dogauss,columnlabels,dooutlier,addjitter,cases)
 
 %getdensity computes bootstrapped density estimates and full stats for two
 %groups
@@ -14,8 +14,8 @@ scalefactor = 100; %scalefactor for jitter of scatter plot
 
 outs = struct();
 
-singleplots = true;
-showoriginalscatter = false;
+singleplots = false;
+showoriginalscatter = true;
 
 if max(isnan(x)) == 1 %remove any nans
 	x = x(isnan(x)==0);
@@ -316,9 +316,27 @@ for i=1:size(x,2) %iterate through columns
 		mx = max(max(xcol),max(ycol));
 		axrange = [(mn - (mn/10)) (mx + (mx/10))];
 		
+		t = 'Group: ';
+        
+        if exist('cases','var')
+            if length(xcol) == length(cases)
+                 uniquecases = unique(cases);
+                 for jj = 1:length(uniquecases)
+                    idx = find(strcmpi(cases,uniquecases{jj}));
+                    colours(idx,1) = jj; 
+					t = [t num2str(jj) '=' uniquecases{jj} ' '];
+                end
+            end
+        else
+            colours = [0 0 0];
+		end
+		
+		cmap = [0 0 0;0 0 1;0 1 0;1 0 1;0 1 1;1 0 0];
+		
 		hold on
-		h=scatter(xcolout,ycolout,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0 0 0],'MarkerFaceColor','none');
-		axis([axrange axrange])
+		h=scatter(xcolout,ycolout,repmat(80,length(xcol),1),colours);
+		colormap(cmap);
+        axis([axrange axrange])
 		axis square
 		%ch = get(h,'Children');
 		%set(ch,'FaceAlpha',0.1,'EdgeAlpha',1);
@@ -338,7 +356,7 @@ for i=1:size(x,2) %iterate through columns
 		end
 		pn(2,1).xlabel(legendtxt{1})
 		pn(2,1).ylabel(legendtxt{2})
-		pn(2,1).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ')']);
+		pn(2,1).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
 		hold off
 		box on
 		set(gca,'Layer','top');
