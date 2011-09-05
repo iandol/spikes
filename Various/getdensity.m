@@ -1,58 +1,92 @@
-function outs = getdensity(x,y,nboot,fhandle,alpha,legendtxt,dogauss,columnlabels,dooutlier,addjitter,cases)
+function outs = getdensity(x,y,inopts)
+%GETDENSITY computes bootstrapped density estimates and full stats for two
+%groups. You can pass a set of cases to the function and it will compute
+%statistics automagically for all cases as well. There are numerous
+%settings:
+% nboot - number of bootstrap iterations default: 1000
+% fhandle - function handle to bootstrap default: @mean
+% alpha - P value to use for all statistics
+% legendtxt - A cell list of the main X and Y data, i.e. {'Control','Drug'}
+% dogauss - Add gaussian fits to the histograms? default: true
+% columnlabels - if X/Y have more than 1 column, you can detail column names here
+% dooutlier - remove outliers using 'grubb', 'rosner', 3SD' or 'none'
+% addjitter - add jitter to scatterplot? 'x', 'y', 'both', 'equal', 'none'
+% cases - a celllist of case names the same length as X/Y
+% jitterfactor - how much to scale the jitter, larger values = less jitter
+% showoriginalscatter - show unjittered data too?
 
-%getdensity computes bootstrapped density estimates and full stats for two
-%groups
-%getdensity(x,y,nboot,fhandle,alpha,legend,gauss,columnlabel,dooutlier)
+if nargin == 0
+	disp('You need to enter in x data at the minimum, use help for more info...')
+	return;
+end
+
+if exist('x','var') && isstruct(x) %first input is actually inopts!
+	inopts = x;
+end
+
+if ~exist('inopts','var') || ~isstruct(inopts) %lets initialise
+	inopts = struct();
+end
 
 bartype='grouped';
 barwidth=1.25;
-xouttext='';
-youttext='';
-rosnern=2; %rosner outlier number of outliers
-outlierp = 0.001; %p to use for outlier removal for rosner and grubb
-scalefactor = 100; %scalefactor for jitter of scatter plot
 
 outs = struct();
 
-singleplots = false;
-showoriginalscatter = true;
-
-if max(isnan(x)) == 1 %remove any nans
-	x = x(isnan(x)==0);
+if isfield(inopts,'x')
+	x=inopts.x;
 end
-
 if ~exist('y','var') || isempty(y)
 	y=zeros(size(x));
 end
-
-if ~exist('nboot','var') || isempty(nboot)
-	nboot=1000;
+if isfield(inopts,'y')
+	y=inopts.y;
 end
-if ~exist('fhandle','var') || isempty(fhandle)
-	fhandle=@mean;
+if ~isfield(inopts,'nboot')
+	inopts.nboot=1000;
 end
-if ~exist('alpha','var') || isempty(alpha)
-	alpha=0.05;
+if ~isfield(inopts,'fhandle')
+	inopts.fhandle=@mean;
 end
-if ~exist('legendtxt','var') || isempty(legendtxt)
-	legendtxt={'Group 1','Group 2'};
+if ~isfield(inopts,'alpha')
+	inopts.alpha=0.05;
 end
-if ~exist('dogauss','var') || isempty(dogauss)
-	dogauss=1;
+if ~isfield(inopts,'legendtxt')
+	inopts.legendtxt={'Group 1','Group 2'};
 end
-if ~exist('columnlabels','var') || isempty(columnlabels)
-	columnlabels={'Set 1'};
+if ~isfield(inopts,'dogauss')
+	inopts.dogauss=1;
 end
-if ~exist('dooutlier','var') || isempty(dooutlier)
-	dooutlier='none';
+if ~isfield(inopts,'columnlabels')
+	inopts.columnlabels={'Set 1'};
 end
-
-if ~exist('addjitter','var') || isempty(addjitter)
-	addjitter = 'none';
+if ~isfield(inopts,'dooutlier')
+	inopts.dooutlier='none';
 end
-
-if max(isnan(y)) == 1
-	y = y(isnan(y)==0);
+if ~isfield(inopts,'addjitter')
+	inopts.addjitter = 'none';
+end
+if ~isfield(inopts,'cases')
+	inopts.cases = [];
+	uniquecases = [];
+end
+if ~isfield(inopts,'nominalcases')
+	inopts.nominalcases = true;
+end
+if ~isfield(inopts,'rosnern')
+	inopts.rosnern=2; %rosner outlier number of outliers
+end
+if ~isfield(inopts,'outlierp')
+	inopts.outlierp = 0.001; %p to use for outlier removal for rosner and grubb
+end
+if ~isfield(inopts,'jitterfactor')
+	inopts.jitterfactor = 100; %scalefactor for jitter of scatter plot
+end
+if ~isfield(inopts,'singleplots')
+	inopts.singleplots = false;
+end
+if ~isfield(inopts,'showoriginalscatter')
+	inopts.showoriginalscatter = false;
 end
 
 if size(x,1)==1
@@ -73,19 +107,40 @@ else
 	subb=2;
 end
 
-if size(x,2) > length(columnlabels)
-	for i = length(columnlabels)+1 : size(x,2)
-		columnlabels{i} = ['Set ' num2str(i)];
+if size(x,2) > length(inopts.columnlabels)
+	for i = length(inopts.columnlabels)+1 : size(x,2)
+		inopts.columnlabels{i} = ['Set_' num2str(i)];
 	end
+end
+
+if ~isempty(inopts.cases)
+	if inopts.nominalcases == true
+		inopts.cases = nominal(inopts.cases);
+	else
+		inopts.cases = ordinal(inopts.cases);
+	end
+	uniquecases = getlabels(inopts.cases);
 end
 
 outs.x = x;
 outs.y = y;
+outs.columnlabels = inopts.columnlabels;
+outs.inopts = inopts;
 
 for i=1:size(x,2) %iterate through columns
 	
+	xcol=x(:,i);
+	ycol=y(:,i);
+	
+	xouttext='';
+	youttext='';
+
+	fieldn = inopts.columnlabels{i};
+	fieldn = regexprep(fieldn,'\s+','_');
+	
 	h=figure;
-	set(h,'Color',[1 1 1])
+	outs.(fieldn).h = h;
+	set(h,'Color',[0.9 0.9 0.9])
 	
 	if suba == 3
 		figpos(3,[600 1200]);
@@ -96,24 +151,29 @@ for i=1:size(x,2) %iterate through columns
 	pn = panel();
 	pn.pack(suba,subb);
 	
-	xcol=x(:,i);
-	ycol=y(:,i);
+	if max(isnan(xcol)) == 1 %remove any nans
+		xcol = xcol(isnan(xcol)==[]);
+	end
+	if max(isnan(y)) == 1
+		y = y(isnan(y)==0);
+	end
 	
 	xmean=nanmean(xcol); %initial values before outlier removal
 	ymean=nanmean(ycol);
 	xstd=nanstd(xcol);
 	ystd=nanstd(ycol);
 	
-	switch dooutlier
+	switch inopts.dooutlier
 		case 'quantiles'
 			idx1=qoutliers(xcol);
 			idx2=qoutliers(ycol);
-			if suba>1
+			if length(xcol)==length(ycol)
 				idx=idx1+idx2;
 				xouttext=sprintf('%0.3g ',xcol(idx>0)');
 				youttext=sprintf('%0.3g ',ycol(idx>0)');
 				xcol(idx>0)=[];
 				ycol(idx>0)=[];
+				inopts.cases(idx>0)=[];
 			else
 				xouttext=sprintf('%0.3g ',xcol(idx1>0)');
 				youttext=sprintf('%0.3g ',ycol(idx2>0)');
@@ -121,16 +181,16 @@ for i=1:size(x,2) %iterate through columns
 				ycol(idx2>0)=[];
 			end
 		case 'rosner'
-			idx1=outlier(xcol,outlierp,rosnern);
-			idx2=outlier(ycol,outlierp,rosnern);
+			idx1=outlier(xcol,inopts.outlierp,inopts.rosnern);
+			idx2=outlier(ycol,inopts.outlierp,inopts.rosnern);
 			if ~isempty(idx1) || ~isempty(idx2)
-				if suba>1
+				if length(xcol)==length(ycol)
 					idx=unique([idx1;idx2]);
 					xouttext=sprintf('%0.3g ',xcol(idx)');
 					youttext=sprintf('%0.3g ',ycol(idx)');
 					xcol(idx)=[];
 					ycol(idx)=[];
-					
+					inopts.cases(idx>0)=[];
 				else
 					xouttext=sprintf('%0.3g ',xcol(idx1)');
 					youttext=sprintf('%0.3g ',ycol(idx2)');
@@ -139,14 +199,15 @@ for i=1:size(x,2) %iterate through columns
 				end
 			end
 		case 'grubb'
-			[out,idx1]=deleteoutliers(xcol,outlierp);
-			[out,idx2]=deleteoutliers(ycol,outlierp);
-			if suba>1
+			[~,idx1]=deleteoutliers(xcol,inopts.outlierp);
+			[~,idx2]=deleteoutliers(ycol,inopts.outlierp);
+			if length(xcol)==length(ycol)
 				idx=unique([idx1;idx2]);
 				xouttext=sprintf('%0.3g ',xcol(idx)');
 				youttext=sprintf('%0.3g ',ycol(idx)');
 				xcol(idx)=[];
 				ycol(idx)=[];
+				inopts.cases(idx>0)=[];
 			else
 				xouttext=sprintf('%0.3g ',xcol(idx1)');
 				youttext=sprintf('%0.3g ',ycol(idx2)');
@@ -161,12 +222,13 @@ for i=1:size(x,2) %iterate through columns
 			mtmp=repmat(ymean,length(ycol),1);
 			stmp=repmat(ystd,length(ycol),1);
 			idx2=abs(ycol-mtmp)>2*stmp;
-			if suba>1
+			if length(xcol)==length(ycol)
 				idx=idx1+idx2;
 				xouttext=sprintf('%0.3g ',xcol(idx>0)');
 				youttext=sprintf('%0.3g ',ycol(idx>0)');
 				xcol(idx>0)=[];
 				ycol(idx>0)=[];
+				inopts.cases(idx>0)=[];
 			else
 				xouttext=sprintf('%0.3g ',xcol(idx1>0)');
 				youttext=sprintf('%0.3g ',ycol(idx2>0)');
@@ -181,12 +243,13 @@ for i=1:size(x,2) %iterate through columns
 			mtmp=repmat(ymean,length(ycol),1);
 			stmp=repmat(ystd,length(ycol),1);
 			idx2=abs(ycol-mtmp)>3*stmp;
-			if suba>1
+			if length(xcol)==length(ycol)
 				idx=idx1+idx2;
 				xouttext=sprintf('%0.3g ',xcol(idx>0));
 				youttext=sprintf('%0.3g ',ycol(idx>0));
 				xcol(idx>0)=[];
 				ycol(idx>0)=[];
+				inopts.cases(idx>0)=[];
 			else
 				xouttext=sprintf('%0.3g ',xcol(idx1>0));
 				youttext=sprintf('%0.3g ',ycol(idx2>0));
@@ -225,8 +288,7 @@ for i=1:size(x,2) %iterate through columns
 		h=bar([hbins'],[xn'],barwidth,bartype);
 		set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
 	end
-	ylabel('Number of Cells');
-	if ~strcmp(columnlabels,''); xlabel(columnlabels{i}); end
+	
 	axis tight;
 	lim=ylim;
 	text(xmean,lim(2),'\downarrow','Color',[0 0 0],'HorizontalAlignment','center',...
@@ -239,9 +301,8 @@ for i=1:size(x,2) %iterate through columns
 		text(ymedian,lim(2),'\nabla','Color',[0.8 0 0],'HorizontalAlignment','center',...
 			'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
 	end
-	box on;
 	
-	if dogauss>0
+	if inopts.dogauss == true
 		hold on
 		if length(find(xn>0))>1
 			try
@@ -259,19 +320,21 @@ for i=1:size(x,2) %iterate through columns
 		end
 		legend off
 		hold off
-		pn(1,1).xlabel(legendtxt{i});
 	end
+	
+	pn(1,1).xlabel(inopts.columnlabels{i});
+	pn(1,1).ylabel('Number of cells');
 	
 	if suba>1
 		%subplot_tight(suba,subb,2,margin)
 		if suba == 3; pn(2,1).select();end
 		if suba == 2; pn(1,2).select();end
-		if exist('distributionPlot')
+		if exist('distributionPlot','file')
 			hold on
 			distributionPlot({xcol,ycol},0.3);
 		end
 		if length(xcol)==length(ycol)
-			boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',legendtxt,'colors','k')
+			boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',inopts.legendtxt,'colors','k')
 		end
 		hold off
 		box on
@@ -287,10 +350,10 @@ for i=1:size(x,2) %iterate through columns
 		[r2,p2]=corr(xcol,ycol,'type','spearman');
 		xrange = max(xcol) - min(xcol);
 		yrange = max(ycol) - min(ycol);
-		xjitter = (randn(length(xcol),1))*(xrange/scalefactor);
-		yjitter = (randn(length(ycol),1))*(yrange/scalefactor);
-		bothjitter = (randn(length(xcol),1))*(max(xrange,yrange)/scalefactor);
-		switch addjitter
+		xjitter = (randn(length(xcol),1))*(xrange/inopts.jitterfactor);
+		yjitter = (randn(length(ycol),1))*(yrange/inopts.jitterfactor);
+		bothjitter = (randn(length(xcol),1))*(max(xrange,yrange)/inopts.jitterfactor);
+		switch inopts.addjitter
 			case 'x'
 				sc = true;
 				xcolout = xcol + xjitter;
@@ -308,7 +371,7 @@ for i=1:size(x,2) %iterate through columns
 				xcolout = xcol + xjitter;
 				ycolout = ycol + yjitter;
 			otherwise
-				sc = false';
+				sc = false;
 				xcolout = xcol;
 				ycolout = ycol;
 		end
@@ -317,34 +380,32 @@ for i=1:size(x,2) %iterate through columns
 		mx = max(max(xcol),max(ycol));
 		axrange = [(mn - (mn/10)) (mx + (mx/10))];
 		
-		t = 'Group: ';
-		
-		if exist('cases','var')
-			if length(xcol) == length(cases)
-				uniquecases = unique(cases);
-				for jj = 1:length(uniquecases)
-					idx = find(strcmpi(cases,uniquecases{jj}));
-					colours(idx,1) = jj;
-					t = [t num2str(jj) '=' uniquecases{jj} ' '];
-				end
+		if ~isempty(inopts.cases)
+			t = 'Group: ';
+			for jj = 1:length(uniquecases)
+				caseidx{jj} = ismember(inopts.cases,uniquecases{jj});
+				colours(caseidx{jj},1) = jj;
+				t = [t num2str(jj) '=' uniquecases{jj} ' '];
 			end
 		else
 			colours = [0 0 0];
+			t = '';
 		end
 		
-		cmap = [0 0 0;0 0 1;0 1 0;1 0 1;0 1 1;1 0 0];
-		
 		hold on
-		h=scatter(xcolout,ycolout,repmat(80,length(xcol),1),colours);
-		colormap(cmap);
+		if ~isempty(inopts.cases)
+			h = gscatter(xcolout,ycolout,inopts.cases,'krbgmyc','o');
+		else
+			h = scatter(xcolout,ycolout,repmat(80,length(xcol),1),[0 0 0]);
+		end
 		axis([axrange axrange])
 		axis square
 		%ch = get(h,'Children');
 		%set(ch,'FaceAlpha',0.1,'EdgeAlpha',1);
 		try %#ok<TRYNC>
 			h = lsline;
-			set(h,'Color',[0 0 1],'LineStyle','--','LineWidth',2)
-			if r >= 0
+			set(h,'LineStyle','--','LineWidth',2)
+			if r2 >= 0
 				h = line([mn mx],[mn mx]);
 				set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
 			else
@@ -352,11 +413,11 @@ for i=1:size(x,2) %iterate through columns
 				set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
 			end
 		end
-		if sc == true && showoriginalscatter == true
+		if sc == true && inopts.showoriginalscatter == true
 			scatter(xcol,ycol,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0.9 0.9 0.9]);
 		end
-		pn(2,1).xlabel(legendtxt{1})
-		pn(2,1).ylabel(legendtxt{2})
+		pn(2,1).xlabel(inopts.legendtxt{1})
+		pn(2,1).ylabel(inopts.legendtxt{2})
 		pn(2,1).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
 		hold off
 		box on
@@ -367,18 +428,18 @@ for i=1:size(x,2) %iterate through columns
 	
 	if ystd > 0
 		if length(xcol) == length(ycol)
-			[h,p1]=ttest2(xcol,ycol,alpha);
+			[h,p1]=ttest2(xcol,ycol,inopts.alpha);
 		else
-			[h,p1]=ttest2(xcol,ycol,alpha);
+			[h,p1]=ttest2(xcol,ycol,inopts.alpha);
 		end
-		[p2,h]=ranksum(xcol,ycol,'alpha',alpha);
+		[p2,h]=ranksum(xcol,ycol,'alpha',inopts.alpha);
 		if length(xcol) == length(ycol)
-			[h,p3]=ttest(xcol,ycol,alpha);
-			[p4,h]=signrank(xcol,ycol,'alpha',alpha);
-			[p5,h]=signtest(xcol,ycol,'alpha',alpha);
+			[h,p3]=ttest(xcol,ycol,inopts.alpha);
+			[p4,h]=signrank(xcol,ycol,'alpha',inopts.alpha);
+			[p5,h]=signtest(xcol,ycol,'alpha',inopts.alpha);
 		end
-		[h,p6]=jbtest(xcol,alpha);
-		[h,p7]=jbtest(ycol,alpha);
+		[h,p6]=jbtest(xcol,inopts.alpha);
+		[h,p7]=jbtest(ycol,inopts.alpha);
 		if length(xcol)>4
 			[h,p8]=lillietest(xcol);
 		else
@@ -389,14 +450,14 @@ for i=1:size(x,2) %iterate through columns
 		else
 			p9=NaN;
 		end
-		[h,p10]=kstest2(xcol,ycol,alpha);
+		[h,p10]=kstest2(xcol,ycol,inopts.alpha);
 	else
-		[h,p1]=ttest(xcol,alpha);
-		[p2,h]=signrank(xcol,0,'alpha',alpha);
+		[h,p1]=ttest(xcol,inopts.alpha);
+		[p2,h]=signrank(xcol,0,'alpha',inopts.alpha);
 		p3=0;
 		p4=0;
-		[p5,h]=signtest(xcol,0,'alpha',alpha);
-		[h,p6]=jbtest(xcol,alpha);
+		[p5,h]=signtest(xcol,0,'alpha',inopts.alpha);
+		[h,p6]=jbtest(xcol,inopts.alpha);
 		p7=0;
 		if length(xcol)>4
 			[h,p8]=lillietest(xcol);
@@ -420,8 +481,8 @@ for i=1:size(x,2) %iterate through columns
 	t=[t 'Lilliefors: ' sprintf('%0.3g', p8) ' / ' sprintf('%0.3g', p9) '\newline'];
 	t=[t 'KSTest: ' sprintf('%0.3g', p10) '\newline'];
 	
-	[xci,xmean,xpop]=bootci(nboot,{fhandle,xcol},'alpha',alpha);
-	[yci,ymean,ypop]=bootci(nboot,{fhandle,ycol},'alpha',alpha);
+	[xci,xmean,xpop]=bootci(inopts.nboot,{inopts.fhandle,xcol},'alpha',inopts.alpha);
+	[yci,ymean,ypop]=bootci(inopts.nboot,{inopts.fhandle,ycol},'alpha',inopts.alpha);
 	
 	t=[t 'BootStrap: ' sprintf('%0.2g', xci(1)) ' < ' sprintf('%0.2g', xmean) ' > ' sprintf('%0.2g', xci(2)) ' | ' sprintf('%0.2g', yci(1)) ' < ' sprintf('%0.2g', ymean) ' > ' sprintf('%0.2g', yci(2))];
 	
@@ -444,17 +505,17 @@ for i=1:size(x,2) %iterate through columns
 	end
 	set(gca,'Layer','top');
 	axis tight
-	title(['BootStrap Density Plots; using: ' func2str(fhandle)]);
+	title(['BootStrap Density Plots; using: ' func2str(inopts.fhandle)]);
 	box on
 	
 	if size(x,2)>1;
-		if ~isempty(columnlabels)
-			supt=['Column: ' columnlabels{i} ' | n = ' num2str(length(xcol)) '[' num2str(length(x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(y(:,i))) ']'];
+		if ~isempty(inopts.columnlabels)
+			supt=['Column: ' inopts.columnlabels{i} ' | n = ' num2str(length(xcol)) '[' num2str(length(x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(y(:,i))) ']'];
 		else
 			supt=['Column: ' num2str(i) ' | n = ' num2str(length(xcol)) '[' num2str(length(x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(y(:,i))) ']'];
 		end
 	else
-		supt=['# = ' num2str(length(xcol)) '[' num2str(length(x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(y(:,i))) ']'];
+		supt=[inopts.columnlabels{i} ' # = ' num2str(length(xcol)) '[' num2str(length(x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(y(:,i))) ']'];
 	end
 	
 	if ~isempty(xouttext) && ~strcmp(xouttext,' ') && length(xouttext)<25
@@ -480,23 +541,25 @@ for i=1:size(x,2) %iterate through columns
 	set(h,'Color',[1 0.5 0.5],'LineStyle',':');
 	
 	text(xl(1)+xfrag,yl(2)-yfrag,t,'FontSize',13,'FontName','Consolas','FontWeight','bold','VerticalAlignment','top');
-	%legend(legendtxt);
+	%legend(inopts.legendtxt);
 	
 	pn.select('all')
 	pn.fontname = 'Helvetica';
 	pn.fontsize = 12;
 	pn.margin = 20;
 	
-	fieldn = ['set' num2str(i)];
-	
 	outs.(fieldn).pn = pn;
 	outs.(fieldn).xcol = xcol;
 	outs.(fieldn).ycol = ycol;
+	outs.(fieldn).xmean = xmean;
+	outs.(fieldn).xmedian = xmedian;
+	outs.(fieldn).ymean = ymean;
+	outs.(fieldn).ymedian = ymedian;
 	outs.(fieldn).xcolout = xcolout;
 	outs.(fieldn).ycolout = ycolout;
 	outs.(fieldn).text = t;
 	
-	if singleplots == true
+	if inopts.singleplots == true
 		if suba == 2;
 			h = figure;
 			p = copyobj(pn(1,1).axis,h);
@@ -523,5 +586,20 @@ for i=1:size(x,2) %iterate through columns
 		end
 	end
 	
+	if ~isempty(uniquecases)
+		for jj = 1:length(uniquecases)
+			xtmp = xcol(caseidx{jj});
+			ytmp = ycol(caseidx{jj});
+			name = ['Case_' uniquecases{jj}];
+			inoptstmp = inopts;
+			inoptstmp = rmfield(inoptstmp,'x');
+			inoptstmp = rmfield(inoptstmp,'y');
+			inoptstmp = rmfield(inoptstmp,'cases');
+			inoptstmp.columnlabels{1} = [inoptstmp.columnlabels{i} ' ' name];
+			outtmp = getdensity(xtmp,ytmp,inoptstmp);
+			outs.(fieldn).(name)=outtmp;
+		end
+		figure(outs.(fieldn).h);
+	end
 end
 end
