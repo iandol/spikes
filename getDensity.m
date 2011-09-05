@@ -320,6 +320,9 @@ classdef getDensity < handle
 					xjitter = (randn(length(xcol),1))*(xrange/obj.jitterfactor);
 					yjitter = (randn(length(ycol),1))*(yrange/obj.jitterfactor);
 					bothjitter = (randn(length(xcol),1))*(max(xrange,yrange)/obj.jitterfactor);
+					if obj.addjitter == true
+						obj.addjitter = 'both';
+					end
 					switch obj.addjitter
 						case 'x'
 							sc = true;
@@ -375,7 +378,7 @@ classdef getDensity < handle
 						end
 					end
 					if sc == true && obj.showoriginalscatter == true
-						scatter(xcol,ycol,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0.9 0.9 0.9]);
+						scatter(xcol,ycol,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0.7 0.7 0.7]);
 					end
 					axis square
 					axis([axrange axrange])
