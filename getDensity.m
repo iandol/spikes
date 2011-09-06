@@ -39,6 +39,7 @@ classdef getDensity < handle
 		barwidth = 1.25
 		verbose = true
 		comment = ''
+		scaleaxes = true
 	end
 	
 	properties (Dependent = true, SetAccess = protected, GetAccess = public)
@@ -385,8 +386,10 @@ classdef getDensity < handle
 						scatter(xcol,ycol,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0.7 0.7 0.7]);
 					end
 					axis square
-					axis([axrange axrange])
-					set(gca,'XTick',get(gca,'YTick'),'XTickLabel',get(gca,'YTickLabel'));
+					if obj.scaleaxes == true
+						axis([axrange axrange]);
+						set(gca,'XTick',get(gca,'YTick'),'XTickLabel',get(gca,'YTickLabel'));
+					end
 					pn(2,1).xlabel(obj.legendtxt{1})
 					pn(2,1).ylabel(obj.legendtxt{2})
 					pn(2,1).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);

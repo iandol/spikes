@@ -3,7 +3,7 @@ function varargout = dogfitfig(varargin)
 %    FIG = DOGFITFIG launch dogfitfig GUI.
 %    DOGFITFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 29-May-2007 23:32:29
+% Last Modified by GUIDE v2.5 06-Sep-2011 11:55:48
 
 if nargin == 0  % LAUNCH GUI
 
@@ -205,18 +205,6 @@ function varargout = lbdc_Callback(h, eventdata, handles, varargin)
 function varargout = lbs_Callback(h, eventdata, handles, varargin)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 % --- Executes on button press in DFUseNLinFit.
 function DFUseNLinFit_Callback(hObject, eventdata, handles)
 % hObject    handle to DFUseNLinFit (see GCBO)
@@ -267,5 +255,19 @@ function DFUseROG_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DFUseROG
+v = get(hObject,'Value');
+if v == 1
+	set(handles.DFUseCHF,'Value',0)
+end
 
+% --- Executes on button press in DFUseCHF.
+function DFUseCHF_Callback(hObject, eventdata, handles)
+% hObject    handle to DFUseCHF (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hint: get(hObject,'Value') returns toggle state of DFUseCHF
+v = get(hObject,'Value');
+if v == 1
+	set(handles.DFUseROG,'Value',0)
+end

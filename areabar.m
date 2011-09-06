@@ -10,18 +10,22 @@ function handles = areabar(xvalues,ydata,error,c1,alpha,varargin)
 
 if min(size(xvalues)) > 1 || min(size(ydata)) > 1 || min(size(error)) > 1
    errordlg('Sorry, you can only plot vector data.')
-   error('Areabar error')
+   error('Areabar error');
 end
 
 if nargin <4 || isempty(c1)
 	c1=[0.7 0.7 0.7];
 end
 
-if nargin < 5 || isempty(alpha)
+if nargin < 5 || isempty(alpha) || ischar(alpha)
+	if exist('alpha','var') && ischar(alpha)
+		[varargin{2:end+1}]=varargin{1:end};
+		varargin{1} = alpha;
+	end
 	alpha = 1;
 end
 
-if nargin < 6 || isempty(varargin)
+if nargin < 6 && isempty(varargin)
 	varargin{1} = 'k-o';
 	varargin{2} = 'MarkerFaceColor';
 	varargin{3} = [0 0 0];
@@ -55,6 +59,5 @@ handles.plot = plot(xvalues,ydata,varargin{:});
 set(gca,'NextPlot','replacechildren');
 %set(gca,'PlotBoxAspectRatioMode','manual');
 set(gca,'Layer','top');
-set(gcf,'Renderer','zbuffer');
+set(gcf,'Renderer','painters');
 box on;
-

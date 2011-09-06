@@ -1563,7 +1563,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			a=a./m;
 			d=w(i);
 			figure;
-			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],1,'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
 			t=data.matrixtitle;
 			sv.titlehandle=title(t);
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
@@ -1618,7 +1618,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			a=a./m;
 			d=w(i);
 			figure;
-			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],1,'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
 			t=data.matrixtitle;
 			yt=['----' data.ytitle ' ' sprintf('%0.5g',YY)];
 			t=[t yt];
@@ -1836,8 +1836,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		e(:,1)=xcurveerror';
 		e(:,2)=ycurveerror;
 		hold on
-		areabar(x(:,1),y(:,1),e(:,1),[.85 .80 .80],'Color',[1 0 0],'Marker','o','MarkerSize',6,'MarkerFaceColor',[1 0 0])
-		areabar(x(:,2),y(:,2),e(:,2),[.80 .80 .85],'Color',[0 0 .6],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 .6])
+		areabar(x(:,1),y(:,1),e(:,1),[.85 .80 .80],1,'Color',[1 0 0],'Marker','o','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+		areabar(x(:,2),y(:,2),e(:,2),[.80 .80 .85],1,'Color',[0 0 .6],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 .6])
 		plot(x(:,1),y(:,1),'Color',[1 0 0],'Marker','o','MarkerSize',6,'MarkerFaceColor',[1 0 0]);
 		plot(x(:,2),y(:,2),'Color',[0 0 .6],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 .6]);
 		hold off
@@ -3850,7 +3850,7 @@ switch sv.SmoothType
 	case 'none'
 		switch get(gh('STypeMenu'),'Value')
 			case 1 %normal
-				areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],'k.-','MarkerSize',15);
+				areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],1);
 			case 2
 				if strcmp (get(gcf,'Tag'),'SpikeFig')
 					set(gca,'NextPlot','replacechildren');
@@ -3898,7 +3898,7 @@ switch sv.SmoothType
 		end
 	otherwise
 		[xax,dat] = fitdata(xvals,data.matrix','interpolated',sv.SmoothType);
-		areabar(xvals,data.matrix,data.errormat,[.8 .8 .8],'k.-','MarkerSize',15);
+		areabar(xvals,data.matrix,data.errormat,[.8 .8 .8]);
 		hold on;
 		plot(xax,dat,'r-');
 		hold off;

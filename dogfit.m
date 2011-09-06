@@ -128,11 +128,11 @@ switch(action)
 		xx=linspace(min(fd.x),max(fd.x),fitnumber);
 		yy=dogsummate(xo,xx);
 		yy(find(yy<0))=0;
-		areabar(fd.x,fd.y,fd.e,[.8 .8 .8],'Color',[0 0 0],'Marker','o','MarkerSize',1,'MarkerFaceColor',[0 0 0]);
+		areabar(fd.x,fd.y,fd.e,[.8 .8 .8]);
 		hold on;
 		plot(xx,yy,'r-');
 		hold off;
-		set(gca,'FontSize',7);
+		set(gca,'FontSize',9);
 		xlabel('Diameter (deg)');
 		ylabel('Firing Rate');
 		title(['Summation Curves (' fd.title ')']);
@@ -141,7 +141,7 @@ switch(action)
 		dogplot(xo);
 		axes(gh('raxis'));
 		axis([-inf inf -100 100]);
-		set(gca,'FontSize',7);
+		set(gca,'FontSize',9);
 		xlabel('Diameter (deg)');
 		ylabel('Normalised Residuals (% Max of Data)');
 		title('Residuals of the Data-Model');
@@ -254,14 +254,14 @@ switch(action)
 		axes(gh('sfaxis'));
 		cla;
 		if isfield(fd,'e')            %we have error onfo
-			areabar(x,y,e,[.8 .8 .8],'Color',[0 0 0]);
+			areabar(x,y,e,[.8 .8 .8]);
 			hold on
 			plot(x,yy,'r-')
 			hold off
 		else
 			plot(x,y,'k-',x,yy,'r-');
 		end
-		set(gca,'FontSize',7)
+		set(gca,'FontSize',9)
 		xlabel('Diameter (deg)');
 		ylabel('Firing Rate');
 		title(['Summation Curves (' fd.title ')']);
@@ -272,7 +272,7 @@ switch(action)
 		axes(gh('raxis'));
 		plot(x,res);
 		axis([-inf inf -100 100]);
-		set(gca,'FontSize',7);
+		set(gca,'FontSize',9);
 		xlabel('Diameter (deg)');
 		ylabel('Normalised Residuals (% Max of Data)');
 		title('Residuals of the Data-Model');
@@ -345,8 +345,8 @@ switch(action)
 		yy=dogsummate(xo,x);
 		yy(find(yy<0))=0;
 		if isfield(fd,'e')            %we have error onfo
-			%areabar(x,y,e,[.8 .8 .8],'Color',[0 0 0]);
-			errorbar(fd.x,fd.y,fd.e,'k.','MarkerSize',13);
+			%areabar(x,y,e,[.8 .8 .8]);
+			areabar(fd.x,fd.y,fd.e,[0.8 0.8 0.8]);
 			hold on;
 			plot(x,yy,'r-');
 			axis tight
@@ -354,7 +354,7 @@ switch(action)
 		else
 			plot(x,y,'k-',x,yy,'r-');
 		end
-		set(gca,'FontSize',7)
+		set(gca,'FontSize',9)
 		xlabel('Diameter (deg)');
 		ylabel('Firing Rate');
 		title(['Summation Curves (' fd.title ')']);
@@ -365,7 +365,7 @@ switch(action)
 		axes(gh('raxis'));
 		plot(x,res)
 		axis([-inf inf -100 100])
-		set(gca,'FontSize',7)
+		set(gca,'FontSize',9)
 		xlabel('Diameter (deg)');
 		ylabel('Normalised Residuals (% Max of Data)');
 		title('Residuals of the Data-Model')
@@ -488,7 +488,7 @@ xo(i)=0.0000000000001;
 for a=1:length(x);
 	f(a,:)=(xo(5)+(xo(1)*exp(-((x(a)^2)+(y.^2))/xo(2)^2))-(xo(3)*exp(-((x(a)^2)+(y.^2))/xo(4)^2)));  %halfmatrixhalfloop
 end
-axes(gh('3daxis'))
+axes(gh('axis3d'))
 imagesc(x,y,f)
 %[xx,yy]=meshgrid(x,y);
 %surf(xx,yy,f);
@@ -498,12 +498,12 @@ imagesc(x,y,f)
 axis tight
 axis square
 axis vis3d
-set(gca,'FontSize',7)
+set(gca,'FontSize',9)
 xlabel('X Space (deg)')
 ylabel('Y Space (deg)')
 title('2D DOG')
 zlabel('Amplitude')
-set(gca,'Tag','3daxis','UserData','SpawnAxes')
+set(gca,'Tag','axis3d','UserData','SpawnAxes')
 
 
 % % ------------------------------Summate1 Function--------------------------------
