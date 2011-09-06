@@ -3606,7 +3606,9 @@ switch data.numvars
 		%set(h1,'FontSize',12)
 		% because we 'defer'red, we have to refresh.
 		p.refresh();
+		
 end
+set(gcf,'Renderer','painters','ResizeFcn',[]);
 
 %----------------------------------END----------------------------------------
 

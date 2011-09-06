@@ -24,9 +24,9 @@ switch(action)
 	
 	%-------------------------------------------------------------------
 	case 'Initialize'
-		%-------------------------------------------------------------------
+	%-------------------------------------------------------------------
 		
-		version=['DOG-Fit Model Fitting Routine V1.7 | Started on ', datestr(now)];
+		version=['DOG-Fit Model Fitting Routine V1.8 | Started on ', datestr(now)];
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
 		dogfitfig;
@@ -44,7 +44,7 @@ switch(action)
 			error('can''t find data...');
 		end
 		
-		set(gh('Load Text'),'String',['Data Loaded: ' data.filename ' (' data.matrixtitle ')']);
+		set(gh('DFLoadText'),'String',['Data Loaded: ' data.filename ' (' data.matrixtitle ')']);
 		
 		switch data.numvars
 			case 0
@@ -387,7 +387,7 @@ switch(action)
 		cd(pn);
 		load(fn);
 		
-		set(gh('Load Text'),'String',['Data Loaded: ' fd.file ' (' fd.title ')']);
+		set(gh('DFLoadText'),'String',['Data Loaded: ' fd.file ' (' fd.title ')']);
 		
 		set(gh('lb1'),'String',num2str(fd.lb(1)));
 		set(gh('lb2'),'String',num2str(fd.lb(2)));
