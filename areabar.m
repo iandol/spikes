@@ -1,4 +1,4 @@
-function areabar(xvalues,ydata,error,c1,varargin)
+function handles = areabar(xvalues,ydata,error,c1,alpha,varargin)
 
 %Plots X and Y value data with error bar shown as a shaded
 %area. Use:
@@ -14,10 +14,18 @@ if min(size(xvalues)) > 1 || min(size(ydata)) > 1 || min(size(error)) > 1
 end
 
 if nargin <4 || isempty(c1)
-	c1=[0.8 0.8 0.8];
+	c1=[0.7 0.7 0.7];
 end
 
-alpha = 0.8;
+if nargin < 5 || isempty(alpha)
+	alpha = 1;
+end
+
+if nargin < 6 || isempty(varargin)
+	varargin{1} = 'k-o';
+	varargin{2} = 'MarkerFaceColor';
+	varargin{3} = [0 0 0];
+end
 
 x=size(xvalues);
 y=size(ydata);
@@ -29,7 +37,7 @@ end
 if y(1) < y(2)             %need to organise to row
    ydata=ydata';
 end
-if y(1) < y(2)             %need to organise to row
+if e(1) < e(2)             %need to organise to row
    error=error';
 end
 
@@ -41,10 +49,12 @@ areax=zeros(x+x,1);
 areax(1:x,1)=xvalues;
 areax(x+1:x+x,1)=flipud(xvalues);
 axis auto
-fill(areax,err,c1,'EdgeColor',c1,'FaceAlpha',alpha);
+handles.fill = fill(areax,err,c1,'EdgeColor','none','FaceAlpha',alpha);
 set(gca,'NextPlot','add');
-plot(xvalues,ydata,varargin{:});
+handles.plot = plot(xvalues,ydata,varargin{:});
 set(gca,'NextPlot','replacechildren');
-set(gca,'PlotBoxAspectRatioMode','manual');
-hold off;
+%set(gca,'PlotBoxAspectRatioMode','manual');
+set(gca,'Layer','top');
+set(gcf,'Renderer','zbuffer');
+box on;
 

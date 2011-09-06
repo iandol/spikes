@@ -44,6 +44,8 @@ classdef getDensity < handle
 	properties (Dependent = true, SetAccess = protected, GetAccess = public)
 		isDataEqualLength = true;
 		nColumns = []
+		plotX = 2 %the layout when plotting mutliple plots
+		plotY = 2 % layout when plotting mutliple plots
 	end
 	
 	properties (SetAccess = protected, GetAccess = public)
@@ -54,8 +56,6 @@ classdef getDensity < handle
 	end
 	
 	properties (SetAccess = protected, GetAccess = protected)
-		plotX = 2
-		plotY = 2
 		allowedProperties = []
 		ignoreProperties = '(isDataEqualLength|nColumns|uniquecases|runStructure|h|pn)';
 	end
@@ -66,7 +66,7 @@ classdef getDensity < handle
 	
 	%=======================================================================
 	methods %------------------PUBLIC METHODS
-		%=======================================================================
+	%=======================================================================
 		
 		% ===================================================================
 		%> @brief Class constructor
@@ -94,6 +94,7 @@ classdef getDensity < handle
 				error('You haven''t supplied any data yet!')
 			end
 			for i = 1: obj.nColumns
+				tic
 				xcol=obj.x(:,i);
 				ycol=obj.y(:,i);
 				cases = obj.cases;
@@ -297,14 +298,17 @@ classdef getDensity < handle
 					pn(1,2).select()
 					hold on
 					distributionPlot({xcol,ycol},0.3);
+					pn(1,2).ylabel(obj.columnlabels{i});
 				elseif obj.isDataEqualLength==false && exist('distributionPlot','file')
-					pn(1,2).select()
+					pn(2,1).select()
 					hold on
 					distributionPlot({xcol,ycol},0.3);
+					pn(2,1).ylabel(obj.columnlabels{i});
 				end
 				if obj.isDataEqualLength
 					boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',obj.legendtxt,'colors','k')
 				end
+				title('Box / Density Plots')
 				hold off
 				box on
 				
@@ -403,10 +407,14 @@ classdef getDensity < handle
 						[h,p1]=ttest2(xcol,ycol,obj.alpha);
 					end
 					[p2,h]=ranksum(xcol,ycol,'alpha',obj.alpha);
-					if length(xcol) == length(ycol)
+					if obj.isDataEqualLength
 						[h,p3]=ttest(xcol,ycol,obj.alpha);
 						[p4,h]=signrank(xcol,ycol,'alpha',obj.alpha);
 						[p5,h]=signtest(xcol,ycol,'alpha',obj.alpha);
+					else
+						p3 = [];
+						p4 = [];
+						p5 = [];
 					end
 					[h,p6]=jbtest(xcol,obj.alpha);
 					[h,p7]=jbtest(ycol,obj.alpha);
@@ -424,8 +432,8 @@ classdef getDensity < handle
 				else
 					[h,p1]=ttest(xcol,obj.alpha);
 					[p2,h]=signrank(xcol,0,'alpha',obj.alpha);
-					p3=0;
-					p4=0;
+					p3=[];
+					p4=[];
 					[p5,h]=signtest(xcol,0,'alpha',obj.alpha);
 					[h,p6]=jbtest(xcol,obj.alpha);
 					p7=0;
@@ -434,7 +442,7 @@ classdef getDensity < handle
 					else
 						p8=NaN;
 					end
-					p9=0;
+					p9=[];
 					p10=kstest(xcol);
 				end
 				
@@ -519,8 +527,6 @@ classdef getDensity < handle
 				pn.fontsize = 12;
 				pn.margin = 20;
 				
-				obj.pn = pn;
-				
 				outs.(fieldn).pn = pn;
 				outs.(fieldn).xcol = xcol;
 				outs.(fieldn).ycol = ycol;
@@ -531,6 +537,10 @@ classdef getDensity < handle
 				outs.(fieldn).xcolout = xcolout;
 				outs.(fieldn).ycolout = ycolout;
 				outs.(fieldn).text = t;
+				
+				set(gcf,'Renderer','zbuffer');
+				
+				fprintf('\n---> getDensity Computation time took: %d seconds\n',toc);
 				
 				if obj.singleplots == true
 					obj.doSinglePlots(pn);
@@ -571,6 +581,22 @@ classdef getDensity < handle
 			end
 		end
 		
+		function value = get.plotX(obj)
+			if obj.isDataEqualLength
+				value = 2;
+			else
+				value = 1;
+			end
+		end
+		
+		function value = get.plotY(obj)
+			if obj.isDataEqualLength
+				value = 2;
+			else
+				value = 3;
+			end
+		end
+		
 		function set.x(obj,value)
 			if size(value,1)==1
 				value=value';
@@ -606,38 +632,60 @@ classdef getDensity < handle
 					obj.cases = ordinal(value);
 				end
 				obj.uniquecases = getlabels(obj.cases);
+				notify(obj,'checkData');
 			end
 		end
 	end
 	
 	%=======================================================================
 	methods ( Access = private ) %-------PRIVATE (protected) METHODS-----%
-		%=======================================================================
+	%=======================================================================
 		
-		function doSinglePlots(pn)
-			if obj.isDataEqualLength == 2;
+		function doSinglePlots(obj,pn)
+			if obj.isDataEqualLength;
 				h = figure;
+				figpos(1,[800 640]);
+				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(1,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(gcf,'Renderer','zbuffer');
 				h = figure;
+				figpos(1,[800 640]);
+				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(1,2).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(gcf,'Renderer','zbuffer');
 				h = figure;
+				figpos(1,[800 640]);
+				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(gcf,'Renderer','zbuffer');
 				h=figure;
+				figpos(1,[800 640]);
+				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,2).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(gcf,'Renderer','zbuffer');
 			else
 				h = figure;
+				figpos(1,[800 640]);
+				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(1,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(gcf,'Renderer','zbuffer');
 				h = figure;
+				figpos(1,[800 640]);
+				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(gcf,'Renderer','zbuffer');
 				h = figure;
+				figpos(1,[800 640]);
+				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(3,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(gcf,'Renderer','zbuffer');
 			end
 		end
 		
@@ -649,13 +697,6 @@ classdef getDensity < handle
 				for i = length(obj.columnlabels)+1 : size(obj.x,2)
 					obj.columnlabels{i} = ['DataSet_' num2str(i)];
 				end
-			end
-			if obj.isDataEqualLength
-				obj.plotX = 2;
-				obj.plotY = 2;
-			else
-				obj.plotX = 1;
-				obj.plotY = 2;
 			end
 		end
 		
