@@ -163,7 +163,7 @@ classdef getDensity < handle
 								youttext=sprintf('%0.3g ',ycol(idx)');
 								xcol(idx)=[];
 								ycol(idx)=[];
-								cases(idx>0)=[];
+								if ~isempty(cases); cases(idx)=[]; end
 							else
 								xouttext=sprintf('%0.3g ',xcol(idx1)');
 								youttext=sprintf('%0.3g ',ycol(idx2)');
@@ -180,7 +180,7 @@ classdef getDensity < handle
 							youttext=sprintf('%0.3g ',ycol(idx)');
 							xcol(idx)=[];
 							ycol(idx)=[];
-							cases(idx>0)=[];
+							if ~isempty(cases); cases(idx)=[]; end
 						else
 							xouttext=sprintf('%0.3g ',xcol(idx1)');
 							youttext=sprintf('%0.3g ',ycol(idx2)');
@@ -201,7 +201,7 @@ classdef getDensity < handle
 							youttext=sprintf('%0.3g ',ycol(idx>0)');
 							xcol(idx>0)=[];
 							ycol(idx>0)=[];
-							cases(idx>0)=[];
+							if ~isempty(cases); cases(idx>0)=[]; end
 						else
 							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
 							youttext=sprintf('%0.3g ',ycol(idx2>0)');
@@ -222,7 +222,7 @@ classdef getDensity < handle
 							youttext=sprintf('%0.3g ',ycol(idx>0));
 							xcol(idx>0)=[];
 							ycol(idx>0)=[];
-							cases(idx>0)=[];
+							if ~isempty(cases); cases(idx>0)=[]; end
 						else
 							xouttext=sprintf('%0.3g ',xcol(idx1>0));
 							youttext=sprintf('%0.3g ',ycol(idx2>0));
@@ -501,7 +501,7 @@ classdef getDensity < handle
 				supt=[obj.columnlabels{i} ' # = ' num2str(length(xcol)) '[' num2str(length(obj.x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(obj.y(:,i))) ']'];
 				
 				if ~isempty(xouttext) && ~strcmp(xouttext,' ') && length(xouttext)<25
-					supt=[supt ' | ' dooutlier ': 1 = ' xouttext];
+					supt=[supt ' | ' obj.dooutlier ': 1 = ' xouttext];
 				end
 				if ~isempty(youttext) && ~strcmp(youttext,' ') && length(xouttext)<25
 					supt=[supt ' | 2 = ' youttext];
@@ -598,7 +598,15 @@ classdef getDensity < handle
 			else
 				value = 3;
 			end
-		end
+        end
+        
+        function set.plotX(obj,value)
+            
+        end
+        
+        function set.plotY(obj,value)
+            
+        end
 		
 		function set.x(obj,value)
 			if size(value,1)==1
