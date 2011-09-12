@@ -13,19 +13,22 @@
 function DOG_PatchGrating;
 
 % Example DOG parameters
-A1=1; A2=0.9; aa1=0.3; aa2=0.6;    
+A1=10; A2=8; aa1=0.3; aa2=0.6;    
 para_DOG=[A1 aa1 A2 aa2];
 % Example grid of patch-grating diameters 
-d_grid=[1 2 3];
+d_grid=[0 0.5 1 2 4 8];
 % Example grid of kd - note kd=2*pi*nud where nud is the spatial frequency of the grating
-kd_grid=[2 4.4 10];
+kd_grid=[0 pi 2*pi];
 % Value of nmax, that is the highest value of n in the series summation of X 
 nmax=16; 
 
 for ikd=1:size(kd_grid,2)
   %Evaluation of patch-grating response
-  kd=kd_grid(ikd)
-  DOG_response=fun_DOG_patch_series_dvary([para_DOG kd nmax],d_grid)        
+  kd=kd_grid(ikd);
+  DOG_response=fun_DOG_patch_series_dvary([para_DOG kd nmax],d_grid);
+  figure;
+  plot(d_grid,DOG_response,'k-o');
+  title(['KMAX = ' num2str(kd)]);
 end
 
 

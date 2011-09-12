@@ -73,7 +73,6 @@ for i=1:length(xdata)
 			case 1
 				f=(x(1)*exp(-((2*space)/x(2)).^2))./(x(3)*exp(-((2*space)/x(4)).^2));
 		end
-		
 		sc(i)=x(5)+trapz(space,f);
 	end
 end

@@ -1563,13 +1563,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			a=a./m;
 			d=w(i);
 			figure;
-			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],1,'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+			areabar(w, a, aerr)
 			t=data.matrixtitle;
 			sv.titlehandle=title(t);
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 			sv.ylabelhandle=ylabel('Normalized Firing Rate');
 			sv.xlabelhandle=xlabel('Diameter');
-			legend(T,0)
+			%legend(T,0)
 			[xx,b]=ginput(2);
 			b=mean(b);
 			b=100-b*100;
@@ -1618,7 +1618,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			a=a./m;
 			d=w(i);
 			figure;
-			areabar(w, a, aerr,[.9 .8 .8],'Color',[1 0 0],1,'Marker','s','MarkerSize',6,'MarkerFaceColor',[1 0 0])
+			areabar(w, a, aerr)
 			t=data.matrixtitle;
 			yt=['----' data.ytitle ' ' sprintf('%0.5g',YY)];
 			t=[t yt];
@@ -1626,8 +1626,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 			sv.ylabelhandle=ylabel('Normalized Firing Rate');
 			sv.xlabelhandle=xlabel('Diameter');
-			legend(T,0)
-			
+			%legend(T,0)
+
 			[xx,b]=ginput(2);
 			b=mean(b);
 			b=100-b*100;

@@ -193,7 +193,7 @@ switch(action)
 		xo(4)=str2num(get(gh('ssedit'),'String'));
 		xo(5)=str2num(get(gh('dcedit'),'String'));
 		xo(6)=str2num(get(gh('sedit'),'String'));
-		xo(6)=xo(6)/sf; %needed or else fmincon doesnt jump values enough to shift it
+		if get(gh('DFUseCHF'),'Value') == 0; xo(6)=xo(6)/sf; end%needed or else fmincon doesnt jump values enough to shift it
 		
 		if get(gh('DFUsenlinfit'),'Value')==0 && get(gh('ConstrainBox'),'Value')==1
 			lb(1)=str2num(get(gh('lb1'),'String'));
@@ -202,18 +202,26 @@ switch(action)
 			lb(4)=str2num(get(gh('lb4'),'String'));
 			lb(5)=str2num(get(gh('lbdc'),'String'));
 			lb(6)=str2num(get(gh('lbs'),'String'));
-			if lb(6)>0;lb(6)=lb(6)/sf;end;
+			if get(gh('DFUseCHF'),'Value') == 0; if lb(6)>0;lb(6)=lb(6)/sf;end;end
 			ub(1)=str2num(get(gh('ub1'),'String'));
 			ub(2)=str2num(get(gh('ub2'),'String'));
 			ub(3)=str2num(get(gh('ub3'),'String'));
 			ub(4)=str2num(get(gh('ub4'),'String'));
 			ub(5)=str2num(get(gh('ubdc'),'String'));
 			ub(6)=str2num(get(gh('ubs'),'String'));
-			if ub(6)>0;ub(6)=ub(6)/sf;end;
-			if get(gh('Surround'),'Value')==1
-				[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,@sumconfun,options,x,y);
+			if get(gh('DFUseCHF'),'Value') == 0; if ub(6)>0;ub(6)=ub(6)/sf;end;end
+			if get(gh('DFUseCHF'),'Value') == 0
+				if get(gh('Surround'),'Value')==1
+					[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,@sumconfun,options,x,y);
+				else
+					[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,[],options,x,y);
+				end
 			else
-				[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,[],options,x,y);
+				nmax = 16;
+				lb(7) = nmax;
+				ub(7) = nmax;
+				xo(7) = nmax;
+				[o,f,exit,output]=fmincon(@DOG_CHF,xo,[],[],[],[],lb,ub,[],options,x,y);
 			end
 		elseif get(gh('DFUsenlinfit'),'Value')==0
 			[o,f,exit,output]=fminunc(@dogsummate,xo,options,x,y);
@@ -232,13 +240,17 @@ switch(action)
 		set(gh('InfoText'),'String',fd.text);
 		
 		fd.dc=o(5);
-		fd.s=o(6)*sf;
+		if get(gh('DFUseCHF'),'Value') == 0;
+			fd.s=o(6)*sf;
+		else
+			fd.s=o(6);
+		end	
 		fd.xo=o;
 		if get(gh('ConstrainBox'),'Value')==1 && get(gh('DFUsenlinfit'),'Value')==0
 			fd.lb=lb;
-			fd.lb(6)=fd.lb(6)*sf;
+			if get(gh('DFUseCHF'),'Value') == 0;fd.lb(6)=fd.lb(6)*sf;end
 			fd.ub=ub;
-			fd.ub(6)=fd.ub(6)*sf;
+			if get(gh('DFUseCHF'),'Value') == 0;fd.ub(6)=fd.ub(6)*sf;end
 			fd.output=output;
 		end
 		
@@ -249,8 +261,19 @@ switch(action)
 		set(gh('dcedit'),'String',num2str(fd.xo(5)));
 		set(gh('sedit'),'String',num2str(fd.xo(6)));
 		
-		yy=dogsummate(fd.xo,x);
-		yy(find(yy<0))=0;
+		if get(gh('DFUseCHF'),'Value') == 0
+			yy=dogsummate(fd.xo,x);
+		else
+			try
+				xoc=fd.xo;
+				nmax = 16;
+				xoc(7) = nmax;
+				yy=DOG_CHF(xoc,x);
+			catch
+				fprintf('\nCHF Failed!!!\n')
+				yy=dogsummate(fd.xo,x);
+			end
+		end
 		axes(gh('sfaxis'));
 		cla;
 		if isfield(fd,'e')            %we have error onfo
@@ -351,7 +374,7 @@ switch(action)
 				xoc(7) = nmax;
 				yy=DOG_CHF(xoc,x);
 			catch
-				fprint('\nCHF Failed!!!\n')
+				fprintf('\nCHF Failed!!!\n')
 				yy=dogsummate(xo,x);
 			end
 		end
@@ -609,10 +632,44 @@ ceq=[];
 % x(7): nmax
 % Note that x-coordinate is patch diameter d
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-function y=DOG_CHF(x,xdata)
+function y=DOG_CHF(x,xdata,data,rectify)
+if nargin < 1
+	x(1) = 10;
+	x(2) = 0.5;
+	x(3) = 8;
+	x(4) = 1;
+	x(5) = 0;
+	x(6) = 2*pi;
+	x(7) = 16;
+end
+if length(x)==6 %we need to add nmax
+	x(7) = 16;
+end
+if nargin < 2
+	xdata=[00.5 1 2 4 9];
+end
+if nargin < 3
+	data=[];
+end
+if nargin < 4
+	rectify=false;
+end
+
 xe(1)=x(2); xe(2)=x(6); xe(3)=x(7);
 xi(1)=x(4); xi(2)=x(6); xi(3)=x(7);
 y = x(5) + (x(1)*fun_X_series_dvary(xe,xdata)-x(3)*fun_X_series_dvary(xi,xdata));
+
+if rectify == true
+	y(y<0) = 0;
+end
+
+if ~isempty(data) %we've been passed data so return the squared error
+	y=sum((data-y).^2);  %percentage
+end
+
+if x(5)<0 %this is to stop the nlinfit, which has no upper or lower bounds to not select negative spontaneous levels.by making the fit really bad
+	y=y/1000;
+end
 
 
 %%%%%%%%%%%%%%%%%

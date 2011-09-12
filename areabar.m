@@ -3,7 +3,7 @@ function handles = areabar(xvalues,ydata,error,c1,alpha,varargin)
 %Plots X and Y value data with error bar shown as a shaded
 %area. Use:
 %
-% areabar(x,y,error,c1,plotoptions)
+% areabar(x,y,error,c1,alpha,plotoptions)
 %
 %     where c1 is the colour of the shaded options and plotoptions are
 %     passed to the line plot
