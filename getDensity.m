@@ -18,51 +18,69 @@ classdef getDensity < handle
 	properties
 		x = []
 		y = []
+		%> number of bootstrap iterations default: 1000
 		nboot = 1000
+		%> function handle to bootstrap default: @mean
 		fhandle = @mean
+		%> P value to use for all statistics
 		alpha = 0.05
+		%> A cell list of the main X and Y data, i.e. {'Control','Drug'}
 		legendtxt = {'Group 1','Group 2'}
+		%> Add gaussian fits to the histograms? default: true
 		dogauss = true
+		%> if X/Y have more than 1 column, you can detail column names here
 		columnlabels = {'Data Set 1'}
+		%> remove outliers using 'grubb', 'rosner', 3SD' or 'none'
 		dooutlier = 'none'
+		%> add jitter to scatterplot? 'x', 'y', 'both', 'equal', 'none'
 		addjitter = 'none'
+		%>  celllist of case names the same length as X/Y
 		cases = []
+		%> are our cases nominal or ordinal?
 		nominalcases = true
 		rownames = []
-		rosnern = 2 %rosner outlier number of outliers
-		outlierp = 0.001 %p to use for outlier removal for rosner and grubb
-		jitterfactor = 100 %scalefactor for jitter of scatter plot
+		%> rosner outlier number of outliers
+		rosnern = 2 
+		%> p to use for outlier removal for rosner and grubb
+		outlierp = 0.001 
+		%> scalefactor for jitter of scatter plot
+		jitterfactor = 100 
+		%> do we spit out each plot in its own figure for easy export?
 		singleplots = false
+		%> do we show the original points in the scatter before scattering them?
 		showoriginalscatter = false
 		autorun = false
 		bartype = 'grouped'
 		barwidth = 1.25
 		verbose = true
 		comment = ''
+		%> do we scale the axes to be equal for the scatterplots
 		scaleaxes = true
+		%> do we show the unity line for the scatterplot?
+		showunityline = true
 	end
 	
-	properties (Dependent = true, SetAccess = protected, GetAccess = public)
+	properties (Dependent = true, SetAccess = private, GetAccess = public)
 		isDataEqualLength = true;
 		nColumns = []
 		plotX = 2 %the layout when plotting mutliple plots
 		plotY = 2 % layout when plotting mutliple plots
+		uniquecases = []
 	end
 	
-	properties (SetAccess = protected, GetAccess = public)
-		uniquecases = []
+	properties (SetAccess = private, GetAccess = public)
 		runStructure
 		h
 		pn
 	end
 	
-	properties (SetAccess = protected, GetAccess = protected)
+	properties (SetAccess = private, GetAccess = private)
 		allowedProperties = []
-		ignoreProperties = '(isDataEqualLength|nColumns|uniquecases|runStructure|h|pn)';
+		ignoreProperties = '(isDataEqualLength|nColumns|uniquecases|runStructure|h|pn|plotX|plotY)';
 	end
 	
-	events (ListenAccess = 'private', NotifyAccess = 'private')
-		checkData
+	events (Hidden = false, ListenAccess = private, NotifyAccess = private)
+		checkData %trigger this event to perform checks on data and cases etc.
 	end
 	
 	%=======================================================================
@@ -83,13 +101,21 @@ classdef getDensity < handle
 				obj.parseArgs(varargin, obj.allowedProperties);
 			end
 			
-			addlistener(obj,'checkData',@obj.doCheckData); %use an event to keep scale accurate
+			addlistener(obj,'checkData',@obj.doCheckData); %use an event to keep data accurate
 			
-			if obj.autorun == true
+			if obj.autorun == true && obj.haveData == true
 				obj.run;
 			end
 		end
 		
+		% ===================================================================
+		%> @brief Our main RUN method
+		%>
+		%> This performs the analysis and plots the results for the stored data.
+		%>
+		%> @param obj the class object automatically passed in
+		%> @return outs a structure with the analysis results if needed.
+		% ===================================================================
 		function outs = run(obj)
 			if isempty(obj.x)
 				error('You haven''t supplied any data yet!')
@@ -163,7 +189,7 @@ classdef getDensity < handle
 								youttext=sprintf('%0.3g ',ycol(idx)');
 								xcol(idx)=[];
 								ycol(idx)=[];
-								cases(idx>0)=[];
+								if ~isempty(cases); cases(idx)=[]; end
 							else
 								xouttext=sprintf('%0.3g ',xcol(idx1)');
 								youttext=sprintf('%0.3g ',ycol(idx2)');
@@ -180,7 +206,7 @@ classdef getDensity < handle
 							youttext=sprintf('%0.3g ',ycol(idx)');
 							xcol(idx)=[];
 							ycol(idx)=[];
-							cases(idx>0)=[];
+							if ~isempty(cases); cases(idx)=[]; end
 						else
 							xouttext=sprintf('%0.3g ',xcol(idx1)');
 							youttext=sprintf('%0.3g ',ycol(idx2)');
@@ -201,7 +227,7 @@ classdef getDensity < handle
 							youttext=sprintf('%0.3g ',ycol(idx>0)');
 							xcol(idx>0)=[];
 							ycol(idx>0)=[];
-							cases(idx>0)=[];
+							if ~isempty(cases); cases(idx>0)=[]; end
 						else
 							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
 							youttext=sprintf('%0.3g ',ycol(idx2>0)');
@@ -222,7 +248,7 @@ classdef getDensity < handle
 							youttext=sprintf('%0.3g ',ycol(idx>0));
 							xcol(idx>0)=[];
 							ycol(idx>0)=[];
-							cases(idx>0)=[];
+							if ~isempty(cases); cases(idx>0)=[]; end
 						else
 							xouttext=sprintf('%0.3g ',xcol(idx1>0));
 							youttext=sprintf('%0.3g ',ycol(idx2>0));
@@ -322,6 +348,7 @@ classdef getDensity < handle
 					[r2,p2]=corr(xcol,ycol,'type','spearman');
 					xrange = max(xcol) - min(xcol);
 					yrange = max(ycol) - min(ycol);
+					range = max(xrange,yrange);
 					xjitter = (randn(length(xcol),1))*(xrange/obj.jitterfactor);
 					yjitter = (randn(length(ycol),1))*(yrange/obj.jitterfactor);
 					bothjitter = (randn(length(xcol),1))*(max(xrange,yrange)/obj.jitterfactor);
@@ -353,7 +380,12 @@ classdef getDensity < handle
 					
 					mn = min(min(xcol),min(ycol));
 					mx = max(max(xcol),max(ycol));
-					axrange = [(mn - (mn/10)) (mx + (mx/10))];
+					
+					if obj.scaleaxes == true
+						axrange = [(mn - (mn/20)) (mx + (mx/20)) (mn - (mn/20)) (mx + (mx/20))];
+					else
+						axrange = [min(xcol) min(xcol)+range min(ycol) min(ycol)+range];
+					end
 					
 					if ~isempty(cases)
 						t = 'Group: ';
@@ -374,20 +406,27 @@ classdef getDensity < handle
 					try %#ok<TRYNC>
 						h = lsline;
 						set(h,'LineStyle','--','LineWidth',2)
-						if r2 >= 0
-							h = line([mn mx],[mn mx]);
-							set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
-						else
-							h = line([mx mn],[mn mx]);
-							set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
+						if obj.showunityline == true
+							if abs(r2) < 0.1
+								h = line([mn mx],[mn mx]);
+								set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
+								h = line([mx mn],[mn mx]);
+								set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
+							elseif r2 >= 0
+								h = line([mn mx],[mn mx]);
+								set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
+							else
+								h = line([mx mn],[mn mx]);
+								set(h,'Color',[0.7 0.7 0.7],'LineStyle','-.','LineWidth',2)
+							end
 						end
 					end
 					if sc == true && obj.showoriginalscatter == true
 						scatter(xcol,ycol,repmat(80,length(xcol),1),'ko','MarkerEdgeColor',[0.7 0.7 0.7]);
 					end
 					axis square
+					axis(axrange);
 					if obj.scaleaxes == true
-						axis([axrange axrange]);
 						set(gca,'XTick',get(gca,'YTick'),'XTickLabel',get(gca,'YTickLabel'));
 					end
 					pn(2,1).xlabel(obj.legendtxt{1})
@@ -501,7 +540,7 @@ classdef getDensity < handle
 				supt=[obj.columnlabels{i} ' # = ' num2str(length(xcol)) '[' num2str(length(obj.x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(obj.y(:,i))) ']'];
 				
 				if ~isempty(xouttext) && ~strcmp(xouttext,' ') && length(xouttext)<25
-					supt=[supt ' | ' dooutlier ': 1 = ' xouttext];
+					supt=[supt ' | ' obj.dooutlier ': 1 = ' xouttext];
 				end
 				if ~isempty(youttext) && ~strcmp(youttext,' ') && length(xouttext)<25
 					supt=[supt ' | 2 = ' youttext];
@@ -549,7 +588,7 @@ classdef getDensity < handle
 					obj.doSinglePlots(pn);
 				end
 				
-				if ~isempty(uniquecases)
+				if ~isempty(uniquecases) && ~isempty(cases)
 					for jj = 1:length(uniquecases)
 						caseidx = ismember(cases,uniquecases{jj});
 						xtmp = xcol(caseidx);
@@ -572,10 +611,20 @@ classdef getDensity < handle
 			obj.runStructure = outs;
 		end
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function value = get.nColumns(obj)
 			value = size(obj.x,2);
 		end
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function value = get.isDataEqualLength(obj)
 			if size(obj.x,1) == size(obj.y,1)
 				value = true;
@@ -584,6 +633,11 @@ classdef getDensity < handle
 			end
 		end
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function value = get.plotX(obj)
 			if obj.isDataEqualLength
 				value = 2;
@@ -592,6 +646,11 @@ classdef getDensity < handle
 			end
 		end
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function value = get.plotY(obj)
 			if obj.isDataEqualLength
 				value = 2;
@@ -600,6 +659,24 @@ classdef getDensity < handle
 			end
 		end
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function value = get.uniquecases(obj)
+			if ~isempty(obj.cases)
+				value = getlabels(obj.cases);
+			else
+				value = [];
+			end
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function set.x(obj,value)
 			if size(value,1)==1
 				value=value';
@@ -610,6 +687,11 @@ classdef getDensity < handle
 			notify(obj,'checkData');
 		end
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function set.y(obj,value)
 			if size(value,1)==1
 				value=value';
@@ -620,11 +702,18 @@ classdef getDensity < handle
 			notify(obj,'checkData');
 		end
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function set.cases(obj,value)
 			if length(value) ~= length(obj.x(:,1))
 				obj.cases = [];
-				obj.uniquecases = [];
 			else
+				if size(value,2) > size(value,1)
+					value = value';
+				end
 				for ii = 1:length(value)
 					value{ii}=regexprep(value{ii},'^\?$','Unknown');
 					value{ii}=regexprep(value{ii},'\W','_');
@@ -634,8 +723,20 @@ classdef getDensity < handle
 				else
 					obj.cases = ordinal(value);
 				end
-				obj.uniquecases = getlabels(obj.cases);
-				notify(obj,'checkData');
+			end
+			notify(obj,'checkData');
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function ret = haveData(obj)
+			if isempty(obj.x)
+				ret = false;
+			else
+				ret = true;
 			end
 		end
 	end
@@ -692,7 +793,13 @@ classdef getDensity < handle
 			end
 		end
 		
-		function doCheckData(obj)
+		% ===================================================================
+		%> @brief Function that runs after the checkData event fires
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function doCheckData(obj, src, evnt)
+			obj.salutation([evnt.EventName ' event'],'Event is running...');
 			if isempty(obj.y)
 				obj.y = zeros(size(obj.x));
 			end
@@ -700,6 +807,9 @@ classdef getDensity < handle
 				for i = length(obj.columnlabels)+1 : size(obj.x,2)
 					obj.columnlabels{i} = ['DataSet_' num2str(i)];
 				end
+			end
+			if isempty(obj.cases) && ~isempty(obj.uniquecases)
+				obj.uniquecases = [];
 			end
 		end
 		
@@ -782,7 +892,7 @@ classdef getDensity < handle
 			if isstruct(args)
 				fnames = fieldnames(args); %find our argument names
 				for i=1:length(fnames);
-					if regexp(fnames{i},allowedProperties) %only set if allowed property
+					if ~isempty(regexp(fnames{i},allowedProperties, 'once')) && isempty(regexp(fnames{i},obj.ignoreProperties, 'once')) %only set if allowed property
 						obj.salutation(fnames{i},'Configuring setting in constructor');
 						obj.(fnames{i})=args.(fnames{i}); %we set up the properies from the arguments as a structure
 					end

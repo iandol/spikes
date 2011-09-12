@@ -342,9 +342,21 @@ switch(action)
 		fd.s=fd.xo(6);
 		axes(gh('sfaxis'));
 		cla;
-		yy=dogsummate(xo,x);
-		yy(find(yy<0))=0;
-		if isfield(fd,'e')            %we have error onfo
+		if get(gh('DFUseCHF'),'Value') == 0
+			yy=dogsummate(xo,x);
+		else
+			try
+				xoc=xo;
+				nmax = 16;
+				xoc(7) = nmax;
+				yy=DOG_CHF(xoc,x);
+			catch
+				fprint('\nCHF Failed!!!\n')
+				yy=dogsummate(xo,x);
+			end
+		end
+		yy(yy<0)=0;
+		if isfield(fd,'e') %we have error info
 			%areabar(x,y,e,[.8 .8 .8]);
 			areabar(fd.x,fd.y,fd.e,[0.8 0.8 0.8]);
 			hold on;
@@ -579,3 +591,50 @@ function [c,ceq]=sumconfun(x,varargin)
 
 c=[x(2)-x(4)];
 ceq=[];
+
+%%%%%%%%%%%%%%%%%
+% fun_DOG_patch_series_dvary.m
+%%%%%%%%%%%%%%%%%
+% Requires:
+%  'fun_X_series_dvary.m'
+%%%%%
+% fun_DOG_patch_series_dvary evaluates the DOG-model response  
+% for a set of circular grating patch of diameter d using the SERIES expansion
+% x(1): A1
+% x(2): aa1
+% x(3): A2
+% x(4): aa2
+% x(5): dc
+% x(6): kd
+% x(7): nmax
+% Note that x-coordinate is patch diameter d
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+function y=DOG_CHF(x,xdata)
+xe(1)=x(2); xe(2)=x(6); xe(3)=x(7);
+xi(1)=x(4); xi(2)=x(6); xi(3)=x(7);
+y = x(5) + (x(1)*fun_X_series_dvary(xe,xdata)-x(3)*fun_X_series_dvary(xi,xdata));
+
+
+%%%%%%%%%%%%%%%%%
+% fun_X_series_dvary.m 
+%%%%%%%%%%%%%%%%%
+% fun_X_series_dvary evaluates the X-function needed to calculate the
+% DOG-response to patch gratings as a function of d values using a series
+% expression
+% x(1): a
+% x(2): kd
+% x(3): nmax, number of terms summed over
+% xdata: points on the d-axis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+function y = fun_X_series_dvary(x,xdata)
+[~, ndmax]=size(xdata);
+yp=zeros(1,ndmax);
+yp=x(1)./xdata;
+zp=x(1)*x(2);
+nmax=x(3);
+for nd= 1:ndmax
+	y(nd)=0;
+	for n= 0:nmax
+		y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+	end
+end
