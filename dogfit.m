@@ -25,20 +25,20 @@ switch(action)
 	%-------------------------------------------------------------------
 	case 'Initialize'
 	%-------------------------------------------------------------------
-		
-		version=['DOG-Fit Model Fitting Routine V1.8 | Started on ', datestr(now)];
+		fd.version = 1.901;
+		version=['DOG-Fit Model Fitting Routine ' sprintf('%.4f',fd.version) ' | Started on ', datestr(now)];
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
-		dogfitfig;
+		fd.uihandle = dogfitfig;
 		set(gcf,'Name', version);
 		set(gh('DFDisplayMenu'),'Value',3);
 		set(gh('InfoText'),'String','Welcome to the DOG Model Fitter. Choose ''Import'' to load data from Spikes, or ''Load Data'' to load a previous model file.');
-		
+		tic;matlabpool
+		fprintf('matlabpool took: %g seconds to initialize\n',toc)
 		%-------------------------------------------------------------------
 	case 'Import'
 		%-------------------------------------------------------------------
 		
-		fd=[];
 		if isempty(data)
 			errordlg('Sorry, I can''t find the spikes data structure, are you running spikes?')
 			error('can''t find data...');
@@ -365,6 +365,7 @@ switch(action)
 		fd.s=fd.xo(6);
 		axes(gh('sfaxis'));
 		cla;
+		tic
 		if get(gh('DFUseCHF'),'Value') == 0
 			yy=dogsummate(xo,x);
 		else
@@ -378,6 +379,7 @@ switch(action)
 				yy=dogsummate(xo,x);
 			end
 		end
+		fprintf('Curve Generation took: %g seconds\n',toc)
 		yy(yy<0)=0;
 		if isfield(fd,'e') %we have error info
 			%areabar(x,y,e,[.8 .8 .8]);
@@ -500,6 +502,14 @@ switch(action)
 		axes(c(end))
 		text(0,0,num2str([fd.xo,fd.goodness,fd.goodness2]))
 		
+		%-------------------------------------------------------------------
+	case 'Exit'
+		%-------------------------------------------------------------------
+		if matlabpool('size') > 0
+			matlabpool close;
+		end
+		close(fd.uihandle);
+		clear fd;
 		
 		%--------------------------------------------------
 end %end of main program switch
@@ -689,9 +699,21 @@ yp=zeros(1,ndmax);
 yp=x(1)./xdata;
 zp=x(1)*x(2);
 nmax=x(3);
-for nd= 1:ndmax
-	y(nd)=0;
-	for n= 0:nmax
-		y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+y=zeros(ndmax);
+
+if matlabpool('size') > 0
+	fprintf('Computing Hypergeometric function using parfor...')
+	for nd=1:ndmax
+	  parfor n=0:nmax
+		  yy(n+1) = exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+	  end
+	  y(nd) = sum(yy);
+	end
+else
+	fprintf('Computing Hypergeometric function serially...')
+	for nd=1:ndmax
+	  for n=0:nmax
+	      y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+	  end
 	end
 end

@@ -58,9 +58,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv=[];
 		data=[];
 		rlist=[];
-		sv.version = 1.905;
+		sv.version = 1.911;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
-		sv.title=['SPIKES: V' num2str(sv.version)];
+		sv.title=['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
 			if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
 				mkdir(['~' filesep 'MatlabFiles' filesep]);
@@ -432,7 +432,11 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		
 		data.numvars=data.meta.numvars;
 		data.protocol.name=data.meta.protocol;
-		data.protocol.desc=data.meta.description;
+		if isfield(data.meta,'description')
+			data.protocol.desc=data.meta.description;
+		else
+			data.protocol.desc = '';
+		end
 		data.protocol.filecomm=data.meta.comments;
 		data.protocol.date=data.meta.date;
 		data.repeats=data.meta.repeats;

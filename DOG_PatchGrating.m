@@ -10,8 +10,10 @@
 %  with the Symbolic Math Toolbox.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function DOG_PatchGrating;
-
+function DOG_PatchGrating
+tic
+matlabpool
+fprintf('matlabpool took: %g seconds to initialize\n',toc)
 % Example DOG parameters
 A1=10; A2=8; aa1=0.3; aa2=0.6;    
 para_DOG=[A1 aa1 A2 aa2];
@@ -21,14 +23,21 @@ d_grid=[0 0.5 1 2 4 8];
 kd_grid=[0 pi 2*pi];
 % Value of nmax, that is the highest value of n in the series summation of X 
 nmax=16; 
-
-for ikd=1:size(kd_grid,2)
-  %Evaluation of patch-grating response
-  kd=kd_grid(ikd);
-  DOG_response=fun_DOG_patch_series_dvary([para_DOG kd nmax],d_grid);
-  figure;
-  plot(d_grid,DOG_response,'k-o');
-  title(['KMAX = ' num2str(kd)]);
+try
+	for ikd=1:size(kd_grid,2)
+	  %Evaluation of patch-grating response
+	  kd=kd_grid(ikd);
+	  tic
+	  DOG_response=fun_DOG_patch_series_dvary([para_DOG kd nmax],d_grid);
+	  fprintf('kd_grid %i took: %g seconds to initialize\n',ikd,toc)
+	  figure;
+	  plot(d_grid,DOG_response,'k-o');
+	  title(['KMAX = ' num2str(kd)]);
+	end
+matlabpool close
+catch ME
+	matlabpool close
+	rethrow ME
 end
 
 
@@ -66,14 +75,23 @@ y = x(1)*fun_X_series_dvary(xe,xdata)-x(3)*fun_X_series_dvary(xi,xdata);
 % xdata: points on the d-axis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function y = fun_X_series_dvary(x,xdata)
-[dummy ndmax]=size(xdata);
+[~, ndmax]=size(xdata);
 yp=zeros(1,ndmax);
 yp=x(1)./xdata;
 zp=x(1)*x(2);
 nmax=x(3);
-for nd= 1:ndmax
-y(nd)=0;
-  for n= 0:nmax
-      y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
-  end
+y=zeros(ndmax);
+if matlabpool('size') > 0
+	for nd=1:ndmax
+	  parfor n=0:nmax
+		  yy(n+1) = exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+	  end
+	  y(nd) = sum(yy);
+	end
+else
+	for nd=1:ndmax
+	  for n=0:nmax
+	      y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+	  end
+	end
 end

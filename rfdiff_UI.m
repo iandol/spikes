@@ -22,7 +22,7 @@ function varargout = rfdiff_UI(varargin)
 
 % Edit the above text to modify the response to help rfdiff_UI
 
-% Last Modified by GUIDE v2.5 29-Apr-2011 11:13:42
+% Last Modified by GUIDE v2.5 13-Sep-2011 11:06:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -530,3 +530,11 @@ function RFDMetricSpace_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 rfdiff('MetricSpace')
+
+
+% --- Executes on button press in RFDgetDensity.
+function RFDgetDensity_Callback(hObject, eventdata, handles)
+% hObject    handle to RFDgetDensity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+rfdiff('getDensity')

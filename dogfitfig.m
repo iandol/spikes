@@ -147,7 +147,7 @@ dogfit('FitIt')
 % --------------------------------------------------------------------
 function varargout = ExitButton_Callback(h, eventdata, handles, varargin)
 % Stub for Callback of the uicontrol handles.ExitButton.
-close(gcf);
+dogfit('Exit')
 
 % --------------------------------------------------------------------
 function varargout = DFSmoothMenu_Callback(h, eventdata, handles, varargin)
@@ -245,9 +245,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
-
 % --- Executes on button press in DFUseROG.
 function DFUseROG_Callback(hObject, eventdata, handles)
 % hObject    handle to DFUseROG (see GCBO)
@@ -270,4 +267,5 @@ function DFUseCHF_Callback(hObject, eventdata, handles)
 v = get(hObject,'Value');
 if v == 1
 	set(handles.DFUseROG,'Value',0)
+	set(handles.DFSmooth,'Value',0)
 end

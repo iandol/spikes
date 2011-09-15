@@ -3,6 +3,8 @@ classdef getDensity < handle
 	%groups. You can pass a set of cases to the function and it will compute
 	%statistics automagically for all cases as well. There are numerous
 	%settings:
+	% x - our first data group, plotted along the abscissa
+	% y - our second data group, plotted along the ordinate
 	% nboot - number of bootstrap iterations default: 1000
 	% fhandle - function handle to bootstrap default: @mean
 	% alpha - P value to use for all statistics
@@ -16,7 +18,9 @@ classdef getDensity < handle
 	% showoriginalscatter - show unjittered data too?
 	
 	properties
+		%> our first data group, plotted along the abscissa
 		x = []
+		%> our second data group, plotted along the ordinate
 		y = []
 		%> number of bootstrap iterations default: 1000
 		nboot = 1000
@@ -49,10 +53,15 @@ classdef getDensity < handle
 		singleplots = false
 		%> do we show the original points in the scatter before scattering them?
 		showoriginalscatter = false
+		%> if we are passed data on construction, run straight away
 		autorun = false
+		%> how to plot the histogram
 		bartype = 'grouped'
+		%> width of histogram bars
 		barwidth = 1.25
+		%> are we verbose printing to command line?
 		verbose = true
+		%> any comments to add to the object
 		comment = ''
 		%> do we scale the axes to be equal for the scatterplots
 		scaleaxes = true
@@ -61,17 +70,27 @@ classdef getDensity < handle
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
+		%> is the x and y data groups equal length, suggestive of paired data?
 		isDataEqualLength = true;
+		%> number of columns
 		nColumns = []
-		plotX = 2 %the layout when plotting mutliple plots
-		plotY = 2 % layout when plotting mutliple plots
+		%> the layout when plotting mutliple plots
+		plotX = 2 
+		%> layout when plotting mutliple plots
+		plotY = 2 
+		%> the unique cases
 		uniquecases = []
 	end
 	
 	properties (SetAccess = private, GetAccess = public)
+		%> the structure returned from run, saved here
 		runStructure
+		%> handle to the figure
 		h
+		%> our panel object, we use panel instead of subplot as it is more powerful
 		pn
+		%> dataStructure a dataset
+		data
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -162,102 +181,7 @@ classdef getDensity < handle
 				xstd=nanstd(xcol);
 				ystd=nanstd(ycol);
 				
-				switch obj.dooutlier
-					case 'quantiles'
-						idx1=qoutliers(xcol);
-						idx2=qoutliers(ycol);
-						if length(xcol)==length(ycol)
-							idx=idx1+idx2;
-							xouttext=sprintf('%0.3g ',xcol(idx>0)');
-							youttext=sprintf('%0.3g ',ycol(idx>0)');
-							xcol(idx>0)=[];
-							ycol(idx>0)=[];
-							cases(idx>0)=[];
-						else
-							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
-							youttext=sprintf('%0.3g ',ycol(idx2>0)');
-							xcol(idx1>0)=[];
-							ycol(idx2>0)=[];
-						end
-					case 'rosner'
-						idx1=outlier(xcol,obj.outlierp,obj.rosnern);
-						idx2=outlier(ycol,obj.outlierp,obj.rosnern);
-						if ~isempty(idx1) || ~isempty(idx2)
-							if length(xcol)==length(ycol)
-								idx=unique([idx1;idx2]);
-								xouttext=sprintf('%0.3g ',xcol(idx)');
-								youttext=sprintf('%0.3g ',ycol(idx)');
-								xcol(idx)=[];
-								ycol(idx)=[];
-								if ~isempty(cases); cases(idx)=[]; end
-							else
-								xouttext=sprintf('%0.3g ',xcol(idx1)');
-								youttext=sprintf('%0.3g ',ycol(idx2)');
-								xcol(idx1)=[];
-								ycol(idx2)=[];
-							end
-						end
-					case 'grubb'
-						[~,idx1]=deleteoutliers(xcol,obj.outlierp);
-						[~,idx2]=deleteoutliers(ycol,obj.outlierp);
-						if length(xcol)==length(ycol)
-							idx=unique([idx1;idx2]);
-							xouttext=sprintf('%0.3g ',xcol(idx)');
-							youttext=sprintf('%0.3g ',ycol(idx)');
-							xcol(idx)=[];
-							ycol(idx)=[];
-							if ~isempty(cases); cases(idx)=[]; end
-						else
-							xouttext=sprintf('%0.3g ',xcol(idx1)');
-							youttext=sprintf('%0.3g ',ycol(idx2)');
-							xcol(idx1)=[];
-							ycol(idx2)=[];
-						end
-					case '2SD'
-						mtmp=repmat(xmean,length(xcol),1);
-						stmp=repmat(xstd,length(xcol),1);
-						idx1=abs(xcol-mtmp)>2*stmp;
-						
-						mtmp=repmat(ymean,length(ycol),1);
-						stmp=repmat(ystd,length(ycol),1);
-						idx2=abs(ycol-mtmp)>2*stmp;
-						if length(xcol)==length(ycol)
-							idx=idx1+idx2;
-							xouttext=sprintf('%0.3g ',xcol(idx>0)');
-							youttext=sprintf('%0.3g ',ycol(idx>0)');
-							xcol(idx>0)=[];
-							ycol(idx>0)=[];
-							if ~isempty(cases); cases(idx>0)=[]; end
-						else
-							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
-							youttext=sprintf('%0.3g ',ycol(idx2>0)');
-							xcol(idx1>0)=[];
-							ycol(idx2>0)=[];
-						end
-					case '3SD'
-						mtmp=repmat(xmean,length(xcol),1);
-						stmp=repmat(xstd,length(xcol),1);
-						idx1=abs(xcol-mtmp)>3*stmp;
-						
-						mtmp=repmat(ymean,length(ycol),1);
-						stmp=repmat(ystd,length(ycol),1);
-						idx2=abs(ycol-mtmp)>3*stmp;
-						if length(xcol)==length(ycol)
-							idx=idx1+idx2;
-							xouttext=sprintf('%0.3g ',xcol(idx>0));
-							youttext=sprintf('%0.3g ',ycol(idx>0));
-							xcol(idx>0)=[];
-							ycol(idx>0)=[];
-							if ~isempty(cases); cases(idx>0)=[]; end
-						else
-							xouttext=sprintf('%0.3g ',xcol(idx1>0));
-							youttext=sprintf('%0.3g ',ycol(idx2>0));
-							xcol(idx1>0)=[];
-							ycol(idx2>0)=[];
-						end
-					otherwise
-						
-				end
+				[xcol,ycol,cases,xouttext,youttext] = obj.removeOutliers(xcol,ycol,cases,xouttext,youttext);
 				
 				xmean=nanmean(xcol);
 				xmedian=nanmedian(xcol);
@@ -268,11 +192,11 @@ classdef getDensity < handle
 				xstderr=stderr(xcol,'SE',1);
 				ystderr=stderr(ycol,'SE',1);
 				
+				
+				%==========================================DO HISTOGRAM
 				dmin=min([xcol;ycol]); %get the min
 				dmax=max([xcol;ycol]); %get the max
-				
 				histax=floor(dmin):(ceil(dmax)-floor(dmin))/10:ceil(dmax);
-				
 				[xn,hbins]=hist(xcol,histax);
 				yn=hist(ycol,histax);
 				pn(1,1).select();
@@ -320,30 +244,33 @@ classdef getDensity < handle
 				
 				pn(1,1).xlabel(obj.columnlabels{i});
 				pn(1,1).ylabel('Number of cells');
+				pn(1,1).title('Histogram and Gaussian Fits');
 				
+				
+				%==========================================DO BOX PLOTS
+				pn(1,2).select()
 				if obj.isDataEqualLength && exist('distributionPlot','file')
-					pn(1,2).select()
 					hold on
 					distributionPlot({xcol,ycol},0.3);
 					pn(1,2).ylabel(obj.columnlabels{i});
 				elseif obj.isDataEqualLength==false && exist('distributionPlot','file')
-					pn(2,1).select()
 					hold on
 					distributionPlot({xcol,ycol},0.3);
-					pn(2,1).ylabel(obj.columnlabels{i});
+					pn(1,2).ylabel(obj.columnlabels{i});
 				end
 				if obj.isDataEqualLength
 					boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',obj.legendtxt,'colors','k')
 				end
-				title('Box / Density Plots')
+				pn(1,2).title('Box / Density Plots')
 				hold off
 				box on
 				
+				
+				%==========================================DO SCATTER
 				xcolout = xcol;
 				ycolout = ycol;
-				
 				if ystd > 0 && obj.isDataEqualLength
-					pn(2,1).select()
+					pn(1,3).select()
 					[r,p]=corr(xcol,ycol);
 					[r2,p2]=corr(xcol,ycol,'type','spearman');
 					xrange = max(xcol) - min(xcol);
@@ -380,13 +307,11 @@ classdef getDensity < handle
 					
 					mn = min(min(xcol),min(ycol));
 					mx = max(max(xcol),max(ycol));
-					
 					if obj.scaleaxes == true
 						axrange = [(mn - (mn/20)) (mx + (mx/20)) (mn - (mn/20)) (mx + (mx/20))];
 					else
 						axrange = [min(xcol) min(xcol)+range min(ycol) min(ycol)+range];
 					end
-					
 					if ~isempty(cases)
 						t = 'Group: ';
 						for jj = 1:length(uniquecases)
@@ -396,7 +321,6 @@ classdef getDensity < handle
 						colours = [0 0 0];
 						t = '';
 					end
-					
 					hold on
 					if ~isempty(cases)
 						gscatter(xcolout,ycolout,cases,'krbgmyc','o');
@@ -429,9 +353,9 @@ classdef getDensity < handle
 					if obj.scaleaxes == true
 						set(gca,'XTick',get(gca,'YTick'),'XTickLabel',get(gca,'YTickLabel'));
 					end
-					pn(2,1).xlabel(obj.legendtxt{1})
-					pn(2,1).ylabel(obj.legendtxt{2})
-					pn(2,1).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
+					pn(1,3).xlabel(obj.legendtxt{1})
+					pn(1,3).ylabel(obj.legendtxt{2})
+					pn(1,3).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
 					hold off
 					grid on
 					box on
@@ -439,7 +363,6 @@ classdef getDensity < handle
 				end
 				
 				%============================Lets measure statistics
-				
 				t=['Mn/Mdn: ' sprintf('%0.3g', xmean) '\pm' sprintf('%0.3g', xstderr) '/' sprintf('%0.3g', xmedian) ' | ' sprintf('%0.3g', ymean) '\pm' sprintf('%0.3g', ystderr) ' / ' sprintf('%0.3g', ymedian)];
 				
 				if ystd > 0
@@ -515,15 +438,32 @@ classdef getDensity < handle
 				[xci,xmean,xpop]=bootci(obj.nboot,{obj.fhandle,xcol},'alpha',obj.alpha);
 				[yci,ymean,ypop]=bootci(obj.nboot,{obj.fhandle,ycol},'alpha',obj.alpha);
 				
-				t=[t 'BootStrap: ' sprintf('%0.2g', xci(1)) ' < ' sprintf('%0.2g', xmean) ' > ' sprintf('%0.2g', xci(2)) ' | ' sprintf('%0.2g', yci(1)) ' < ' sprintf('%0.2g', ymean) ' > ' sprintf('%0.2g', yci(2))];
+				t=[t 'BootStrap: ' sprintf('%0.3g', xci(1)) ' < ' sprintf('%0.3g', xmean) ' > ' sprintf('%0.3g', xci(2)) ' | ' sprintf('%0.3g', yci(1)) ' < ' sprintf('%0.3g', ymean) ' > ' sprintf('%0.3g', yci(2))];
 				
 				[fx,xax]=ksdensity(xpop);
 				[fy,yax]=ksdensity(ypop);
 				
+				
+				%==========================================DO CDF
+				if obj.isDataEqualLength
+					pn(2,1).select();
+				else
+					pn(2,1).select();
+				end
+				h = cdfplot(xcol);
+				set(h,'Color',[0 0 0])
+				hold on
+				h = cdfplot(ycol);
+				set(h,'Color',[1 0 0])
+				hold off
+				pn(2,1).title('Cumulative Distribution Function');
+				pn(2,1).xlabel(obj.columnlabels{i});
+				
+				%==========================================Do DENSITY
 				if obj.isDataEqualLength
 					pn(2,2).select();
 				else
-					pn(3,1).select();
+					pn(2,2).select();
 				end
 				
 				plot(xax,fx,'k-','linewidth',1.5);
@@ -640,9 +580,9 @@ classdef getDensity < handle
 		% ===================================================================
 		function value = get.plotX(obj)
 			if obj.isDataEqualLength
-				value = 2;
+				value = 3;
 			else
-				value = 1;
+				value = 2;
 			end
 		end
 		
@@ -655,7 +595,7 @@ classdef getDensity < handle
 			if obj.isDataEqualLength
 				value = 2;
 			else
-				value = 3;
+				value = 2;
 			end
 		end
 		
@@ -707,6 +647,19 @@ classdef getDensity < handle
 		%>
 		%> @param obj this instance object
 		% ===================================================================
+		function set.columnlabels(obj,value)
+			if ischar(value)
+				obj.columnlabels = {value};
+			elseif iscell(value)
+				obj.columnlabels = value;
+			end
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function set.cases(obj,value)
 			if length(value) ~= length(obj.x(:,1))
 				obj.cases = [];
@@ -745,51 +698,176 @@ classdef getDensity < handle
 	methods ( Access = private ) %-------PRIVATE (protected) METHODS-----%
 	%=======================================================================
 		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function [xcol,ycol,cases,xouttext,youttext] = removeOutliers(obj,xcol,ycol,cases,xouttext,youttext)
+			switch obj.dooutlier
+					case 'quantiles'
+						idx1=qoutliers(xcol);
+						idx2=qoutliers(ycol);
+						if length(xcol)==length(ycol)
+							idx=idx1+idx2;
+							xouttext=sprintf('%0.3g ',xcol(idx>0)');
+							youttext=sprintf('%0.3g ',ycol(idx>0)');
+							xcol(idx>0)=[];
+							ycol(idx>0)=[];
+							cases(idx>0)=[];
+						else
+							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
+							youttext=sprintf('%0.3g ',ycol(idx2>0)');
+							xcol(idx1>0)=[];
+							ycol(idx2>0)=[];
+						end
+					case 'rosner'
+						idx1=outlier(xcol,obj.outlierp,obj.rosnern);
+						idx2=outlier(ycol,obj.outlierp,obj.rosnern);
+						if ~isempty(idx1) || ~isempty(idx2)
+							if length(xcol)==length(ycol)
+								idx=unique([idx1;idx2]);
+								xouttext=sprintf('%0.3g ',xcol(idx)');
+								youttext=sprintf('%0.3g ',ycol(idx)');
+								xcol(idx)=[];
+								ycol(idx)=[];
+								if ~isempty(cases); cases(idx)=[]; end
+							else
+								xouttext=sprintf('%0.3g ',xcol(idx1)');
+								youttext=sprintf('%0.3g ',ycol(idx2)');
+								xcol(idx1)=[];
+								ycol(idx2)=[];
+							end
+						end
+					case 'grubb'
+						[~,idx1]=deleteoutliers(xcol,obj.outlierp);
+						[~,idx2]=deleteoutliers(ycol,obj.outlierp);
+						if length(xcol)==length(ycol)
+							idx=unique([idx1;idx2]);
+							xouttext=sprintf('%0.3g ',xcol(idx)');
+							youttext=sprintf('%0.3g ',ycol(idx)');
+							xcol(idx)=[];
+							ycol(idx)=[];
+							if ~isempty(cases); cases(idx)=[]; end
+						else
+							xouttext=sprintf('%0.3g ',xcol(idx1)');
+							youttext=sprintf('%0.3g ',ycol(idx2)');
+							xcol(idx1)=[];
+							ycol(idx2)=[];
+						end
+					case '2SD'
+						mtmp=repmat(xmean,length(xcol),1);
+						stmp=repmat(xstd,length(xcol),1);
+						idx1=abs(xcol-mtmp)>2*stmp;
+						
+						mtmp=repmat(ymean,length(ycol),1);
+						stmp=repmat(ystd,length(ycol),1);
+						idx2=abs(ycol-mtmp)>2*stmp;
+						if length(xcol)==length(ycol)
+							idx=idx1+idx2;
+							xouttext=sprintf('%0.3g ',xcol(idx>0)');
+							youttext=sprintf('%0.3g ',ycol(idx>0)');
+							xcol(idx>0)=[];
+							ycol(idx>0)=[];
+							if ~isempty(cases); cases(idx>0)=[]; end
+						else
+							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
+							youttext=sprintf('%0.3g ',ycol(idx2>0)');
+							xcol(idx1>0)=[];
+							ycol(idx2>0)=[];
+						end
+					case '3SD'
+						mtmp=repmat(xmean,length(xcol),1);
+						stmp=repmat(xstd,length(xcol),1);
+						idx1=abs(xcol-mtmp)>3*stmp;
+						
+						mtmp=repmat(ymean,length(ycol),1);
+						stmp=repmat(ystd,length(ycol),1);
+						idx2=abs(ycol-mtmp)>3*stmp;
+						if length(xcol)==length(ycol)
+							idx=idx1+idx2;
+							xouttext=sprintf('%0.3g ',xcol(idx>0));
+							youttext=sprintf('%0.3g ',ycol(idx>0));
+							xcol(idx>0)=[];
+							ycol(idx>0)=[];
+							if ~isempty(cases); cases(idx>0)=[]; end
+						else
+							xouttext=sprintf('%0.3g ',xcol(idx1>0));
+							youttext=sprintf('%0.3g ',ycol(idx2>0));
+							xcol(idx1>0)=[];
+							ycol(idx2>0)=[];
+						end
+					otherwise
+						
+				end
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
 		function doSinglePlots(obj,pn)
+			wid = 1000;
+			hei = 800;
+			minp = 0.01;
+			maxp = 0.925;
 			if obj.isDataEqualLength;
 				h = figure;
-				figpos(1,[800 640]);
+				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(1,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
-				set(gcf,'Renderer','zbuffer');
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
 				h = figure;
-				figpos(1,[800 640]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,2).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
-				set(gcf,'Renderer','zbuffer');
-				h = figure;
-				figpos(1,[800 640]);
+				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','zbuffer');
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,3).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
 				h=figure;
-				figpos(1,[800 640]);
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,1).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				h=figure;
+				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,2).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
-				set(gcf,'Renderer','zbuffer');
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
 			else
 				h = figure;
-				figpos(1,[800 640]);
+				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(1,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,2).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','zbuffer');
 				h = figure;
-				figpos(1,[800 640]);
+				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
-				set(gcf,'Renderer','zbuffer');
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
 				h = figure;
-				figpos(1,[800 640]);
+				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(3,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
-				set(gcf,'Renderer','zbuffer');
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
 			end
 		end
 		

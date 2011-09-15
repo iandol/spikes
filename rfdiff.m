@@ -1345,6 +1345,21 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 		end
 		
 		%-----------------------------------------------------------------------------------------
+	case 'getDensity'
+		%-----------------------------------------------------------------------------------------
+		clear gd
+		if isfield(rfd,'compared') && ~isempty(rfd.compared)
+			gd = getDensity;
+			gd.x = rfd.compared.cell1;
+			gd.y = rfd.compared.cell2;
+			txt = ['Variable_' num2str(rfd.xy{4})];
+			gd.columnlabels = {regexprep(txt, '\.', '_')};
+			gd.legendtxt = {'Cell 1', 'Cell 2'};
+			gd.addjitter = 'both';
+			gd.run;
+		end		
+		
+		%-----------------------------------------------------------------------------------------
 	case 'MetricSpace'
 		%-----------------------------------------------------------------------------------------
 		
