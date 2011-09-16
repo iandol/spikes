@@ -1536,7 +1536,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------Surround Suppression Measurement----------
 	case 'Surround Suppression'
 		
-		if data.numvars==1
+		if data.numvars<3
 			switch get(gh('SpikeMenu'),'Value');
 				case 1 %all spikes
 					a=data.matrix;
@@ -1567,27 +1567,36 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			a=a./m;
 			d=w(i);
 			figure;
-			areabar(w, a, aerr)
+			h=areabar(w, a, aerr);
 			t=data.matrixtitle;
 			sv.titlehandle=title(t);
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 			sv.ylabelhandle=ylabel('Normalized Firing Rate');
 			sv.xlabelhandle=xlabel('Diameter');
 			%legend(T,0)
-			[xx,b]=ginput(2);
-			b=mean(b);
+			[xi,yi]=ginput(2);
+			
+			[xx1, yy1] = local_nearest(xi(1),w,yi(1),a);
+			[xx2, yy2] = local_nearest(xi(2),w,yi(2),a);
+			
+			line(xx1,yy1, 'Color', [1 0 0], 'Marker', 'o');
+			line(xx2,yy2, 'Color', [1 0 0], 'Marker', 'o');
+			
+			b=mean([yy1 yy2]);
+			line([w(1) w(end)],[b b],'Color',[1 0 0]);
 			b=100-b*100;
+			
 			o=[s,d,b]; %spontaneous - diameter - percent suppression
-			t1=['Spontaneous: ' sprintf('%0.5f',s)];
-			t2=['Optimal Diameter: ' sprintf('%0.5g',d)];
-			t3=['Surround Suppression: ' sprintf('%0.5f',b)];
+			t1=['Spontaneous: ' sprintf('%0.5f',s) 'Hz'];
+			t2=['Optimal Diameter: ' sprintf('%0.5g',d) 'deg'];
+			t3=['Surround Suppression: ' sprintf('%0.5f',b) '%'];
 			tt={t1,t2,t3};
 			gtext (tt);
 			%gtext(num2str(o))
 			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
 			clipboard('Copy',s);
 			
-		elseif data.numvars==2 % Two Variable Condition
+		elseif data.numvars==3 
 			Y=get(gh('YHoldMenu'),'value');
 			YY=data.yvalues(Y);
 			switch get(gh('SpikeMenu'),'Value');
@@ -2565,6 +2574,57 @@ end  %end of spikes main program switch
 %#############################################################################
 %============================End of Spikes Function===========================
 %#############################################################################
+
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+% Finds nearest point on a curve input
+%
+function [xv,yv]=local_nearest(x,xl,y,yl)
+%Inputs:
+% x   Selected x value
+% xl  Line Data (x)
+% y   Selected y value
+% yl  Line Data (y)
+%Find nearest value of [xl,yl] to (x,y)
+%Special Case: Line has a single non-singleton value
+if sum(isfinite(xl))==1
+    fin = find(isfinite(xl));
+    xv = xl(fin);
+    yv = yl(fin);
+else
+    %Normalize axes
+    xlmin = min(xl);
+    xlmax = max(xl);
+    ylmin = min(yl);
+    ylmax = max(yl);
+	%Process the case where max == min
+	if xlmax == xlmin
+		xln = (xl - xlmin);
+		xn = (x - xlmin);
+	else
+		%Normalize data
+		xln = (xl - xlmin)./(xlmax - xlmin);
+		xn = (x - xlmin)./(xlmax - xlmin);
+	end
+	if ylmax == ylmin
+		yln = (yl - ylmin);
+		yn = (y - ylmin);
+	else
+		yln = (yl - ylmin)./(ylmax - ylmin);
+		yn = (y - ylmin)./(ylmax - ylmin);
+	end
+    %Find nearest point using our friend Ptyhagoras
+    a = xln - xn;       %Distance between x and the line
+    b = yln - yn;       %Distance between y and the line
+    c = (a.^2 + b.^2);  %Distance between point and line
+    %Don't need sqrt, since we get same answer anyway
+    [~,ind] = min(c);
+    %Nearest value on the line
+    xv = xl(ind);
+    yv = yl(ind);
+end
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/

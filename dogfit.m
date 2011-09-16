@@ -24,17 +24,25 @@ switch(action)
 	
 	%-------------------------------------------------------------------
 	case 'Initialize'
-	%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
 		fd.version = 1.901;
 		version=['DOG-Fit Model Fitting Routine ' sprintf('%.4f',fd.version) ' | Started on ', datestr(now)];
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
 		fd.uihandle = dogfitfig;
+		set(gh('DFLoadText'),'String','Please wait, initialising...');
 		set(gcf,'Name', version);
 		set(gh('DFDisplayMenu'),'Value',3);
 		set(gh('InfoText'),'String','Welcome to the DOG Model Fitter. Choose ''Import'' to load data from Spikes, or ''Load Data'' to load a previous model file.');
-		tic;matlabpool
-		fprintf('matlabpool took: %g seconds to initialize\n',toc)
+		if matlabpool('size') == 0
+			tic;matlabpool
+			fprintf('matlabpool took: %g seconds to initialize\n',toc)
+			fd.weOpen = true;
+		else
+			fprintf('matlabpool seems open...\n');
+			fd.weOpen = false;
+		end
+		set(gh('DFLoadText'),'String','Initialising complete...');
 		%-------------------------------------------------------------------
 	case 'Import'
 		%-------------------------------------------------------------------
@@ -44,7 +52,9 @@ switch(action)
 			error('can''t find data...');
 		end
 		
-		set(gh('DFLoadText'),'String',['Data Loaded: ' data.filename ' (' data.matrixtitle ')']);
+		tit = regexprep(data.matrixtitle,'\\fontname\{Helvetica\}\\fontsize\{12\}','');
+		
+		set(gh('DFLoadText'),'String',['Data: ' tit]);
 		
 		switch data.numvars
 			case 0
@@ -152,6 +162,7 @@ switch(action)
 	case 'FitIt'
 		%-------------------------------------------------------------------
 		
+		set(gh('DFLoadText'),'String','Please wait, model fitting in operation...')
 		set(gh('InfoText'),'String','Now trying to find the optimum parameters for the model fit to this data, please wait...');
 		drawnow;
 		if get(gh('DFSmooth'),'Value')==1
@@ -217,14 +228,20 @@ switch(action)
 					[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,[],options,x,y);
 				end
 			else
-				nmax = 16;
-				lb(7) = nmax;
-				ub(7) = nmax;
-				xo(7) = nmax;
-				[o,f,exit,output]=fmincon(@DOG_CHF,xo,[],[],[],[],lb,ub,[],options,x,y);
+				nmax = 16
+				lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
+				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
+				[o,f,exit,output]=fmincon(@DOG_CHF,xo,[],[],[],[],lb,ub,@sumconfun,options,x,y);
 			end
 		elseif get(gh('DFUsenlinfit'),'Value')==0
-			[o,f,exit,output]=fminunc(@dogsummate,xo,options,x,y);
+			if get(gh('DFUseCHF'),'Value') == 0
+				[o,f,exit,output]=fminunc(@dogsummate,xo,options,x,y);
+			else
+				nmax = 16;
+				lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
+				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
+				[o,f,exit,output]=fminunc(@DOG_CHF,xo,options,x,y);
+			end
 		elseif get(gh('DFUsenlinfit'),'Value')==1
 			opts=statset('Display',disp,'DerivStep',0.01,'Robust','off');
 			xo=xo(1:5);
@@ -237,6 +254,7 @@ switch(action)
 		end
 		
 		fd.text=['Parameters found...'];
+		set(gh('DFLoadText'),'String','Model parameters found...');
 		set(gh('InfoText'),'String',fd.text);
 		
 		fd.dc=o(5);
@@ -244,7 +262,7 @@ switch(action)
 			fd.s=o(6)*sf;
 		else
 			fd.s=o(6);
-		end	
+		end
 		fd.xo=o;
 		if get(gh('ConstrainBox'),'Value')==1 && get(gh('DFUsenlinfit'),'Value')==0
 			fd.lb=lb;
@@ -332,7 +350,9 @@ switch(action)
 	case 'RePlot'
 		%-------------------------------------------------------------------
 		
+		set(gh('DFLoadText'),'String','Please wait, replotting...');
 		set(gh('InfoText'),'String','Replotting values entered by the user......');
+		drawnow
 		if get(gh('DFSmooth'),'Value')==1
 			fittype=get(gh('DFSmoothMenu'),'String');
 			fittype=fittype{get(gh('DFSmoothMenu'),'Value')};
@@ -379,7 +399,8 @@ switch(action)
 				yy=dogsummate(xo,x);
 			end
 		end
-		fprintf('Curve Generation took: %g seconds\n',toc)
+		err = sum((fd.y-yy).^2);
+		fprintf('Curve Generation took: %g seconds, squared error = %g\n',toc,err)
 		yy(yy<0)=0;
 		if isfield(fd,'e') %we have error info
 			%areabar(x,y,e,[.8 .8 .8]);
@@ -412,8 +433,9 @@ switch(action)
 		fd.goodness2=goodness(y,yy,'mfe');
 		legend(['fit = ' num2str(fd.goodness) '%'])
 		xog=[fd.xo,fd.goodness,fd.goodness2];
-		s=[sprintf('%s\t',fd.title),sprintf('%0.6g\t',xog)]
+		s=[sprintf('%s\t',fd.title),sprintf('%0.6g\t',xog)];
 		clipboard('Copy',s);
+		set(gh('DFLoadText'),'String','Replotting finished...');
 		
 		%-------------------------------------------------------------------
 	case 'Load Data'
@@ -505,7 +527,7 @@ switch(action)
 		%-------------------------------------------------------------------
 	case 'Exit'
 		%-------------------------------------------------------------------
-		if matlabpool('size') > 0
+		if matlabpool('size') > 0 && fd.weOpen == true
 			matlabpool close;
 		end
 		close(fd.uihandle);
@@ -631,7 +653,7 @@ ceq=[];
 % Requires:
 %  'fun_X_series_dvary.m'
 %%%%%
-% fun_DOG_patch_series_dvary evaluates the DOG-model response  
+% fun_DOG_patch_series_dvary evaluates the DOG-model response
 % for a set of circular grating patch of diameter d using the SERIES expansion
 % x(1): A1
 % x(2): aa1
@@ -641,7 +663,7 @@ ceq=[];
 % x(6): kd
 % x(7): nmax
 % Note that x-coordinate is patch diameter d
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y=DOG_CHF(x,xdata,data,rectify)
 if nargin < 1
 	x(1) = 10;
@@ -665,6 +687,8 @@ if nargin < 4
 	rectify=false;
 end
 
+fprintf('--->CHF Input: ');fprintf('%g ',x);fprintf('\n');
+
 xe(1)=x(2); xe(2)=x(6); xe(3)=x(7);
 xi(1)=x(4); xi(2)=x(6); xi(3)=x(7);
 y = x(5) + (x(1)*fun_X_series_dvary(xe,xdata)-x(3)*fun_X_series_dvary(xi,xdata));
@@ -683,7 +707,7 @@ end
 
 
 %%%%%%%%%%%%%%%%%
-% fun_X_series_dvary.m 
+% fun_X_series_dvary.m
 %%%%%%%%%%%%%%%%%
 % fun_X_series_dvary evaluates the X-function needed to calculate the
 % DOG-response to patch gratings as a function of d values using a series
@@ -692,28 +716,37 @@ end
 % x(2): kd
 % x(3): nmax, number of terms summed over
 % xdata: points on the d-axis
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = fun_X_series_dvary(x,xdata)
 [~, ndmax]=size(xdata);
+if x(1) < 0 || isnan(x(1)) || x(2) < 0 || isnan(x(2)) || x(3) < 0 || isnan(x(3))
+	y=zeros(1,ndmax);
+	return
+end
 yp=zeros(1,ndmax);
 yp=x(1)./xdata;
 zp=x(1)*x(2);
 nmax=x(3);
-y=zeros(ndmax);
+y=zeros(1,ndmax);
 
 if matlabpool('size') > 0
-	fprintf('Computing Hypergeometric function using parfor...')
+	fprintf('-->Computing Hypergeometric function using parfor: ');fprintf('%g ',x);fprintf('\n')
 	for nd=1:ndmax
-	  parfor n=0:nmax
-		  yy(n+1) = exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
-	  end
-	  y(nd) = sum(yy);
+		lp = [0:16];
+		parfor n=lp
+			%fprintf('.[%g]',n);
+			yy(n+1) = exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+		end
+		y(nd) = sum(yy);
 	end
+	%fprintf('\n');
 else
-	fprintf('Computing Hypergeometric function serially...')
+	fprintf('-->Computing Hypergeometric function serially: ');fprintf('%d ',x);fprintf('\n')
 	for nd=1:ndmax
-	  for n=0:nmax
-	      y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
-	  end
+		for n=0:nmax
+			y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+		end
+		%fprintf('.');
 	end
+	%fprintf('\n');
 end

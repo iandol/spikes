@@ -11,32 +11,39 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function DOG_PatchGrating
-tic
-matlabpool
-fprintf('matlabpool took: %g seconds to initialize\n',toc)
+if matlabpool('size') == 0
+	tic;matlabpool
+	fprintf('matlabpool took: %g seconds to initialize\n',toc)
+	weOpenPool = true;
+else
+	fprintf('matlabpool seems open...\n');
+	weOpenPool = false;
+end
+
 % Example DOG parameters
-A1=10; A2=8; aa1=0.3; aa2=0.6;    
+A1=1; A2=0.9; aa1=0.3; aa2=0.6;
 para_DOG=[A1 aa1 A2 aa2];
-% Example grid of patch-grating diameters 
-d_grid=[0 0.5 1 2 4 8];
+% Example grid of patch-grating diameters
+d_grid=[0 0.5 1 2 3 6];
 % Example grid of kd - note kd=2*pi*nud where nud is the spatial frequency of the grating
-kd_grid=[0 pi 2*pi];
-% Value of nmax, that is the highest value of n in the series summation of X 
-nmax=16; 
+kd_grid=[2 4.4 10];
+% Value of nmax, that is the highest value of n in the series summation of X
+nmax=16;
+
 try
 	for ikd=1:size(kd_grid,2)
 	  %Evaluation of patch-grating response
 	  kd=kd_grid(ikd);
 	  tic
 	  DOG_response=fun_DOG_patch_series_dvary([para_DOG kd nmax],d_grid);
-	  fprintf('kd_grid %i took: %g seconds to initialize\n',ikd,toc)
+	  fprintf('kd_grid %i took: %g seconds to process\n',ikd,toc)
 	  figure;
 	  plot(d_grid,DOG_response,'k-o');
-	  title(['KMAX = ' num2str(kd)]);
+	  title(['KD = ' num2str(kd)]);
 	end
-matlabpool close
+	if weOpenPool == true; matlabpool close; end
 catch ME
-	matlabpool close
+	if weOpenPool == true; matlabpool close; end
 	rethrow ME
 end
 
@@ -76,22 +83,26 @@ y = x(1)*fun_X_series_dvary(xe,xdata)-x(3)*fun_X_series_dvary(xi,xdata);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 function y = fun_X_series_dvary(x,xdata)
 [~, ndmax]=size(xdata);
+if x(1) <= 0 || isnan(x(1))
+	y=zeros(1,ndmax);
+	return;
+end
 yp=zeros(1,ndmax);
 yp=x(1)./xdata;
 zp=x(1)*x(2);
 nmax=x(3);
-y=zeros(ndmax);
+y=zeros(1,ndmax);
 if matlabpool('size') > 0
 	for nd=1:ndmax
-	  parfor n=0:nmax
+		parfor n=0:nmax
 		  yy(n+1) = exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
-	  end
-	  y(nd) = sum(yy);
+		end
+		y(nd) = sum(yy);
 	end
 else
 	for nd=1:ndmax
-	  for n=0:nmax
-	      y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
-	  end
+		for n=0:nmax
+			y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
+		end
 	end
 end
