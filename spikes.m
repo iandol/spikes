@@ -28,9 +28,10 @@ function spikes(action)
 % [ian]		[1.7.5 Got rid of dependency on Frogbit!						(Nov 2005)	]
 % [ian]		[1.7.6 Added Report Generation integration with spikereport		(Nov 2005)	]
 % [ian]		[1.7.7 Can plot out and juggle any variable selection from 0-3  (Nov 2005)	]
-% [ian]		[1.7.8 Small fixes															(Dec 2005)	]
+% [ian]		[1.7.8 Small fixes												(Dec 2005)	]
 % [ian]		[1.7.9 (Re)add the quick temporal analysis						(Feb 2006) ]
-%
+% NOTE: we've switched to Bazaae VCS to log changes, please use that to
+% know what has changed...
 %
 %**********************************************************************************
 
@@ -1501,7 +1502,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				%                 t=[ data.runname '[' o ':' m '-' n ']'];
 				%             end
 				MakeTitle('vector');
-				sv.titlehandle=title(data.matrixtitle);
+				sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 				set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 				
 				w=rot90(z,-1);
@@ -1521,7 +1522,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				box on
 				legend(num2str(data.yvalues'));
 				
-				sv.titlehandle=title(data.matrixtitle);
+				sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 				set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 				
 				x=get(gh('XHoldMenu'),'Value');
@@ -1567,6 +1568,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			a=a./m;
 			d=w(i);
 			figure;
+			figpos(1,[700 700])
 			h=areabar(w, a, aerr);
 			t=data.matrixtitle;
 			sv.titlehandle=title(t);
@@ -1579,20 +1581,42 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			[xx1, yy1] = local_nearest(xi(1),w,yi(1),a);
 			[xx2, yy2] = local_nearest(xi(2),w,yi(2),a);
 			
+			xidx1 = find(data.xvalues == xx1);
+			xidx2 = find(data.xvalues == xx2);
+			
+			tr = [data.sums{xidx1}; data.sums{xidx2}];
+			if data.wrapped == 1
+				timet = data.modtime / 10;
+			else
+				timet = data.trialtime / 10;
+			end
+			modt = 1000 / timet;
+			tr = tr .* modt; %convert to Hz
+			tr = tr - s; %remove spontaneous
+			
+			ci = bootci(1000,{@mean, tr},'alpha',0.001);
+			ci = ci ./ m;
+			
 			line(xx1,yy1, 'Color', [1 0 0], 'Marker', 'o');
 			line(xx2,yy2, 'Color', [1 0 0], 'Marker', 'o');
 			
 			b=mean([yy1 yy2]);
-			line([w(1) w(end)],[b b],'Color',[1 0 0]);
+			h = line([w(1) w(end)],[b b]);
+			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-','LineWidth',2);
+			h = line([w(1) w(end)],[ci(1) ci(1)]);
+			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
+			text(w(end)/2,ci(1)+0.01,sprintf('CI = %.5g',ci(1)));
+			h = line([w(1) w(end)],[ci(2) ci(2)]);
+			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
+			text(w(end)/2,ci(2)+0.01,sprintf('CI = %.5g',ci(2)));
 			b=100-b*100;
 			
-			o=[s,d,b]; %spontaneous - diameter - percent suppression
-			t1=['Spontaneous: ' sprintf('%0.5f',s) 'Hz'];
-			t2=['Optimal Diameter: ' sprintf('%0.5g',d) 'deg'];
-			t3=['Surround Suppression: ' sprintf('%0.5f',b) '%'];
+			o=[s,d,b, ci(1), ci(2)]; %spontaneous - diameter - percent suppression
+			t1=['Spontaneous: ' sprintf('%0.3f',s) 'Hz'];
+			t2=['Optimal Diameter: ' sprintf('%0.3g',d) 'deg'];
+			t3=['Surround Suppression: ' sprintf('%0.3f',b) '%'];
 			tt={t1,t2,t3};
-			gtext (tt);
-			%gtext(num2str(o))
+			text(0.1,-0.1,tt,'FontSize',12);
 			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
 			clipboard('Copy',s);
 			
@@ -2923,7 +2947,7 @@ data.dd=dd;
 MakeTitle('surface');
 sv.xlabelhandle=xlabel(data.xtitle);
 sv.ylabelhandle=ylabel(data.ytitle);
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 set(gca,'Tag','SpikeFigMainAxes');
 
@@ -3084,7 +3108,7 @@ switch data.numvars
 		end
 end
 
-data.matrixtitle = ['\fontname{Helvetica}\fontsize{12}' data.matrixtitle];
+%data.matrixtitle = ['\fontname{Helvetica}\fontsize{12}' data.matrixtitle];
 
 sv.EndMod=str2double(get(gh('SEndMod'),'String'));
 sv.EndTrial=str2double(get(gh('SEndTrial'),'String'));
@@ -3432,7 +3456,7 @@ legend('fano factor','CV','Allan Factor');
 MakeTitle('raster');
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
 sv.ylabelhandle=ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)],'FontSize',sv.labelsize);
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 
 %-----------------------------------------------------------------------------
@@ -3454,7 +3478,7 @@ axis tight;
 MakeTitle('raster');
 data.matrixtitle = [data.matrixtitle '\newline Coefficient of Variation C_v = ' num2str(c_v)];
 clipboard('copy',sprintf('%2.3f',c_v));
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
 sv.ylabelhandle=ylabel('Number of Intervals','FontSize',sv.labelsize);
@@ -3486,7 +3510,7 @@ imagesc(interv);
 axis tight;
 set(gca,'YDir','Normal')
 MakeTitle('raster');
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
 sv.ylabelhandle=ylabel([num2str(window) 'ms window - '  num2str(shift) 'ms steps'],'FontSize',sv.labelsize);
@@ -3508,7 +3532,7 @@ bnr=sum(data.bpsth{sv.yval, sv.xval, sv.zval});
 err=finderror(data.raw{sv.yval,sv.xval,sv.zval},'Fano Factor',0,inf,data.wrapped,0);
 data.matrixtitle = [data.matrixtitle '\newlinefano factor = ' num2str(err) ' #: ' num2str(nr) ' #b: ' num2str(bnr) ' Bratio:' num2str(bnr/nr)];
 clipboard('copy',[sprintf('%2.3f\t',err) sprintf('%d\t',nr) sprintf('%2.3f\t',bnr) sprintf('%2.3f\t',(bnr/nr)) sprintf('%2.3f',data.raw{sv.yval,sv.xval,sv.zval}.numtrials)]);
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 sv.xlabelhandle=xlabel('Time (s)','FontSize',sv.labelsize);
 sv.ylabelhandle=ylabel('Trials','FontSize',sv.labelsize);
@@ -3749,7 +3773,7 @@ else
 	data.matrixtitle = [data.matrixtitle ' Mean: ' sprintf('%3.2f',data.matrix) '(\pm' sprintf('%2.2f',data.errormat) ') #: ' num2str(nr) ' #b: ' num2str(bnr) ' B_r: ' num2str(bnr/nr)];
 	clipboard('copy',[sprintf('%2.3f\t',ff) sprintf('%2.3f\t',data.matrix) sprintf('%2.3f\t',data.errormat) sprintf('%2.3f\t',bnr) sprintf('%2.3f\t',(bnr/nr)) sprintf('%2.3f',data.raw{sv.yval,sv.xval,sv.zval}.numtrials)]);
 end
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 set(gh('XText'),'String',[num2str(min(data.time{sv.yval,sv.xval,sv.zval})) ' > ' num2str(max(data.time{sv.yval,sv.xval,sv.zval}))]);
 set(gh('YText'),'String',[num2str(min(data.psth{sv.yval,sv.xval,sv.zval})) ' > ' num2str(max(data.psth{sv.yval,sv.xval,sv.zval}))]);
@@ -3800,7 +3824,7 @@ MakeTitle();
 
 %data.matrixtitle=t;
 
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 
 ymin=data.matrix-(data.matrix/2);
@@ -3987,7 +4011,7 @@ end
 if get(gh('STypeMenu'),'Value')>1
 	data.matrixtitle=[data.matrixtitle '\newline Circ Mean= ' num2str(rad2ang(mu)) '[' num2str(rad2ang(ll)) ':' num2str(rad2ang(ul)) '] / Ax mean=' num2str(rad2ang(mu2)) '[' num2str(rad2ang(ll2)) ':' num2str(rad2ang(ul2)) '] p=' num2str(pval) ];
 end
-sv.titlehandle=title(data.matrixtitle);
+sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 
 if ~isempty(data.fftinfnnpoints) && ~(data.fftinfnnpoints(1)==inf)  %plots our inf & NaN points as dashed lines
@@ -4252,7 +4276,7 @@ for i=1:steps
 	axis off
 	a=a+1;
 end
-suptitle(data.matrixtitle);
+suptitle(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/

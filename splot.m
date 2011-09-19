@@ -427,6 +427,10 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 				text(spdata.latency+(spdata.latency/2),(mm-(mm/20)),['Latency=' num2str(spdata.latency)],'FontSize',12);
 			end
 			
+			set(gcf,'Renderer','painters')
+			set(gca,'Layer','top')
+			axis tight
+			box on
 			%line([time2(1) time2(end)],[m/10 m/10]);
 			
 			t1 = ['Prior: ' spdata.bars.bp.prior_id ' | dparams: ' num2str(spdata.bars.bp.dparams) ' | burn: ' num2str(spdata.bars.bp.burn_iter)];

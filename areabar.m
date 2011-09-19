@@ -58,6 +58,7 @@ set(gca,'NextPlot','add');
 handles.plot = plot(xvalues,ydata,varargin{:});
 set(gca,'NextPlot','replacechildren');
 %set(gca,'PlotBoxAspectRatioMode','manual');
+uistack(handles.plot,'top')
 set(gca,'Layer','top');
 set(gcf,'Renderer','painters');
 box on;
