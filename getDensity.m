@@ -42,7 +42,10 @@ classdef getDensity < handle
 		cases = []
 		%> are our cases nominal or ordinal?
 		nominalcases = true
-		rownames = []
+		%> a cell of names for each row
+		xrownames = []
+		%> a cell of names for each row
+		yrownames = []
 		%> rosner outlier number of outliers
 		rosnern = 2 
 		%> p to use for outlier removal for rosner and grubb
@@ -67,6 +70,8 @@ classdef getDensity < handle
 		scaleaxes = true
 		%> do we show the unity line for the scatterplot?
 		showunityline = true
+		%>number of bins for histogram
+		nBins = 10
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -89,8 +94,8 @@ classdef getDensity < handle
 		h
 		%> our panel object, we use panel instead of subplot as it is more powerful
 		pn
-		%> dataStructure a dataset
-		data
+		xdata = []
+		ydata = []
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -116,11 +121,12 @@ classdef getDensity < handle
 		%> @return instance of class.
 		% ===================================================================
 		function obj = getDensity(varargin)
+			
+			addlistener(obj,'checkData',@obj.doCheckData); %use an event to keep data accurate
+			
 			if nargin>0
 				obj.parseArgs(varargin, obj.allowedProperties);
 			end
-			
-			addlistener(obj,'checkData',@obj.doCheckData); %use an event to keep data accurate
 			
 			if obj.autorun == true && obj.haveData == true
 				obj.run;
@@ -161,7 +167,7 @@ classdef getDensity < handle
 				set(h,'Color',[0.9 0.9 0.9])
 				
 				if obj.isDataEqualLength == false
-					figpos(3,[600 1200]);
+					figpos(1,[1000,1000]);
 				else
 					figpos(1,[1200,1000]);
 				end
@@ -196,7 +202,7 @@ classdef getDensity < handle
 				%==========================================DO HISTOGRAM
 				dmin=min([xcol;ycol]); %get the min
 				dmax=max([xcol;ycol]); %get the max
-				histax=floor(dmin):(ceil(dmax)-floor(dmin))/10:ceil(dmax);
+				histax=floor(dmin):(ceil(dmax)-floor(dmin))/obj.nBins:ceil(dmax);
 				[xn,hbins]=hist(xcol,histax);
 				yn=hist(ycol,histax);
 				pn(1,1).select();
@@ -653,6 +659,8 @@ classdef getDensity < handle
 			elseif iscell(value)
 				obj.columnlabels = value;
 			end
+			
+			notify(obj,'checkData');
 		end
 		
 		% ===================================================================
@@ -888,6 +896,12 @@ classdef getDensity < handle
 			end
 			if isempty(obj.cases) && ~isempty(obj.uniquecases)
 				obj.uniquecases = [];
+			end
+			if ~isempty(obj.x)
+				obj.xdata = dataset({obj.x,obj.columnlabels{:}},'ObsNames',obj.xrownames);
+			end
+			if ~isempty(obj.y)
+				obj.ydata = dataset({obj.y,obj.columnlabels{:}},'ObsNames',obj.yrownames);
 			end
 		end
 		

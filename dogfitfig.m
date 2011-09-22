@@ -3,7 +3,7 @@ function varargout = dogfitfig(varargin)
 %    FIG = DOGFITFIG launch dogfitfig GUI.
 %    DOGFITFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 06-Sep-2011 11:55:48
+% Last Modified by GUIDE v2.5 20-Sep-2011 15:05:09
 
 if nargin == 0  % LAUNCH GUI
 
@@ -106,8 +106,8 @@ function varargout = Surround_Callback(h, eventdata, handles, varargin)
 % Stub for Callback of the uicontrol handles.Surround.
 
 % --------------------------------------------------------------------
-function varargout = LargeScale_Callback(h, eventdata, handles, varargin)
-% Stub for Callback of the uicontrol handles.LargeScale.
+function varargout = DFAlgorithm_Callback(h, eventdata, handles, varargin)
+% Stub for Callback of the uicontrol handles.DFAlgorithm.
 
 
 % --------------------------------------------------------------------
@@ -203,16 +203,6 @@ function varargout = lbdc_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = lbs_Callback(h, eventdata, handles, varargin)
-
-
-% --- Executes on button press in DFUseNLinFit.
-function DFUseNLinFit_Callback(hObject, eventdata, handles)
-% hObject    handle to DFUseNLinFit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of DFUseNLinFit
-
 
 % --- Executes on button press in DFUsenlinfit.
 function DFUsenlinfit_Callback(hObject, eventdata, handles)

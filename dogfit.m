@@ -185,18 +185,19 @@ switch(action)
 			end
 		end
 		
-		if get(gh('LargeScale'),'Value')==1
-			ls='on';
-		else
-			ls='off';
-		end
-		
 		disp=get(gh('DFDisplayMenu'),'String');
 		disp=disp{get(gh('DFDisplayMenu'),'Value')};
 		
+		alg = get(gh('DFAlgorithm'),'String');
+		alg = alg{get(gh('DFAlgorithm'),'Value')};
+		
 		sf=1;
 		
-		options = optimset('Display',disp,'LargeScale',ls);
+		nmax = str2num(get(gh('DFnmax'),'String'));
+		
+		options = optimset('Display',disp,'Algorithm',alg,...
+			'FunValCheck','on','UseParallel','always',...
+			'TolX',1e-3);
 		xo=[0 0 0 0 0 0];
 		xo(1)=str2num(get(gh('caedit'),'String'));
 		xo(2)=str2num(get(gh('csedit'),'String'));
@@ -228,8 +229,8 @@ switch(action)
 					[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,[],options,x,y);
 				end
 			else
-				nmax = 16
-				lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
+				options.MaxFunEvals = 300;
+				%lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
 				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
 				[o,f,exit,output]=fmincon(@DOG_CHF,xo,[],[],[],[],lb,ub,@sumconfun,options,x,y);
 			end
@@ -237,16 +238,20 @@ switch(action)
 			if get(gh('DFUseCHF'),'Value') == 0
 				[o,f,exit,output]=fminunc(@dogsummate,xo,options,x,y);
 			else
-				nmax = 16;
-				lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
+				%lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
 				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
 				[o,f,exit,output]=fminunc(@DOG_CHF,xo,options,x,y);
 			end
 		elseif get(gh('DFUsenlinfit'),'Value')==1
-			opts=statset('Display',disp,'DerivStep',0.01,'Robust','off');
+			opts=statset('Display','iter','DerivStep',0.01,'Robust','off');
+			if get(gh('DFUseCHF'),'Value') == 0
 			xo=xo(1:5);
 			[o,r,J]=nlinfit(x,y,@dogsummate,xo,opts);
-			ci=nlparci(o,r,J)
+			else
+				%lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
+				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
+			end
+			ci=nlparci(o,r,J);
 			if o(5)<0.001 %silly to have tiny spontaneous rates
 				o(5)=0;
 			end
@@ -284,7 +289,7 @@ switch(action)
 		else
 			try
 				xoc=fd.xo;
-				nmax = 16;
+				nmax = num2str(get(gh('DFnmax'),'String'));
 				xoc(7) = nmax;
 				yy=DOG_CHF(xoc,x);
 			catch
@@ -390,8 +395,8 @@ switch(action)
 			yy=dogsummate(xo,x);
 		else
 			try
+				nmax = str2num(get(gh('DFnmax'),'String'));
 				xoc=xo;
-				nmax = 16;
 				xoc(7) = nmax;
 				yy=DOG_CHF(xoc,x);
 			catch
@@ -687,8 +692,6 @@ if nargin < 4
 	rectify=false;
 end
 
-fprintf('--->CHF Input: ');fprintf('%g ',x);fprintf('\n');
-
 xe(1)=x(2); xe(2)=x(6); xe(3)=x(7);
 xi(1)=x(4); xi(2)=x(6); xi(3)=x(7);
 y = x(5) + (x(1)*fun_X_series_dvary(xe,xdata)-x(3)*fun_X_series_dvary(xi,xdata));
@@ -704,6 +707,10 @@ end
 if x(5)<0 %this is to stop the nlinfit, which has no upper or lower bounds to not select negative spontaneous levels.by making the fit really bad
 	y=y/1000;
 end
+
+fprintf('---> CHF Input: ');fprintf('%.5g ',x);
+if ~isempty(data);fprintf(' | Error^2: %.5g',y);end
+fprintf('\n');
 
 
 %%%%%%%%%%%%%%%%%
@@ -730,7 +737,7 @@ nmax=x(3);
 y=zeros(1,ndmax);
 
 if matlabpool('size') > 0
-	fprintf('-->Computing Hypergeometric function using parfor: ');fprintf('%g ',x);fprintf('\n')
+	fprintf('--> Computing CHF in parallel: ');fprintf('%.4g ',x);
 	for nd=1:ndmax
 		lp = [0:16];
 		parfor n=lp
@@ -741,7 +748,7 @@ if matlabpool('size') > 0
 	end
 	%fprintf('\n');
 else
-	fprintf('-->Computing Hypergeometric function serially: ');fprintf('%d ',x);fprintf('\n')
+	fprintf('--> Computing CHF serially: ');fprintf('%.4g ',x);fprintf('\n')
 	for nd=1:ndmax
 		for n=0:nmax
 			y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));

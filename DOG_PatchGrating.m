@@ -21,14 +21,16 @@ else
 end
 
 % Example DOG parameters
-A1=1; A2=0.9; aa1=0.3; aa2=0.6;
+%A1=1; A2=0.9; aa1=0.3; aa2=0.6;
+A1=61; A2=29.6; aa1=0.82; aa2=4.95;
 para_DOG=[A1 aa1 A2 aa2];
+sf = 0.75;
 % Example grid of patch-grating diameters
-d_grid=[0 0.5 1 2 3 6];
+d_grid=[0 0.3 0.5 0.7 1 1.5 2 4 6 9];
 % Example grid of kd - note kd=2*pi*nud where nud is the spatial frequency of the grating
-kd_grid=[2 4.4 10];
+kd_grid=2*pi*sf;
 % Value of nmax, that is the highest value of n in the series summation of X
-nmax=16;
+nmax=4;
 
 try
 	for ikd=1:size(kd_grid,2)
@@ -36,10 +38,11 @@ try
 	  kd=kd_grid(ikd);
 	  tic
 	  DOG_response=fun_DOG_patch_series_dvary([para_DOG kd nmax],d_grid);
-	  fprintf('kd_grid %i took: %g seconds to process\n',ikd,toc)
+	  timetook = toc;
+	  fprintf('\nValue of kd: %i took %g seconds to process\n',ikd,timetook)
 	  figure;
 	  plot(d_grid,DOG_response,'k-o');
-	  title(['KD = ' num2str(kd)]);
+	  title(sprintf('KD = %.4g | NMAX = %i | Time = %.3g secs', kd, nmax, timetook));
 	end
 	if weOpenPool == true; matlabpool close; end
 catch ME
@@ -93,6 +96,7 @@ zp=x(1)*x(2);
 nmax=x(3);
 y=zeros(1,ndmax);
 if matlabpool('size') > 0
+	fprintf('--> Computing CHF in parallel: ');fprintf('%.4g ',x);
 	for nd=1:ndmax
 		parfor n=0:nmax
 		  yy(n+1) = exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));
@@ -100,6 +104,7 @@ if matlabpool('size') > 0
 		y(nd) = sum(yy);
 	end
 else
+	fprintf('--> Computing CHF serially: ');fprintf('%.4g ',x);
 	for nd=1:ndmax
 		for n=0:nmax
 			y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));

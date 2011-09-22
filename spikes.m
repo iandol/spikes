@@ -59,7 +59,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv=[];
 		data=[];
 		rlist=[];
-		sv.version = 1.911;
+		sv.version = 1.912;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title=['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -166,7 +166,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Gabor Fit';'Burst Ratio';'Plateau Analysis';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Tuning Curves';'Surround Suppression'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Burst Ratio';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
 		set(gcf,'DefaultAxesFontName','Helvetica');
@@ -1594,7 +1594,12 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			tr = tr .* modt; %convert to Hz
 			tr = tr - s; %remove spontaneous
 			
-			ci = bootci(1000,{@mean, tr},'alpha',0.001);
+			pval=str2num(get(gh('SErrorEdit'),'String'));
+			if pval == 0
+				pval = 0.001;
+			end
+			
+			ci = bootci(1000,{@mean, tr},'alpha',pval);
 			ci = ci ./ m;
 			
 			line(xx1,yy1, 'Color', [1 0 0], 'Marker', 'o');
@@ -1605,7 +1610,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-','LineWidth',2);
 			h = line([w(1) w(end)],[ci(1) ci(1)]);
 			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
-			text(w(end)/2,ci(1)+0.01,sprintf('CI = %.5g',ci(1)));
+			text(w(end)/2,ci(1)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(1)));
 			h = line([w(1) w(end)],[ci(2) ci(2)]);
 			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
 			text(w(end)/2,ci(2)+0.01,sprintf('CI = %.5g',ci(2)));
@@ -1943,7 +1948,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 	case 'Area Analysis'
 		%-----------------------------------------------------------------------------------------
-		x=str2double(get(gh('ErrorEdit'),'String'));
+		x=str2double(get(gh('SErrorEdit'),'String'));
 		if data.numvars<2
 			errordlg('Single independent variable file is Loaded - Cannot perform this analysis')
 			error('Error: Need X and Y variable data.')
