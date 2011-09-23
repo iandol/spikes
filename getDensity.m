@@ -61,7 +61,7 @@ classdef getDensity < handle
 		%> how to plot the histogram
 		bartype = 'grouped'
 		%> width of histogram bars
-		barwidth = 1.25
+		barwidth = 1.75
 		%> are we verbose printing to command line?
 		verbose = true
 		%> any comments to add to the object
@@ -72,6 +72,8 @@ classdef getDensity < handle
 		showunityline = true
 		%>number of bins for histogram
 		nBins = 10
+		%> centre histogram bins
+		centreBins = true
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -80,7 +82,7 @@ classdef getDensity < handle
 		%> number of columns
 		nColumns = []
 		%> the layout when plotting mutliple plots
-		plotX = 2 
+		plotX = 3 
 		%> layout when plotting mutliple plots
 		plotY = 2 
 		%> the unique cases
@@ -166,14 +168,18 @@ classdef getDensity < handle
 				outs.(fieldn).h = h;
 				set(h,'Color',[0.9 0.9 0.9])
 				
+				pn = panel(h);
 				if obj.isDataEqualLength == false
 					figpos(1,[1000,1000]);
+					pn.pack('v',[0.5 0.5]);
+					pn(1).pack('h',[1/3 1/3 -1])
+					pn(2).pack('h',[1/3 -1])
 				else
 					figpos(1,[1200,1000]);
+					pn.pack('v',[0.5 0.5]);
+					pn(1).pack('h',[1/3 1/3 -1])
+					pn(2).pack('h',[1/3 1/3 -1])
 				end
-				
-				pn = panel();
-				pn.pack(obj.plotY,obj.plotX);
 				
 				if max(isnan(xcol)) == 1 %remove any nans
 					xcol = xcol(isnan(xcol)==[]);
@@ -203,17 +209,30 @@ classdef getDensity < handle
 				dmin=min([xcol;ycol]); %get the min
 				dmax=max([xcol;ycol]); %get the max
 				histax=floor(dmin):(ceil(dmax)-floor(dmin))/obj.nBins:ceil(dmax);
-				[xn,hbins]=hist(xcol,histax);
-				yn=hist(ycol,histax);
-				pn(1,1).select();
+				if obj.centreBins == true
+					[xn,bins]=hist(xcol,histax);
+					yn=hist(ycol,histax);
+				else
+					%[xn,bins]=hist(xcol,histax);
+					%yn=hist(ycol,histax);
+					[~,bins]=hist(xcol,histax);
+					xn=histc(xcol,histax);
+					[yn]=histc(ycol,histax);
+					xn = xn';
+					yn = yn';
+				end
+
+				px = 1;
+				py = 1;
+				pn(py,px).select();
 				
 				if ystd > 0
-					h=bar([hbins',hbins'],[xn',yn'],obj.barwidth,obj.bartype);
-					set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
-					set(h(2),'FaceColor',[0.7 0 0],'EdgeColor',[0.7 0 0]);
+					h=bar([bins',bins'],[xn',yn'],obj.barwidth,obj.bartype);
+					set(h(1),'FaceColor',[0 0 0],'EdgeColor','none');
+					set(h(2),'FaceColor',[0.7 0 0],'EdgeColor','none');
 				else
 					h=bar([hbins'],[xn'],obj.barwidth,obj.bartype);
-					set(h(1),'FaceColor',[0 0 0],'EdgeColor',[0 0 0]);
+					set(h(1),'FaceColor',[0 0 0],'EdgeColor','none');
 				end
 				
 				axis tight;
@@ -248,13 +267,15 @@ classdef getDensity < handle
 					hold off
 				end
 				
-				pn(1,1).xlabel(obj.columnlabels{i});
-				pn(1,1).ylabel('Number of cells');
-				pn(1,1).title('Histogram and Gaussian Fits');
+				pn(py,px).xlabel(obj.columnlabels{i});
+				pn(py,px).ylabel('Number of cells');
+				pn(py,px).title('Histogram and Gaussian Fits');
 				
 				
 				%==========================================DO BOX PLOTS
-				pn(1,2).select()
+				px = 2;
+				py = 1;
+				pn(py,px).select()
 				if obj.isDataEqualLength && exist('distributionPlot','file')
 					hold on
 					distributionPlot({xcol,ycol},0.3);
@@ -267,7 +288,41 @@ classdef getDensity < handle
 				if obj.isDataEqualLength
 					boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',obj.legendtxt,'colors','k')
 				end
-				pn(1,2).title('Box / Density Plots')
+				pn(py,px).title('Box / Density Plots')
+				hold off
+				box on
+				
+				%==========================================DO SCATBOX PLOTS
+				px = 3;
+				py = 1;
+				pn(py,px).select()
+				if obj.isDataEqualLength && exist('notBoxPlot','file')
+% 					if ~isempty(uniquecases) && ~isempty(cases)
+% 						for jj = 1:length(uniquecases)
+% 							caseidx = ismember(cases,uniquecases{jj});
+% 							xtmp(:,jj) = xcol(caseidx);
+% 							ytmp(:,jj) = ycol(caseidx);
+% 						end
+% 						notBoxPlot([xtmp ytmp],[1 1 2 2]);
+% 					else
+% 						notBoxPlot([xcol ycol],[1 1]);
+% 					end
+					notBoxPlot([xcol ycol],[1 2]);
+					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
+					pn(py,px).ylabel(obj.columnlabels{i});
+					
+				elseif obj.isDataEqualLength==false && exist('notBoxPlot','file')
+					
+					notBoxPlot(xcol,1);
+					hold on
+					notBoxPlot(ycol,2);
+					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
+					pn(py,px).ylabel(obj.columnlabels{i});
+					
+				end
+				
+				xlim([0 3]);
+				pn(py,px).title('ScatterBox Plots')
 				hold off
 				box on
 				
@@ -276,7 +331,9 @@ classdef getDensity < handle
 				xcolout = xcol;
 				ycolout = ycol;
 				if ystd > 0 && obj.isDataEqualLength
-					pn(1,3).select()
+					px = 1;
+					py = 2;
+					pn(py,px).select()
 					[r,p]=corr(xcol,ycol);
 					[r2,p2]=corr(xcol,ycol,'type','spearman');
 					xrange = max(xcol) - min(xcol);
@@ -359,9 +416,9 @@ classdef getDensity < handle
 					if obj.scaleaxes == true
 						set(gca,'XTick',get(gca,'YTick'),'XTickLabel',get(gca,'YTickLabel'));
 					end
-					pn(1,3).xlabel(obj.legendtxt{1})
-					pn(1,3).ylabel(obj.legendtxt{2})
-					pn(1,3).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
+					pn(py,px).xlabel(obj.legendtxt{1})
+					pn(py,px).ylabel(obj.legendtxt{2})
+					pn(py,px).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
 					hold off
 					grid on
 					box on
@@ -452,26 +509,33 @@ classdef getDensity < handle
 				
 				%==========================================DO CDF
 				if obj.isDataEqualLength
-					pn(2,1).select();
+					px = 2;
+					py = 2;
 				else
-					pn(2,1).select();
+					px = 1;
+					py = 2;
 				end
+				pn(py,px).select();
 				h = cdfplot(xcol);
 				set(h,'Color',[0 0 0])
 				hold on
 				h = cdfplot(ycol);
 				set(h,'Color',[1 0 0])
 				hold off
-				pn(2,1).title('Cumulative Distribution Function');
-				pn(2,1).xlabel(obj.columnlabels{i});
+				
+				pn(py,px).title('Cumulative Distribution Function');
+				pn(py,px).xlabel(obj.columnlabels{i});
+				box on
 				
 				%==========================================Do DENSITY
 				if obj.isDataEqualLength
-					pn(2,2).select();
+					px = 3;
+					py = 2;
 				else
-					pn(2,2).select();
+					px = 2;
+					py = 2;
 				end
-				
+				pn(py,px).select();
 				plot(xax,fx,'k-','linewidth',1.5);
 				if ystd > 0
 					hold on
@@ -534,7 +598,7 @@ classdef getDensity < handle
 					obj.doSinglePlots(pn);
 				end
 				
-				if ~isempty(uniquecases) && ~isempty(cases)
+				if obj.isDataEqualLength && ~isempty(uniquecases) && ~isempty(cases)
 					for jj = 1:length(uniquecases)
 						caseidx = ismember(cases,uniquecases{jj});
 						xtmp = xcol(caseidx);
@@ -588,7 +652,7 @@ classdef getDensity < handle
 			if obj.isDataEqualLength
 				value = 3;
 			else
-				value = 2;
+				value = 3;
 			end
 		end
 		
@@ -705,6 +769,58 @@ classdef getDensity < handle
 	%=======================================================================
 	methods ( Access = private ) %-------PRIVATE (protected) METHODS-----%
 	%=======================================================================
+		
+		% ===================================================================
+		%> @brief Function that runs after the checkData event fires
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function doCheckData(obj, src, evnt)
+			obj.salutation([evnt.EventName ' event'],'Event is running...');
+			if isempty(obj.y)
+				obj.y = zeros(size(obj.x));
+			end
+			if size(obj.x,2) > length(obj.columnlabels)
+				for i = length(obj.columnlabels)+1 : size(obj.x,2)
+					obj.columnlabels{i} = ['DataSet_' num2str(i)];
+				end
+			end
+			if isempty(obj.cases) && ~isempty(obj.uniquecases)
+				obj.uniquecases = [];
+			end
+			if isempty(obj.xrownames) || (length(obj.x) ~= length(obj.xrownames))
+				ntmp = cell(length(obj.x),1);
+				for i = 1:length(obj.x)
+					ntmp{i} = ['Obs_' num2str(i)];
+				end
+				obj.xrownames = ntmp;
+			end
+			if isempty(obj.yrownames) || (length(obj.y) ~= length(obj.yrownames))
+				ntmp = cell(length(obj.y),1);
+				for i = 1:length(obj.y)
+					ntmp{i} = ['Obs_' num2str(i)];
+				end
+				obj.yrownames = ntmp;
+			end			
+			if ~isempty(obj.x)
+				if ~isempty(obj.cases) && obj.isDataEqualLength
+					obj.xdata = dataset({obj.x,obj.columnlabels{:}},'ObsNames',obj.xrownames);
+					ntmp = dataset({obj.cases,'Groups'});
+					obj.xdata = horzcat(obj.xdata, ntmp);
+				else
+					obj.xdata = dataset({obj.x,obj.columnlabels{:}},'ObsNames',obj.xrownames);
+				end
+			end
+			if ~isempty(obj.y)
+				if ~isempty(obj.cases) && obj.isDataEqualLength
+					obj.ydata = dataset({obj.y,obj.columnlabels{:}},'ObsNames',obj.yrownames);
+					ntmp = dataset({obj.cases,'Groups'});
+					obj.ydata = horzcat(obj.ydata, ntmp);
+				else
+					obj.ydata = dataset({obj.y,obj.columnlabels{:}},'ObsNames',obj.yrownames);
+				end
+			end
+		end
 		
 		% ===================================================================
 		%> @brief
@@ -827,28 +943,39 @@ classdef getDensity < handle
 				p = copyobj(pn(1,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
+				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,1).axis,h);
+				p = copyobj(pn(1,2).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','zbuffer');
+				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(1,3).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
+				
 				h=figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
+				
 				h=figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,2).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h=figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,3).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 			else
@@ -858,50 +985,35 @@ classdef getDensity < handle
 				p = copyobj(pn(1,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
+				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(1,2).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','zbuffer');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,3).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
 				p = copyobj(pn(2,1).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
+				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(3,1).axis,h);
+				p = copyobj(pn(2,2).axis,h);
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
-			end
-		end
-		
-		% ===================================================================
-		%> @brief Function that runs after the checkData event fires
-		%>
-		%> @param obj this instance object
-		% ===================================================================
-		function doCheckData(obj, src, evnt)
-			obj.salutation([evnt.EventName ' event'],'Event is running...');
-			if isempty(obj.y)
-				obj.y = zeros(size(obj.x));
-			end
-			if size(obj.x,2) > length(obj.columnlabels)
-				for i = length(obj.columnlabels)+1 : size(obj.x,2)
-					obj.columnlabels{i} = ['DataSet_' num2str(i)];
-				end
-			end
-			if isempty(obj.cases) && ~isempty(obj.uniquecases)
-				obj.uniquecases = [];
-			end
-			if ~isempty(obj.x)
-				obj.xdata = dataset({obj.x,obj.columnlabels{:}},'ObsNames',obj.xrownames);
-			end
-			if ~isempty(obj.y)
-				obj.ydata = dataset({obj.y,obj.columnlabels{:}},'ObsNames',obj.yrownames);
+				
 			end
 		end
 		
