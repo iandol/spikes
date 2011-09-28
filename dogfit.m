@@ -14,6 +14,7 @@ function dogfit(action)
 global data
 global fd
 global sv
+global doparallel
 
 if nargin<1,
 	action='Initialize';
@@ -25,7 +26,7 @@ switch(action)
 	%-------------------------------------------------------------------
 	case 'Initialize'
 		%-------------------------------------------------------------------
-		fd.version = 1.901;
+		fd.version = 1.910;
 		version=['DOG-Fit Model Fitting Routine ' sprintf('%.4f',fd.version) ' | Started on ', datestr(now)];
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
@@ -34,13 +35,21 @@ switch(action)
 		set(gcf,'Name', version);
 		set(gh('DFDisplayMenu'),'Value',3);
 		set(gh('InfoText'),'String','Welcome to the DOG Model Fitter. Choose ''Import'' to load data from Spikes, or ''Load Data'' to load a previous model file.');
-		if matlabpool('size') == 0
-			tic;matlabpool
-			fprintf('matlabpool took: %g seconds to initialize\n',toc)
-			fd.weOpen = true;
-		else
-			fprintf('matlabpool seems open...\n');
+		try
+			if matlabpool('size') == 0
+				tic;matlabpool
+				fprintf('matlabpool took: %g seconds to initialize\n',toc)
+				fd.weOpen = true;
+				doparallel = true;
+			else
+				fprintf('matlabpool seems open...\n');
+				fd.weOpen = false;
+				doparallel = true;
+			end
+		catch
+			fprintf('matlabpool couldn''t open...\n');
 			fd.weOpen = false;
+			doparallel = false;
 		end
 		set(gh('DFLoadText'),'String','Initialising complete...');
 		%-------------------------------------------------------------------
@@ -92,7 +101,7 @@ switch(action)
 			fd.s=0;
 			xo(6)=fd.s;
 			set(gh('sedit'),'String',num2str(fd.s));
-			fd.lb=round([fd.dc/2 0.1 fd.dc/2 0.1 0 0]);
+			fd.lb=[round(fd.dc/2) 0.1 round(fd.dc/2) 0.2 0 0];
 			fd.ub=round([max(fd.y)*5 max(fd.x) max(fd.y)*5 max(fd.x) max(fd.y) 0]);
 			set(gh('lb1'),'String',num2str(fd.lb(1)));
 			set(gh('lb2'),'String',num2str(fd.lb(2)));
@@ -196,8 +205,8 @@ switch(action)
 		nmax = str2num(get(gh('DFnmax'),'String'));
 		
 		options = optimset('Display',disp,'Algorithm',alg,...
-			'FunValCheck','on','UseParallel','always',...
-			'TolX',1e-3);
+			'FunValCheck','off','UseParallel','always',...
+			'TolX',1e-1);
 		xo=[0 0 0 0 0 0];
 		xo(1)=str2num(get(gh('caedit'),'String'));
 		xo(2)=str2num(get(gh('csedit'),'String'));
@@ -229,7 +238,8 @@ switch(action)
 					[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,[],options,x,y);
 				end
 			else
-				options.MaxFunEvals = 300;
+				options.MaxFunEvals = 200;
+				%options.MaxIter = 200;
 				%lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
 				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
 				[o,f,exit,output]=fmincon(@DOG_CHF,xo,[],[],[],[],lb,ub,@sumconfun,options,x,y);
@@ -404,8 +414,13 @@ switch(action)
 				yy=dogsummate(xo,x);
 			end
 		end
-		err = sum((fd.y-yy).^2);
-		fprintf('Curve Generation took: %g seconds, squared error = %g\n',toc,err)
+		if get(gh('DFSmooth'),'Value')==1
+			err = sum((fd.ys-yy).^2);
+		else
+			err = sum((fd.y-yy).^2);
+		end
+		tend = sprintf('Curve Generation took: %g seconds, squared error = %g\n',toc,err);
+		fprintf(tend)
 		yy(yy<0)=0;
 		if isfield(fd,'e') %we have error info
 			%areabar(x,y,e,[.8 .8 .8]);
@@ -440,14 +455,14 @@ switch(action)
 		xog=[fd.xo,fd.goodness,fd.goodness2];
 		s=[sprintf('%s\t',fd.title),sprintf('%0.6g\t',xog)];
 		clipboard('Copy',s);
-		set(gh('DFLoadText'),'String','Replotting finished...');
+		set(gh('DFLoadText'),'String',['Replotting finished: ' tend]);
 		
 		%-------------------------------------------------------------------
 	case 'Load Data'
 		%-------------------------------------------------------------------
 		
 		[fn,pn]=uigetfile({'*.mat','Mat File (MAT)'},'Select File Type to Load:');
-		if isequal(fn,0)|isequal(pn,0);errordlg('No File Selected or Found!');error('File not selected');end
+		if isequal(fn,0)||isequal(pn,0);errordlg('No File Selected or Found!');error('File not selected');end
 		cd(pn);
 		load(fn);
 		
@@ -704,13 +719,17 @@ if ~isempty(data) %we've been passed data so return the squared error
 	y=sum((data-y).^2);  %percentage
 end
 
-if x(5)<0 %this is to stop the nlinfit, which has no upper or lower bounds to not select negative spontaneous levels.by making the fit really bad
-	y=y/1000;
-end
-
 fprintf('---> CHF Input: ');fprintf('%.5g ',x);
 if ~isempty(data);fprintf(' | Error^2: %.5g',y);end
 fprintf('\n');
+
+if x(5)<0 %this is to stop the nlinfit, which has no upper or lower bounds to not select negative spontaneous levels.by making the fit really bad
+	if isempty(data)
+		y = y / 1e6; %make the curve tiny and never a good fit
+	else
+		y = y * 1e6; %make squared error massive
+	end
+end
 
 
 %%%%%%%%%%%%%%%%%
@@ -725,6 +744,7 @@ fprintf('\n');
 % xdata: points on the d-axis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = fun_X_series_dvary(x,xdata)
+global doparallel
 [~, ndmax]=size(xdata);
 if x(1) < 0 || isnan(x(1)) || x(2) < 0 || isnan(x(2)) || x(3) < 0 || isnan(x(3))
 	y=zeros(1,ndmax);
@@ -736,8 +756,8 @@ zp=x(1)*x(2);
 nmax=x(3);
 y=zeros(1,ndmax);
 
-if matlabpool('size') > 0
-	fprintf('--> Computing CHF in parallel: ');fprintf('%.4g ',x);
+if doparallel == true
+	fprintf('--> Computing CHF in parallel (%i): ', doparallel);fprintf('%.4g ',x);
 	for nd=1:ndmax
 		lp = [0:16];
 		parfor n=lp
@@ -748,7 +768,7 @@ if matlabpool('size') > 0
 	end
 	%fprintf('\n');
 else
-	fprintf('--> Computing CHF serially: ');fprintf('%.4g ',x);fprintf('\n')
+	fprintf('--> Computing CHF serially (%i): ', doparallel);fprintf('%.4g ',x);fprintf('\n')
 	for nd=1:ndmax
 		for n=0:nmax
 			y(nd) = y(nd) + exp(-zp^2/4)/(4*yp(nd)^2)/factorial(n)*(1/4)^n*zp^(2*n)*double(mfun('Hypergeom',[n+1],[2],-1/(4*(yp(nd)^2))));

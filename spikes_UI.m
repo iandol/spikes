@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 11-Aug-2010 00:30:58
+% Last Modified by GUIDE v2.5 27-Sep-2011 13:18:23
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -779,8 +779,6 @@ function SUseWindow_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of SUseWindow
 
 
-
-
 % --- Executes on button press in SRemoveMean.
 function SRemoveMean_Callback(hObject, eventdata, handles)
 % hObject    handle to SRemoveMean (see GCBO)
@@ -788,3 +786,47 @@ function SRemoveMean_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of SRemoveMean
+
+
+% --- Executes on button press in SAllPSTHs.
+function SAllPSTHs_Callback(hObject, eventdata, handles)
+% hObject    handle to SAllPSTHs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Plot All PSTHs');
+
+
+% --- Executes on button press in SDoDOG.
+function SDoDOG_Callback(hObject, eventdata, handles)
+% hObject    handle to SDoDOG (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Difference of Gaussian');
+
+% --- Executes on button press in SDoArea.
+function SDoArea_Callback(hObject, eventdata, handles)
+% hObject    handle to SDoArea (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Area Analysis');
+
+% --- Executes on button press in SDoSurround.
+function SDoSurround_Callback(hObject, eventdata, handles)
+% hObject    handle to SDoSurround (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Surround Suppression');
+
+% --- Executes on button press in SDoSPlot.
+function SDoSPlot_Callback(hObject, eventdata, handles)
+% hObject    handle to SDoSPlot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Plot Single PSTH');
+
+% --- Executes on button press in SDoMetric.
+function SDoMetric_Callback(hObject, eventdata, handles)
+% hObject    handle to SDoMetric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Metric Space');

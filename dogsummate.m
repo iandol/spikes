@@ -95,5 +95,9 @@ else
 end
 
 if x(5)<0 %this is to stop the nlinfit, which has no upper or lower bounds to not select negative spontaneous levels.by making the fit really bad
-	y=y/1000;
+	if ~isempty(data)
+		y=y*1e6;
+	else
+		y=y/1e6;
+	end
 end

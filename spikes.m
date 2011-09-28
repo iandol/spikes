@@ -59,7 +59,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv=[];
 		data=[];
 		rlist=[];
-		sv.version = 1.912;
+		sv.version = 1.913;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title=['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -641,7 +641,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
 					filename = [basefilename '.' int2str(i)];
-					filenamet = [filename num2str(data.meta.matrix(i,end))];
+					filenamet = [filename ' ' num2str(data.meta.matrix(i,end))]; %add variable value to name
 					filenamet = regexprep(filenamet,'\s+',' ');
 					data.names{i}=filenamet;
 					switch data.filetype
@@ -767,7 +767,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
 					filename = strcat(basefilename,'.',int2str(i));
-					filenamet = [filename num2str(data.meta.matrix(i,end-1:end))];
+					filenamet = [filename ' ' num2str(data.meta.matrix(i,end-1:end))];
 					filenamet = regexprep(filenamet,'\s+',' ');
 					data.names{i}=filenamet;
 					switch data.filetype
@@ -902,7 +902,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					drawnow;
 					filename = [basefilename '.' int2str(i)];
 					filename = strcat(basefilename,'.',int2str(i));
-					filenamet = [filename num2str(data.meta.matrix(i,end-2:end))];
+					filenamet = [filename ' ' num2str(data.meta.matrix(i,end-2:end))];
 					filenamet = regexprep(filenamet,'\s+',' ');
 					data.names{yi,xi,zi}=filenamet;
 					switch data.filetype
@@ -1537,7 +1537,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------Surround Suppression Measurement----------
 	case 'Surround Suppression'
 		
-		if data.numvars<3
+		if data.numvars<4
 			switch get(gh('SpikeMenu'),'Value');
 				case 1 %all spikes
 					a=data.matrix;
@@ -1563,13 +1563,27 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				errordlg('sorry, no 0 diameter, please calculate manually')
 				s=0;
 			end
-			[m,i]=max(a);
+			
+			figure;
+			figpos(1,[700 700])
+			
+			ret = questdlg('Do you want to measure optimum manually?');
+			if strcmpi(ret,'Yes')
+				areabar(w, a, aerr);
+				[xi,yi]=ginput(1);
+				[xx1, ~] = local_nearest(xi(1),w,yi(1),a);
+				i = find(w == xx1);
+				m = a(i);
+			else			
+				[m,i]=max(a);
+			end
+			
 			aerr=aerr./m;
 			a=a./m;
 			d=w(i);
-			figure;
-			figpos(1,[700 700])
+			
 			h=areabar(w, a, aerr);
+			line(w(i),a(i), 'Color', [0 0 1], 'Marker', 'o', 'MarkerSize', 12);
 			t=data.matrixtitle;
 			sv.titlehandle=title(t);
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
@@ -1602,8 +1616,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			ci = bootci(1000,{@mean, tr},'alpha',pval);
 			ci = ci ./ m;
 			
-			line(xx1,yy1, 'Color', [1 0 0], 'Marker', 'o');
-			line(xx2,yy2, 'Color', [1 0 0], 'Marker', 'o');
+			line(xx1,yy1, 'Color', [1 0 0], 'Marker', 'o', 'MarkerSize', 12);
+			line(xx2,yy2, 'Color', [1 0 0], 'Marker', 'o', 'MarkerSize', 12);
 			
 			b=mean([yy1 yy2]);
 			h = line([w(1) w(end)],[b b]);
@@ -1613,14 +1627,15 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			text(w(end)/2,ci(1)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(1)));
 			h = line([w(1) w(end)],[ci(2) ci(2)]);
 			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
-			text(w(end)/2,ci(2)+0.01,sprintf('CI = %.5g',ci(2)));
+			text(w(end)/2,ci(2)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(2)));
 			b=100-b*100;
 			
 			o=[s,d,b, ci(1), ci(2)]; %spontaneous - diameter - percent suppression
 			t1=['Spontaneous: ' sprintf('%0.3f',s) 'Hz'];
 			t2=['Optimal Diameter: ' sprintf('%0.3g',d) 'deg'];
 			t3=['Surround Suppression: ' sprintf('%0.3f',b) '%'];
-			tt={t1,t2,t3};
+			t4=['Optimum Firing Rate (after - spontaneous): ' sprintf('%0.3f',m) 'Hz'];
+			tt={t1,t2,t3,t4};
 			text(0.1,-0.1,tt,'FontSize',12);
 			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
 			clipboard('Copy',s);
@@ -3608,7 +3623,7 @@ switch data.numvars
 			if i<data.xrange
 				set(gca,'XTickLabel',[]);
 			end
-			text(5,(m-m/10), data.names{data.xindex(i)},'FontSize',10);
+			text(5,(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.5 0.5 0.5]);
 			ylabel(num2str(data.xvalues(i)));
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 		end
@@ -3679,7 +3694,7 @@ switch data.numvars
 			set(gca,'XTick',[]);
 			set(gca,'YTick',[]);
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-			text(5,(m-m/10), data.names{y(i)},'FontSize',10);
+			text(5,(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.5 0.5 0.5]);
 			a=a+1;
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
