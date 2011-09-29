@@ -168,6 +168,31 @@ switch(action)
 		set(gh('InfoText'),'String','Tuning curve data loaded and rough initial guesses have been made, you may now let the computer find the optimum parameters "Fit IT!", or enter parameters directly via the edit boxes.');
 		
 		%-------------------------------------------------------------------
+	case 'DFHistory'
+		%-------------------------------------------------------------------
+		v = get(gh('DFHistory'),'Value');
+		s = get(gh('DFHistory'),'String');
+		s = s{v};
+		
+		remain = s;
+		
+		xo = zeros(6,1);
+		
+		for i = 1:6
+			[inum, remain] = strtok(remain, ' ');
+			xo(i) = str2num(inum);
+		end
+		set(gh('caedit'),'String',num2str(xo(1)));
+		set(gh('csedit'),'String',num2str(xo(2)));
+		set(gh('saedit'),'String',num2str(xo(3)));
+		set(gh('ssedit'),'String',num2str(xo(4)));
+		set(gh('dcedit'),'String',num2str(xo(5)));
+		set(gh('sedit'),'String',num2str(xo(6)));
+		
+		dogfit('RePlot');
+		
+		
+		%-------------------------------------------------------------------
 	case 'FitIt'
 		%-------------------------------------------------------------------
 		
@@ -358,8 +383,17 @@ switch(action)
 		%fprintf(fid,'%s\n',ttt);
 		%fclose(fid);
 		xog=[fd.xo(1:end-1),fd.goodness,fd.goodness2];
+		xoo=[fd.xo,fd.goodness,fd.goodness2];
 		s=[sprintf('%s\t',fd.title),sprintf('%0.6g\t',xog)];
 		clipboard('Copy',s(1:end-1));
+		
+		s = get(gh('DFHistory'),'String');
+		if ~iscell(s)
+			s = {s};
+		end
+		s{end+1,:} = sprintf('%0.6g ',xoo);
+		set(gh('DFHistory'),'String',s);
+		set(gh('DFHistory'),'Value',length(s));
 		
 		%-------------------------------------------------------------------
 	case 'RePlot'

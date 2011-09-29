@@ -74,6 +74,12 @@ classdef getDensity < handle
 		nBins = 10
 		%> centre histogram bins
 		centreBins = true
+		%>density kernel to use, 'normal', 'box', 'triangle', 'epanechnikov'
+		densityKernel = 'normal'
+		%> density function, 'pdf', 'cdf','icdf', 'survivor', 'cumhazard'
+		densityFunction = 'pdf'
+		%> density bounds
+		densityBounds = 'unbounded'
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -503,9 +509,10 @@ classdef getDensity < handle
 				
 				t=[t 'BootStrap: ' sprintf('%0.3g', xci(1)) ' < ' sprintf('%0.3g', xmean) ' > ' sprintf('%0.3g', xci(2)) ' | ' sprintf('%0.3g', yci(1)) ' < ' sprintf('%0.3g', ymean) ' > ' sprintf('%0.3g', yci(2))];
 				
-				[fx,xax]=ksdensity(xpop);
-				[fy,yax]=ksdensity(ypop);
-				
+				[fx,xax]=ksdensity(xpop, 'kernel', obj.densityKernel,...
+					'function', obj.densityFunction, 'support', obj.densityBounds);
+				[fy,yax]=ksdensity(ypop, 'kernel', obj.densityKernel,...
+					'function', obj.densityFunction, 'support', obj.densityBounds);
 				
 				%==========================================DO CDF
 				if obj.isDataEqualLength
@@ -516,16 +523,28 @@ classdef getDensity < handle
 					py = 2;
 				end
 				pn(py,px).select();
-				h = cdfplot(xcol);
-				set(h,'Color',[0 0 0])
+				
+% 				h = cdfplot(xcol);
+% 				set(h,'Color',[0 0 0])
+% 				hold on
+% 				h = cdfplot(ycol);
+% 				set(h,'Color',[1 0 0])
+% 				hold off
 				hold on
-				h = cdfplot(ycol);
-				set(h,'Color',[1 0 0])
+				[f,x,flo,fup] = ecdf(xcol);
+				stairs(x,f,'k','LineWidth',2);
+				stairs(x,flo,'k:');
+				stairs(x,fup,'k:');
+				[f,x,flo,fup] = ecdf(ycol);
+				stairs(x,f,'r','LineWidth',2);
+				stairs(x,flo,'r:');
+				stairs(x,fup,'r:');
 				hold off
 				
+				grid on
+				box on
 				pn(py,px).title('Cumulative Distribution Function');
 				pn(py,px).xlabel(obj.columnlabels{i});
-				box on
 				
 				%==========================================Do DENSITY
 				if obj.isDataEqualLength

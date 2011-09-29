@@ -1040,7 +1040,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------Set up our history mechanism-----------
 		history=get(gh('spikehistory'),'String');
 		newitem=[data.sourcepath ' | Cell ' num2str(sv.firstunit)];
-		hsize=20;
+		hsize=40;
 		if ischar(history)
 			history={history};
 		end
@@ -3777,11 +3777,10 @@ m=round(m+m/10);  %just to scale a bit bigger than the maximum value
 set(gh('PSTHText'),'String',num2str(m));
 
 %colormap([0 0 0;1 0 0]);
-h(1)=bar(time,psth,1,'k');
+h(1)=bar(time,psth,'BarWidth', 1 ,'FaceColor',[0 0 0],'EdgeColor','none', 'ShowBaseLine', 'off');
 hold on;
-h(2)=bar(time,bpsth,1,'r');
+h(2)=bar(time,bpsth,'BarWidth', 1 ,'FaceColor',[0.8 0 0],'EdgeColor','none', 'ShowBaseLine', 'off');
 hold off;
-set(h,'EdgeColor','none')
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
 sv.ylabelhandle=ylabel('Spikes/Bin','FontSize',sv.labelsize);
 MakeTitle('psth');

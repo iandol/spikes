@@ -3,7 +3,7 @@ function varargout = dogfitfig(varargin)
 %    FIG = DOGFITFIG launch dogfitfig GUI.
 %    DOGFITFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 20-Sep-2011 15:05:09
+% Last Modified by GUIDE v2.5 28-Sep-2011 17:04:58
 
 if nargin == 0  % LAUNCH GUI
 
@@ -244,7 +244,7 @@ function DFUseROG_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of DFUseROG
 v = get(hObject,'Value');
 if v == 1
-	set(handles.DFUseCHF,'Value',0)
+	set(handles.DFUseCHF,'Value',0);
 end
 
 % --- Executes on button press in DFUseCHF.
@@ -256,6 +256,17 @@ function DFUseCHF_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of DFUseCHF
 v = get(hObject,'Value');
 if v == 1
-	set(handles.DFUseROG,'Value',0)
-	set(handles.DFSmooth,'Value',0)
+	set(handles.DFUseROG,'Value',0);
+	set(handles.DFSmooth,'Value',0);
 end
+
+
+% --- Executes on selection change in DFHistory.
+function DFHistory_Callback(hObject, eventdata, handles)
+% hObject    handle to DFHistory (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns DFHistory contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from DFHistory
+dogfit('DFHistory')
