@@ -26,7 +26,7 @@ switch(action)
 	%-------------------------------------------------------------------
 	case 'Initialize'
 		%-------------------------------------------------------------------
-		fd.version = 1.910;
+		fd.version = 1.920;
 		version=['DOG-Fit Model Fitting Routine ' sprintf('%.4f',fd.version) ' | Started on ', datestr(now)];
 		set(0,'DefaultAxesLayer','top');
 		set(0,'DefaultAxesTickDir','out');
@@ -70,16 +70,23 @@ switch(action)
 				errordlg('Sorry, 0 variable data cannot be used.')
 				error('not enough variables');
 			otherwise
-				if sv.xlock==1 && sv.ylock==0
-					fd.x=data.yvalues;
-				else
-					fd.x=data.xvalues;
+				if sv.xlock==1 && data.numvars == 50
+					fd.x = data.yvalues;
+					fd.y = data.matrixall(:,sv.xval,sv.zval);
+					fd.e = data.errormatall(:,sv.xval,sv.zval);
+				elseif sv.ylock==1 && data.numvars == 50
+					fd.x = data.xvalues;
+					fd.y = data.matrixall(sv.yval,:,sv.zval);
+					fd.e = data.errormatall(sv.yval,:,sv.zval);
+				else 
+					fd.x = data.xvalues;
+					fd.y = data.matrix;
+					fd.e = data.errormat;
 				end
-				fd.y=data.matrix;
 				if ~(length(fd.x)==length(fd.y))
 					error('Dimension error in input!!!')
 				end
-				fd.e=data.errormat;
+				
 		end
 		
 		set(gh('caedit'),'String',num2str(max(fd.y)*1.5));            %set to the max firing rate *1.5
@@ -191,7 +198,6 @@ switch(action)
 		
 		dogfit('RePlot');
 		
-		
 		%-------------------------------------------------------------------
 	case 'FitIt'
 		%-------------------------------------------------------------------
@@ -229,9 +235,16 @@ switch(action)
 		
 		nmax = str2num(get(gh('DFnmax'),'String'));
 		
+		TolX = str2num(get(gh('DFTolX'),'String'));
+		MaxFunEvals = str2num(get(gh('DFMaxFunEvals'),'String'));
+		MaxIter = str2num(get(gh('DFMaxIter'),'String'));
+		TolCon = str2num(get(gh('DFTolCon'),'String'));
+		
 		options = optimset('Display',disp,'Algorithm',alg,...
 			'FunValCheck','off','UseParallel','always',...
-			'TolX',1e-1);
+			'TolX',TolX,'TolCon',TolCon,...
+			'MaxFunEvals',MaxFunEvals,'MaxIter',MaxIter);
+		
 		xo=[0 0 0 0 0 0];
 		xo(1)=str2num(get(gh('caedit'),'String'));
 		xo(2)=str2num(get(gh('csedit'),'String'));
@@ -263,8 +276,6 @@ switch(action)
 					[o,f,exit,output]=fmincon(@dogsummate,xo,[],[],[],[],lb,ub,[],options,x,y);
 				end
 			else
-				options.MaxFunEvals = 200;
-				%options.MaxIter = 200;
 				%lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
 				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
 				[o,f,exit,output]=fmincon(@DOG_CHF,xo,[],[],[],[],lb,ub,@sumconfun,options,x,y);
@@ -368,7 +379,8 @@ switch(action)
 			fd.text=['Warning: Algorithm didn''t converge. Try to fit it using these latest parameters, if there is still no convergence, use new initial parameters. Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
 			set(gh('InfoText'),'String',fd.text);
 		elseif exist('output','var')
-			fd.text=[num2str(output.iterations) ' iterations and ' num2str(output.funcCount) ' :- ' output.algorithm '. Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE | SI=' num2str(sindex)];
+			fd.text{1,:}=[num2str(output.iterations) ' iterations and ' num2str(output.funcCount) ' :- ' output.algorithm];
+			fd.text{2,:} = ['Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE | SI=' num2str(sindex)];
 			set(gh('InfoText'),'String',fd.text);
 		else
 			fd.text=['Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
@@ -392,6 +404,7 @@ switch(action)
 			s = {s};
 		end
 		s{end+1,:} = sprintf('%0.6g ',xoo);
+		s{end,:} = [s{end,:} ' | ' fd.title];
 		set(gh('DFHistory'),'String',s);
 		set(gh('DFHistory'),'Value',length(s));
 		

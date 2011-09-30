@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 27-Sep-2011 13:18:23
+% Last Modified by GUIDE v2.5 29-Sep-2011 16:54:01
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -21,9 +21,9 @@ elseif ischar(varargin{1}) % INVOKE NAMED SUBFUNCTION OR CALLBACK
 	
 	try
 		[varargout{1:nargout}] = feval(varargin{:}); % FEVAL switchyard
-	catch
+	catch ME
 		disp(lasterr);
-		s=lasterror;
+		s=ME;
 		disp(s.message);
 		for i=1:length(s.stack)
 			disp(s.stack(i));
@@ -830,3 +830,11 @@ function SDoMetric_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 spikes('Metric Space');
+
+
+% --- Executes on mouse press over figure background.
+function SpikeFig_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to SpikeFig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global data

@@ -3,7 +3,7 @@ function varargout = dogfitfig(varargin)
 %    FIG = DOGFITFIG launch dogfitfig GUI.
 %    DOGFITFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 28-Sep-2011 17:04:58
+% Last Modified by GUIDE v2.5 29-Sep-2011 16:29:16
 
 if nargin == 0  % LAUNCH GUI
 
@@ -212,8 +212,6 @@ function DFUsenlinfit_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of DFUsenlinfit
 
-
-
 function DFSmoothNumber_Callback(hObject, eventdata, handles)
 % hObject    handle to DFSmoothNumber (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -221,19 +219,6 @@ function DFSmoothNumber_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of DFSmoothNumber as text
 %        str2double(get(hObject,'String')) returns contents of DFSmoothNumber as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function DFSmoothNumber_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to DFSmoothNumber (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on button press in DFUseROG.
 function DFUseROG_Callback(hObject, eventdata, handles)
@@ -270,3 +255,38 @@ function DFHistory_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns DFHistory contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from DFHistory
 dogfit('DFHistory')
+
+
+
+function DFTolX_Callback(hObject, eventdata, handles)
+% hObject    handle to DFTolX (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DFTolX as text
+%        str2double(get(hObject,'String')) returns contents of DFTolX as a double
+
+function DFMaxFunEvals_Callback(hObject, eventdata, handles)
+% hObject    handle to DFMaxFunEvals (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DFMaxFunEvals as text
+%        str2double(get(hObject,'String')) returns contents of DFMaxFunEvals as a double
+
+function DFMaxIter_Callback(hObject, eventdata, handles)
+% hObject    handle to DFMaxIter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DFMaxIter as text
+%        str2double(get(hObject,'String')) returns contents of DFMaxIter as a double
+
+function DFTolCon_Callback(hObject, eventdata, handles)
+% hObject    handle to DFTolCon (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DFTolCon as text
+%        str2double(get(hObject,'String')) returns contents of DFTolCon as a double
+

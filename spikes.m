@@ -30,7 +30,7 @@ function spikes(action)
 % [ian]		[1.7.7 Can plot out and juggle any variable selection from 0-3  (Nov 2005)	]
 % [ian]		[1.7.8 Small fixes												(Dec 2005)	]
 % [ian]		[1.7.9 (Re)add the quick temporal analysis						(Feb 2006) ]
-% NOTE: we've switched to Bazaae VCS to log changes, please use that to
+% NOTE: we've switched to Bazaar VCS to log changes, please use that to
 % know what has changed...
 %
 %**********************************************************************************
@@ -2008,10 +2008,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				case 'Cancel'
 					error('Area analysis cancelled');
 			end
-			
-			PlotDMatrix(data.matrix);
-			
 		end
+		PlotDMatrix(data.matrix);
 		x=data.anal.xvals(2)-data.anal.xvals(1);
 		y=data.anal.yvals(2)-data.anal.yvals(1);
 		area=x*y;
@@ -3616,14 +3614,14 @@ switch data.numvars
 			p(i,1).select();
 			%subaxis(data.xrange,1,i,'S',0,'P',0,'M',0.1);
 			h(1)=bar(data.time{data.xindex(i)}(mini:maxi),data.psth{data.xindex(i)}(mini:maxi),1,'k');
-			hold on;
+			p(i,1).hold('on')
 			h(2)=bar(data.time{data.xindex(i)}(mini:maxi),data.bpsth{data.xindex(i)}(mini:maxi),1,'r');
-			hold off;
-			set(h,'EdgeColor','none')
+			p(i,1).hold('off')
+			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
 			if i<data.xrange
 				set(gca,'XTickLabel',[]);
 			end
-			text(5,(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.5 0.5 0.5]);
+			text(data.time{1}(mini),(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			ylabel(num2str(data.xvalues(i)));
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 		end
@@ -3690,11 +3688,11 @@ switch data.numvars
 			p(i1,i2).hold('on')
 			h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
 			p(i1,i2).hold('off')
-			set(h,'EdgeColor','none');
+			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
 			set(gca,'XTick',[]);
 			set(gca,'YTick',[]);
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-			text(5,(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.5 0.5 0.5]);
+			text(data.time{1}(mini),(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			a=a+1;
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];

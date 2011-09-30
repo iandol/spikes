@@ -76,8 +76,8 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		
 		set(gh('SmoothEdit'),'String',num2str(data.binwidth*2));
 		
-		set(gh('DataBox'),'String',{'All Spikes';'Burst Spikes';'Both Types'});
-		set(gh('DataBox'),'Value',3);
+		set(gh('DataBox'),'String',{'All Spikes';'Burst Spikes';'Tonic Spikes';'Both Types'});
+		set(gh('DataBox'),'Value',4);
 		set(gh('TypeBox'),'String',{'Bar Plot';'Area Plot';'Gaussian Smooth';'Loess Curve'});
 		set(gh('SPAnalMenu'),'String',{'None';'FFT Power Spectrum';'Linearity Test';'Get Spontaneous';'Latency Analysis';'Calculate BARS'}); %;'Latency Analysis';'Ratio of Bursts'});
 		splot('Plot') %actually plot what we have
@@ -108,8 +108,8 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			set(gh('XBox'),'String',{'1'});
 		end
 		
-		set(gh('DataBox'),'String',{'All Spikes';'Burst Spikes';'Both Types'});
-		set(gh('DataBox'),'Value',3);
+		set(gh('DataBox'),'String',{'All Spikes';'Burst Spikes';'Tonic Spikes';'Both Types'});
+		set(gh('DataBox'),'Value',4);
 		set(gh('TypeBox'),'String',{'Bar Plot';'Area Plot';'Gaussian Smooth';'Loess Curve'});
 		set(gh('SPAnalMenu'),'String',{'None';'FFT Power Spectrum';'Linearity Test';'Get Spontaneous';'Latency Analysis'}); %;'Latency Analysis';'Ratio of Bursts'});
 		splot('Plot') %actually plot what we have
@@ -132,6 +132,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		time=data.time{y,x,z};
 		psth=data.psth{y,x,z};
 		bpsth=data.bpsth{y,x,z};
+		tpsth = psth - bpsth;
 		
 		datatype=get(gh('DataBox'),'Value');
 		plottype=get(gh('TypeBox'),'Value');
@@ -141,6 +142,9 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		
 		mb=max(bpsth);
 		mb=converttotime(mb);
+		
+		mt=max(tpsth);
+		mt=converttotime(mt);
 		
 		switch(datatype)
 			
@@ -270,7 +274,62 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						%save c:\burstpsth.txt  ww -ascii
 				end
 				
-			case 3 %both spikes
+				case 3 % burst spikes
+				
+				switch(plottype)
+					
+					case 1 %bar
+						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
+						bar(time,tpsth,1,'k');
+						hold on
+						if isfield(spdata.bars,'mean') && logical(spdata.bars.x == x)
+							plot(time,spdata.bars.mean,'r-')
+							plot(time,spdata.bars.confBands(:,1),'r:')
+							plot(time,spdata.bars.confBands(:,2),'r:')
+						end
+						hold off
+						axis tight;
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ww=[time',tpsth'];
+					case 2 %area
+						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
+						h=area(time,tpsth);
+						set(h,'FaceColor',[0 0 0]);
+						hold on
+						if isfield(spdata.bars,'mean') && logical(spdata.bars.x == x)
+							plot(time,spdata.bars.mean,'r-')
+							plot(time,spdata.bars.confBands(:,1),'r:')
+							plot(time,spdata.bars.confBands(:,2),'r:')
+						end
+						hold off
+						axis tight;
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+					case 3 %smooth
+						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
+						ss=str2num(get(gh('SmoothEdit'),'String'));
+						spdata.tpsths=gausssmooth(time,tpsth,ss);
+						if isnan(spdata.tpsths);errordlg('Sorry, increase smooth parameter - may not work at all for very low firing rate');error('Smoothing parameter too low.');end;
+						h=area(time,spdata.tpsths);
+						set(h,'FaceColor',[0 0 0]);
+						axis tight;
+						ylabel('Instantaneous Firing Rate (Hz)')
+					case 4 %loess
+						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
+						lss=str2num(get(gh('LoessEdit'),'String'));
+						resolution=length(tpsth)*2;
+						spdata.times=linspace(min(time),max(time),resolution);
+						spdata.tpsths=loess(time,tpsth,spdata.times,lss,1);
+						if max(spdata.tpsths)==0 && max(tpsth)>0	 %says that loess has smoothed to 0
+							errordlg(['You may need to increase the Loess smoothing parameter from:' lss])
+							error('Loess value too small')
+						end
+						h=area(spdata.times,spdata.tpsths);
+						set(h,'FaceColor',[0 0 0]);
+						axis tight;
+						ylabel('Instantaneous Firing Rate (Hz)')
+				end
+				
+			case 4 %both spikes
 				
 				switch(plottype)
 					
@@ -459,10 +518,13 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			time=data.time{y,x,z};
 			psth=data.psth{y,x,z};
 			bpsth=data.bpsth{y,x,z};
+			tpsth = psth - bpsth;
 
 			datatype=get(gh('DataBox'),'Value');
 			if datatype == 2
 				psth = bpsth;
+			elseif datatype == 3
+				psth = tpsth;
 			end
 
 			m=max(psth);
@@ -523,6 +585,17 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			elseif plottype==4
 				time=spdata.times;
 				psth=spdata.bpsths;
+			end
+		elseif datatype == 3
+			if plottype==1 || plottype==2 %no smoothing so just raw psths
+				time=data.time{y,x,z};
+				psth = data.psth{y,x,z} - data.bpsth{y,x,z};
+			elseif plottype==3
+				time=data.time{y,x,z};
+				psth=spdata.tpsths;
+			elseif plottype==4
+				time=spdata.times;
+				psth=spdata.tpsths;
 			end
 		else %all spikes
 			if plottype==1 || plottype==2 %no smoothing so just raw psths
@@ -599,8 +672,11 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		cil=num2str(spdata.spont.ci01(1));
 		ciu=num2str(spdata.spont.ci01(2));
 		t4=['0.01 Confidence Interval from a Poisson: ' cil '-' ciu ' Hz'];
-		t5=['These Values has been stored in the data structure, and can automatically be used with the latency analysis'];
-		t={t1;t2;t3;t4;t5};
+		cil=num2str(spdata.spont.ci05(1));
+		ciu=num2str(spdata.spont.ci05(2));
+		t5=['0.05 Confidence Interval from a Poisson: ' cil '-' ciu ' Hz'];
+		t6=['These Values has been stored in the data structure, and can automatically be used with the latency analysis'];
+		t={t1;t2;t3;t4;t5;t6};
 		
 		spdata.latency = [];
 		
@@ -622,13 +698,24 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		if datatype==2 %bursts
 			if plottype==1 || plottype==2 %no smoothing so just raw psths
 				time=data.time{y,x,z};
-				psth=data.psth{y,x,z};
+				psth=data.bpsth{y,x,z};
 			elseif plottype==3
 				time=data.time{y,x,z};
-				psth=spdata.psths;
+				psth=spdata.bpsths;
 			elseif plottype==4
 				time=spdata.times;
-				psth=spdata.psths;
+				psth=spdata.bpsths;
+			end
+		elseif datatype == 3
+			if plottype==1 || plottype==2 %no smoothing so just raw psths
+				time=data.time{y,x,z};
+				psth = data.psth{y,x,z} - data.bpsth{y,x,z};
+			elseif plottype==3
+				time=data.time{y,x,z};
+				psth=spdata.tpsths;
+			elseif plottype==4
+				time=spdata.times;
+				psth=spdata.tpsths;
 			end
 		else %all spikes
 			if plottype==1 || plottype==2 %no smoothing so just raw psths
