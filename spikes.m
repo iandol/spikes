@@ -1574,7 +1574,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				[xx1, ~] = local_nearest(xi(1),w,yi(1),a);
 				i = find(w == xx1);
 				m = a(i);
-			else			
+			else
 				[m,i]=max(a);
 			end
 			
@@ -1583,13 +1583,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			d=w(i);
 			
 			h=areabar(w, a, aerr);
+			set(gca,'FontSize',12);
 			line(w(i),a(i), 'Color', [0 0 1], 'Marker', 'o', 'MarkerSize', 12);
 			t=data.matrixtitle;
-			sv.titlehandle=title(t);
-			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
+			title(t);
 			sv.ylabelhandle=ylabel('Normalized Firing Rate');
 			sv.xlabelhandle=xlabel('Diameter');
-			%legend(T,0)
+			%legend(T,0);
 			[xi,yi]=ginput(2);
 			
 			[xx1, yy1] = local_nearest(xi(1),w,yi(1),a);
@@ -1598,7 +1598,17 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			xidx1 = find(data.xvalues == xx1);
 			xidx2 = find(data.xvalues == xx2);
 			
-			tr = [data.sums{xidx1}; data.sums{xidx2}];
+			if data.numvars == 1
+				tr = [data.sums{xidx1}; data.sums{xidx2}];
+				tr0 = data.sums{1};
+			elseif data.numvars > 1 && sv.xlock == 0
+				tr = [data.sums{sv.yval, xidx1, sv.zval}; data.sums{sv.yval, xidx2, sv.zval}];
+				tr0 = data.sums{sv.yval, 1, sv.zval};
+			elseif data.numvars > 1 && sv.ylock == 0
+				tr = [data.sums{xidx1, sv.xval, sv.zval}; data.sums{xidx2, sv.xval, sv.zval}];
+				tr0 = data.sums{1, sv.xval, sv.zval};
+			end
+			
 			if data.wrapped == 1
 				timet = data.modtime / 10;
 			else
@@ -1606,15 +1616,20 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			end
 			modt = 1000 / timet;
 			tr = tr .* modt; %convert to Hz
-			tr = tr - s; %remove spontaneous
+			tr0 = tr0 .* modt; %convert to Hz
 			
-			pval=str2num(get(gh('SErrorEdit'),'String'));
-			if pval == 0
-				pval = 0.001;
+			pval = str2num(get(gh('SErrorEdit'),'String'));
+			if pval == 0 || pval > 1
+				pval = 0.05;
 			end
 			
 			ci = bootci(1000,{@mean, tr},'alpha',pval);
+			ci = ci - s;%now remove spontaneous
 			ci = ci ./ m;
+			
+			ci0 = bootci(1000,{@mean, tr0},'alpha',pval);
+			ci0 = ci0 - s;%now remove spontaneous
+			ci0 = ci0 ./ m;
 			
 			line(xx1,yy1, 'Color', [1 0 0], 'Marker', 'o', 'MarkerSize', 12);
 			line(xx2,yy2, 'Color', [1 0 0], 'Marker', 'o', 'MarkerSize', 12);
@@ -1622,18 +1637,28 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			b=mean([yy1 yy2]);
 			h = line([w(1) w(end)],[b b]);
 			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-','LineWidth',2);
-			h = line([w(1) w(end)],[ci(1) ci(1)]);
-			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
-			text(w(end)/2,ci(1)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(1)));
-			h = line([w(1) w(end)],[ci(2) ci(2)]);
-			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
-			text(w(end)/2,ci(2)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(2)));
+			if ci(1) > -1 && ci(1) < 5 
+				h = line([w(1) w(end)],[ci(1) ci(1)]);
+				set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
+				text(w(end)/2,ci(1)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(1)));
+			end
+			if ci(2) > -1 && ci(2) < 5 
+				h = line([w(1) w(end)],[ci(2) ci(2)]);
+				set(h,'Color',[0.7 0.2 0.2],'LineStyle','-.','LineWidth',1);
+				text(w(end)/2,ci(2)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(2)));
+			end
+			
+			h = line([w(1) w(end)],[ci0(1) ci0(1)]);
+			set(h,'Color',[0.6 0.6 0.6],'LineStyle',':','LineWidth',1);
+			h = line([w(1) w(end)],[ci0(2) ci0(2)]);
+			set(h,'Color',[0.6 0.6 0.6],'LineStyle',':','LineWidth',1);
+			
 			b=100-b*100;
 			
-			o=[s,d,b, ci(1), ci(2)]; %spontaneous - diameter - percent suppression
+			o = [s, d, b, ci(1), ci(2)]; %spontaneous - diameter - percent suppression
 			t1=['Spontaneous: ' sprintf('%0.3f',s) 'Hz'];
 			t2=['Optimal Diameter: ' sprintf('%0.3g',d) 'deg'];
-			t3=['Surround Suppression: ' sprintf('%0.3f',b) '%'];
+			t3=['Surround Suppression: ' sprintf('%0.3f',b) sprintf('% (-%0.3g +%0.3g)',ci(1),ci(2))];
 			t4=['Optimum Firing Rate (after - spontaneous): ' sprintf('%0.3f',m) 'Hz'];
 			tt={t1,t2,t3,t4};
 			text(0.1,-0.1,tt,'FontSize',12);

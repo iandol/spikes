@@ -374,16 +374,18 @@ switch(action)
 		set(gca,'Tag','raxis','UserData','SpawnAxes');
 		
 		sindex=((xo(3)*xo(4))/(xo(1)*xo(2)));
+		fd.text = {' '};
 		
 		if exist('exit','var') && exit<=0
-			fd.text=['Warning: Algorithm didn''t converge. Try to fit it using these latest parameters, if there is still no convergence, use new initial parameters. Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
+			fd.text{1,:}=['Warning: Algorithm didn''t converge. Try to fit it using these latest parameters, if there is still no convergence, use new initial parameters. Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
 			set(gh('InfoText'),'String',fd.text);
 		elseif exist('output','var')
-			fd.text{1,:}=[num2str(output.iterations) ' iterations and ' num2str(output.funcCount) ' :- ' output.algorithm];
+			fd.text{1,:}=[num2str(output.iterations) ' iterations and ' num2str(output.funcCount) ' functions:- ' output.algorithm];
 			fd.text{2,:} = ['Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE | SI=' num2str(sindex)];
+			fd.text{3,:} = output.message;
 			set(gh('InfoText'),'String',fd.text);
 		else
-			fd.text=['Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
+			fd.text{1,:}=['Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
 			set(gh('InfoText'),'String',fd.text);
 		end
 		
