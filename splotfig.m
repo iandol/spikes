@@ -3,7 +3,7 @@ function varargout = splotfig(varargin)
 %    FIG = SPLOTFIG launch splotfig GUI.
 %    SPLOTFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 01-Sep-2011 14:24:46
+% Last Modified by GUIDE v2.5 03-Oct-2011 12:15:32
 
 if nargin == 0  % LAUNCH GUI
 
@@ -136,20 +136,6 @@ function SPBARSpriorid_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from SPBARSpriorid
 
 
-% --- Executes during object creation, after setting all properties.
-function SPBARSpriorid_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SPBARSpriorid (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function SPBARSdparams_Callback(hObject, eventdata, handles)
 % hObject    handle to SPBARSdparams (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -158,21 +144,6 @@ function SPBARSdparams_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SPBARSdparams as text
 %        str2double(get(hObject,'String')) returns contents of SPBARSdparams as a double
 
-
-% --- Executes during object creation, after setting all properties.
-function SPBARSdparams_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SPBARSdparams (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function SPBARSburniter_Callback(hObject, eventdata, handles)
 % hObject    handle to SPBARSburniter (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -180,20 +151,6 @@ function SPBARSburniter_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of SPBARSburniter as text
 %        str2double(get(hObject,'String')) returns contents of SPBARSburniter as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function SPBARSburniter_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SPBARSburniter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function SPBARSconflevel_Callback(hObject, eventdata, handles)
@@ -205,14 +162,10 @@ function SPBARSconflevel_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of SPBARSconflevel as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function SPBARSconflevel_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SPBARSconflevel (see GCBO)
+function SPSpPos_Callback(hObject, eventdata, handles)
+% hObject    handle to SPSpPos (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
+% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% Hints: get(hObject,'String') returns contents of SPSpPos as text
+%        str2double(get(hObject,'String')) returns contents of SPSpPos as a double

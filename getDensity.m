@@ -759,6 +759,9 @@ classdef getDensity < handle
 					value = value';
 				end
 				for ii = 1:length(value)
+					if isempty(value(ii)
+						value{ii} = 'Unknown';
+					end
 					value{ii}=regexprep(value{ii},'^\?$','Unknown');
 					value{ii}=regexprep(value{ii},'\W','_');
 				end

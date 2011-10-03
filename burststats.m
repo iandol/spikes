@@ -5,9 +5,15 @@ function burststats(sdata);
 % the spikes program). Output is visual.
 
 global data
+global sv
+
+homedir = sv.historypath;
 
 stats.raw=cell(size(sdata,1),size(sdata,2));
 stats.info=cell(size(sdata,1),size(sdata,2));
+
+tic;
+fprintf('==============PLEASE WAIT!!!===============');
 
 for i=1:size(sdata,1)*size(sdata,2)   %for each variable lsd file
    
@@ -40,8 +46,11 @@ a=1:(size(sdata,1)*size(sdata,2));
 y=reshape(a,size(sdata,1),size(sdata,2));
 y=y'; %order it so we can load our data
 scatterh=figure;
+figpos(0,[800 800]);
 bscatterh=figure;
+figpos(0,[800 800]);
 histh=figure;
+figpos(0,[800 800]);
 allbefore=[];
 allafter=[];
 ballbefore=[];
@@ -83,7 +92,7 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
       end
       
      
-      if isi>=x.maxtime-2 | isi>x.maxtime | (isi==x.maxtime-1 | isi==x.maxtime+1)
+      if isi >= x.maxtime-2 | isi > x.maxtime | (isi==x.maxtime-1 | isi==x.maxtime+1)
          isi=[];
       end
       
@@ -108,7 +117,8 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
    stats.info{i}.bisiafter=bisiafter/10;
    stats.info{i}.count=count;   
    
-   figure(histh);
+   %figure(histh);
+   set(0,'CurrentFigure',histh);
    subplot(size(sdata,2),size(sdata,1),y(i));
    hist(stats.info{i}.count,[2 3 4 5 6 7 8 9 10]);
    colormap([0 0 0]);
@@ -116,7 +126,8 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
    set(gca,'FontSize',4);
    set(gcf,'NumberTitle','off','Name','Histograms of Burst Size for Each Variable');
    
-   figure(scatterh);
+   %figure(scatterh);
+   set(0,'CurrentFigure',scatterh);
    subplot(size(sdata,2),size(sdata,1),y(i));
    isiplot(stats.info{i}.isibefore,stats.info{i}.isiafter,stats.raw{i}(1).spike(end)/10,1);
    title(['Ratio = ' num2str(stats.info{i}.ratio)],'FontSize',6);
@@ -126,7 +137,8 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
    set(gcf,'NumberTitle','off','Name','ISIPlots for Each Variable Position');
    
    %plot with bursts in red
-   figure(bscatterh);
+   %figure(bscatterh);
+   set(0,'CurrentFigure',bscatterh);
    subplot(size(sdata,2),size(sdata,1),y(i));
    isiplot(stats.info{i}.isibefore,stats.info{i}.isiafter,stats.raw{i}(1).spike(end)/10,0, ...
            stats.info{i}.bisibefore,stats.info{i}.bisiafter);
@@ -196,16 +208,16 @@ title(['Ratio of Burst / Non-Burst Spikes = ' num2str(allratio) ' (' num2str(all
 hold off;
 axis square;
 
-save c:\isibefore.txt allbefore -ascii;
-save c:\isiafter.txt allafter -ascii;
+save([homedir 'isibefore.txt'], allbefore, '-ascii');
+save([homedir 'isiafter.txt'], allafter, '-ascii');
 x=alltbefore(odd);
-save c:\isistart1.txt x -ascii;
+save([homedir 'isistart1.txt'], x, '-ascii');
 x=alltafter(odd);
-save c:\isistart2.txt x -ascii;
+save([homedir 'isistart2.txt'], x, '-ascii');
 x=alltbefore(even);
-save c:\isiend1.txt x -ascii;
+save([homedir 'isiend1.txt'], x, '-ascii');
 x=alltafter(even);
-save c:\isiend1.txt  x -ascii;
+save([homedir 'isiend1.txt'],  x, '-ascii');
 
 ratio=zeros(size(sdata,1),size(sdata,2));
 for i=1:size(sdata,1)*size(sdata,2);
@@ -231,9 +243,12 @@ else
 end
 set(gcf,'NumberTitle','off','Name','Ratio Plot for All Variables');
 
+fprintf('===>Finished in %.4g seconds',toc);
+
+
 ratio;
 data.ratioall=ratio;
-save c:\ratioall.txt ratio -ascii;
+save([homedir 'ratioall.txt'], ratio, '-ascii');
 
 
 

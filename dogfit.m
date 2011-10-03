@@ -543,7 +543,7 @@ switch(action)
 		if isfield(fd,'s')
 			set(gh('sedit'),'String',num2str(fd.s));
 		else
-			fd.s=0.1
+			fd.s=0.1;
 			set(gh('sedit'),'String',num2str(fd.s));
 		end
 		

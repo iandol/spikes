@@ -352,7 +352,7 @@ if get(findobj('Tag','SUseWindow'),'Value')==1
 end
 if mint>=maxt || mint<0
 	mint=0;
-	set(minh,'String',num2str(mint));
+	set(h,'String',num2str(mint));
 end
 sv.mint=mint;
 sv.maxt=maxt;
@@ -384,7 +384,7 @@ if get(gh('SUseWindow'),'Value')==1
 	end
 	set(minh,'String',num2str(mint));
 	set(h,'String',num2str(maxt));
-	set(maxh,'UserData','yes'); 
+	set(h,'UserData','yes'); 
 end
 
 sv.mint=mint;
@@ -838,3 +838,4 @@ function SpikeFig_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global data
+spikes('Data Info');

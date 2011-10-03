@@ -59,7 +59,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv=[];
 		data=[];
 		rlist=[];
-		sv.version = 1.913;
+		sv.version = 1.914;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title=['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -1125,9 +1125,12 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			maxt=data.time{1}(ceil(maxt/data.binwidth));
 		elseif (strcmp(get(gh('SMinEdit'),'UserData'),'yes') && strcmp(get(gh('SMaxEdit'),'UserData'),'yes')) || strcmp(sv.auto,'report')
 			time=data.time{1};
-			if (mint<=0 || isnan(mint) || mint>=max(time)); mint=0; end
-			if maxt>max(time) || isnan(maxt); maxt=max(time);end
-			
+			if (mint<=0 || isnan(mint) || mint>=max(time))
+				mint=0; 
+			end
+			if maxt>max(time) || isnan(maxt) 
+				maxt=max(time);
+			end
 			mint=mint+0.0001;
 			maxt=maxt+0.0001;
 			
@@ -2439,37 +2442,40 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 	case 'Data Info'
 		%-----------------------------------------------------------------------------------------
 		
-		if ~isempty(gh('DataInfoBox'))
-			%close(gh('DataInfoBox'));
-		else
-			sv.infoboxhandle=datainfobox;
-		end
-		
-		if strcmp(data.filetype,'txt') || strcmp(data.filetype,'smr')
-			pos=get(gh('SpikeFig'),'Position');
-			pos2=get(gh('DataInfoBox'),'Position');
-			x=pos(1)+pos(3)+2;
-			y=pos(2);
-			set(gh('DataInfoBox'),'Position',[x y pos2(3) pos(4)]);
-			if ~isempty(data.error)
-				errorc=cell(1);
-				for i=1:length(data.error)
-					a=1;
-					if ~isempty(data.error{i})
-						if a==1
-							errorc=data.error{i};
-						else
-							errorc=cat(1,errorc,data.error{i});
-						end;
-						a=a+1;
-					end
-				end
-				out=cat(1,errorc,data.info);
+		if strcmpi(sv.loaded,'yes')
+			if ~isempty(gh('DataInfoBox'))
+				%close(gh('DataInfoBox'));
 			else
-				out=data.info;
+				sv.infoboxhandle=datainfobox;
 			end
-			set(gh('DITextDisplay'),'String',out);
-			%figure(gh('SpikeFig'));
+		
+			if strcmp(data.filetype,'txt') || strcmp(data.filetype,'smr')
+				pos=get(gh('SpikeFig'),'Position');
+				pos2=get(gh('DataInfoBox'),'Position');
+				x=pos(1)+pos(3)+2;
+				y=pos(2);
+				set(gh('DataInfoBox'),'Position',[x y pos2(3) pos(4)]);
+				if ~isempty(data.error)
+					errorc=cell(1);
+					for i=1:length(data.error)
+						a=1;
+						if ~isempty(data.error{i})
+							if a==1
+								errorc=data.error{i};
+							else
+								errorc=cat(1,errorc,data.error{i});
+							end;
+							a=a+1;
+						end
+					end
+					out=cat(1,errorc,data.info);
+				else
+					out=data.info;
+				end
+				set(gh('DITextDisplay'),'String',out);
+				figure(gh('DataInfoBox'));
+				figure(gh('SpikeFig'));
+			end
 		end
 		
 		
@@ -3217,7 +3223,7 @@ switch data.plottype
 		else
 			sv.xlock=0;	set(gh('XHoldCheck'),'Value',0);
 			sv.ylock=1; set(gh('YHoldCheck'),'Value',1);
-			sv.zlock=1; set(gh('ZHoldCheck'),'Value',1);
+			sv.zlock=1; %set(gh('ZHoldCheck'),'Value',1);
 		end
 	case 7 %surface
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
