@@ -531,11 +531,11 @@ classdef getDensity < handle
 % 				set(h,'Color',[1 0 0])
 % 				hold off
 				hold on
-				[f,x,flo,fup] = ecdf(xcol);
+				[f,x,flo,fup] = ecdf(xcol,'alpha',obj.alpha);
 				stairs(x,f,'k','LineWidth',2);
 				stairs(x,flo,'k:');
 				stairs(x,fup,'k:');
-				[f,x,flo,fup] = ecdf(ycol);
+				[f,x,flo,fup] = ecdf(ycol,'alpha',obj.alpha);
 				stairs(x,f,'r','LineWidth',2);
 				stairs(x,flo,'r:');
 				stairs(x,fup,'r:');
@@ -543,7 +543,7 @@ classdef getDensity < handle
 				
 				grid on
 				box on
-				pn(py,px).title('Cumulative Distribution Function');
+				pn(py,px).title(['Cumulative Distribution Function, p=' num2str(obj.alpha));
 				pn(py,px).xlabel(obj.columnlabels{i});
 				
 				%==========================================Do DENSITY
@@ -759,7 +759,7 @@ classdef getDensity < handle
 					value = value';
 				end
 				for ii = 1:length(value)
-					if isempty(value(ii)
+					if isempty(value{ii})
 						value{ii} = 'Unknown';
 					end
 					value{ii}=regexprep(value{ii},'^\?$','Unknown');
