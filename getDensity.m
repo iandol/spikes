@@ -543,7 +543,7 @@ classdef getDensity < handle
 				
 				grid on
 				box on
-				pn(py,px).title(['Cumulative Distribution Function, p=' num2str(obj.alpha));
+				pn(py,px).title(['Cumulative Distribution Function, p=' num2str(obj.alpha)]);
 				pn(py,px).xlabel(obj.columnlabels{i});
 				
 				%==========================================Do DENSITY
