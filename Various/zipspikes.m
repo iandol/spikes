@@ -125,30 +125,99 @@ classdef zipspikes < handle
 		%>
 		%> Do the randomisation
 		% ===================================================================
-		function [meta,txtcomment,txtprotocol] = readarchive(obj,~)
-			%Class method to read a Zipped spikes file and get out the data to pass to
-			%spikes
-			olddir=pwd;
+		function modifyNames(obj)
+			meta = [];
+			olddir = pwd;
+			obj.sourcedir = uigetdir;
+			if obj.sourcedir == 0
+				disp('No directory selected')
+				return
+			end
+			cd(obj.sourcedir)
+			d=dir;
+			for i = 1:length(d)
+				name=d(i).name;
+				if d(i).isdir && ~isempty(regexpi(name, obj.pathfilter)) && ~strcmp(name,'.') && ~strcmp(name,'..')
+					cd(name)
+					dd=dir;
+					for j = 1:length(dd)
+						name2 = dd(j).name;
+						if regexpi(name2,'zip$')
+							[meta,~,~] = obj.readarchive(name2);
+							if ~isempty(meta) && isfield(meta,'protocol')
+								[p,f,e]=fileparts(name2);
+								if isempty(regexpi(f,' -- ','once'));
+									newname = [f ' - ' meta.protocol];
+									newname = [p filesep newname e];
+									obj.salutation(['Renamed: ' name2],newname);
+									movefile(name2,newname);
+								else
+									obj.salutation([' Not Renamed: ' name2]);
+								end
+							end
+						end
+					end
+					cd(obj.sourcedir)
+				elseif regexpi(name,'zip$')
+					[meta,~,~] = obj.readarchive(name);
+					if ~isempty(meta) && isfield(meta,'protocol')
+						[p,f,e]=fileparts(name);
+						if isempty(regexpi(f,' -- ','once'));
+							newname = [f ' -- ' meta.protocol];
+							newname = [newname e];
+							obj.salutation(['Renamed: ' name],newname);
+							movefile(name,newname);
+						else
+							obj.salutation([' Not Renamed: ' name]);
+						end
+					end
+				end
+				meta = [];
+			end
+			
+			cd(olddir);
+		end
+		
+		% ===================================================================
+		%> @brief Read a zip into spikes formatted data
+		%>
+		%> Class method to read a Zipped spikes file and get out the data to pass to spikes
+		% ===================================================================
+		function [meta,txtcomment,txtprotocol] = readarchive(obj,myfile)
+			
+			meta = [];
+			txtcomment = [];
+			txtprotocol = [];
+
+			if ~exist('myfile','var')
+				myfile = obj.sourcepath;
+			end
 			
 			if ~exist(obj.tmppath,'dir')
 				[status,values]=system([obj.mkdirCommand ' ' obj.tmppath]);
 				if status ~= 0;obj.salutation(['Couldn''t make temp install directory! - ' values]);end
 			end
 			
-			[p,f,e]=fileparts(obj.sourcepath);
+			[p,f,e]=fileparts(myfile);
 			
-			switch e
+			switch lower(e)
 				case '.zip'
-					unzip(obj.sourcepath,obj.tmppath);
+					unzip(myfile,obj.tmppath);
 				case '.gz'
-					gunzip(obj.sourcepath,obj.tmppath);
+					gunzip(myfile,obj.tmppath);
 				otherwise
+					return
 			end
 			
-			meta=loadvstext(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'));
-			txtcomment=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.cmt'),'%s','delimiter','\n','whitespace','');
-			txtprotocol=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.prt'),'%s','delimiter','\n','whitespace','');
+			f = regexprep(f, '\s--\s.*$','');%we need to remove the appended protocol string
 			
+			if exist(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'),'file')
+				try
+					meta=loadvstext(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'));
+					txtcomment=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.cmt'),'%s','delimiter','\n','whitespace','');
+					txtprotocol=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.prt'),'%s','delimiter','\n','whitespace','');
+				end
+			end
 		end
 	end %---END PUBLIC METHODS---%
 	
@@ -168,9 +237,9 @@ classdef zipspikes < handle
 					in = 'undefined';
 				end
 				if exist('message','var')
-					fprintf([message ' | ' in '\n']);
+					fprintf(['---> Zipspikes: ' message ' | ' in '\n']);
 				else
-					fprintf(['Zipspikes: ' in '\n']);
+					fprintf(['---> Zipspikes: ' in '\n']);
 				end
 			end
 		end

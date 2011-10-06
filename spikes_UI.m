@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 29-Sep-2011 16:54:01
+% Last Modified by GUIDE v2.5 06-Oct-2011 12:18:11
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -839,3 +839,26 @@ function SpikeFig_ButtonDownFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global data
 spikes('Data Info');
+
+
+
+function SPDogSpont_Callback(hObject, eventdata, handles)
+% hObject    handle to SPDogSpont (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SPDogSpont as text
+%        str2double(get(hObject,'String')) returns contents of SPDogSpont as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function SPDogSpont_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SPDogSpont (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

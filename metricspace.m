@@ -20,6 +20,14 @@ X=makemetric(data,sv);
 opts.start_time = min([X.categories(1).trials(:).start_time]);
 opts.end_time = max([X.categories(1).trials(:).end_time]);
 
+if isfield(sv,'mint') && sv.mint/1000 > opts.start_time
+	opts.start_time = sv.mint/1000;
+end
+
+if isfield(sv,'maxt') && sv.maxt/1000 < opts.end_time
+	opts.end_time = sv.maxt/1000;
+end
+
 waitbar(0.1,hwait,'Plotting Rasters');
 clear out out_unshuf shuf out_unjk jk;
 clear info_plugin info_tpmc info_jack info_unshuf info_unjk;
@@ -27,7 +35,7 @@ clear temp_info_shuf temp_info_jk;
 
 h=figure;
 figpos(1,[],2);
-set(gcf,'name','Metric Space Analysis'); 
+set(gcf,'name','Metric Space Analysis');
 
 subplot_tight(2,2,1,margins,'Parent',h);
 %set(gca,'FontName','georgia','FontSize',11);

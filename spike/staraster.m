@@ -60,8 +60,7 @@ for m=1:X.M
   cur_start = idx;
   for p = 1:X.categories(m).P 
     list = X.sites(n).time_scale*X.categories(m).trials(p,n).list; 
-    h = plot(list,idx*ones(size(list)),'.');
-    set(h,'color',cur_color);
+    h = plot(list,idx*ones(size(list)),'.','Color',cur_color,'MarkerSize',9);
     idx=idx+1;
   end
   cur_end = idx;

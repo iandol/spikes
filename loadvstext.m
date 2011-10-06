@@ -5,10 +5,12 @@
 
 function [meta] = loadvstext(file)
 
+meta = [];
+
 fid=fopen(file);
 if fid==-1
-	errordlg('Load VS Text Error: Sorry, cannot open the text file; please check the path.');
-	error('LoadVSText error!');
+	disp(['Load VS Text Error: Sorry, cannot open the text file: ' file '; please check the path.']);
+	return
 end
 tline={''};
 a=1;

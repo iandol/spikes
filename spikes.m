@@ -228,6 +228,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('LoadText'),'String','Data Loading');
 				%This checks to see if we are called with a load history or to open new data.
 				n=regexpi(sv.reload,'^(?<name>[^|]+)(?:.+)(?<num>\d)','names'); %part of the file history reloading mechanism
+				%na = regexpi(n.name,['(?<seg>[^' filesep ']+)'],'names');
+				%na = na(end).seg;
 				if ~isempty(n) %&& ~strcmp(sv.loadtype,'') %we already have a path
 					switch sv.loadtype
 						case 'previous'
@@ -1560,11 +1562,16 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			end
 			aerr=data.errormat;
 			if w(1)==0
+				fakezero = false;
 				s=a(1);
 				a=a-s;
 			else
-				errordlg('sorry, no 0 diameter, please calculate manually')
-				s=0;
+				fakezero = true;
+				questdlg('No 0 diameter, please calculate manually and enter in spikes: Dogfit Spont');
+				s = str2num(get(gh('SPDogSpont'),'String'));
+				a = [0 a];
+				w = [s w];
+				aerr = [0 aerr];
 			end
 			
 			figure;
@@ -1586,6 +1593,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			d=w(i);
 			
 			h=areabar(w, a, aerr);
+			%ylim([-0.1 1.1]);
 			set(gca,'FontSize',12);
 			line(w(i),a(i), 'Color', [0 0 1], 'Marker', 'o', 'MarkerSize', 12);
 			t=data.matrixtitle;
@@ -1651,79 +1659,26 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				text(w(end)/2,ci(2)+0.01,sprintf('CI at p = %.5g : %.5g',pval,ci(2)));
 			end
 			
-			h = line([w(1) w(end)],[ci0(1) ci0(1)]);
-			set(h,'Color',[0.6 0.6 0.6],'LineStyle',':','LineWidth',1);
-			h = line([w(1) w(end)],[ci0(2) ci0(2)]);
-			set(h,'Color',[0.6 0.6 0.6],'LineStyle',':','LineWidth',1);
+			if fakezero == false
+				h = line([w(1) w(end)],[ci0(1) ci0(1)]);
+				set(h,'Color',[0.6 0.6 0.6],'LineStyle',':','LineWidth',1);
+				h = line([w(1) w(end)],[ci0(2) ci0(2)]);
+				set(h,'Color',[0.6 0.6 0.6],'LineStyle',':','LineWidth',1);
+			end
 			
 			b=100-b*100;
 			
 			o = [s, d, b, ci(1), ci(2)]; %spontaneous - diameter - percent suppression
-			t1=['Spontaneous: ' sprintf('%0.3f',s) 'Hz'];
+			if fakezero == true
+				t1=['FAKE 0 Spontaneous: ' sprintf('%0.3f',s) 'Hz'];
+			else
+				t1=['Spontaneous: ' sprintf('%0.3f',s) 'Hz'];
+			end
 			t2=['Optimal Diameter: ' sprintf('%0.3g',d) 'deg'];
 			t3=['Surround Suppression: ' sprintf('%0.3f',b) sprintf('% (-%0.3g +%0.3g)',ci(1),ci(2))];
 			t4=['Optimum Firing Rate (after - spontaneous): ' sprintf('%0.3f',m) 'Hz'];
 			tt={t1,t2,t3,t4};
 			text(0.1,-0.1,tt,'FontSize',12);
-			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
-			clipboard('Copy',s);
-			
-		elseif data.numvars==3 
-			Y=get(gh('YHoldMenu'),'value');
-			YY=data.yvalues(Y);
-			switch get(gh('SpikeMenu'),'Value');
-				case 1 %all spikes
-					a=data.matrix(Y,:);
-					w=data.xvalues;
-					T='all spikes';
-				case 2 %burst spikes
-					a=data.bmatrix(Y,:);
-					w=data.xvalues;
-					T='Burst spikes';
-				case 3 %subtract burst from all to get tonic, only surfaces etc
-					a=data.tmatrix(Y,:);
-					w=data.xvalues;
-					T='Tonic spikes';
-				otherwise
-					errordlg('Spike Selection Error')
-					error('spike selection error in spikeset')
-			end
-			aerr=data.errormat(Y,:);
-			
-			if w(1)==0
-				s=a(1);
-				a=a-s;
-			else
-				errordlg('sorry, no 0 diameter, please calculate manually')
-				s=0;
-			end
-			
-			[m,i]=max(a);
-			aerr=aerr./m;
-			a=a./m;
-			d=w(i);
-			figure;
-			areabar(w, a, aerr)
-			t=data.matrixtitle;
-			yt=['----' data.ytitle ' ' sprintf('%0.5g',YY)];
-			t=[t yt];
-			sv.titlehandle=title(t);
-			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
-			sv.ylabelhandle=ylabel('Normalized Firing Rate');
-			sv.xlabelhandle=xlabel('Diameter');
-			%legend(T,0)
-
-			[xx,b]=ginput(2);
-			b=mean(b);
-			b=100-b*100;
-			o=[s,d,b]; %spontaneous - diameter - percent suppression
-			
-			t1=['Spontaneous: ' sprintf('%0.5f',s)];
-			t2=['Optimal Diameter: ' sprintf('%0.5g',d)];
-			t3=['Surround Suppression: ' sprintf('%0.5f',b)];
-			tt={t1,t2,t3};
-			gtext (tt);
-			%gtext(num2str(o))
 			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
 			clipboard('Copy',s);
 		end

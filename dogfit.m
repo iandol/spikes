@@ -89,6 +89,13 @@ switch(action)
 				
 		end
 		
+		s = str2num(get(gh('SPDogSpont'),'String'));
+		if fd.x(1) > 0 && s >= 0
+			fd.x = [0 fd.x];
+			fd.y = [s fd.y];
+			fd.e = [mean(fd.e) fd.e];
+		end
+		
 		set(gh('caedit'),'String',num2str(max(fd.y)*1.5));            %set to the max firing rate *1.5
 		tmp=fd.x(find(fd.y==max(fd.y)));
 		set(gh('csedit'),'String',num2str(tmp(1)));  %set to the optimum diameter
@@ -109,7 +116,7 @@ switch(action)
 			xo(6)=fd.s;
 			set(gh('sedit'),'String',num2str(fd.s));
 			fd.lb=[round(fd.dc/2) 0.1 round(fd.dc/2) 0.2 0 0];
-			fd.ub=round([max(fd.y)*5 max(fd.x) max(fd.y)*5 max(fd.x) max(fd.y) 0]);
+			fd.ub=round([max(fd.y)*4 max(fd.x) max(fd.y)*4 max(fd.x) max(fd.y) 0]);
 			set(gh('lb1'),'String',num2str(fd.lb(1)));
 			set(gh('lb2'),'String',num2str(fd.lb(2)));
 			set(gh('lb3'),'String',num2str(fd.lb(3)));
@@ -131,7 +138,7 @@ switch(action)
 			xo(6)=fd.s;
 			set(gh('sedit'),'String',num2str(fd.s));
 			fd.lb=[0 0.1 0 0.1 0 0];
-			fd.ub=[max(fd.y)*5 max(fd.x) max(fd.y)*5 max(fd.x) max(fd.y) 0];
+			fd.ub=[max(fd.y)*4 max(fd.x) max(fd.y)*4 max(fd.x) max(fd.y) 0];
 			set(gh('lb1'),'String',num2str(fd.lb(1)));
 			set(gh('lb2'),'String',num2str(fd.lb(2)));
 			set(gh('lb3'),'String',num2str(fd.lb(3)));
@@ -234,6 +241,7 @@ switch(action)
 		sf=1;
 		
 		nmax = str2num(get(gh('DFnmax'),'String'));
+		ci = [];
 		
 		TolX = str2num(get(gh('DFTolX'),'String'));
 		MaxFunEvals = str2num(get(gh('DFMaxFunEvals'),'String'));
@@ -289,10 +297,11 @@ switch(action)
 				[o,f,exit,output]=fminunc(@DOG_CHF,xo,options,x,y);
 			end
 		elseif get(gh('DFUsenlinfit'),'Value')==1
-			opts=statset('Display','iter','DerivStep',0.01,'Robust','off');
+			opts=statset('Display','iter','DerivStep',0.01,...
+				'Robust','off','TolX',TolX);
 			if get(gh('DFUseCHF'),'Value') == 0
-			xo=xo(1:5);
-			[o,r,J]=nlinfit(x,y,@dogsummate,xo,opts);
+				xo=xo(1:5);
+				[o,r,J]=nlinfit(x,y,@dogsummate,xo,opts);
 			else
 				%lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
 				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
@@ -377,17 +386,20 @@ switch(action)
 		fd.text = {' '};
 		
 		if exist('exit','var') && exit<=0
-			fd.text{1,:}=['Warning: Algorithm didn''t converge. Try to fit it using these latest parameters, if there is still no convergence, use new initial parameters. Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
-			set(gh('InfoText'),'String',fd.text);
+			fd.text{1,:}=['Warning: Algorithm didn''t converge. Try to fit it using these latest parameters, if there is still no convergence, use new initial parameters.'];
+			fd.text{2,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
 		elseif exist('output','var')
 			fd.text{1,:}=[num2str(output.iterations) ' iterations and ' num2str(output.funcCount) ' functions:- ' output.algorithm];
-			fd.text{2,:} = ['Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE | SI=' num2str(sindex)];
+			fd.text{2,:} = ['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE | SI=' sprintf('%.4g',sindex)];
 			fd.text{3,:} = output.message;
-			set(gh('InfoText'),'String',fd.text);
+		elseif ~isempty(ci)
+			fd.text{1,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
+			fd.text{2,:}=['L1:' num2str(ci(1,1)) ' U1:' num2str(ci(1,2)) ' L2:' num2str(ci(2,1)) ' U2:' num2str(ci(2,2)) ' L3:' num2str(ci(3,1)) ' U3:' num2str(ci(3,2)) ' L4:' num2str(ci(4,1)) ' U4:' num2str(ci(4,2))];
 		else
-			fd.text{1,:}=['Goodness:' num2str(fd.goodness) '% | ' num2str(fd.goodness2) ' MFE. SI=' num2str(sindex)];
-			set(gh('InfoText'),'String',fd.text);
+			fd.text{1,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
 		end
+		
+		set(gh('InfoText'),'String',fd.text);
 		
 		fd.res=res;
 		fd.yy=yy;
@@ -497,9 +509,16 @@ switch(action)
 		ylabel('Normalised Residuals (% Max of Data)');
 		title('Residuals of the Data-Model')
 		set(gca,'Tag','raxis','UserData','SpawnAxes');
-		set(gh('InfoText'),'String','Finished replotting user-modified difference of gaussian parameters.');
+		
 		fd.goodness=goodness(y,yy);
 		fd.goodness2=goodness(y,yy,'mfe');
+		sindex=((xo(3)*xo(4))/(xo(1)*xo(2)));
+		
+		fd.text{1,:}='Finished replotting user-modified difference of gaussian parameters.';
+		fd.text{2,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
+		
+		set(gh('InfoText'),'String',fd.text);
+		
 		legend(['fit = ' num2str(fd.goodness) '%'])
 		xog=[fd.xo,fd.goodness,fd.goodness2];
 		s=[sprintf('%s\t',fd.title),sprintf('%0.6g\t',xog)];
