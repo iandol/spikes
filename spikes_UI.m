@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 06-Oct-2011 12:18:11
+% Last Modified by GUIDE v2.5 07-Oct-2011 11:28:54
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -131,7 +131,6 @@ spikes('ChoosePlot');
 % --------------------------------------------------------------------
 function varargout = XHoldMenu_Callback(h, eventdata, handles, varargin)
 global sv; 
-
 sv.xval=get(h,'Value');
 if get(gh('XHoldCheck'),'Value')==1
 	spikes('ChoosePlot');
@@ -140,7 +139,6 @@ end
 % --------------------------------------------------------------------
 function varargout = YHoldMenu_Callback(h, eventdata, handles, varargin)
 global sv; 
-
 sv.yval=get(h,'Value');
 if get(gh('YHoldCheck'),'Value')==1
 	spikes('ChoosePlot');
@@ -149,7 +147,6 @@ end
 % --- Executes on selection change in ZHoldMenu.
 function ZHoldMenu_Callback(h, eventdata, handles)
 global sv; 
-
 sv.zval=get(h,'Value');
 if get(gh('ZHoldCheck'),'Value')==1
 	spikes('ChoosePlot');
@@ -158,34 +155,29 @@ end
 % --- Executes on button press in XHoldCheck.
 function XHoldCheck_Callback(h, eventdata, handles)
 global sv; 
-
 sv.xlock=get(h,'Value');
 %spikes('ChoosePlot');
 
 % --- Executes on button press in YHoldCheck.
 function YHoldCheck_Callback(h, eventdata, handles)
 global sv; 
-
 sv.ylock=get(h,'Value');
 %spikes('ChoosePlot');
 
 % --- Executes on button press in ZHoldCheck.
 function ZHoldCheck_Callback(h, eventdata, handles)
 global sv; 
-
 sv.zlock=get(h,'Value');
 %spikes('ChoosePlot');
 
 % --------------------------------------------------------------------
-function varargout = MeasureButton_Callback(h, eventdata, handles, varargin)
-
+function varargout = SMeasureButton_Callback(h, eventdata, handles, varargin)
 set(findobj('Tag','SMinEdit'),'UserData','no');
 set(findobj('Tag','SMaxEdit'),'UserData','no');
 spikes('Measure');
 
 % --------------------------------------------------------------------
 function varargout = WrappedMenu_Callback(h, eventdata, handles, varargin)
-
 global sv;
 global mint maxt;
 mint=0;
