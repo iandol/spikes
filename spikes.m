@@ -166,7 +166,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Burst Ratio';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
 		set(gcf,'DefaultAxesFontName','Helvetica');
@@ -1456,6 +1456,17 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 		gaborfit
 		gaborfit('Import')
+		
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Gaussian Fit 1D'
+		%-----------------------------------------------------------------------------------------
+		helpdlg('Please run this from OPro...');
+		
+		%-----------------------------------------------------------------------------------------
+	case 'Gaussian Fit 2D'
+		%-----------------------------------------------------------------------------------------
+		helpdlg('Please run this from OPro...');
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Tuning Curves'

@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 07-Oct-2011 11:28:54
+% Last Modified by GUIDE v2.5 11-Oct-2011 11:49:10
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -854,3 +854,13 @@ function SPDogSpont_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in SLoadRAWButton.
+function SLoadRAWButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SLoadRAWButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global sv
+sv.reload = '';
+spikes('Load');
