@@ -573,7 +573,11 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		datatype=get(gh('DataBox'),'Value');
 		plottype=get(gh('TypeBox'),'Value');
 		
-		[mint,maxt]=measure(data,x,y,z);
+		psthtype = datatype;
+		if psthtype == 4; %in the menu 1 and 4 are all spikes 
+			psthtype = 1;
+		end
+		[mint,maxt]=measure(data,x,y,z,psthtype);
 		%this if loop selects where are data is (depends on whether it was smoothed etc)
 		sppos = str2num(get(gh('SPSpPos'),'String'));
 		if isempty(sppos)
@@ -586,10 +590,10 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		for i = 1:loop
 			if datatype==2 %bursts
 				if plottype==1 || plottype==2 %no smoothing so just raw psths
-					time=data.time{sppos(i,:)};
-					psth=data.bpsth{sppos(i,:)};
+					time=data.time{sppos(i,1),sppos(i,2),sppos(i,3)};
+					psth=data.bpsth{sppos(i,1),sppos(i,2),sppos(i,3)};
 				elseif plottype==3
-					time=data.time{sppos(i,:)};
+					time=data.time{sppos(i,1),sppos(i,2),sppos(i,3)};
 					psth=spdata.bpsths;
 				elseif plottype==4
 					time=spdata.times;
@@ -597,10 +601,10 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 				end
 			elseif datatype == 3
 				if plottype==1 || plottype==2 %no smoothing so just raw psths
-					time=data.time{sppos(i,:)};
-					psth = data.psth{sppos(i,:)} - data.bpsth{sppos(i,:)};
+					time=data.time{sppos(i,1),sppos(i,2),sppos(i,3)};
+					psth = data.psth{sppos(i,1),sppos(i,2),sppos(i,3)} - data.bpsth{sppos(i,1),sppos(i,2),sppos(i,3)};
 				elseif plottype==3
-					time=data.time{sppos(i,:)};
+					time=data.time{sppos(i,1),sppos(i,2),sppos(i,3)};
 					psth=spdata.tpsths;
 				elseif plottype==4
 					time=spdata.times;
@@ -608,10 +612,10 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 				end
 			else %all spikes
 				if plottype==1 || plottype==2 %no smoothing so just raw psths
-					time=data.time{sppos(i,:)};
-					psth=data.psth{sppos(i,:)};
+					time=data.time{sppos(i,1),sppos(i,2),sppos(i,3)};
+					psth=data.psth{sppos(i,1),sppos(i,2),sppos(i,3)};
 				elseif plottype==3
-					time=data.time{sppos(i,:)};
+					time=data.time{sppos(i,1),sppos(i,2),sppos(i,3)};
 					psth=spdata.psths;
 				elseif plottype==4
 					time=spdata.times;
@@ -676,7 +680,17 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			data.spontaneous.poissont=spdata.spont.ci01(2);
 		end
 		
-		t1=['Spontaneous is: ' num2str(spdata.spont.mean) '+-' num2str(spdata.spont.sd) 'S.D. Hz'];
+		if datatype == 1 || datatype == 4
+			t = 'All Spikes ';
+		elseif datatype == 2
+			t = 'Burst Spikes ';
+		elseif datatype == 3
+			t = 'Tonic Spikes ';
+		end
+		spdata.spont.type = t;
+		data.spontaneous.type = spdata.spont.type;
+		
+		t1=[t 'Spontaneous is: ' num2str(spdata.spont.mean) '+-' num2str(spdata.spont.sd) 'S.D. Hz'];
 		t2=['2*S.D. Limit: ' num2str(data.spontaneous.limitt) ' Hz (' num2str(data.spontaneous.limit) 'sp/bin)'];
 		t3=['2*S.E. Limit: ' num2str(data.spontaneous.limitset) ' Hz (' num2str(data.spontaneous.limitse) 'sp/bin)'];
 		cil=num2str(spdata.spont.ci01(1));

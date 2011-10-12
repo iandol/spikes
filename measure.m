@@ -1,4 +1,4 @@
-function [mint,maxt] = measure(data,x,y,z)
+function [mint,maxt] = measure(data,x,y,z,psthtype)
 
 % This helper function is called via Spikes to get a time window
 % for further analysis
@@ -18,6 +18,9 @@ if exist('z','var')
 else
 	zhold=1;
 end
+if ~exist('psthtype','var')
+	psthtype = 1;
+end
 
 h=figure;
 t=0;
@@ -25,23 +28,32 @@ t=0;
 time=data.time{yhold,xhold,zhold};
 psth=data.psth{yhold,xhold,zhold};
 bpsth=data.bpsth{yhold,xhold,zhold};
+tpsth = psth - bpsth;
 
 set(gcf,'Name','Please Select the Area of PSTH for Analysis:','NumberTitle','off')
 
 colormap([0 0 0;1 0 0]);
-bar(time,psth,1,'k');
-shading flat
-hold on
-bar(time,bpsth,1,'r');
-hold off
+if psthtype == 1
+	bar(time,psth,1,'k');
+	hold on
+	bar(time,bpsth,1,'r');
+	hold off
+	t = 'ALL: ';
+elseif psthtype == 2 %burst
+	bar(time,bpsth,1,'r');
+	t = 'BURST: ';
+elseif psthtype == 3 %tonic
+	bar(time,tpsth,1,'b');
+	t = 'TONIC: ';
+end
 
 switch data.numvars
 	case 3
-		t=[data.runname ': ' data.xtitle '=' num2str(data.xvalues(xhold)) ' | ' data.ytitle '='  num2str(data.yvalues(yhold)) ' | ' data.ztitle '='  num2str(data.zvalues(zhold))];
+		t=[t data.runname ': ' data.xtitle '=' num2str(data.xvalues(xhold)) ' | ' data.ytitle '='  num2str(data.yvalues(yhold)) ' | ' data.ztitle '='  num2str(data.zvalues(zhold))];
 	case 2
-		t=[data.runname ': ' data.xtitle '=' num2str(data.xvalues(xhold)) ' | ' data.ytitle '='  num2str(data.yvalues(yhold))];
+		t=[t data.runname ': ' data.xtitle '=' num2str(data.xvalues(xhold)) ' | ' data.ytitle '='  num2str(data.yvalues(yhold))];
 	case 1
-		t=[data.runname '='  data.xtitle '=' num2str(data.xvalues(xhold))];
+		t=[t data.runname '='  data.xtitle '=' num2str(data.xvalues(xhold))];
 	otherwise
 		t='There are no independent variables';
 end

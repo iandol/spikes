@@ -3,13 +3,13 @@ function varargout = laoptions(varargin)
 %    FIG = LAOPTIONS launch LAOptions GUI.
 %    LAOPTIONS('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 30-Aug-2011 11:21:57
+% Last Modified by GUIDE v2.5 12-Oct-2011 15:28:12
 
 global spdata
 
 if nargin == 0  % LAUNCH GUI
     
-    fig = openfig(mfilename);
+    fig = openfig(mfilename,'reuse',varargin{:});
     
     % Generate a structure of handles to pass to callbacks, and store it. 
     handles = guihandles(fig);
