@@ -8,11 +8,10 @@ opts.clustering_exponent = -2;
 opts.unoccupied_bins_strategy = 0;
 opts.metric_family = family;
 opts.parallel = 1;
-opts.possible_words = 'unique';
+%opts.possible_words = 'unique';
+opts.entropy_estimation_method = {'plugin','tpmc','jack'};
 %opts.tpmc_possible_words_strategy = 0;
 opts.shift_cost = [0 2.^(-2:10)];
-%opts.start_time = sv.mint/1000;
-%opts.end_time = sv.maxt/1000;
 margins = 0.05;
 
 X=makemetric(data,sv);
@@ -45,7 +44,6 @@ title('Raster plot');
 %%% Simple analysis
 drawnow;
 waitbar(0.2,hwait,'Performing Metric space measurement');
-opts.entropy_estimation_method = {'plugin','tpmc','jack'};
 [out,opts_used] = metric(X,opts);
 
 for q_idx=1:length(opts.shift_cost)

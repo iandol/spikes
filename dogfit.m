@@ -382,21 +382,21 @@ switch(action)
 		legend(['fit = ' num2str(fd.goodness) '%']);
 		set(gca,'Tag','raxis','UserData','SpawnAxes');
 		
-		sindex=((xo(3)*xo(4))/(xo(1)*xo(2)));
+		sindex=((fd.xo(3)*fd.xo(4))/(fd.xo(1)*fd.xo(2)));
 		fd.text = {' '};
 		
 		if exist('exit','var') && exit<=0
 			fd.text{1,:}=['Warning: Algorithm didn''t converge. Try to fit it using these latest parameters, if there is still no convergence, use new initial parameters.'];
-			fd.text{2,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
+			fd.text{2,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | MFE:' sprintf('%.4g',fd.goodness2) ' | SI=' sprintf('%.4g',sindex)];
 		elseif exist('output','var')
 			fd.text{1,:}=[num2str(output.iterations) ' iterations and ' num2str(output.funcCount) ' functions:- ' output.algorithm];
-			fd.text{2,:} = ['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE | SI=' sprintf('%.4g',sindex)];
+			fd.text{2,:} = ['Goodness:' sprintf('%.4g',fd.goodness) '% | MFE:' sprintf('%.4g',fd.goodness2) ' | SI=' sprintf('%.4g',sindex)];
 			fd.text{3,:} = output.message;
 		elseif ~isempty(ci)
-			fd.text{1,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
+			fd.text{1,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | MFE:' sprintf('%.4g',fd.goodness2) ' | SI=' sprintf('%.4g',sindex)];
 			fd.text{2,:}=['L1:' num2str(ci(1,1)) ' U1:' num2str(ci(1,2)) ' L2:' num2str(ci(2,1)) ' U2:' num2str(ci(2,2)) ' L3:' num2str(ci(3,1)) ' U3:' num2str(ci(3,2)) ' L4:' num2str(ci(4,1)) ' U4:' num2str(ci(4,2))];
 		else
-			fd.text{1,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
+			fd.text{1,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | MFE:' sprintf('%.4g',fd.goodness2) ' | SI=' sprintf('%.4g',sindex)];
 		end
 		
 		set(gh('InfoText'),'String',fd.text);
@@ -515,7 +515,7 @@ switch(action)
 		sindex=((xo(3)*xo(4))/(xo(1)*xo(2)));
 		
 		fd.text{1,:}='Finished replotting user-modified difference of gaussian parameters.';
-		fd.text{2,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | ' sprintf('%.4g',fd.goodness2) ' MFE. SI=' sprintf('%.4g',sindex)];
+		fd.text{2,:}=['Goodness:' sprintf('%.4g',fd.goodness) '% | MFE:' sprintf('%.4g',fd.goodness2) '| SI=' sprintf('%.4g',sindex)];
 		
 		set(gh('InfoText'),'String',fd.text);
 		
@@ -630,18 +630,19 @@ end %end of main program switch
 % --------------------------------------------------------------------------------------
 function dogplot(xo)
 
-x=5;
-y=5;
-stepx=x/20;
-stepy=y/20;
+xin=2;
+yin=2;
+stepx=xin/20;
+stepy=yin/20;
 
-x=-x:stepx:x;
-y=-y:stepy:y;
+x=-xin:stepx:xin;
+y=-yin:stepy:yin;
 
 i=find(xo==0);
 xo(i)=0.0000000000001;
 for a=1:length(x);
-	f(a,:)=(xo(5)+(xo(1)*exp(-((x(a)^2)+(y.^2))/xo(2)^2))-(xo(3)*exp(-((x(a)^2)+(y.^2))/xo(4)^2)));  %halfmatrixhalfloop
+	%f(a,:)=(xo(5)+(xo(1)*exp(-((x(a)^2)+(y.^2))/xo(2)^2))-(xo(3)*exp(-((x(a)^2)+(y.^2))/xo(4)^2)));  %halfmatrixhalfloop
+	f(a,:)= xo(5) + ( (xo(1) * exp(-( 2*(x(a)^2 + y.^2) / xo(2)^2 ))) - (xo(3) * exp(-( ( 2*(x(a)^2+y.^2) / xo(4)^2)))));  %halfmatrixhalfloop
 end
 axes(gh('axis3d'))
 imagesc(x,y,f)
@@ -653,12 +654,15 @@ imagesc(x,y,f)
 axis tight
 axis square
 axis vis3d
+grid on
 set(gca,'FontSize',9)
+set(gca,'XTick',[-xin:1:xin],'YTick',[-yin:1:yin])
 xlabel('X Space (deg)')
 ylabel('Y Space (deg)')
 title('2D DOG')
 zlabel('Amplitude')
 set(gca,'Tag','axis3d','UserData','SpawnAxes')
+colorbar
 
 
 % % ------------------------------Summate1 Function--------------------------------

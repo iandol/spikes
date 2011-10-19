@@ -15,7 +15,7 @@ switch(action)
 		version = 'Difference of Gaussian Modeller V1.3';
 		set(gh('dgUITitle'),'String', version);
 		dog('Plot')
-		rotate3d
+		%rotate3d
 		
 		
 	case 'Plot'
@@ -36,11 +36,6 @@ switch(action)
 		stepy=yD/res;
 		mu=1;
 		
-		p(1)=2;
-		p(2)=1;
-		p(3)=1.5;
-		p(4)=0.5;
-		
 		x=-xD:stepx:xD;
 		y=-yD:stepy:yD;
 		xTmp=-xD:stepx:xD;
@@ -48,8 +43,9 @@ switch(action)
 		x=x-offset;
 		
 		% f=(a1*exp(-x.^2/sd1^2))-(a2*exp(-x.^2/sd2^2));  %dog equation
-		c=(a1*exp(-(x/sd1).^2));
-		s=(a2*exp(-(x/sd2).^2));
+		c=(a1*exp(-(x.*2/sd1).^2));
+		s=(a2*exp(-(x.*2/sd2).^2));
+		[yy,ff,xx]=dogsummate([a1 sd1 a2 sd2 dclevel 0],xTmp); 
 		f=dclevel+(c-s);
 		s=-s;
 		if get(gh('dgRectifyBox'),'Value')==1
@@ -58,10 +54,14 @@ switch(action)
 		
 		axes(gh('dg2daxis'));
 		plot(xTmp,c,'r--',xTmp,s,'g--',xTmp,f,'k-')
-		legend('Centre','Surround','DOG')
+		hold on
+		plot(xx,ff,'b:')
+		hold off
+		set(gca,'XMinorTick','on');
+		legend('Centre','Surround','DOG','Summate function')
 		title('1D Difference of Gaussians')
 		axis tight
-		set(gca,'FontSize',8)
+		set(gca,'FontSize',10)
 		xlabel('Visual Space (deg)')
 		ylabel('Visual sensitivity')
 		set(gca,'Tag','dg2daxis')
@@ -82,6 +82,7 @@ switch(action)
 		axes(gh('dg3daxis'))
 		[xx,yy]=meshgrid(xTmp,y);
 		pcolor(xx,yy,f');
+		set(gca,'XMinorTick','on');
 		shading interp
 		lighting phong
 		camlight left
@@ -89,7 +90,7 @@ switch(action)
 		axis square
 		axis vis3d
 		title('2D Difference of Gaussians')
-		set(gca,'FontSize',8)
+		set(gca,'FontSize',10)
 		xlabel('X Space (deg)')
 		ylabel('Y Space (deg)')
 		set(gca,'Tag','dg3daxis')
@@ -151,9 +152,3 @@ switch(action)
 		ylabel('Model Response')
 		
 end
-
-
-%GH Gets Handle From Tag
-function [handle] = gh(tag)
-handle=findobj('Tag',tag);
-%End of handle getting routine

@@ -1,4 +1,4 @@
-function [y,f]=dogsummate(x,xdata,data,ROG,rectify)
+function [y,f,space]=dogsummate(x,xdata,data,ROG,rectify)
 
 % This generates a summation curve (y) using a DOG equation
 % compatible with the optimisation toolbox.

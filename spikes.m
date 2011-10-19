@@ -1599,6 +1599,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				[m,i]=max(a);
 			end
 			
+			%save pre-normalized values
+			ao = a;
+			aerro = aerr;
+			
 			aerr=aerr./m;
 			a=a./m;
 			d=w(i);
@@ -1656,7 +1660,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			line(xx1,yy1, 'Color', [1 0 0], 'Marker', 'o', 'MarkerSize', 12);
 			line(xx2,yy2, 'Color', [1 0 0], 'Marker', 'o', 'MarkerSize', 12);
 			
-			b=mean([yy1 yy2]);
+			b = mean([yy1 yy2]); 
+			bo = mean([ao(xidx1) ao(xidx2)]);
+			
 			h = line([w(1) w(end)],[b b]);
 			set(h,'Color',[0.7 0.2 0.2],'LineStyle','-','LineWidth',2);
 			if ci(1) > -1 && ci(1) < 5 
@@ -1678,8 +1684,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			end
 			
 			b=100-b*100;
+			si = ((m-bo)/m);
 			
-			o = [s, d, b, ci(1), ci(2)]; %spontaneous - diameter - percent suppression
+			o = [s, d, b, ci(1), ci(2), m, bo]; %spontaneous - diameter - percent suppression
 			if fakezero == true
 				t1=['FAKE 0 Spontaneous: ' sprintf('%0.3f',s) 'Hz'];
 			else
@@ -1687,8 +1694,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			end
 			t2=['Optimal Diameter: ' sprintf('%0.3g',d) 'deg'];
 			t3=['Surround Suppression: ' sprintf('%0.3f',b) sprintf('% (-%0.3g +%0.3g)',ci(1),ci(2))];
-			t4=['Optimum Firing Rate (after - spontaneous): ' sprintf('%0.3f',m) 'Hz'];
-			tt={t1,t2,t3,t4};
+			t4=['Opt (- spont): ' sprintf('%0.3f',m) 'Hz'];
+			t5=['Plateau(- spont): ' sprintf('%0.3f',bo) 'Hz | SI = ' sprintf('%0.3f',si)];
+			tt={t1,t2,t3,t4,t5};
 			text(0.1,-0.1,tt,'FontSize',12);
 			s=[sprintf('%s\t',t),sprintf('%0.6g\t',o)];
 			clipboard('Copy',s);
