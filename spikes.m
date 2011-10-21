@@ -1580,8 +1580,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				fakezero = true;
 				questdlg('No 0 diameter, please calculate manually and enter in spikes: Dogfit Spont');
 				s = str2num(get(gh('SPDogSpont'),'String'));
-				a = [0 a];
-				w = [s w];
+				a = [s a];
+				w = [0 w];
 				aerr = [0 aerr];
 			end
 			

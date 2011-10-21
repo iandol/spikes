@@ -242,6 +242,7 @@ switch(action)
 		
 		nmax = str2num(get(gh('DFnmax'),'String'));
 		ci = [];
+		ci2 = [];
 		
 		TolX = str2num(get(gh('DFTolX'),'String'));
 		MaxFunEvals = str2num(get(gh('DFMaxFunEvals'),'String'));
@@ -297,25 +298,29 @@ switch(action)
 				[o,f,exit,output]=fminunc(@DOG_CHF,xo,options,x,y);
 			end
 		elseif get(gh('DFUsenlinfit'),'Value')==1
-			opts=statset('Display','iter','DerivStep',0.01,...
-				'Robust','off','TolX',TolX);
+			opts=statset('Display','iter','DerivStep',1e-3,...
+				'Robust','off','TolX',TolX,'UseParallel','always');
 			if get(gh('DFUseCHF'),'Value') == 0
 				xo=xo(1:5);
-				[o,r,J]=nlinfit(x,y,@dogsummate,xo,opts);
+				[o,r,J,COV,mle]=nlinfit(x,y,@dogsummate,xo,opts);
 			else
 				%lb(6) = 0;	ub(6) = 0;	xo(6) = 0;
 				lb(7) = nmax;	ub(7) = nmax;	xo(7) = nmax;
 			end
-			ci=nlparci(o,r,J);
+			
+			ci=nlparci(o,r,'jacobian',J);
+			ci2=nlparci(o,r,'covar',COV);
+			
 			if o(5)<0.001 %silly to have tiny spontaneous rates
 				o(5)=0;
 			end
 			o(6)=0;
+			
 		end
 		
-		fd.text=['Parameters found...'];
-		set(gh('DFLoadText'),'String','Model parameters found...');
-		set(gh('InfoText'),'String',fd.text);
+% 		fd.text=['Parameters found...'];
+% 		set(gh('DFLoadText'),'String','Model parameters found...');
+% 		set(gh('InfoText'),'String',fd.text);
 		
 		fd.dc=o(5);
 		if get(gh('DFUseCHF'),'Value') == 0;
@@ -411,6 +416,13 @@ switch(action)
 		xog=[fd.xo(1:end-1),fd.goodness,fd.goodness2];
 		xoo=[fd.xo,fd.goodness,fd.goodness2];
 		s=[sprintf('%s\t',fd.title),sprintf('%0.6g\t',xog)];
+		if ~isempty(ci)
+			ci = rot90(ci);
+			ci2 = rot90(ci2);
+			s = [s sprintf('\t') sprintf('%0.6g\t',ci)];
+			ci
+			ci2
+		end
 		clipboard('Copy',s(1:end-1));
 		
 		s = get(gh('DFHistory'),'String');
