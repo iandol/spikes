@@ -78,8 +78,10 @@ classdef getDensity < handle
 		densityKernel = 'normal'
 		%> density function, 'pdf', 'cdf','icdf', 'survivor', 'cumhazard'
 		densityFunction = 'pdf'
-		%> density bounds
+		%> density bounds; 'unbounded', 'positiive' or 2-element vector for lower and upper
 		densityBounds = 'unbounded'
+		%> should scatterbox use 95% SEM or bootstrap?
+		scatterBoxType = 'bootstrap'
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -172,7 +174,7 @@ classdef getDensity < handle
 				
 				h=figure;
 				outs.(fieldn).h = h;
-				set(h,'Color',[0.9 0.9 0.9])
+				set(h,'Color',[1 1 1])
 				
 				pn = panel(h);
 				if obj.isDataEqualLength == false
@@ -302,6 +304,13 @@ classdef getDensity < handle
 				px = 3;
 				py = 1;
 				pn(py,px).select()
+				
+				if strcmpi(obj.scatterBoxType,'bootstrap')
+					options = {{obj.nboot,obj.fhandle,obj.alpha}};
+				else
+					options = [];
+				end
+				
 				if obj.isDataEqualLength && exist('notBoxPlot','file')
 % 					if ~isempty(uniquecases) && ~isempty(cases)
 % 						for jj = 1:length(uniquecases)
@@ -313,15 +322,16 @@ classdef getDensity < handle
 % 					else
 % 						notBoxPlot([xcol ycol],[1 1]);
 % 					end
-					notBoxPlot([xcol ycol],[1 2]);
+					notBoxPlot([xcol ycol],[1 2],[],[],[],options);
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 					pn(py,px).ylabel(obj.columnlabels{i});
 					
 				elseif obj.isDataEqualLength==false && exist('notBoxPlot','file')
 					
-					notBoxPlot(xcol,1);
+					
+					notBoxPlot(xcol,1,[],[],[],options);
 					hold on
-					notBoxPlot(ycol,2);
+					notBoxPlot(ycol,2,[],[],[],options);
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 					pn(py,px).ylabel(obj.columnlabels{i});
 					
@@ -342,32 +352,32 @@ classdef getDensity < handle
 					pn(py,px).select()
 					[r,p]=corr(xcol,ycol);
 					[r2,p2]=corr(xcol,ycol,'type','spearman');
+
 					xrange = max(xcol) - min(xcol);
 					yrange = max(ycol) - min(ycol);
 					range = max(xrange,yrange);
-					xjitter = (randn(length(xcol),1))*(xrange/obj.jitterfactor);
-					yjitter = (randn(length(ycol),1))*(yrange/obj.jitterfactor);
-					bothjitter = (randn(length(xcol),1))*(max(xrange,yrange)/obj.jitterfactor);
+
+					
 					if obj.addjitter == true
 						obj.addjitter = 'both';
 					end
 					switch obj.addjitter
 						case 'x'
 							sc = true;
-							xcolout = xcol + xjitter;
+							xcolout = obj.jitterData(xcol);
 							ycolout = ycol;
 						case 'y'
 							sc = true;
 							xcolout = xcol;
-							ycolout = ycol + yjitter;
+							ycolout = obj.jitterData(ycol);
 						case 'equal'
 							sc = true;
-							xcolout = xcol + bothjitter;
-							ycolout = ycol + bothjitter;
+							[xcolout,jitter] = obj.jitterData([xcol ycol]);
+							ycolout = obj.jitterData([ycol xcol],jitter);
 						case 'both'
 							sc = true;
-							xcolout = xcol + xjitter;
-							ycolout = ycol + yjitter;
+							xcolout = obj.jitterData(xcol);
+							ycolout = obj.jitterData(ycol);
 						otherwise
 							sc = false;
 							xcolout = xcol;
@@ -638,6 +648,100 @@ classdef getDensity < handle
 				end
 			end
 			obj.runStructure = outs;
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function scatterColumns(obj,c1,c2)
+			
+			obs1 = obj.xdata.Properties.VarNames{c1};
+			obs2 = obj.xdata.Properties.VarNames{c2};
+			
+			d1 = obj.xdata.(obs1);
+			d2 = obj.xdata.(obs2);
+			d3 = obj.ydata.(obs1);
+			d4 = obj.ydata.(obs2);
+			
+			if obj.addjitter == true
+				obj.addjitter = 'both';
+			end
+			switch obj.addjitter
+				case 'x'
+					sc = true;
+					d1 = obj.jitterData(d1);
+					d3 = obj.jitterData(d3);
+				case 'y'
+					sc = true;
+					d2 = obj.jitterData(d2);
+					d4 = obj.jitterData(d4);
+				case 'equal'
+					sc = true;
+					[d1, jitter] = obj.jitterData([d1 d3]);
+					d3 = obj.jitterData([d3 d1],jitter);
+					[d2, jitter] = obj.jitterData([d2 d4]);
+					d4 = obj.jitterData([d4 d2],jitter);
+				case 'both'
+					sc = true;
+					d1 = obj.jitterData(d1);
+					d3 = obj.jitterData(d3);
+					d2 = obj.jitterData(d2);
+					d4 = obj.jitterData(d4);
+				otherwise
+					sc = false;
+			end
+			
+			h=figure;
+			figpos(1,[1000,1000]);
+			set(h,'Color',[1 1 1]);
+			hold on
+			scatter(d1, d2, repmat(80,length(d1),1),[0 0 0],'MarkerFaceColor','none');
+			scatter(d3, d4, repmat(80,length(d3),1),[0.8 0 0],'MarkerFaceColor','none');
+			%plot(d1, d2, 'ko');
+			%plot(d3, d4, 'ro');
+			hold off
+			box on
+			grid on
+			xlabel([obs1])
+			ylabel([obs2])
+			title
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function [data,jitter] = jitterData(obj,datain,jitter)
+			
+			if ~exist('jitter','var')
+				jitter = [];
+			end
+			
+			if size(datain,2) > size(datain,1)
+				datain = datain';
+			end
+			
+			if size(datain,2) > 1
+				other = datain(:,2);
+				datain = datain(:,1);
+				range1 = max(datain) - min(datain);
+				range2 = max(other) - min(other);
+				if isempty(jitter)
+					jitter = (randn(length(datain),1))*(max(range1,range2)/obj.jitterfactor);
+				end
+			else
+				range = max(datain) - min(datain);
+				if isempty(jitter)
+					jitter = (randn(length(datain),1))*(range/obj.jitterfactor);
+				end
+			end
+					
+			sc = true;
+			data = datain + jitter;
+				
 		end
 		
 		% ===================================================================
