@@ -3,7 +3,7 @@ function varargout = splotfig(varargin)
 %    FIG = SPLOTFIG launch splotfig GUI.
 %    SPLOTFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 03-Oct-2011 12:15:32
+% Last Modified by GUIDE v2.5 25-Oct-2011 17:23:51
 
 if nargin == 0  % LAUNCH GUI
 
@@ -96,14 +96,14 @@ function SPlotISI_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of SPlotISI
 
 
-% --- Executes on selection change in XBox.
-function XBox_Callback(hObject, eventdata, handles)
-% hObject    handle to XBox (see GCBO)
+% --- Executes on selection change in SPXBox.
+function SPXBox_Callback(hObject, eventdata, handles)
+% hObject    handle to SPXBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns XBox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from XBox
+% Hints: contents = get(hObject,'String') returns SPXBox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SPXBox
 global spdata
 spdata.linfo=[];
 spdata.latency = [];
@@ -111,14 +111,14 @@ spdata.bars = [];
 spdata.changetitle=0;
 splot('Plot');
 
-% --- Executes on selection change in YBox.
-function YBox_Callback(hObject, eventdata, handles)
-% hObject    handle to YBox (see GCBO)
+% --- Executes on selection change in SPYBox.
+function SPYBox_Callback(hObject, eventdata, handles)
+% hObject    handle to SPYBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns YBox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from YBox
+% Hints: contents = get(hObject,'String') returns SPYBox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SPYBox
 global spdata
 spdata.linfo=[];
 spdata.latency = [];
@@ -169,3 +169,10 @@ function SPSpPos_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of SPSpPos as text
 %        str2double(get(hObject,'String')) returns contents of SPSpPos as a double
+
+
+% --- Executes on button press in SPExport.
+function SPExport_Callback(hObject, eventdata, handles)
+% hObject    handle to SPExport (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

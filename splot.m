@@ -58,20 +58,20 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		end
 		
 		if data.numvars > 1
-			set(gh('XBox'),'String',{num2str(data.xvalues')});
-			set(gh('XBox'),'Value',ceil(data.xrange/2));
-			set(gh('YBox'),'String',{num2str(data.yvalues')});
-			set(gh('YBox'),'Value',ceil(data.yrange/2));
+			set(gh('SPXBox'),'String',{num2str(data.xvalues')});
+			set(gh('SPXBox'),'Value',ceil(data.xrange/2));
+			set(gh('SPYBox'),'String',{num2str(data.yvalues')});
+			set(gh('SPYBox'),'Value',ceil(data.yrange/2));
 		elseif data.numvars > 0
-			set(gh('XBox'),'String',{num2str(data.xvalues')});
-			set(gh('XBox'),'Value',ceil(data.xrange/2));
-			set(gh('YBox'),'Enable','off');
-			set(gh('YBox'),'String',{'1'});
+			set(gh('SPXBox'),'String',{num2str(data.xvalues')});
+			set(gh('SPXBox'),'Value',ceil(data.xrange/2));
+			set(gh('SPYBox'),'Enable','off');
+			set(gh('SPYBox'),'String',{'1'});
 		else
-			set(gh('YBox'),'Enable','off');
-			set(gh('YBox'),'String',{'1'});
-			set(gh('XBox'),'Enable','off');
-			set(gh('XBox'),'String',{'1'});
+			set(gh('SPYBox'),'Enable','off');
+			set(gh('SPYBox'),'String',{'1'});
+			set(gh('SPXBox'),'Enable','off');
+			set(gh('SPXBox'),'String',{'1'});
 		end
 		
 		set(gh('SmoothEdit'),'String',num2str(data.binwidth*2));
@@ -92,28 +92,30 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		end
 		
 		if data.numvars > 1
-			set(gh('XBox'),'String',{num2str(data.xvalues')});
-			set(gh('XBox'),'Value',ceil(data.xrange/2));
-			set(gh('YBox'),'String',{num2str(data.yvalues')});
-			set(gh('YBox'),'Value',ceil(data.yrange/2));
+			set(gh('SPXBox'),'String',{num2str(data.xvalues')});
+			set(gh('SPXBox'),'Value',ceil(data.xrange/2));
+			set(gh('SPYBox'),'String',{num2str(data.yvalues')});
+			set(gh('SPYBox'),'Value',ceil(data.yrange/2));
 		elseif data.numvars > 0
-			set(gh('XBox'),'String',{num2str(data.xvalues')});
-			set(gh('XBox'),'Value',ceil(data.xrange/2));
-			set(gh('YBox'),'Enable','off');
-			set(gh('YBox'),'String',{'1'});
+			set(gh('SPXBox'),'String',{num2str(data.xvalues')});
+			set(gh('SPXBox'),'Value',ceil(data.xrange/2));
+			set(gh('SPYBox'),'Enable','off');
+			set(gh('SPYBox'),'String',{'1'});
 		else
-			set(gh('YBox'),'Enable','off');
-			set(gh('YBox'),'String',{'1'});
-			set(gh('XBox'),'Enable','off');
-			set(gh('XBox'),'String',{'1'});
+			set(gh('SPYBox'),'Enable','off');
+			set(gh('SPYBox'),'String',{'1'});
+			set(gh('SPXBox'),'Enable','off');
+			set(gh('SPXBox'),'String',{'1'});
 		end
+		
+		spdata.bars = [];
+		spdata.linfo=[];
 		
 		set(gh('DataBox'),'String',{'All Spikes';'Burst Spikes';'Tonic Spikes';'Both Types'});
 		set(gh('DataBox'),'Value',4);
 		set(gh('TypeBox'),'String',{'Bar Plot';'Area Plot';'Gaussian Smooth';'Loess Curve'});
-		set(gh('SPAnalMenu'),'String',{'None';'FFT Power Spectrum';'Linearity Test';'Get Spontaneous';'Latency Analysis'}); %;'Latency Analysis';'Ratio of Bursts'});
+		set(gh('SPAnalMenu'),'String',{'None';'FFT Power Spectrum';'Linearity Test';'Get Spontaneous';'Latency Analysis';'Calculate BARS'}); %;'Latency Analysis';'Ratio of Bursts'});
 		splot('Plot') %actually plot what we have
-		spdata.linfo=[];
 		
 		%---------------------------------------------------------------------------------
 	case 'Plot' %do da stuff
@@ -125,14 +127,24 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		set(gh('SPPanel'),'Title','Plotting, please wait...');
 		drawnow
 		
-		x=get(gh('XBox'),'Value');
-		y=get(gh('YBox'),'Value');
+		x=get(gh('SPXBox'),'Value');
+		y=get(gh('SPYBox'),'Value');
 		z=sv.zval;
 		
-		time=data.time{y,x,z};
-		psth=data.psth{y,x,z};
-		bpsth=data.bpsth{y,x,z};
-		tpsth = psth - bpsth;
+		[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
+
+% 		time=data.time{y,x,z};
+% 		psth=data.psth{y,x,z};
+% 		bpsth=data.bpsth{y,x,z};
+% 		tpsth = psth - bpsth;
+% 		
+% 		mini = find(time == sv.mint);
+% 		maxi = find(time == sv.maxt);
+% 		
+% 		time = time(mini:maxi);
+% 		psth = psth(mini:maxi);
+% 		bpsth = bpsth(mini:maxi);
+% 		tpsth = tpsth(mini:maxi);
 		
 		datatype=get(gh('DataBox'),'Value');
 		plottype=get(gh('TypeBox'),'Value');
@@ -426,9 +438,9 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			text(spdata.latency+(spdata.latency/2),(m-(m/20)),['Latency=' num2str(spdata.latency)],'FontSize',12);
 		end
 		
-		String=get(gh('XBox'),'String');
+		String=get(gh('SPXBox'),'String');
 		xs=String{x};
-		String=get(gh('YBox'),'String');
+		String=get(gh('SPYBox'),'String');
 		ys=String{y};
 		xt=data.xtitle;
 		if data.numvars > 1;
@@ -511,14 +523,16 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		oldtext = get(gh('SPPanel'),'Title');
 		try
 			spdata.bars = [];
-			x=get(gh('XBox'),'Value');
-			y=get(gh('YBox'),'Value');
+			x=get(gh('SPXBox'),'Value');
+			y=get(gh('SPYBox'),'Value');
 			z=sv.zval;
+			
+			[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
 
-			time=data.time{y,x,z};
-			psth=data.psth{y,x,z};
-			bpsth=data.bpsth{y,x,z};
-			tpsth = psth - bpsth;
+% 			time=data.time{y,x,z};
+% 			psth=data.psth{y,x,z};
+% 			bpsth=data.bpsth{y,x,z};
+% 			tpsth = psth - bpsth;
 
 			datatype=get(gh('DataBox'),'Value');
 			if datatype == 2
@@ -567,8 +581,8 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		spdata.spont=[];
 		data.spontaneous=[];
 		
-		x=get(gh('XBox'),'Value');
-		y=get(gh('YBox'),'Value');
+		x=get(gh('SPXBox'),'Value');
+		y=get(gh('SPYBox'),'Value');
 		z=sv.zval;
 		datatype=get(gh('DataBox'),'Value');
 		plottype=get(gh('TypeBox'),'Value');
@@ -712,8 +726,8 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		
 		laoptions;	%our GUI to select options etc. - puts its values in spdata
 		
-		x=get(gh('XBox'),'Value');
-		y=get(gh('YBox'),'Value');
+		x=get(gh('SPXBox'),'Value');
+		y=get(gh('SPYBox'),'Value');
 		z=sv.zval;
 		datatype=get(gh('DataBox'),'Value');
 		plottype=get(gh('TypeBox'),'Value');
@@ -832,8 +846,8 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			return
 		end
 		
-		x=get(gh('XBox'),'Value');
-		y=get(gh('YBox'),'Value');
+		x=get(gh('SPXBox'),'Value');
+		y=get(gh('SPYBox'),'Value');
 		z=sv.zval;
 		
 		rawspikes=data.rawspikes{y,x,z}/1000; %get raw spikes in seconds
@@ -858,8 +872,8 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		%------------------------------------------------------------------------------------------
 		
 		figure
-		x=get(gh('XBox'),'Value');
-		y=get(gh('YBox'),'Value');
+		x=get(gh('SPXBox'),'Value');
+		y=get(gh('SPYBox'),'Value');
 		z=sv.zval;
 		maxtime=(max(data.time{1})+data.binwidth)/1000;
 		numtrials=data.raw{y,x,z}.numtrials;
@@ -890,9 +904,9 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 				clipboard('copy',sprintf('%2.3f',a(1)/a(ind)));
 			end
 		end
-		String=get(gh('XBox'),'String');
+		String=get(gh('SPXBox'),'String');
 		x=String{x};
-		String=get(gh('YBox'),'String');
+		String=get(gh('SPYBox'),'String');
 		y=String{y};
 		xt=data.xtitle;
 		if data.numvars > 1;
@@ -928,17 +942,35 @@ end  %----------------------------end of the main switch------------------------
 % Additional Helper Functions
 %##################################################################
 
-function [out,trials]=converttotime(in)
-global data
-in = (in/data.binwidth)*1000;
-if data.wrapped==1 %wrapped
-	trials = data.raw{1}.numtrials*data.raw{1}.nummods;
-	in=in/trials; %we have to get the values for an individual trial
-elseif data.wrapped==2
-	trials = data.raw{1}.numtrials;
-	in=in/trials;
+	function [time,psth,bpsth,tpsth] = selectPSTH(x,y,z)
+		time=data.time{y,x,z};
+		psth=data.psth{y,x,z};
+		bpsth=data.bpsth{y,x,z};
+		tpsth = psth - bpsth;
+		
+		mini = find(time == sv.mint);
+		maxi = find(time == sv.maxt);
+		
+		time = time(mini:maxi);
+		psth = psth(mini:maxi);
+		bpsth = bpsth(mini:maxi);
+		tpsth = tpsth(mini:maxi);
+	end
+
+
+	function [out,trials]=converttotime(in)
+		in = (in/data.binwidth)*1000;
+		if data.wrapped==1 %wrapped
+			trials = data.raw{1}.numtrials*data.raw{1}.nummods;
+			in=in/trials; %we have to get the values for an individual trial
+		elseif data.wrapped==2
+			trials = data.raw{1}.numtrials;
+			in=in/trials;
+		end
+		out = in;
+	end
+
 end
-out = in;
 
 
 

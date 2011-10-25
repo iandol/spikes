@@ -29,11 +29,11 @@ classdef getDensity < handle
 		%> P value to use for all statistics
 		alpha = 0.05
 		%> A cell list of the main X and Y data, i.e. {'Control','Drug'}
-		legendtxt = {'Group 1','Group 2'}
+		legendtxt = {'Group_1','Group_2'}
 		%> Add gaussian fits to the histograms? default: true
 		dogauss = true
 		%> if X/Y have more than 1 column, you can detail column names here
-		columnlabels = {'Data Set 1'}
+		columnlabels = {'Data_Set_1'}
 		%> remove outliers using 'grubb', 'rosner', 3SD' or 'none'
 		dooutlier = 'none'
 		%> add jitter to scatterplot? 'x', 'y', 'both', 'equal', 'none'
@@ -294,8 +294,23 @@ classdef getDensity < handle
 					pn(1,2).ylabel(obj.columnlabels{i});
 				end
 				if obj.isDataEqualLength
-					boxplot([xcol,ycol],'notch',1,'whisker',1,'labels',obj.legendtxt,'colors','k')
+					boxplot([xcol ycol],'positions',[1 2],'notch',1,'whisker',1,...
+						'labels',obj.legendtxt,'colors','k',...
+						'boxstyle','outline','medianstyle','target',...
+						'widths',0.5,'symbol','ro');
+				else
+					boxplot(xcol,'positions',1,'notch',1,'whisker',1,...
+						'labels',obj.legendtxt{1},'colors','k',...
+						'boxstyle','outline','medianstyle','line',...
+						'widths',0.5,'symbol','ro');
+					boxplot(ycol,'positions',2,'notch',1,'whisker',1,...
+						'labels',obj.legendtxt{2},'colors','k',...
+						'boxstyle','outline','medianstyle','line',...
+						'widths',0.5,'symbol','ro');
 				end
+				axis tight
+				xlim([0.5 2.5])
+				set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 				pn(py,px).title('Box / Density Plots')
 				hold off
 				box on
@@ -621,7 +636,7 @@ classdef getDensity < handle
 				
 				set(gcf,'Renderer','zbuffer');
 				
-				fprintf('\n---> getDensity Computation time took: %d seconds\n',toc);
+				fprintf('\n---> getDensity Computation time took: %.2g seconds\n',toc);
 				
 				if obj.singleplots == true
 					obj.doSinglePlots(pn);
@@ -697,16 +712,17 @@ classdef getDensity < handle
 			figpos(1,[1000,1000]);
 			set(h,'Color',[1 1 1]);
 			hold on
-			scatter(d1, d2, repmat(80,length(d1),1),[0 0 0],'MarkerFaceColor','none');
-			scatter(d3, d4, repmat(80,length(d3),1),[0.8 0 0],'MarkerFaceColor','none');
-			%plot(d1, d2, 'ko');
-			%plot(d3, d4, 'ro');
+			scatter(d1, d2, repmat(80,length(d1),1),[0 0 0],'MarkerFaceColor','none',...
+				'DisplayName',obj.legendtxt{1});
+			scatter(d3, d4, repmat(80,length(d3),1),[0.8 0 0],'MarkerFaceColor','none',...
+				'DisplayName',obj.legendtxt{2});
+			set(gca, 'FontSize', 14);
 			hold off
 			box on
 			grid on
 			xlabel([obs1])
 			ylabel([obs2])
-			title
+			title(['Scatterbox plot comparing ' obs1 ' against ' obs2 ' -- jitter:' obj.addjitter]);
 		end
 		
 		% ===================================================================
@@ -725,6 +741,7 @@ classdef getDensity < handle
 			end
 			
 			if size(datain,2) > 1
+				
 				other = datain(:,2);
 				datain = datain(:,1);
 				range1 = max(datain) - min(datain);
@@ -739,7 +756,6 @@ classdef getDensity < handle
 				end
 			end
 					
-			sc = true;
 			data = datain + jitter;
 				
 		end

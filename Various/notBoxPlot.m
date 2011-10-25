@@ -124,26 +124,23 @@ if nargout==1
 end
 
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Nested functions follow
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	function h=myPlotter(X,Y)
-		
-		%Require the stats toolbox
+	%Require the stats toolbox
 		
 		if isempty(options)
 			SEM = SEM_calc(Y);
 			SD=nanstd(Y);
+			mu=nanmean(Y);
 		elseif iscell(options)
 			SEM = bootCI_calc(Y,options{1},options{2},options{3});
-			SD=nanstd(Y);
-			%SD = bootCI_calc(Y,options{1},options{2},0.0001);
+			%SD=nanstd(Y);
+			SD = bootCI_calc(Y,options{1},options{2},0.0001);
+			mu=options{2}(Y);
 		end
-		
-		mu=nanmean(Y);
-		
+
 		%The plot colors to use for multiple sets of points on the same x
 		%location
 		cols=hsv(length(X)+1)*0.5;
@@ -159,7 +156,7 @@ end
 			
 			if strcmp(style,'patch') || strcmp(style,'sdline')
 				
-				h(k).semPtch=patchMaker(SEM(k),[0.9,0.7,0.7]);
+				h(k).semPtch=patchMaker(SEM(k),[0.9,0.8,0.8]);
 				h(k).mu=plot([X(k)-edgepos,X(k)+edgepos],[mu(k),mu(k)],'-r',...
 					'linewidth',2);
 			end
@@ -167,7 +164,8 @@ end
 			%Plot jittered raw data
 			C=cols(k,:);
 			J=(rand(size(thisX))-0.5)*jitter;
-			h(k).data=plot(thisX+J,thisY,'o',...
+			JJ=(rand(size(thisY))-0.5)*(jitter/5);
+			h(k).data=plot(thisX+J,thisY+JJ,'o',...
 				'color',C,...
 				'markerfacecolor',C+(1-C)*0.8);
 		end
