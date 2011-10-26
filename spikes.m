@@ -1798,7 +1798,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 	case 'Temporal Analysis'
 		%--------------------------------------------------------------------------------------------------
 		
-		temporalanalysis(data);
+		temporalanalysis();
 		
 		%---------------------------Run SPlot------------------------------------------------------------------
 	case 'Plot Single PSTH'
@@ -1810,8 +1810,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 	case 'Burst Ratio'
 		%-----------------------------------------------------------------------------------------
 		
-		if data.measured~=1 || data.plotburst~=1
-			errordlg('You need to first measure all the spikes, then remeasure using the bursts before using this analysis')
+		if data.measured~=1 || isempty(data.bmatrix)
+			errordlg('You need to first measure all the spikes, then remeasure using the bursts, then tonic before using this analysis')
 			error('Burst Ratio Error')
 		end
 		
@@ -3197,7 +3197,7 @@ switch data.plottype
 		else
 			sv.xlock=0;	set(gh('XHoldCheck'),'Value',0);
 			sv.ylock=1; set(gh('YHoldCheck'),'Value',1);
-			sv.zlock=1; %set(gh('ZHoldCheck'),'Value',1);
+			sv.zlock=1; set(gh('ZHoldCheck'),'Value',1);
 		end
 	case 7 %surface
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
@@ -3330,6 +3330,13 @@ elseif sv.zlock==0 && sv.ylock==0 && sv.xlock==1
 			data.errormat=data.errormatall(sv.yval,sv.xval,sv.zval);
 	end
 end
+
+if data.plotburst==1
+	data.bmatrix = data.matrix;
+elseif data.plottonic==1
+	data.tmatrix = data.matrix;
+end
+
 
 %---------------Take slices out of the matrix-------------------
 data.xvalues=data.xvalueso;
@@ -4196,44 +4203,83 @@ end
 %
 %Quick frames
 %
-function temporalanalysis(data)
+function temporalanalysis()
+global data
 global sv
 
 h=figure;
-reset(h);
+figpos(1,[800 800]);	%position the figure
+%reset(h);
 
-if data.plotburst==0
-	psth=data.psth;
-else
-	psth=data.bpsth;
-end
-
-timeslice=data.binwidth;
-steps=max(size(data.time{1}));
-
-tmatrix=zeros(data.yrange,data.xrange,steps);
-
-for i=1:steps   %for each bin
-	for j=1:data.xrange
-		for k=1:data.yrange
-			tmatrix(k,j,i)=psth{k,j}(i);
+if data.plotburst == 0 && data.plottonic == 0
+	psth = data.psth;
+elseif data.plotburst == 1
+	psth = data.bpsth;
+elseif data.plottonic == 1
+	psth = data.psth;
+	bpsth = data.bpsth;
+	for zz = 1:size(data.psth,3)
+		for xx = 1:size(data.psth,2)
+			for yy = 1:size(data.psth,1)
+				psth{yy,xx,zz} = psth{yy,xx,zz} - bpsth{yy,xx,zz};
+			end
 		end
 	end
 end
 
-m=max(max(max(tmatrix)));
+wi = str2num(get(gh('SISIWindow'),'String'));
+sh = str2num(get(gh('SISIShift'),'String'));
+timeslice=data.binwidth;
+wsum = wi / timeslice;
+ssum = sh / timeslice;
+time = data.time{1,1,1};
+totalsteps = max(size(time));
+z = sv.zval;
+ttime = sv.maxt - sv.mint;
+mini = find(time == sv.mint);
+maxi = find(time == sv.maxt);
 
-for i=1:steps
+msteps = floor(ttime / sh);
+
+while maxi+wsum > totalsteps
+	msteps = msteps - 1;
+end
+
+tmatrix=zeros(data.yrange,data.xrange,msteps);
+
+mi = mini;
+mx = mi+(wsum-1);
+
+for i=1:msteps   %for each bin
+	for j=1:data.xrange
+		for k=1:data.yrange
+			if mx <= maxi
+				tmatrix(k,j,i)=sum(psth{k,j,z}(mi:mx));
+			else
+			end
+		end
+	end
+	tstr(i) = time(mi);
+	mi = mi + ssum;
+	mx = mx + ssum;
+end
+
+mmax=max(tmatrix(:));
+
+for i=1:msteps
 	d=tmatrix(:,:,i);
 	PlotDMatrix(d);
-	text(data.xvalues(end-1),data.yvalues(end-1),m,num2str(data.time{1}(i)),'Color',[1 1 0],'FontSize',16,'FontWeight','bold');
+	xstep = data.xvalues(2) - data.xvalues(1);
+	ystep = data.yvalues(2) - data.yvalues(1);
+	text(data.xvalues(1)+xstep/5,data.yvalues(1)+ystep/5,mmax,num2str(tstr(i)),'Color',[1 1 0],'FontSize',16,'FontWeight','bold');
 	if data.dim==0
-		caxis([0 m]);
+		caxis([0 mmax]);
 	else
-		caxis([0 m]);
-		axis([-inf inf -inf inf 0 m]);
+		caxis([0 mmax]);
+		axis([-inf inf -inf inf 0 mmax]);
 		axis off;
 	end
+	pause(0.1)
 	M(i) = getframe;
 	%L(i) = getindexedframe;
 end
@@ -4241,49 +4287,55 @@ end
 %c=colormap;
 
 reset(h);
-title('Playing movie 3 times, then will save to c:\\movie.mat and plot individual frames in a new figure.');
-movie(M,3,8)
+
+if exist('implay','file')
+	close(h);
+	implay(M);
+else
+	title('Playing movie 3 times, then will save to movie.mat and plot individual frames in a new figure.');
+	movie(M,3,10)
+end
 save([sv.historypath 'movie.mat'], 'M');
 figure;
-figpos(1,[600 600]);	%position the figure
+figpos(1,[800 800]);	%position the figure
 
-if steps <=16
+if msteps <=16
 	m=4;
 	n=4;
-elseif steps <=20
+elseif msteps <=20
 	m=4;
 	n=5;
-elseif steps <=25
+elseif msteps <=25
 	m=5;
 	n=5;
-elseif steps <=30
+elseif msteps <=30
 	m=6;
 	n=5;
-elseif steps <=36
+elseif msteps <=36
 	m=6;
 	n=6;
-elseif steps <=42
+elseif msteps <=42
 	m=7;
 	n=6;
-elseif steps <=49
+elseif msteps <=49
 	m=7;
 	n=7;
-elseif steps <=56
+elseif msteps <=56
 	m=8;
 	n=7;
-elseif steps <=64
+elseif msteps <=64
 	m=8;
 	n=8;
-elseif steps <=72
+elseif msteps <=72
 	m=9;
 	n=8;
-elseif steps <=81
+elseif msteps <=81
 	m=9;
 	n=9;
-elseif steps <=90
+elseif msteps <=90
 	m=10;
 	n=9;
-elseif steps <=100
+elseif msteps <=100
 	m=10;
 	n=10;
 else
@@ -4292,13 +4344,13 @@ else
 end
 
 a=1;
-for i=1:steps
+for i=1:msteps
 	subaxis(m,n,a,'S',0,'P',0,'M',0.1);
 	image(M(i).cdata);
 	axis off
 	a=a+1;
 end
-suptitle(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
+suptitle(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle '\newlineMAX = ' num2str(mmax)]);
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
