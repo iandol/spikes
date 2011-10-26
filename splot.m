@@ -13,7 +13,7 @@ global data		%global data structure from spikes
 global sv		%spikes ui structure
 global spdata 	%global structure to hold any splot specific data
 
-spdata.version = 1.21;
+spdata.version = 1.22;
 
 if nargin<1;
 	action='Initialize';
@@ -24,12 +24,13 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 	%---------------------------------------------------------------------------------
 	case 'Initialize'
 		%---------------------------------------------------------------------------------
-		
+		v = spdata.version;
+		spdata = [];
+		spdata.version = v;
 		version=['Single PSTH Plot: V' num2str(spdata.version) ' | Started - ',datestr(now)];
-		splotfig;			%our GUI file
-		figpos;
-		%movegui;
-		set(gcf,'Name', version);
+		spdata.guihandle = splotfig;			%our GUI file
+		figpos(1);
+		set(spdata.guihandle,'Name', version);
 		spdata.spont=[]; %initialise spontaneous measurement
 		spdata.latency=0;
 		spdata.linfo=[];
@@ -109,7 +110,9 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		end
 		
 		spdata.bars = [];
-		spdata.linfo=[];
+		spdata.latency = [];
+		spdata.spont = [];
+		spdata.linfo = [];
 		
 		set(gh('DataBox'),'String',{'All Spikes';'Burst Spikes';'Tonic Spikes';'Both Types'});
 		set(gh('DataBox'),'Value',4);
@@ -121,30 +124,15 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 	case 'Plot' %do da stuff
 		%---------------------------------------------------------------------------------
 		
-		cla
-		
-		oldtext = get(gh('SPPanel'),'Title');
-		set(gh('SPPanel'),'Title','Plotting, please wait...');
-		drawnow
+		figure(spdata.guihandle);
+		cla;
+		set(gca,'Tag','SPAxis');
 		
 		x=get(gh('SPXBox'),'Value');
 		y=get(gh('SPYBox'),'Value');
 		z=sv.zval;
 		
 		[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
-
-% 		time=data.time{y,x,z};
-% 		psth=data.psth{y,x,z};
-% 		bpsth=data.bpsth{y,x,z};
-% 		tpsth = psth - bpsth;
-% 		
-% 		mini = find(time == sv.mint);
-% 		maxi = find(time == sv.maxt);
-% 		
-% 		time = time(mini:maxi);
-% 		psth = psth(mini:maxi);
-% 		bpsth = bpsth(mini:maxi);
-% 		tpsth = tpsth(mini:maxi);
 		
 		datatype=get(gh('DataBox'),'Value');
 		plottype=get(gh('TypeBox'),'Value');
@@ -286,7 +274,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						%save c:\burstpsth.txt  ww -ascii
 				end
 				
-				case 3 % burst spikes
+				case 3 % tonic spikes
 				
 				switch(plottype)
 					
@@ -465,52 +453,52 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			axis([xv yv])
 		end
 		
-		set(gh('SPPanel'),'Title',oldtext);
-		drawnow
+		set(gca,'Tag','SPAxis');
 		
 		if isfield(spdata.bars,'mean') && spdata.bars.x == x
-			figure;
-			t1=spdata.bars.time(1);
-			t2=spdata.bars.time(end);
-			ll = length(spdata.bars.confBands_fine(:,1))-1;
-			time2 = t1:(t2/ll):t2;
-			
-			mm=max(spdata.bars.mean_fine);
-			
-			hold on
-			h=area(time2,spdata.bars.confBands_fine(:,2));
-			set(h,'FaceColor',[0.6 0.6 0.6]);
-			set(h,'EdgeColor','none');
-			
-			h=area(time2,spdata.bars.mean_fine);
-			set(h,'FaceColor',[0.6 0.6 0.6]);
-			
-			h=area(time2,spdata.bars.confBands_fine(:,1));
-			set(h,'FaceColor',[1 1 1]);
-			set(h,'EdgeColor','none');
-			
-			p = find(spdata.bars.mean_fine == mm);
-			plot(time2(p),mm,'ro');
-			plot(time2, repmat(mm/10,length(spdata.bars.mean_fine),1),'b:');
-			
-			if ~isempty(spdata.latency) && spdata.latency > 0
-				line([spdata.latency spdata.latency],[0 mm],'LineWidth',1);
-				text(spdata.latency+(spdata.latency/2),(mm-(mm/20)),['Latency=' num2str(spdata.latency)],'FontSize',12);
+			hh = figure;
+			try
+				
+				mm=max(spdata.bars.mean_fine);
+
+				hold on
+				h=area(spdata.bars.time_fine,spdata.bars.confBands_fine(:,2));
+				set(h,'FaceColor',[0.6 0.6 0.6]);
+				set(h,'EdgeColor','none');
+
+				h=area(spdata.bars.time_fine,spdata.bars.mean_fine);
+				set(h,'FaceColor',[0.6 0.6 0.6]);
+
+				h=area(spdata.bars.time_fine,spdata.bars.confBands_fine(:,1));
+				set(h,'FaceColor',[1 1 1]);
+				set(h,'EdgeColor','none');
+
+				p = find(spdata.bars.mean_fine == mm);
+				plot(spdata.bars.time_fine(p),mm,'ro');
+				plot(spdata.bars.time_fine, repmat(mm/10,length(spdata.bars.mean_fine),1),'b:');
+
+				if ~isempty(spdata.latency) && spdata.latency > 0
+					line([spdata.latency spdata.latency],[0 mm],'LineWidth',1);
+					text(spdata.latency+(spdata.latency/2),(mm-(mm/20)),['Latency=' num2str(spdata.latency)],'FontSize',12);
+				end
+
+				set(gcf,'Renderer','painters')
+				set(gca,'Layer','top')
+				axis tight
+				box on
+				%line([time2(1) time2(end)],[m/10 m/10]);
+
+				t1 = ['Prior: ' spdata.bars.bp.prior_id ' | dparams: ' num2str(spdata.bars.bp.dparams) ' | burn: ' num2str(spdata.bars.bp.burn_iter)];
+
+				xlabel('Time (ms)')
+				ylabel('Firing Rate (Hz)')
+				title(['BARS Fit:' o t1])
+				hold off
+				
+			catch ME
+				close(hh)
+				rethrow ME
 			end
-			
-			set(gcf,'Renderer','painters')
-			set(gca,'Layer','top')
-			axis tight
-			box on
-			%line([time2(1) time2(end)],[m/10 m/10]);
-			
-			t1 = ['Prior: ' spdata.bars.bp.prior_id ' | dparams: ' num2str(spdata.bars.bp.dparams) ' | burn: ' num2str(spdata.bars.bp.burn_iter)];
-			
-			xlabel('Time (ms)')
-			ylabel('Firing Rate (Hz)')
-			title(['BARS Fit:' o t1])
-			
-			hold off
 		end
 		
 		%------------------------------------------------------------------------------------------
@@ -521,18 +509,17 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 	case 'Calculate BARS'
 		%------------------------------------------------------------------------------------------
 		oldtext = get(gh('SPPanel'),'Title');
+		set(gh('SPPanel'),'Title','Please wait...');
+		drawnow
+		
 		try
 			spdata.bars = [];
+			spdata.latency = [];
 			x=get(gh('SPXBox'),'Value');
 			y=get(gh('SPYBox'),'Value');
 			z=sv.zval;
 			
 			[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
-
-% 			time=data.time{y,x,z};
-% 			psth=data.psth{y,x,z};
-% 			bpsth=data.bpsth{y,x,z};
-% 			tpsth = psth - bpsth;
 
 			datatype=get(gh('DataBox'),'Value');
 			if datatype == 2
@@ -556,23 +543,25 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
 			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
 			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
-
-			oldtext = get(gh('SPPanel'),'Title');
-			set(gh('SPPanel'),'Title','Please wait...');
-			drawnow
+			
 			spdata.bars = barsP(psth,[time(1) time(end)],trials,bp);
 			spdata.bars.psth = psth;
 			spdata.bars.time = time;
+			
+			t1=spdata.bars.time(1);
+			t2=spdata.bars.time(end);
+			
+			spdata.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
+
 			spdata.bars.x = x;
 			spdata.bars.bp = bp;
 			set(gh('SPPanel'),'Title',oldtext);
-			drawnow
-			splot('Plot') %actually plot what we have
 		catch ME
 			spdata.bars = [];
 			set(gh('SPPanel'),'Title',oldtext);
 			rethrow(ME)
 		end
+		splot('Plot') %actually plot what we have
 		
 		%------------------------------------------------------------------------------------------
 	case 'Get Spontaneous'
@@ -774,6 +763,53 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		
 		switch spdata.method
 			
+			case 'BARS'
+				if isfield(spdata,'bars') && isfield(spdata.bars,'mean')
+					
+					psth = spdata.bars.mean';
+					time = spdata.bars.time;
+					
+					mi = max(psth);
+					
+					[xi,yi]=ginput(1);
+					[x1, y1] = local_nearest(xi(1),time,yi(1),psth);
+					
+					yi = find(psth == y1);
+					yi = yi(1);
+					
+					psth = psth(1:yi);
+					time = time(1:yi);
+					
+					t2 = linspace(time(1),time(end),200);
+					
+					psth = interp1(time,psth,t2);
+					time = t2;
+					
+					if spdata.spont.baseline == 1
+						psth = (psth/max(psth))*100;
+					else
+						psth = psth - psth(1);
+						psth = (psth/max(psth))*100;
+					end
+					
+					ii = find(psth >= spdata.spont.percent);
+					if isempty(ii);
+						ii = 1;
+					end
+					ii = ii(1);
+					spdata.latency = time(ii);	
+					
+					hold on
+					line([spdata.latency spdata.latency],[0 m],'LineWidth',2);
+					yy = ylim;
+					text(10,yy(2)-(yy(2)/20),['Latency=' num2str(spdata.latency)]);
+					hold off
+					
+				else
+					helpdlg('You must first calculate the BARS curve...')
+					return
+				end
+			
 			case '2 STDDEVS'
 				spdata.sigpoint=spdata.spont.mean+(2*spdata.spont.sd);
 				a=find(psth>spdata.sigpoint);
@@ -957,6 +993,52 @@ end  %----------------------------end of the main switch------------------------
 		tpsth = tpsth(mini:maxi);
 	end
 
+	function [xv,yv]=local_nearest(x,xl,y,yl)
+		%Inputs:
+		% x   Selected x value
+		% xl  Line Data (x)
+		% y   Selected y value
+		% yl  Line Data (y)
+		%Find nearest value of [xl,yl] to (x,y)
+		%Special Case: Line has a single non-singleton value
+		if sum(isfinite(xl))==1
+			fin = find(isfinite(xl));
+			xv = xl(fin);
+			yv = yl(fin);
+		else
+			%Normalize axes
+			xlmin = min(xl);
+			xlmax = max(xl);
+			ylmin = min(yl);
+			ylmax = max(yl);
+			%Process the case where max == min
+			if xlmax == xlmin
+				xln = (xl - xlmin);
+				xn = (x - xlmin);
+			else
+				%Normalize data
+				xln = (xl - xlmin)./(xlmax - xlmin);
+				xn = (x - xlmin)./(xlmax - xlmin);
+			end
+			if ylmax == ylmin
+				yln = (yl - ylmin);
+				yn = (y - ylmin);
+			else
+				yln = (yl - ylmin)./(ylmax - ylmin);
+				yn = (y - ylmin)./(ylmax - ylmin);
+			end
+			%Find nearest point using our friend Ptyhagoras
+			a = xln - xn;       %Distance between x and the line
+			b = yln - yn;       %Distance between y and the line
+			c = (a.^2 + b.^2);  %Distance between point and line
+			%Don't need sqrt, since we get same answer anyway
+			[~,ind] = min(c);
+			%Nearest value on the line
+			xv = xl(ind);
+			yv = yl(ind);
+		end
+	end
+
 
 	function [out,trials]=converttotime(in)
 		in = (in/data.binwidth)*1000;
@@ -971,10 +1053,3 @@ end  %----------------------------end of the main switch------------------------
 	end
 
 end
-
-
-
-
-
-
-
