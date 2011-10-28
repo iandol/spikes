@@ -797,12 +797,12 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						ii = 1;
 					end
 					ii = ii(1);
-					spdata.latency = time(ii);	
+					spdata.latency = time(ii);
 					
 					hold on
 					line([spdata.latency spdata.latency],[0 m],'LineWidth',2);
 					yy = ylim;
-					text(10,yy(2)-(yy(2)/20),['Latency=' num2str(spdata.latency)]);
+					text(10,10,['Latency=' num2str(spdata.latency)],'FontSize',14);
 					hold off
 					
 				else
@@ -827,7 +827,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 					spdata.latency=time(sigbin);
 					hold on
 					line([spdata.latency spdata.latency],[min(psth) max(psth)],'LineWidth',2);
-					text(min((time)+(max(time)/20)),(max(psth)-(max(psth)/20)),['Latency=' num2str(spdata.latency)]);
+					text(min((time)+(max(time)/20)),(max(psth)-(max(psth)/20)),['Latency=' num2str(spdata.latency)],'FontSize',14);
 					hold off
 				end
 				
@@ -848,7 +848,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 					spdata.latency=time(sigbin);
 					hold on
 					line([spdata.latency spdata.latency],[min(psth) max(psth)],'LineWidth',2);
-					text(min((time)+(max(time)/20)),(max(psth)-(max(psth)/20)),['Latency=' num2str(spdata.latency)]);
+					text(min((time)+(max(time)/20)),(max(psth)-(max(psth)/20)),['Latency=' num2str(spdata.latency)],'FontSize',14);
 					hold off
 				end
 				

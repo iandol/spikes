@@ -837,6 +837,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('ZHoldMenu'),'String',' ');
 				set(gh('ZHoldMenu'),'Enable','on');
 				set(gh('ZHoldCheck'),'Enable','on');
+				set(gh('ZHoldCheck'),'Value',1);
 				
 				%%%Set the plotting options
 				if get(gh('SPlotMenu'),'Value')>7; set(gh('SPlotMenu'),'Value',7); end
@@ -994,10 +995,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		end
 		set(gh('XHoldCheck'),'Value',0);
 		set(gh('YHoldCheck'),'Value',0);
-		set(gh('ZHoldCheck'),'Value',0);
+		set(gh('ZHoldCheck'),'Value',1);
 		sv.xlock=0;
 		sv.ylock=0;
-		sv.zlock=0;
+		sv.zlock=1;
 		data.xindex=1:data.xrange;
 		data.yindex=1:data.yrange;
 		
