@@ -17,13 +17,14 @@ plus_hue = 0.98;
 
 cmap = zeros(nentries,3);
 
-if nargin<2  |  maxv==minv,
+if nargin<2  ||  ~exist('minv','var') || ~exist('maxv','var') || isempty(minv) || isempty(maxv) || maxv<=minv
    minv = -1;
    maxv = 1;
-   zerov=0.5;
-elseif nargin<3
-	zerov=0.5;
-end;
+end
+
+if nargin<3 || ~exist('zerov','var') || isempty(zerov)
+	   zerov=0.5;
+end
 
 if zerov>1
 	zerov=1;

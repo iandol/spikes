@@ -315,8 +315,8 @@ end
 
 % --------------------------------------------------------------------
 function varargout = SpikeMenu_Callback(h, eventdata, handles, varargin)
-
 spikes('SpikeSet')
+spikes('Measure');
 
 % --------------------------------------------------------------------
 function varargout = AnalMenu_Callback(h, eventdata, handles, varargin)
@@ -333,6 +333,7 @@ global sv
 
 set(h,'UserData','yes');                                                                           
 maxh=gh('SMaxEdit');
+set(maxh,'UserData','yes');
 mint=str2num(get(h,'String')); 
 maxt=str2num(get(maxh,'String'));
 
@@ -357,6 +358,7 @@ global sv
 
 set(h,'UserData','yes');  
 minh=gh('SMinEdit');
+set(minh,'UserData','yes');
 mint=str2num(get(minh,'String'));
 maxt=str2num(get(h,'String')); 
 
