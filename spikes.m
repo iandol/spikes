@@ -1979,9 +1979,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		end
 		data.areaplot=1;
 		set(gh('SmoothingMenu'),'Value',4);
-		set(gh('SmoothingSlider'),'Value',5);
+		if get(gh('SmoothingSlider'),'Value') < 5
+			set(gh('SmoothingSlider'),'Value',5);
+			sv.SmoothValue=5;
+		else
+			sv.SmoothValue = floor(get(gh('SmoothingSlider'),'Value'));
+		end
 		sv.SmoothType='linear';
-		sv.SmoothValue=5;
 		set(findobj('Tag','SmoothingText'),'String',['Resolution: ' num2str(sv.SmoothValue)]);
 		set(gh('STypeMenu'),'Value',3);
 		set(gh('CMapMenu'),'Value',5);
@@ -2011,6 +2015,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			end
 		end
 		PlotDMatrix(data.matrix);
+		caxis([0 1])
 		x=data.anal.xvals(2)-data.anal.xvals(1);
 		y=data.anal.yvals(2)-data.anal.yvals(1);
 		area=x*y;
@@ -2019,7 +2024,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		x=axis;
 		g=text(x(1)-(x(1)/25),x(3)-(x(3)/25),num2str(data.anal.size));
 		
-		set(g,'Color',[1 0 0],'Fontsize',12,'Fontweight','bold');
+		set(g,'Color',[1 0 0],'Fontsize',14,'Fontweight','bold');
 		
 		%-----------------------------------------------------------------
 		s1=data.anal.size;
@@ -4234,6 +4239,24 @@ ssum = sh / timeslice;
 time = data.time{1,1,1};
 totalsteps = max(size(time));
 z = sv.zval;
+isSurface = true;
+
+if sv.xlock == 1 && data.numvars > 1
+	xrange = sv.xval;
+	isSurface = false;
+else
+	xrange = 1:data.xrange;
+	range=length(xrange);
+end
+
+if sv.ylock == 1 || data.numvars == 1
+	yrange = sv.yval;
+	isSurface = false;
+else
+	yrange = 1:data.yrange;
+	range=length(yrange);
+end
+
 ttime = sv.maxt - sv.mint;
 mini = find(time == sv.mint);
 maxi = find(time == sv.maxt);
@@ -4244,16 +4267,22 @@ while maxi+wsum > totalsteps
 	msteps = msteps - 1;
 end
 
-tmatrix=zeros(data.yrange,data.xrange,msteps);
+tmatrix=zeros(length(yrange),length(xrange),msteps);
 
 mi = mini;
 mx = mi+(wsum-1);
 
 for i=1:msteps   %for each bin
-	for j=1:data.xrange
-		for k=1:data.yrange
+	for j=xrange
+		for k=yrange
 			if mx <= maxi
-				tmatrix(k,j,i)=sum(psth{k,j,z}(mi:mx));
+				if length(yrange) == 1
+					tmatrix(1,j,i)=sum(psth{k,j,z}(mi:mx));
+				elseif length(xrange) == 1
+					tmatrix(k,1,i)=sum(psth{k,j,z}(mi:mx));
+				else
+					tmatrix(k,j,i)=sum(psth{k,j,z}(mi:mx));
+				end
 			else
 			end
 		end
@@ -4265,9 +4294,16 @@ end
 
 mmax=max(tmatrix(:));
 
+tsurface = zeros(msteps,range);
+
 for i=1:msteps
 	d=tmatrix(:,:,i);
-	PlotDMatrix(d);
+	if isSurface == true
+		PlotDMatrix(d);
+	else
+		PlotVector(d');
+		tsurface(i,:) = d;
+	end
 	xstep = data.xvalues(2) - data.xvalues(1);
 	ystep = data.yvalues(2) - data.yvalues(1);
 	text(data.xvalues(1)+xstep/5,data.yvalues(1)+ystep/5,mmax,num2str(tstr(i)),'Color',[1 1 0],'FontSize',16,'FontWeight','bold');
@@ -4284,8 +4320,6 @@ for i=1:msteps
 end
 
 %c=colormap;
-
-reset(h);
 
 if exist('implay','file')
 	close(h);
@@ -4351,6 +4385,10 @@ for i=1:msteps
 	a=a+1;
 end
 suptitle(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle '\newlineMAX = ' num2str(mmax)]);
+
+if isSurface == false
+	
+end
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
