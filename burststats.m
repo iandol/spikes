@@ -1,4 +1,4 @@
-function burststats(sdata);
+function burststats(sdata)
 
 % This function calculates basic burst statistics from raw spike trains
 % the sdata is in a cell matrix of lsd files (basically data.raw from 
@@ -6,14 +6,28 @@ function burststats(sdata);
 
 global data
 global sv
+global bstats
+
+data.bstats = [];
+bstats = [];
 
 homedir = sv.historypath;
 
-stats.raw=cell(size(sdata,1),size(sdata,2));
-stats.info=cell(size(sdata,1),size(sdata,2));
+if sv.zlock == 1;
+	z = sv.zval;
+else 
+	z = 1;
+end
+
+sdata = sdata(:,:,z);
+
+bstats.raw=cell(size(sdata,1),size(sdata,2));
+bstats.info=cell(size(sdata,1),size(sdata,2));
 
 tic;
-fprintf('==============PLEASE WAIT!!!===============');
+hwait=waitbar(0,'Calculating burst spikes...');
+pos=get(hwait,'Position');
+set(hwait,'Position',[0 0 pos(3) pos(4)]);
 
 for i=1:size(sdata,1)*size(sdata,2)   %for each variable lsd file
    
@@ -38,7 +52,7 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each variable lsd file
                
    end
    
-   stats.raw{i}=s;
+   bstats.raw{i}=s;
    
 end
 
@@ -62,6 +76,10 @@ allratio=[];
 alltbefore=[];
 alltafter=[];
 
+ratio=zeros(size(sdata,1),size(sdata,2));
+tratio=zeros(size(sdata,1),size(sdata,2));
+
+waitbar(0.3,hwait,'Plotting Each Variable ISIs etc...');
 
 for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
    
@@ -76,13 +94,13 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
    
    for j=1:sdata{i}.numtrials
       
-      burstn=[burstn;max(size(stats.raw{i}(j).burst))-2];
-      spiken=[spiken;max(size(stats.raw{i}(j).spike))-2]; 
-      isi=diff(stats.raw{i}(j).spike);
+      burstn=[burstn;max(size(bstats.raw{i}(j).burst))-2];
+      spiken=[spiken;max(size(bstats.raw{i}(j).spike))-2]; 
+      isi=diff(bstats.raw{i}(j).spike);
 
       %Finds indexes of bursts in the vectors of spikes
-      tmp1=stats.raw{i}(j).spike;
-      tmp2=stats.raw{i}(j).burst;
+      tmp1=bstats.raw{i}(j).spike;
+      tmp2=bstats.raw{i}(j).burst;
       tmp3=find(ismember(tmp1,tmp2)==1);
       %Now uses them to find isi's for burst spikes
       if max(size(tmp3))>2 %if there are any real spikes
@@ -100,82 +118,104 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
          isibefore=[isibefore;isi(1:end-1)]; 
          isiafter=[isiafter;isi(2:end)];
       end        
-      count=[count;stats.raw{i}(j).count];
+      count=[count;bstats.raw{i}(j).count];
       
    end
 
-   stats.info{i}.nspike=sum(spiken);
-   stats.info{i}.nburst=sum(burstn);
-   if stats.info{i}.nspike>1
-      stats.info{i}.ratio=stats.info{i}.nburst/ stats.info{i}.nspike;
+   bstats.info{i}.nspike=sum(spiken);
+   bstats.info{i}.nburst=sum(burstn);
+   bstats.info{i}.ntonic=bstats.info{i}.nspike-bstats.info{i}.nburst;
+   if bstats.info{i}.nspike>1
+      bstats.info{i}.ratio=bstats.info{i}.nburst / bstats.info{i}.nspike;
+	  ratio(i) = bstats.info{i}.ratio;
+	  bstats.info{i}.tratio=bstats.info{i}.ntonic / bstats.info{i}.nspike;
+	  tratio(i) = bstats.info{i}.tratio;
    else
-      stats.info{i}.ratio=0;
+      bstats.info{i}.ratio = 0;
+	  bstats.info{i}.tratio = 0;
+	  ratio(i) = 0;
+	  tratio(i) = 0;
    end   
-   stats.info{i}.isibefore=isibefore/10;   %convert into ms
-   stats.info{i}.isiafter=isiafter/10;
-   stats.info{i}.bisibefore=bisibefore/10;
-   stats.info{i}.bisiafter=bisiafter/10;
-   stats.info{i}.count=count;   
+   bstats.info{i}.isibefore=isibefore/10;   %convert into ms
+   bstats.info{i}.isiafter=isiafter/10;
+   bstats.info{i}.bisibefore=bisibefore/10;
+   bstats.info{i}.bisiafter=bisiafter/10;
+   bstats.info{i}.count=count;   
+   
+   
    
    %figure(histh);
    set(0,'CurrentFigure',histh);
    subplot(size(sdata,2),size(sdata,1),y(i));
-   hist(stats.info{i}.count,[2 3 4 5 6 7 8 9 10]);
+   hist(bstats.info{i}.count,[2 3 4 5 6 7 8 9 10]);
    colormap([0 0 0]);
-   title(stats.raw{i}(1).name,'FontSize',5);
+   title(bstats.raw{i}(1).name,'FontSize',5);
    set(gca,'FontSize',4);
-   set(gcf,'NumberTitle','off','Name','Histograms of Burst Size for Each Variable');
+   
    
    %figure(scatterh);
    set(0,'CurrentFigure',scatterh);
    subplot(size(sdata,2),size(sdata,1),y(i));
-   isiplot(stats.info{i}.isibefore,stats.info{i}.isiafter,stats.raw{i}(1).spike(end)/10,1);
-   title(['Ratio = ' num2str(stats.info{i}.ratio)],'FontSize',6);
+   isiplot(bstats.info{i}.isibefore,bstats.info{i}.isiafter,bstats.raw{i}(1).spike(end)/10,1);
+   title(['Ratio = ' num2str(bstats.info{i}.ratio)],'FontSize',6);
    xlabel('');
    ylabel('');
    set(gca,'FontSize',3);
-   set(gcf,'NumberTitle','off','Name','ISIPlots for Each Variable Position');
+   
    
    %plot with bursts in red
    %figure(bscatterh);
    set(0,'CurrentFigure',bscatterh);
    subplot(size(sdata,2),size(sdata,1),y(i));
-   isiplot(stats.info{i}.isibefore,stats.info{i}.isiafter,stats.raw{i}(1).spike(end)/10,0, ...
-           stats.info{i}.bisibefore,stats.info{i}.bisiafter);
-   title(['Ratio = ' num2str(stats.info{i}.ratio)],'FontSize',6);
+   isiplot(bstats.info{i}.isibefore,bstats.info{i}.isiafter,bstats.raw{i}(1).spike(end)/10,0, ...
+           bstats.info{i}.bisibefore,bstats.info{i}.bisiafter);
+   title(['Ratio = ' num2str(bstats.info{i}.ratio)],'FontSize',6);
    xlabel('');
    ylabel('');
    set(gca,'FontSize',3);
-   set(gcf,'NumberTitle','off','Name','ISIPlots for each Variable (Burst spikes in RED)');
+
+   ballbefore=[ballbefore;bstats.info{i}.bisibefore]; %burst isibefore
+   ballafter=[ballafter;bstats.info{i}.bisiafter];    %burst isafter
    
-   ballbefore=[ballbefore;stats.info{i}.bisibefore]; %burst isibefore
-   ballafter=[ballafter;stats.info{i}.bisiafter];    %burst isafter
-   
-   if length(stats.info{i}.isibefore)>=3;
-      allbefore=[allbefore;stats.info{i}.isibefore(2:end-1)];
-      allafter=[allafter;stats.info{i}.isiafter(2:end-1)];
-      alltbefore=[alltbefore;[stats.info{i}.isibefore(1);stats.info{i}.isibefore(end)]]; %NB corrected missing 't' here
-      alltafter=[alltafter;[stats.info{i}.isiafter(1);stats.info{i}.isiafter(end)]];     % there was 'allafter'
-   elseif length(stats.info{i}.isibefore)>=2;                                            % where i *think* there should
-      alltbefore=[alltbefore;[stats.info{i}.isibefore(1);stats.info{i}.isibefore(end)]]; % have been 'alltafter' 
-      alltafter=[alltafter;[stats.info{i}.isiafter(1);stats.info{i}.isiafter(end)]];
+   if length(bstats.info{i}.isibefore)>=3;
+      allbefore=[allbefore;bstats.info{i}.isibefore(2:end-1)];
+      allafter=[allafter;bstats.info{i}.isiafter(2:end-1)];
+      alltbefore=[alltbefore;[bstats.info{i}.isibefore(1);bstats.info{i}.isibefore(end)]]; %NB corrected missing 't' here
+      alltafter=[alltafter;[bstats.info{i}.isiafter(1);bstats.info{i}.isiafter(end)]];     % there was 'allafter'
+   elseif length(bstats.info{i}.isibefore)>=2;                                            % where i *think* there should
+      alltbefore=[alltbefore;[bstats.info{i}.isibefore(1);bstats.info{i}.isibefore(end)]]; % have been 'alltafter' 
+      alltafter=[alltafter;[bstats.info{i}.isiafter(1);bstats.info{i}.isiafter(end)]];
    end
-   allcount=[allcount;stats.info{i}.count];
-   allspike=[allspike;stats.info{i}.nspike];
-   allburst=[allburst;stats.info{i}.nburst];
-   allratio=[allratio;stats.info{i}.ratio];
+   allcount=[allcount;bstats.info{i}.count];
+   allspike=[allspike;bstats.info{i}.nspike];
+   allburst=[allburst;bstats.info{i}.nburst];
+   allratio=[allratio;bstats.info{i}.ratio];
 end
+
+set(histh,'NumberTitle','off','Name','Histograms of Burst Size for Each Variable');
+set(scatterh,'NumberTitle','off','Name','ISIPlots for Each Variable Position (Burst spikes in RED)');
+set(bscatterh,'NumberTitle','off','Name','ISIPlots for each Variable (Showing start and end spikes)');
+
+waitbar(0.7,hwait,'Summary Plots...');
 
 if min(size(sdata))==1
    jointfig(histh,size(sdata,2),size(sdata,1));
    jointfig(scatterh,size(sdata,2),size(sdata,1));
 end
 
+bstats.ratio = ratio;
+bstats.tratio = tratio;
+bstats.allratio = allratio;
+bstats.allspike = allspike;
+bstats.allburst = allburst;
+bstats.allcount = allcount;
+
 allratio=mean(allratio);
 allspike=sum(allspike);
-allburst=sum(allburst)
-size(ballbefore)
+allburst=sum(allburst);
+
 figure;
+figpos(0,[800 800]);
 hist(allcount,[2 3 4 5 6 7 8 9 10]);
 colormap([0 0 0]);
 xlabel('Number of Spikes in Burst');
@@ -183,6 +223,7 @@ ylabel('Number of Bursts');
 set(gcf,'NumberTitle','off','Name','Histogram of Burst Size for All Variables')
 
 figure;
+figpos(0,[800 800]);
 isiplot(allbefore,allafter,x.maxtime/10,0);
 hold on;
 isisize=length(alltbefore);
@@ -197,9 +238,9 @@ allratio=allburst/allspike;
 title(['Ratio of Burst / Non-Burst Spikes = ' num2str(allratio) ' (' num2str(allburst) '/' num2str(allspike) ' spikes)'],'FontSize',12.5);
 hold off;
 
-
 %plots a scatter for all variables with bursts in red
 figure;
+figpos(0,[800 800]);
 size(alltbefore)
 size(alltafter)
 isiplot([allbefore;alltbefore],[allafter;alltafter],x.maxtime/10,0,ballbefore,ballafter);
@@ -208,30 +249,23 @@ title(['Ratio of Burst / Non-Burst Spikes = ' num2str(allratio) ' (' num2str(all
 hold off;
 axis square;
 
-save([homedir 'isibefore.txt'], allbefore, '-ascii');
-save([homedir 'isiafter.txt'], allafter, '-ascii');
-x=alltbefore(odd);
-save([homedir 'isistart1.txt'], x, '-ascii');
-x=alltafter(odd);
-save([homedir 'isistart2.txt'], x, '-ascii');
-x=alltbefore(even);
-save([homedir 'isiend1.txt'], x, '-ascii');
-x=alltafter(even);
-save([homedir 'isiend1.txt'],  x, '-ascii');
+xx=linspace(min(data.xvalues),max(data.xvalues),(length(data.xvalues)*5));
+yy=linspace(min(data.yvalues),max(data.yvalues),(length(data.yvalues)*5));
+[xx,yy]=meshgrid(xx,yy);
+[xo,yo]=meshgrid(data.xvalues,data.yvalues);
 
-ratio=zeros(size(sdata,1),size(sdata,2));
-for i=1:size(sdata,1)*size(sdata,2);
-     ratio(i)=stats.info{i}.ratio;   
-end
-
-figure
 if data.numvars==1
-	plot(data.xvalues,ratio,'ko-')
+	figure;
+	figpos(0,[800 800]);
+	plot(data.xvalues,bstats.ratio,'ko-')
 	ylabel('Ratio of Burst:All Spikes')
 	xlabel(data.xtitle')
 	title(['Ratio Plot for:' data.matrixtitle])
 else
-	pcolor(data.xvalues,data.yvalues,ratio);
+	figure
+	figpos(0,[800 800]);
+	dd=interp2(xo,yo,bstats.ratio,xx,yy,'linear');
+	pcolor(xx, yy,dd);
 	shading interp
 	colormap(hot)
 	caxis([0 1])
@@ -240,15 +274,66 @@ else
 	title(['Ratio Plot for:' data.matrixtitle])
 	set(gca,'Tag','');
 	colorbar
+	set(gcf,'NumberTitle','off','Name','Ratio Plot for All Variables');
+	
+	figure
+	figpos(0,[800 800]);
+	dd=interp2(xo,yo,bstats.ratio,xx,yy,'linear');
+	dd2=interp2(xo,yo,bstats.tratio,xx,yy,'linear');
+	pcolor(xx, yy, dd - dd2);
+	shading interp
+	cm = rbmap;
+	colormap(cm)
+	caxis([-1 1])
+	xlabel(data.xtitle);
+	ylabel(data.ytitle);
+	title(['Burst - Tonic Ratio Plot for:' data.matrixtitle])
+	set(gca,'Tag','');
+	colorbar
+	set(gcf,'NumberTitle','off','Name','Burst - Tonic Ratio Plot for All Variables');
+	
+	figure
+	figpos(0,[800 800]);
+	bt = bstats.ratio ./ max(bstats.ratio(:));
+	tt = bstats.tratio ./ max(bstats.tratio(:));
+	dd=interp2(xo,yo,bt,xx,yy,'linear');
+	dd2=interp2(xo,yo,tt,xx,yy,'linear');
+	pcolor(xx, yy, dd - dd2);
+	shading interp
+	cm = rbmap;
+	colormap(cm)
+	caxis([-1 1])
+	xlabel(data.xtitle);
+	ylabel(data.ytitle);
+	title(['Burst - Tonic Ratio Plot for:' data.matrixtitle])
+	set(gca,'Tag','');
+	colorbar
+	set(gcf,'NumberTitle','off','Name','Burst - Tonic Difference Plot for All Variables');
+	
 end
-set(gcf,'NumberTitle','off','Name','Ratio Plot for All Variables');
 
-fprintf('===>Finished in %.4g seconds',toc);
+waitbar(0.9,hwait,'Saving...');
+
+save([homedir 'isibefore.txt'], 'allbefore', '-ascii');
+save([homedir 'isiafter.txt'], 'allafter', '-ascii');
+x=alltbefore(odd);
+save([homedir 'isistart1.txt'], 'x', '-ascii');
+x=alltafter(odd);
+save([homedir 'isistart2.txt'], 'x', '-ascii');
+x=alltbefore(even);
+save([homedir 'isiend1.txt'], 'x', '-ascii');
+x=alltafter(even);
+save([homedir 'isiend2.txt'],  'x', '-ascii');
+data.ratioall=bstats.ratio;
+save([homedir 'ratioall.txt'], 'ratio', '-ascii');
+data.bstats = bstats;
+
+close(hwait)
+
+fprintf('\n===>Finished in %.4g seconds\n',toc);
 
 
-ratio;
-data.ratioall=ratio;
-save([homedir 'ratioall.txt'], ratio, '-ascii');
+
 
 
 

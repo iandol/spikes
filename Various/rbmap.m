@@ -1,6 +1,6 @@
 function [cmap] = rbmap(minv, maxv, zerov)
 
-% [cmap] = makerbcmap(min=0, max=1)
+% [cmap] = rbmap(min=0, max=1)
 %
 % Makes a red/blue colormap a la Alonso & Reid.
 %

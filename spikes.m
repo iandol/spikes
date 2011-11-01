@@ -1126,7 +1126,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				maxt=ceil(data.trialtime/10);
 			end
 			maxt=data.time{1}(ceil(maxt/data.binwidth));
-		elseif (strcmp(get(gh('SMinEdit'),'UserData'),'yes') && strcmp(get(gh('SMaxEdit'),'UserData'),'yes')) || strcmp(sv.auto,'report')
+		elseif ~isempty(mint) || ~isempty(maxt) || strcmp(sv.auto,'report')
 			time=data.time{1};
 			if (mint<=0 || isnan(mint) || mint>=max(time))
 				mint=0; 
@@ -1139,8 +1139,6 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			
 			mint=time(ceil(mint/data.binwidth));
 			maxt=time(ceil(maxt/data.binwidth));
-		elseif strcmp(get(gh('SMinEdit'),'UserData'),'yes') || strcmp(get(gh('SMaxEdit'),'UserData'),'yes');
-			error('Need to Select the Other Value')
 		elseif get(gh('SOverrideTime'),'Value')==0
 			if data.numvars>1 && automeasure<1 && sv.AnalysisMethod~=6
 				[mint,maxt]=measure(data,get(gh('XHoldMenu'),'Value'),get(gh('YHoldMenu'),'Value'),get(gh('ZHoldMenu'),'Value'));
@@ -4348,6 +4346,7 @@ a=1;
 for i=1:msteps
 	subaxis(m,n,a,'S',0,'P',0,'M',0.1);
 	image(M(i).cdata);
+	axis square
 	axis off
 	a=a+1;
 end
