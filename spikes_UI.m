@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 11-Oct-2011 11:49:10
+% Last Modified by GUIDE v2.5 03-Nov-2011 12:35:12
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -797,6 +797,13 @@ function SDoDOG_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 spikes('Difference of Gaussian');
 
+% --- Executes on button press in SDoTA.
+function SDoTA_Callback(hObject, eventdata, handles)
+% hObject    handle to SDoTA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Temporal Analysis');
+
 % --- Executes on button press in SDoArea.
 function SDoArea_Callback(hObject, eventdata, handles)
 % hObject    handle to SDoArea (see GCBO)
@@ -866,3 +873,4 @@ function SLoadRAWButton_Callback(hObject, eventdata, handles)
 global sv
 sv.reload = '';
 spikes('Load');
+

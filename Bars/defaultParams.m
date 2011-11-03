@@ -11,7 +11,7 @@ function bp = defaultParams()
     bp.conf_level = .95; %The confidence level for parameter intervals.
     bp.threshold = -10; %Threshhold for determining whether the initial beta variate is suspect. It is suspect if the log acceptance probability is less than the threshhold.
 
-    bp.prior_id = 'UNIFORM';
+    bp.prior_id = 'UNIFORM'; %can be uniform or poisson
     bp.dparams = 6; %Poisson_parameter_lambda
     bp.iparams = [1 80];  %lower and upper bounds  
 end

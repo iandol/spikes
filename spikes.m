@@ -59,7 +59,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv=[];
 		data=[];
 		rlist=[];
-		sv.version = 1.914;
+		sv.version = 1.920;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title=['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -166,7 +166,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Movie';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves';'Temporal Movie'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
 		set(gcf,'DefaultAxesFontName','Helvetica');
@@ -4211,10 +4211,6 @@ function temporalanalysis()
 global data
 global sv
 
-h=figure;
-figpos(1,[800 800]);	%position the figure
-%reset(h);
-
 if data.plotburst == 0 && data.plottonic == 0
 	psth = data.psth;
 elseif data.plotburst == 1
@@ -4243,17 +4239,21 @@ isSurface = true;
 
 if sv.xlock == 1 && data.numvars > 1
 	xrange = sv.xval;
+	xvalues = data.xrange(sv.xval);
 	isSurface = false;
 else
 	xrange = 1:data.xrange;
+	xvalues = data.xvalues;
 	range=length(xrange);
 end
 
 if sv.ylock == 1 || data.numvars == 1
 	yrange = sv.yval;
+	yvalues = data.yrange(sv.yval);
 	isSurface = false;
 else
 	yrange = 1:data.yrange;
+	yvalues = data.yrange;
 	range=length(yrange);
 end
 
@@ -4263,9 +4263,13 @@ maxi = find(time == sv.maxt);
 
 msteps = floor(ttime / sh);
 
-while maxi+wsum > totalsteps
-	msteps = msteps - 1;
+if maxi+wsum > totalsteps
+	msteps = msteps - wsum;
 end
+
+% while maxi+wsum > totalsteps
+% 	msteps = msteps - 1;
+% end
 
 tmatrix=zeros(length(yrange),length(xrange),msteps);
 
@@ -4296,27 +4300,33 @@ mmax=max(tmatrix(:));
 
 tsurface = zeros(msteps,range);
 
+h=figure;
+figpos(1,[1000 1000]);	%position the figure
+set(gcf,'Color',[1 1 1]);
+
 for i=1:msteps
 	d=tmatrix(:,:,i);
 	if isSurface == true
 		PlotDMatrix(d);
+		colormap(sv.CMap);
+		xstep = data.xvalues(2) - data.xvalues(1);
+		ystep = data.yvalues(2) - data.yvalues(1);
+		text(data.xvalues(1)+xstep/5,data.yvalues(1)+ystep/5,mmax,num2str(tstr(i)),'Color',[1 1 0],'FontSize',20,'FontWeight','bold');
+		if data.dim==0
+			caxis([0 mmax]);
+		else
+			caxis([0 mmax]);
+			axis([-inf inf -inf inf 0 mmax]);
+			axis off;
+		end
 	else
-		PlotVector(d');
+		plot(xvalues,d','k-o','LineWidth',3,'MarkerFaceColor',[0 0 0]);
+		axis([-inf inf 0 mmax])
+		text(xvalues(1), mmax-(mmax/20), num2str(tstr(i)),'Color',[1 0 0],'FontSize',20,'FontWeight','bold');
 		tsurface(i,:) = d;
-	end
-	xstep = data.xvalues(2) - data.xvalues(1);
-	ystep = data.yvalues(2) - data.yvalues(1);
-	text(data.xvalues(1)+xstep/5,data.yvalues(1)+ystep/5,mmax,num2str(tstr(i)),'Color',[1 1 0],'FontSize',16,'FontWeight','bold');
-	if data.dim==0
-		caxis([0 mmax]);
-	else
-		caxis([0 mmax]);
-		axis([-inf inf -inf inf 0 mmax]);
-		axis off;
 	end
 	pause(0.1)
 	M(i) = getframe;
-	%L(i) = getindexedframe;
 end
 
 %c=colormap;
@@ -4330,7 +4340,8 @@ else
 end
 save([sv.historypath 'movie.mat'], 'M');
 figure;
-figpos(1,[800 800]);	%position the figure
+figpos(1,[1000 1000]);	%position the figure
+set(gcf,'Color',[1 1 1]);
 
 if msteps <=16
 	m=4;
@@ -4384,11 +4395,56 @@ for i=1:msteps
 	axis off
 	a=a+1;
 end
-suptitle(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle '\newlineMAX = ' num2str(mmax)]);
+suptitle(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle '\newlineMAX = ' num2str(mmax) ' | window:' num2str(wi) ' shift:' num2str(sh)]);
 
 if isSurface == false
-	
+	figure;
+	figpos(1,[1000 1000])
+	set(gcf,'Color',[1 1 1]);
+	if ~strcmpi(sv.SmoothType,'none')
+		xx=linspace(xvalues(1),xvalues(end),length(xvalues)*5);
+		yy=linspace(tstr(1),tstr(end),length(tstr)*5);
+		[xx2,yy2]=meshgrid(xx,yy);
+		[x,y]=meshgrid(xvalues,tstr);
+		tsurface2=interp2(x,y,tsurface,xx2,yy2,'linear');
+		pcolor(xx,yy,tsurface2);
+	else
+		pcolor(xvalues,tstr,tsurface);
+	end
+	axis tight
+	shading flat
+	caxis([0 mmax]);
+	colorbar
+	set(gca,'TickDir','out','FontSize',14);
+	xlabel('First IV')
+	ylabel('Time(ms)')
+	title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle '\newlineMAX = ' num2str(mmax) ' | window:' num2str(wi) ' shift:' num2str(sh)]);
+
+	figure;
+	figpos(1,[1000 1000])
+	set(gcf,'Color',[1 1 1]);
+	if ~strcmpi(sv.SmoothType,'none')
+		xx=linspace(xvalues(1),xvalues(end),length(xvalues)*5);
+		yy=linspace(tstr(1),tstr(end),length(tstr)*5);
+		[xx2,yy2]=meshgrid(xx,yy);
+		[x,y]=meshgrid(xvalues,tstr);
+		tsurface2=interp2(x,y,tsurface,xx2,yy2,'linear');
+		waterfall(xx,yy,tsurface2);
+	else
+		waterfall(xvalues,tstr,tsurface);
+	end
+	axis tight
+	shading flat
+	caxis([0 mmax]);
+	colorbar
+	set(gca,'TickDir','out','FontSize',14);
+	xlabel('First IV')
+	ylabel('Time(ms)')
+	title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle '\newlineMAX = ' num2str(mmax) ' | window:' num2str(wi) ' shift:' num2str(sh)]);
+
+
 end
+
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
