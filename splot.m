@@ -423,7 +423,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		
 		if ~isempty(spdata.latency) && spdata.latency > 0
 			line([spdata.latency spdata.latency],[0 m],'LineWidth',1);
-			text(spdata.latency+(spdata.latency/2),(m-(m/20)),['Latency=' num2str(spdata.latency)],'FontSize',12);
+			text(spdata.latency+(spdata.latency/2),(m-(m/20)),['Latency=' num2str(spdata.latency)],'FontSize',16,'Color',[1 0 0]);
 		end
 		
 		String=get(gh('SPXBox'),'String');
@@ -802,7 +802,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 					hold on
 					line([spdata.latency spdata.latency],[0 m],'LineWidth',2);
 					yy = ylim;
-					text(10,10,['Latency=' num2str(spdata.latency)],'FontSize',14);
+					text(mi,spdata.latency,['Latency=' num2str(spdata.latency) 'ms'],'FontSize',16,'FontWeight','bold','Color',[1 0 0]);
 					hold off
 					
 				else
@@ -991,65 +991,6 @@ end  %----------------------------end of the main switch------------------------
 		psth = psth(mini:maxi);
 		bpsth = bpsth(mini:maxi);
 		tpsth = tpsth(mini:maxi);
-	end
-
-	function [xv,yv]=local_nearest(x,xl,y,yl)
-		%Inputs:
-		% x   Selected x value
-		% xl  Line Data (x)
-		% y   Selected y value
-		% yl  Line Data (y)
-		%Find nearest value of [xl,yl] to (x,y)
-		%Special Case: Line has a single non-singleton value
-		if sum(isfinite(xl))==1
-			fin = find(isfinite(xl));
-			xv = xl(fin);
-			yv = yl(fin);
-		else
-			%Normalize axes
-			xlmin = min(xl);
-			xlmax = max(xl);
-			ylmin = min(yl);
-			ylmax = max(yl);
-			%Process the case where max == min
-			if xlmax == xlmin
-				xln = (xl - xlmin);
-				xn = (x - xlmin);
-			else
-				%Normalize data
-				xln = (xl - xlmin)./(xlmax - xlmin);
-				xn = (x - xlmin)./(xlmax - xlmin);
-			end
-			if ylmax == ylmin
-				yln = (yl - ylmin);
-				yn = (y - ylmin);
-			else
-				yln = (yl - ylmin)./(ylmax - ylmin);
-				yn = (y - ylmin)./(ylmax - ylmin);
-			end
-			%Find nearest point using our friend Ptyhagoras
-			a = xln - xn;       %Distance between x and the line
-			b = yln - yn;       %Distance between y and the line
-			c = (a.^2 + b.^2);  %Distance between point and line
-			%Don't need sqrt, since we get same answer anyway
-			[~,ind] = min(c);
-			%Nearest value on the line
-			xv = xl(ind);
-			yv = yl(ind);
-		end
-	end
-
-
-	function [out,trials]=converttotime(in)
-		in = (in/data.binwidth)*1000;
-		if data.wrapped==1 %wrapped
-			trials = data.raw{1}.numtrials*data.raw{1}.nummods;
-			in=in/trials; %we have to get the values for an individual trial
-		elseif data.wrapped==2
-			trials = data.raw{1}.numtrials;
-			in=in/trials;
-		end
-		out = in;
 	end
 
 end

@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 03-Nov-2011 12:35:12
+% Last Modified by GUIDE v2.5 06-Nov-2011 14:26:56
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -315,8 +315,8 @@ end
 
 % --------------------------------------------------------------------
 function varargout = SpikeMenu_Callback(h, eventdata, handles, varargin)
+
 spikes('SpikeSet')
-spikes('Measure');
 
 % --------------------------------------------------------------------
 function varargout = AnalMenu_Callback(h, eventdata, handles, varargin)
@@ -333,7 +333,6 @@ global sv
 
 set(h,'UserData','yes');                                                                           
 maxh=gh('SMaxEdit');
-set(maxh,'UserData','yes');
 mint=str2num(get(h,'String')); 
 maxt=str2num(get(maxh,'String'));
 
@@ -358,7 +357,6 @@ global sv
 
 set(h,'UserData','yes');  
 minh=gh('SMinEdit');
-set(minh,'UserData','yes');
 mint=str2num(get(minh,'String'));
 maxt=str2num(get(h,'String')); 
 
@@ -797,13 +795,6 @@ function SDoDOG_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 spikes('Difference of Gaussian');
 
-% --- Executes on button press in SDoTA.
-function SDoTA_Callback(hObject, eventdata, handles)
-% hObject    handle to SDoTA (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-spikes('Temporal Analysis');
-
 % --- Executes on button press in SDoArea.
 function SDoArea_Callback(hObject, eventdata, handles)
 % hObject    handle to SDoArea (see GCBO)
@@ -874,3 +865,13 @@ global sv
 sv.reload = '';
 spikes('Load');
 
+
+% --- Executes on button press in SdoBARS.
+function SdoBARS_Callback(hObject, eventdata, handles)
+% hObject    handle to SdoBARS (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SdoBARS
+global sv
+sv.doBARS = get(hObject,'Value');

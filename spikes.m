@@ -134,6 +134,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.zholdold=0;
 		sv.labelsize = 10;
 		sv.autosave = 0;
+		sv.doBARS = 0;
 		%-----------------------------------------------------------------------
 		sv.mint=0;
 		sv.maxt=inf;
@@ -166,7 +167,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves';'Temporal Movie'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'BARS';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves';'Temporal Movie'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
 		set(gcf,'DefaultAxesFontName','Helvetica');
@@ -2497,6 +2498,59 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		PlotAllPSTHs;
 		
 		%-----------------------------------------------------------------------------------------
+	case 'BARS'
+		%-----------------------------------------------------------------------------------------
+		try
+			data.bars = [];
+			data.bars.latency = [];
+			x=get(gh('SPXBox'),'Value');
+			y=get(gh('SPYBox'),'Value');
+			z=sv.zval;
+			
+			[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
+
+			datatype=get(gh('DataBox'),'Value');
+			if datatype == 2
+				psth = bpsth;
+			elseif datatype == 3
+				psth = tpsth;
+			end
+
+			m=max(psth);
+			[m,trials]=converttotime(m);
+
+			if max(psth)>0;psth=(psth/max(psth))*m;end
+			
+			psth(psth < 1) = 0;
+
+			bp = defaultParams;
+
+			v=get(gh('SPBARSpriorid'),'Value');
+			s=get(gh('SPBARSpriorid'),'String');
+			bp.prior_id = s{v};
+			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
+			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
+			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
+			
+			spdata.bars = barsP(psth,[time(1) time(end)],trials,bp);
+			spdata.bars.psth = psth;
+			spdata.bars.time = time;
+			
+			t1=spdata.bars.time(1);
+			t2=spdata.bars.time(end);
+			
+			spdata.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
+
+			spdata.bars.x = x;
+			spdata.bars.bp = bp;
+			set(gh('SPPanel'),'Title',oldtext);
+		catch ME
+			spdata.bars = [];
+			set(gh('SPPanel'),'Title',oldtext);
+			rethrow(ME)
+		end
+		
+		%-----------------------------------------------------------------------------------------
 	case 'Plot Fano'
 		%-----------------------------------------------------------------------------------------
 		
@@ -2625,57 +2679,6 @@ end  %end of spikes main program switch
 %#############################################################################
 %============================End of Spikes Function===========================
 %#############################################################################
-
-%-----------------------------------------------------------------------------
-%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-%-----------------------------------------------------------------------------
-%
-% Finds nearest point on a curve input
-%
-function [xv,yv]=local_nearest(x,xl,y,yl)
-%Inputs:
-% x   Selected x value
-% xl  Line Data (x)
-% y   Selected y value
-% yl  Line Data (y)
-%Find nearest value of [xl,yl] to (x,y)
-%Special Case: Line has a single non-singleton value
-if sum(isfinite(xl))==1
-    fin = find(isfinite(xl));
-    xv = xl(fin);
-    yv = yl(fin);
-else
-    %Normalize axes
-    xlmin = min(xl);
-    xlmax = max(xl);
-    ylmin = min(yl);
-    ylmax = max(yl);
-	%Process the case where max == min
-	if xlmax == xlmin
-		xln = (xl - xlmin);
-		xn = (x - xlmin);
-	else
-		%Normalize data
-		xln = (xl - xlmin)./(xlmax - xlmin);
-		xn = (x - xlmin)./(xlmax - xlmin);
-	end
-	if ylmax == ylmin
-		yln = (yl - ylmin);
-		yn = (y - ylmin);
-	else
-		yln = (yl - ylmin)./(ylmax - ylmin);
-		yn = (y - ylmin)./(ylmax - ylmin);
-	end
-    %Find nearest point using our friend Ptyhagoras
-    a = xln - xn;       %Distance between x and the line
-    b = yln - yn;       %Distance between y and the line
-    c = (a.^2 + b.^2);  %Distance between point and line
-    %Don't need sqrt, since we get same answer anyway
-    [~,ind] = min(c);
-    %Nearest value on the line
-    xv = xl(ind);
-    yv = yl(ind);
-end
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -3786,7 +3789,7 @@ if data.wrapped==1 && ~isempty(data.tempfreq)
 	end
 end
 
-m=max(data.psth{sv.yval,sv.xval,sv.zval}(mini:maxi));
+m=max(psth);
 m=round(m+m/10);  %just to scale a bit bigger than the maximum value
 set(gh('PSTHText'),'String',num2str(m));
 
@@ -3795,6 +3798,17 @@ h(1)=bar(time,psth,'BarWidth', 1 ,'FaceColor',[0 0 0],'EdgeColor','none', 'ShowB
 hold on;
 h(2)=bar(time,bpsth,'BarWidth', 1 ,'FaceColor',[0.8 0 0],'EdgeColor','none', 'ShowBaseLine', 'off');
 hold off;
+
+if sv.plotBARS == 1
+	doBARS(time,psth);
+	if ~isempty(data.bars)
+		if isfield(data.bars,'mean') 
+			plot(time,data.bars.mean,'r-');
+			plot(time,data.bars.confBands,'r:');
+		end
+	end
+end
+
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
 sv.ylabelhandle=ylabel('Spikes/Bin','FontSize',sv.labelsize);
 MakeTitle('psth');
@@ -3823,6 +3837,52 @@ end
 axis(axval);
 %----------------------------------END----------------------------------------
 
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+% Plot a single PSTH measurement
+function doBARS(time,psth)
+global data
+global sv
+try
+		data.bars = [];
+		data.bars.latency = [];
+
+		m=max(psth);
+		[m,trials]=converttotime(m);
+
+		if max(psth)>0;psth=(psth/max(psth))*m;end
+
+		psth(psth < 1) = 0;
+
+		bp = defaultParams;
+
+% 			v=get(gh('SPBARSpriorid'),'Value');
+% 			s=get(gh('SPBARSpriorid'),'String');
+% 			bp.prior_id = s{v};
+% 			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
+% 			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
+% 			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
+
+		data.bars = barsP(psth,[time(1) time(end)],trials,bp);
+		data.bars.psth = psth;
+		data.bars.time = time;
+
+		t1=data.bars.time(1);
+		t2=data.bars.time(end);
+
+		data.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
+
+		data.bars.x = x;
+		data.bars.bp = bp;
+		sv.plotBARS = 1;
+catch ME
+	sv.plotBARS = 0;
+	spdata.bars = [];
+	rethrow(ME)
+end
+%----------------------------------END----------------------------------------
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
