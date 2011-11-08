@@ -134,7 +134,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.zholdold=0;
 		sv.labelsize = 10;
 		sv.autosave = 0;
-		sv.doBARS = 0;
+		sv.plotBARS = 0;
 		%-----------------------------------------------------------------------
 		sv.mint=0;
 		sv.maxt=inf;
@@ -203,6 +203,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 	case 'Load'
 		%-----------------------------------------------------------------------------------------------
 		close(gh('MovieToolFig'));
+		set(gh('SdoBARS'),'Value',0);
+		sv.plotBARS = 0;
 		
 		startclock=clock;
 		startcpu=cputime;
@@ -1608,6 +1610,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			d=w(i);
 			
 			h=areabar(w, a, aerr);
+			sa = [w;a;aerr]';
+			save([sv.historypath 'tuningcurve.mat'], 'sa');
+			assignin('base','tuningcurve',sa);
 			%ylim([-0.1 1.1]);
 			set(gca,'FontSize',12);
 			line(w(i),a(i), 'Color', [0 0 1], 'Marker', 'o', 'MarkerSize', 12);
@@ -1805,6 +1810,64 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%---------------------------------------------------------------------------------------------------
 		
 		splot
+		
+		%---------------------------Latency------------------------------------------------------------------
+	case 'Do Latency'
+		%---------------------------------------------------------------------------------------------------
+		
+		if isfield(data,'bars') && ~isempty(data.bars) && data.plottype == 4
+			
+			baseline = 0;
+			
+			propmax=str2double(get(gh('SErrorEdit'),'String'));
+			if propmax == 0 || isempty(propmax)
+				propmax = 50;
+			end
+			
+			[time,psth,bpsth] = selectPSTH();
+			barspsth = data.bars.mean';
+			timebars = data.bars.time;
+			
+			mi = max(barspsth);
+			
+			[xi,yi]=ginput(1);
+			[x1, y1] = local_nearest(xi(1),timebars,yi(1),barspsth);
+
+			yi = find(barspsth == y1);
+			yi = yi(1);
+
+			barspsth = barspsth(1:yi);
+			timebars = timebars(1:yi);
+
+			t2 = linspace(timebars(1),timebars(end),200);
+
+			barspsth = interp1(timebars,barspsth,t2);
+			timebars = t2;
+
+			if baseline == 1
+				barspsth = (barspsth/max(barspsth))*100;
+			else
+				barspsth = barspsth - barspsth(1);
+				barspsth = (barspsth/max(barspsth))*100;
+			end
+
+			ii = find(barspsth >= propmax);
+			if isempty(ii);
+				ii = 1;
+			end
+			ii = ii(1);
+			latency = timebars(ii);
+			data.latency = timebars(ii) - timebars(1);
+
+			hold on
+			line([latency latency],[0 mi],'Color',[0 1 0],'LineWidth',1);
+			yy = ylim;
+			text(latency,mi,['Latency=' num2str(data.latency) 'ms'],'FontSize',16,'FontWeight','bold','Color',[0 1 0]);
+			hold off
+		else
+			helpdlg('Couldn''t find BARS data, please plot PSTH and turn on BARS before calculating latency');
+		end
+		
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Burst Ratio'
@@ -2500,55 +2563,55 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 	case 'BARS'
 		%-----------------------------------------------------------------------------------------
-		try
-			data.bars = [];
-			data.bars.latency = [];
-			x=get(gh('SPXBox'),'Value');
-			y=get(gh('SPYBox'),'Value');
-			z=sv.zval;
-			
-			[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
-
-			datatype=get(gh('DataBox'),'Value');
-			if datatype == 2
-				psth = bpsth;
-			elseif datatype == 3
-				psth = tpsth;
-			end
-
-			m=max(psth);
-			[m,trials]=converttotime(m);
-
-			if max(psth)>0;psth=(psth/max(psth))*m;end
-			
-			psth(psth < 1) = 0;
-
-			bp = defaultParams;
-
-			v=get(gh('SPBARSpriorid'),'Value');
-			s=get(gh('SPBARSpriorid'),'String');
-			bp.prior_id = s{v};
-			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
-			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
-			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
-			
-			spdata.bars = barsP(psth,[time(1) time(end)],trials,bp);
-			spdata.bars.psth = psth;
-			spdata.bars.time = time;
-			
-			t1=spdata.bars.time(1);
-			t2=spdata.bars.time(end);
-			
-			spdata.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
-
-			spdata.bars.x = x;
-			spdata.bars.bp = bp;
-			set(gh('SPPanel'),'Title',oldtext);
-		catch ME
-			spdata.bars = [];
-			set(gh('SPPanel'),'Title',oldtext);
-			rethrow(ME)
-		end
+% 		try
+% 			data.bars = [];
+% 			data.bars.latency = [];
+% 			x=get(gh('SPXBox'),'Value');
+% 			y=get(gh('SPYBox'),'Value');
+% 			z=sv.zval;
+% 			
+% 			[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
+% 
+% 			datatype=get(gh('DataBox'),'Value');
+% 			if datatype == 2
+% 				psth = bpsth;
+% 			elseif datatype == 3
+% 				psth = tpsth;
+% 			end
+% 
+% 			m=max(psth);
+% 			[m,trials]=converttotime(m);
+% 
+% 			if max(psth)>0;psth=(psth/max(psth))*m;end
+% 			
+% 			psth(psth < 1) = 0;
+% 
+% 			bp = defaultParams;
+% 
+% 			v=get(gh('SPBARSpriorid'),'Value');
+% 			s=get(gh('SPBARSpriorid'),'String');
+% 			bp.prior_id = s{v};
+% 			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
+% 			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
+% 			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
+% 			
+% 			spdata.bars = barsP(psth,[time(1) time(end)],trials,bp);
+% 			spdata.bars.psth = psth;
+% 			spdata.bars.time = time;
+% 			
+% 			t1=spdata.bars.time(1);
+% 			t2=spdata.bars.time(end);
+% 			
+% 			spdata.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
+% 
+% 			spdata.bars.x = x;
+% 			spdata.bars.bp = bp;
+% 			set(gh('SPPanel'),'Title',oldtext);
+% 		catch ME
+% 			spdata.bars = [];
+% 			set(gh('SPPanel'),'Title',oldtext);
+% 			rethrow(ME)
+% 		end
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Plot Fano'
@@ -3737,16 +3800,8 @@ set(gcf,'Renderer','painters','ResizeFcn',[]);
 
 %----------------------------------END----------------------------------------
 
-
-%-----------------------------------------------------------------------------
-%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-%-----------------------------------------------------------------------------
-%
-% Plot a PSTH
-
-function PlotPSTH
-
-global data sv;
+function [time,psth,bpsth,mint,maxt] = selectPSTH()
+global data sv
 
 mint=str2double(get(gh('SMinEdit'),'String'));   %this selects what to plot
 maxt=str2double(get(gh('SMaxEdit'),'String'));
@@ -3770,6 +3825,20 @@ end
 psth=data.psth{sv.yval,sv.xval,sv.zval}(mini:maxi);
 time=data.time{sv.yval,sv.xval,sv.zval}(mini:maxi);
 bpsth=data.bpsth{sv.yval,sv.xval,sv.zval}(mini:maxi);
+
+
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+% Plot a PSTH
+
+function PlotPSTH
+
+global data sv
+
+[time,psth,bpsth,mint,maxt] = selectPSTH();
+
 nr=sum(psth);
 bnr=sum(bpsth);
 ff=finderror(data.raw{sv.yval,sv.xval,sv.zval},'Fano Factor',mint,maxt+data.binwidth,data.wrapped,0);
@@ -3799,18 +3868,26 @@ hold on;
 h(2)=bar(time,bpsth,'BarWidth', 1 ,'FaceColor',[0.8 0 0],'EdgeColor','none', 'ShowBaseLine', 'off');
 hold off;
 
+mf=max(psth);
+[mf,trials]=converttotime(mf);
+
 if sv.plotBARS == 1
-	doBARS(time,psth);
+	wh=waitbar(0.3,'Calculating BARS, please wait...');
+	doBARS(time,psth,trials);
+	close(wh);
 	if ~isempty(data.bars)
-		if isfield(data.bars,'mean') 
-			plot(time,data.bars.mean,'r-');
+		if isfield(data.bars,'mean')
+			hold on
+			plot(time,data.bars.mean,'r-','LineWidth',1);
 			plot(time,data.bars.confBands,'r:');
+			hold off
 		end
 	end
+	
 end
 
-sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
-sv.ylabelhandle=ylabel('Spikes/Bin','FontSize',sv.labelsize);
+sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize*1.3);
+sv.ylabelhandle=ylabel(['Spikes/Bin (Hz max = ' sprintf('%.3g',mf) ')'],'FontSize',sv.labelsize*1.3);
 MakeTitle('psth');
 data.matrixtitle = [data.matrixtitle '\newlineFF: ' sprintf('%2.2f',ff)];
 if exist('pr','var')
@@ -3842,28 +3919,28 @@ axis(axval);
 %-----------------------------------------------------------------------------
 %
 % Plot a single PSTH measurement
-function doBARS(time,psth)
+function doBARS(time,psth,trials,bp)
 global data
 global sv
 try
 		data.bars = [];
 		data.bars.latency = [];
 
-		m=max(psth);
-		[m,trials]=converttotime(m);
+		if ~exist('trials','var')
+			m=max(psth);
+			[m,trials]=converttotime(m);
+		end
 
-		if max(psth)>0;psth=(psth/max(psth))*m;end
+		%if max(psth)>0;psth=(psth/max(psth))*m;end %normalise?
 
 		psth(psth < 1) = 0;
-
-		bp = defaultParams;
-
-% 			v=get(gh('SPBARSpriorid'),'Value');
-% 			s=get(gh('SPBARSpriorid'),'String');
-% 			bp.prior_id = s{v};
-% 			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
-% 			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
-% 			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
+		if ~exist('bp','var')
+			bp = defaultParams;
+			bp.prior_id = 'POISSON';
+			bp.dparams=4;
+			bp.burn_iter=200;
+			bp.conf_level=0.95;
+		end
 
 		data.bars = barsP(psth,[time(1) time(end)],trials,bp);
 		data.bars.psth = psth;
@@ -3872,14 +3949,13 @@ try
 		t1=data.bars.time(1);
 		t2=data.bars.time(end);
 
-		data.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
+		data.bars.time_fine = linspace(t1,t2,length(data.bars.mean_fine));
 
-		data.bars.x = x;
 		data.bars.bp = bp;
+		data.bars.trials = trials;
 		sv.plotBARS = 1;
 catch ME
-	sv.plotBARS = 0;
-	spdata.bars = [];
+	data.bars = [];
 	rethrow(ME)
 end
 %----------------------------------END----------------------------------------
