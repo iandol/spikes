@@ -216,6 +216,8 @@ classdef zipspikes < handle
 					meta=loadvstext(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'));
 					txtcomment=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.cmt'),'%s','delimiter','\n','whitespace','');
 					txtprotocol=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.prt'),'%s','delimiter','\n','whitespace','');
+				catch ME
+					disp(getReport(ME))
 				end
 			end
 		end
