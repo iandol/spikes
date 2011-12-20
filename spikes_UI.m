@@ -172,8 +172,10 @@ sv.zlock=get(h,'Value');
 
 % --------------------------------------------------------------------
 function varargout = SMeasureButton_Callback(h, eventdata, handles, varargin)
-set(findobj('Tag','SMinEdit'),'UserData','no');
-set(findobj('Tag','SMaxEdit'),'UserData','no');
+global sv
+%set(findobj('Tag','SMinEdit'),'UserData','no');
+%set(findobj('Tag','SMaxEdit'),'UserData','no');
+sv.measureButton = true;
 spikes('Measure');
 
 % --------------------------------------------------------------------

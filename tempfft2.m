@@ -1,8 +1,8 @@
 global data
 
 maxtime=(max(data.time{1})+data.binwidth)/1000;
-numtrials=data.raw{1}.numtrials;
-nummods=data.raw{1}.nummods;
+numtrials=data.numtrials;
+nummods=data.nummods;
 binwidth=data.binwidth;
 
 if data.wrapped==1
