@@ -134,6 +134,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.zholdold=0;
 		sv.labelsize = 10;
 		sv.autosave = 0;
+		sv.MeasureButton = 0;
 		sv.plotBARS = 0;
 		sv.bars.prior_id = 'POISSON';
 		sv.bars.dparams=4;
@@ -276,7 +277,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 									name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
 								end
 								if ~strcmp(filesep,'/'); name=regexprep(name,'\/','\\'); end
-								[p,basefilename,e]=fileparts(name);
+								p = fileparts(name);
 								name=[p '.smr'];
 								if ~exist(name,'file')
 									errordlg('No previous file');
@@ -313,7 +314,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 									name=[n.name(1:ind(end-1)) name]; %rebuild the full path and file
 								end
 								if ~strcmp(filesep,'/'); name=regexprep(name,'\/','\\'); end
-								[p,basefilename,e]=fileparts(name);
+								p = fileparts(name);
 								name=[p '.smr'];
 								if ~exist(name,'file')
 									errordlg('No next file');
@@ -1133,7 +1134,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		mint=sv.mint;
 		maxt=sv.maxt;
 		
-		if get(gh('SOverrideTime'),'Value')==1
+		if get(gh('SOverrideTime'),'Value') == 1
 			mint=0;
 			if data.wrapped==1
 				maxt=ceil(data.modtime/10);
@@ -1141,12 +1142,17 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				maxt=ceil(data.trialtime/10);
 			end
 			maxt=data.time{1}(ceil(maxt/data.binwidth));
-		elseif ~isempty(mint) || ~isempty(maxt) || strcmp(sv.auto,'report')
+		elseif sv.MeasureButton == true
+			sv.MeasureButton = false;
+			if automeasure < 1 && sv.AnalysisMethod~=6
+				[mint,maxt]=measure(data,sv.xval,sv.yval,sv.zval);
+			end
+		else
 			time=data.time{1};
-			if (mint<=0 || isnan(mint) || mint>=max(time))
+			if isempty(mint) || mint < 0 || isnan(mint) || mint >= max(time)
 				mint=0; 
 			end
-			if maxt>max(time) || isnan(maxt) 
+			if isempty(maxt) || maxt>max(time) || isnan(maxt) 
 				maxt=max(time);
 			end
 			mint=mint+0.0001;
@@ -1154,14 +1160,6 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			
 			mint=time(ceil(mint/data.binwidth));
 			maxt=time(ceil(maxt/data.binwidth));
-		elseif get(gh('SOverrideTime'),'Value')==0
-			if data.numvars>1 && automeasure<1 && sv.AnalysisMethod~=6
-				[mint,maxt]=measure(data,get(gh('XHoldMenu'),'Value'),get(gh('YHoldMenu'),'Value'),get(gh('ZHoldMenu'),'Value'));
-			elseif data.numvars==1 && automeasure<1 && sv.AnalysisMethod~=6
-				[mint,maxt]=measure(data,get(gh('XHoldMenu'),'Value'),1,1);
-			elseif data.numvars==0 && automeasure<1 && sv.AnalysisMethod~=6
-				[mint,maxt]=measure(data,1,1,1);
-			end
 		end
 		
 		if ~isempty(findobj('tag','MovieToolFig')) && automeasure<1 %if the movie program is already there
@@ -4312,12 +4310,14 @@ switch data.numvars
 		if data.areaplot==1 %& data.textload==0
 			h=text((x(1)-(x(1)/25)),(x(3)-(x(3)/25)),num2str(data.anal.size));
 			set(h,'Color',[1 0 0],'Fontsize',12,'Fontweight','bold');
-		elseif strcmp(sv.PlotType,'Rectangle Plot')
+		end
+		if strcmp(sv.PlotType,'Rectangle Plot')
 			set(sv.titlehandle,'String',[get(sv.titlehandle,'String') ' Max=' num2str(sv.rectanglemax)]);
-		elseif data.plottype==4
+		end
+		if data.plottype > 6
 			cbh=colorbar;
 		end
-		if data.xrange==data.yrange
+		if data.xrange == data.yrange
 			axis square
 		end
 end
@@ -4400,11 +4400,11 @@ end
 
 if sv.ylock == 1 || data.numvars == 1
 	yrange = sv.yval;
-	yvalues = data.yrange(sv.yval);
+	yvalues = data.yvalues(sv.yval);
 	isSurface = false;
 else
 	yrange = 1:data.yrange;
-	yvalues = data.yrange;
+	yvalues = data.yvalues;
 	range=length(yrange);
 end
 

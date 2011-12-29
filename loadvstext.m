@@ -50,6 +50,13 @@ function [meta] = loadvstext(file)
 								meta.var{vn}.range=size(str2num(var),2);
 							end
 						end
+						if meta.var{vn}.range > length(unique(meta.var{vn}.values))
+							var = inputdlg(['Correct repeat values for: ' meta.var{vn}.title],['Fix Variable ' names.num], 1, {names.values});
+							var = var{1};
+							if ~isempty(var)
+								meta.var{vn}.values = str2num(var);
+							end
+						end
 					end
 
 				end	

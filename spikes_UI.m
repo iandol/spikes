@@ -172,8 +172,10 @@ sv.zlock=get(h,'Value');
 
 % --------------------------------------------------------------------
 function varargout = SMeasureButton_Callback(h, eventdata, handles, varargin)
+global sv
 set(findobj('Tag','SMinEdit'),'UserData','no');
 set(findobj('Tag','SMaxEdit'),'UserData','no');
+sv.MeasureButton = true;
 spikes('Measure');
 
 % --------------------------------------------------------------------
@@ -713,7 +715,7 @@ function SOverrideTime_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of SOverrideTime
-
+global sv
 if get(hObject,'Value')==1
 	set(gh('SMinEdit'),'String','0');
 	set(gh('SMinEdit'),'Enable','off');
@@ -727,6 +729,7 @@ else
 	set(gh('SMaxEdit'),'Enable','on');
 	set(gh('Measurebutton'),'Enable','on');
 end
+sv.MeasureButton = false;
 
 function STransientValue_Callback(hObject, eventdata, handles)
 % hObject    handle to STransientValue (see GCBO)
