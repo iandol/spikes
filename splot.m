@@ -163,7 +163,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 						ww=[time',psth'];
 						%save c:\psth.txt  ww -ascii
 					case 2 % area
@@ -178,7 +178,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 						ww=[time',psth'];
 						%save c:\psth.txt  ww -ascii
 					case 3 %smooth
@@ -227,7 +227,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 						ww=[time',bpsth'];
 						%save c:\burstpsth.txt  ww -ascii
 					case 2 %area
@@ -242,7 +242,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 						ww=[time',bpsth'];
 						%save c:\burstpsth.txt  ww -ascii
 					case 3 %smooth
@@ -289,7 +289,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 						ww=[time',tpsth'];
 					case 2 %area
 						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
@@ -303,7 +303,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 					case 3 %smooth
 						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
 						ss=str2num(get(gh('SmoothEdit'),'String'));
@@ -347,7 +347,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						hold off
 						legend('All Spikes','Burst Spikes',0)
 						axis tight
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 						ww=[time',psth'];
 						www=[time',bpsth'];
 						%save c:\psth.txt  ww -ascii
@@ -368,7 +368,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						hold off
 						legend('All Spikes','Burst Spikes',0)
 						axis tight
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.raw{1}.numtrials) ' Mods:' num2str(data.raw{1}.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
 						ww=[time',psth'];
 						www=[time',bpsth'];
 						%save c:\psth.txt  ww -ascii

@@ -40,10 +40,10 @@ global EndMod
 
 %Calculate scaling factor, so our harmonics are in Hz
 if data.wrapped==1
-sf=1000/(data.raw{1}.numtrials*data.raw{1}.nummods*data.binwidth); %for the data values
+sf=1000/(data.numtrials*data.nummods*data.binwidth); %for the data values
 sf2=1000/data.binwidth; %for the error values
 else
-sf=1000/(data.raw{1}.numtrials*data.binwidth);  %for the data values
+sf=1000/(data.numtrials*data.binwidth);  %for the data values
 sf2=1000/data.binwidth; %for the error values
 end
 

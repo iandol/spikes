@@ -151,6 +151,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------
 		sv.mint=0;
 		sv.maxt=inf;
+		sv.measureButton = false;
 		automeasure=0; 			%used by temporal movie creator
 		
 		history='';
@@ -552,6 +553,19 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
 				data.raw{1}=x;
 				if ~isempty(x.error); data.error=x.error; end
+				
+				%lets make sure our modulation selection is valid
+				if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
+				  sv.StartMod=1;
+				  set(gh('SStartMod'),'String',num2str(sv.StartMod));
+				end
+				if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+				   sv.EndMod=x.nummods;
+				   set(gh('SEndMod'),'String',num2str(sv.EndMod));
+				end
+				data.nummods = (sv.EndMod - sv.StartMod) + 1;
+				data.numtrials = data.raw{1}.numtrials; %this value comes from lsd2.m
+				
 				[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 				[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 				if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
@@ -671,6 +685,19 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
 					data.raw{i}=x;
 					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
+					
+					%lets make sure our modulation selection is valid
+					if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
+					  sv.StartMod=1;
+					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
+					end
+					if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+					   sv.EndMod=x.nummods;
+					   set(gh('SEndMod'),'String',num2str(sv.EndMod));
+					end
+					data.nummods = (sv.EndMod - sv.StartMod) + 1;
+					data.numtrials = data.raw{1}.numtrials; %this value comes from lsd2.m
+					
 					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
@@ -797,6 +824,19 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
 					data.raw{i}=x;
 					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
+					
+					%lets make sure our modulation selection is valid
+					if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
+					  sv.StartMod=1;
+					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
+					end
+					if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+					   sv.EndMod=x.nummods;
+					   set(gh('SEndMod'),'String',num2str(sv.EndMod));
+					end
+					data.nummods = (sv.EndMod - sv.StartMod) + 1;
+					data.numtrials = data.raw{1}.numtrials; %this value comes from lsd2.m
+					
 					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
@@ -931,6 +971,19 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 					end
 					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+					
+					%lets make sure our modulation selection is valid
+					if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
+					  sv.StartMod=1;
+					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
+					end
+					if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+					   sv.EndMod=x.nummods;
+					   set(gh('SEndMod'),'String',num2str(sv.EndMod));
+					end
+					data.nummods = (sv.EndMod - sv.StartMod) + 1;
+					data.numtrials = data.raw{1}.numtrials; %this value comes from lsd2.m
+					
 					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
@@ -1204,9 +1257,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				for i=1:data.yrange*data.xrange*data.zrange
 					x=sum(rawpsth{i}(mini:maxi));
 					if data.wrapped==1 %wrapped
-						x=x/(data.raw{i}.numtrials*data.raw{i}.nummods); %we have to get the values for an individual trial
+						x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
 					elseif data.wrapped==2
-						x=x/(data.raw{i}.numtrials);
+						x=x/(data.numtrials);
 					end
 					if data.plotburst==1 && x>0
 						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
@@ -1248,9 +1301,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
 							end
 							if data.wrapped==1
-								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+								x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
 							elseif data.wrapped==2
-								x=x/(data.raw{1}.numtrials);
+								x=x/(data.numtrials);
 							end
 						elseif n==length(rawpsth{1}) %we are at the end of the psth
 							x=(sum(rawpsth{i}(n-2:n)));
@@ -1262,9 +1315,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
 							end
 							if data.wrapped==1
-								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+								x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
 							elseif data.wrapped==2
-								x=x/(data.raw{1}.numtrials);
+								x=x/(data.numtrials);
 							end
 						elseif n==1 %we are at the beginning
 							x=(sum(rawpsth{i}(n:n+2)));
@@ -1276,9 +1329,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
 							end
 							if data.wrapped==1
-								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+								x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
 							elseif data.wrapped==2
-								x=x/(data.raw{1}.numtrials);
+								x=x/(data.numtrials);
 							end
 						end
 						x=(x/(data.binwidth*3))*1000;	 %convert into spikes/second
@@ -1313,9 +1366,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
 							end
 							if data.wrapped==1
-								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+								x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
 							elseif data.wrapped==2
-								x=x/(data.raw{1}.numtrials);
+								x=x/(data.numtrials);
 							end
 						else
 							x=(sum(rawpsth{i}(n)));	  %Peak is the average over 3 bins starting at 1
@@ -1327,9 +1380,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 								e=finderror(data.raw{i},err,mint,maxt,data.wrapped,0);
 							end
 							if data.wrapped==1
-								x=x/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+								x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
 							elseif data.wrapped==2
-								x=x/(data.raw{1}.numtrials);
+								x=x/(data.numtrials);
 							end
 						end
 						x=(x/(data.binwidth))*1000;	 %convert into spikes/second
@@ -1406,11 +1459,11 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					mtmp=sum(data.psth{i}(mini:maxi));
 					btmp=sum(data.bpsth{i}(mini:maxi));
 					if data.wrapped==1
-						mtmp=mtmp/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
-						btmp=btmp/(data.raw{1}.numtrials*data.raw{1}.nummods); %we have to get the values for an individual trial
+						mtmp=mtmp/(data.numtrials*data.nummods); %we have to get the values for an individual trial
+						btmp=btmp/(data.numtrials*data.nummods); %we have to get the values for an individual trial
 					elseif data.wrapped==2
-						mtmp=mtmp/(data.raw{1}.numtrials);
-						btmp=btmp/(data.raw{1}.numtrials);
+						mtmp=mtmp/(data.numtrials);
+						btmp=btmp/(data.numtrials);
 					end
 					if data.plotburst==1 && mtmp>0
 						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
@@ -2373,8 +2426,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('SMaxEdit'),'String',num2str(data.sv.maxt));
 			end
 		elseif ~strcmp(sv.auto,'report')
-			sv.EndTrial=data.raw{1}.numtrials;
-			sv.EndMod=data.raw{1}.nummods;
+			sv.EndTrial=data.numtrials;
+			sv.EndMod=data.nummods;
 			set(gh('SEndMod'),'String',num2str(sv.EndMod));
 			set(gh('SEndTrial'),'String',num2str(sv.EndTrial));
 		end

@@ -30,19 +30,19 @@ if ~exist('mintrial','var')
 	mintrial=1;
 end
 if ~exist('maxtrial','var') || maxtrial == Inf
-	maxtrial=data.raw{1}.numtrials;
+	maxtrial=data.numtrials;
 end
 if maxtrial < 0
-	maxtrial=data.raw{1}.numtrials-maxtrial;
+	maxtrial=data.numtrials-maxtrial;
 end
 if maxtrial == mintrial
-	maxtrial=data.raw{1}.numtrials;
+	maxtrial=data.numtrials;
 end
 if ~exist('minmod','var')
 	minmod=sv.StartMod;
 end
-if ~exist('maxmod','var') || sv.EndMod>data.raw{1}.nummods
-	maxmod=data.raw{1}.nummods;
+if ~exist('maxmod','var') || sv.EndMod>data.nummods
+	maxmod=data.nummods;
 end
 if ~exist('wrapped','var')
 	wrapped=data.wrapped;

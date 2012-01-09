@@ -63,6 +63,8 @@ end
 sd.numtrials=(endtrial-starttrial)+1;
 sd.starttrial=starttrial;
 sd.endtrial=endtrial;
+sd.startmod = startmod;
+sd.endmod = endmod;
 
 if mod(sd.nummods,1) %checks to see if there are the same num mods for each trial by determining if there is a remainder in the division
 	if length(find(sd.raw(trials(end-1):trials(end),1)==10)) > length(find(sd.raw(trials(1):trials(2),1)==10)) %sometimes a rogue modulation is present in the last trial
