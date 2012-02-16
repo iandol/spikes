@@ -1,55 +1,41 @@
 
-% INTRODUCTION
+% Panel is an alternative to Matlab's "subplot" function.
 % 
-% Panel Version 1 was released in 2008. It has been in use
-% since, and improved, and converted into a classdef (single
-% file) implementation. Panel Version 2 is a public release
-% of these changes.
+% INSTALLATION. To install panel, place the file "panel.m"
+% on your Matlab path.
 % 
-% 
-% 
-% INSTALLATION
-% 
-% To install panel, place the file "panel.m" on your Matlab
-% path.
-% 
-% 
-% 
-% DOCUMENTATION
-% 
-% Documentation is provided in three forms.
-% 
-% 1) The folder "docs" contains introductory information.
-% 2) "doc panel" at the Matlab prompt provides reference
-% information.
-% 3) The folder "demo" contains scripts which you can review
-% one by one to learn how to use Panel - this constitutes
-% the User Guide.
-% 
-% 
-% 
+% DOCUMENTATION. Scan the introductory information in the
+% folder "docs". Learn to use panel by working through the
+% demonstration scripts in the folder "demo". Reference
+% information is available through "doc panel" or "help
+% panel". For the change log, use "edit panel" to view the
+% file "panel.m".
+
+
+
 % CHANGE LOG
 % 
-% 22/05/2011 First Public Release Version 2.0
+% 22/05/2011
+% First Public Release Version 2.0
 % 
 % 23/05/2011
-% 	Incorporated an LP solver, since the one we were using
-% 	"linprog()" is not available to users who do not have
-% 	the Optimisation Toolbox installed.
+% Incorporated an LP solver, since the one we were using
+% "linprog()" is not available to users who do not have the
+% Optimisation Toolbox installed.
 % 
 % 21/06/2011
-% 	Added -opdf option, and changed PageSize to be equal to
-% 	PaperPosition.
+% Added -opdf option, and changed PageSize to be equal to
+% PaperPosition.
 %
 % 12/07/2011
-%   Made some linprog optimisations, inspired by "Ian" on
-%   Matlab central. Tested against subplot using
-%   demopanel2(N=9). Subplot is faster, by about 20%, but
-%   panel is better :). For my money, 20% isn't much of a
-%   hit for the extra functionality. NB: Using Jeff Stuart's
-%   linprog (unoptimised), panel is much slower (especially
-%   for large N problems); we will probably have to offer a
-%   faster solver at some point (optimise Jeff's?).
+% Made some linprog optimisations, inspired by "Ian" on
+% Matlab central. Tested against subplot using
+% demopanel2(N=9). Subplot is faster, by about 20%, but
+% panel is better :). For my money, 20% isn't much of a hit
+% for the extra functionality. NB: Using Jeff Stuart's
+% linprog (unoptimised), panel is much slower (especially
+% for large N problems); we will probably have to offer a
+% faster solver at some point (optimise Jeff's?).
 %
 % NOTES: You will see a noticeable delay, also, on resize.
 % That's the price of using physical units for the layout,
@@ -58,10 +44,21 @@
 % could offer an option so that physical units are only used
 % during export; that would make resizes fast, and the user
 % may not care so much about layout on screen, if they are
-% aiming for print figures.
+% aiming for print figures. Or, you could have the ability
+% to turn off auto-refresh on resize().
 %
-% 20/07/2011 Release Version 2.1
-
+% 20/07/2011
+% Release Version 2.1
+%
+% 05/10/2011
+% Tidied in-file documentation (panel.m).
+%
+% 11/12/2011
+% Added flag "no-manage-font" to constructor, as requested
+% by Matlab Central user Mukhtar Ullah.
+%
+% 13/12/2011
+% Release Version 2.2
 
 
 
@@ -382,11 +379,11 @@ classdef (Sealed = true) panel < handle
 			%   refresh() or export() on the panel. if you create
 			%   a complex layout, this will improve performance.
 			%
-			% ------------------------------------------------
-			%
-			% project: Panel 2
-			% version: 17 Mar 2011
-			% constructive criticism: google "matlab central panel"
+			% 'no-manage-font'
+			%   by default, the panel will manage fonts of titles
+			%   and axis labels. this prevents the user from
+			%   setting individual fonts on those items. pass this
+			%   flag to disable font management for this panel.
 			%
 			% see also: panel (overview), pack(), select()
 
@@ -405,6 +402,7 @@ classdef (Sealed = true) panel < handle
 			p.state = [];
 			p.state.name = '';
 			p.state.defer = 0;
+			p.state.manage_font = 1;
 			
 			% peel off args
 			while ~isempty(varargin)
@@ -424,6 +422,10 @@ classdef (Sealed = true) panel < handle
 							
 						case 'defer'
 							p.state.defer = 1;
+							continue;
+							
+						case 'no-manage-font'
+							p.state.manage_font = 0;
 							continue;
 							
 						otherwise
@@ -2191,6 +2193,13 @@ classdef (Sealed = true) panel < handle
 	
 	methods (Access = private)
 		
+		function b = ismanagefont(p)
+			
+			% ask root
+			b = p.m_root.state.manage_font;
+			
+		end
+		
 		function b = isdefer(p)
 			
 			% ask root
@@ -2990,6 +2999,33 @@ classdef (Sealed = true) panel < handle
 					if strcmp(w.state, 'on')
 						warning on backtrace
 					end
+				elseif strcmp(err.identifier, 'MATLAB:class:InvalidHandle')
+					% this will happen if the user deletes the managed
+					% objects manually. an obvious way that this
+					% happens is if the user select()s some panels so
+					% that axes get created, then calls clf. it would
+					% be nice if we could clear the panels attached to
+					% a figure in response to a clf call, but there
+					% doesn't seem any obvious way to pick up the clf
+					% call, only the delete(objects) that follows, and
+					% this is indistinguishable from a call by the
+					% user to delete(my_axis), for instance. how are
+					% we to respond if the user deletes the axis the
+					% panel is managing? it's not clear. so, we'll
+					% just fail silently, for now, and these panels
+					% will either never be used again (and will be
+					% destroyed when the figure is closed) or will be
+					% destroyed when the user creates a new panel on
+					% this figure. either way, i think, no real harm
+					% done.
+% 					w = warning('query', 'backtrace');
+% 					warning off backtrace
+% 					warning('panel:PanelObjectDestroyed', 'the object managed by a panel has been destroyed');
+% 					if strcmp(w.state, 'on')
+% 						warning on backtrace
+% 					end
+					panel.debugmsg('***WARNING*** the object managed by a panel has been destroyed');
+					return
 				else
 					rethrow(err)
 				end
@@ -3008,11 +3044,13 @@ classdef (Sealed = true) panel < handle
 			end
 			
 			% apply
-			set(h, ...
-				'fontname', p.getPropertyValue('fontname'), ...
-				'fontsize', p.getPropertyValue('fontsize'), ...
-				'fontweight', p.getPropertyValue('fontweight') ...
-				);
+			if p.ismanagefont()
+				set(h, ...
+					'fontname', p.getPropertyValue('fontname'), ...
+					'fontsize', p.getPropertyValue('fontsize'), ...
+					'fontweight', p.getPropertyValue('fontweight') ...
+					);
+			end
 
 		end
 			
@@ -3839,7 +3877,11 @@ classdef (Sealed = true) panel < handle
 			
 			% create
 			if isempty(debug)
-				debug = false; % strcmp(getenv('USERDOMAIN'), 'MITCH-HOME');
+				try
+					debug = panel_debug_state();
+				catch
+	 				debug = false;
+				end
 			end
 			
 			% ok

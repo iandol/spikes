@@ -3,38 +3,7 @@ function spikes(action)
 %**********************************************************************************
 % This Program will allow generation of PSTH and other spike
 % measurements for up to 3 variables.
-%
-% [rowland]	[0.91 Now supports single independent variables 				(Dec 2000)	]
-% [ian] 	[0.92 Updated it to use a newer binning routine 				(Dec 2000)	]
-% [ian]		[1.0  Fixed trial selection bugs								(Feb 2001)  ]
-% [ian]	 	[1.1  Added Burst Analysis to Spike Data						(Feb 2001)  ]
-% [ian]	 	[1.2  Add temporal anal until roland movie fix					(Mar 2001)  ]
-% [ian]	 	[1.5  Added error bars to tuning curves							(Mar 2001)  ]
-% [ian]	 	[1.51 Added controls for Axis values							(Mar 2001)  ]
-% [ian]	 	[1.52 Enhanced Burst Analysis for Wei							(Apr 2001)  ]
-% [ian]	 	[1.53 Prepare to change to VSX data loading						(May 2001)  ]
-% [ian]	 	[1.54 Added text load,single psth plot,bug fix					(May 2001)  ]
-% [rowland] [1.6  Added interface with VSX to load smr files				(Jul 2001)  ]
-% [ian]	 	[1.61 Finally allowed LSD to work with single modulation data 	(Dec 2001)  ]
-% [ian]	 	[1.62 Fixed several bugs in different places					(Jan 2002)  ]
-% [ian]	 	[1.63 Big Matlab Based error workround, note waitbar has been disabled and questdlg removed (Jan 2002) ]
-% [ian]	 	[1.64 Minor tweaks												(Feb 2002)  ]
-% [ian]	 	[1.65 Rearranged and some small fixes - FFT now works! 			(Apr 2002)  ]
-% [ian]	 	[1.666 Plot all PSTHs uses the measured bins for display 		(May 2002)  ]
-% [ian]		[1.7.1 Added the option to convolve PSTH with gaussian kernal   (July 2002)	]
-% [ian]     [1.7.2 Partially added non-proportional plotting (only for unsmoothed data and 2D plots (Sep 2002)    ]
-% [ian]     [1.7.3 Small fixes for Matlab V7.1                              (Sep 2005)    ]
-% [ian]		[1.7.4 Implemented 0 variable loading support					(Nov 2005)	]
-% [ian]		[1.7.5 Got rid of dependency on Frogbit!						(Nov 2005)	]
-% [ian]		[1.7.6 Added Report Generation integration with spikereport		(Nov 2005)	]
-% [ian]		[1.7.7 Can plot out and juggle any variable selection from 0-3  (Nov 2005)	]
-% [ian]		[1.7.8 Small fixes												(Dec 2005)	]
-% [ian]		[1.7.9 (Re)add the quick temporal analysis						(Feb 2006) ]
-% NOTE: we've switched to Bazaar VCS to log changes, please use that to
-% know what has changed...
-%
 %**********************************************************************************
-
 
 %-----------------------------------Global Variable Definitions----------------------------
 
@@ -56,21 +25,21 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 	%----------------------------------------------------------------------
 	case 'Initialize'
 	%----------------------------------------------------------------------
-		sv=[];
-		data=[];
-		rlist=[];
+		sv = [];
+		data = [];
+		rlist = [];
 		sv.version = 1.920;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
-		sv.title=['SPIKES: V' sprintf('%.4f',sv.version)];
+		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
 			if ~exist(['~' filesep 'MatlabFiles' filesep],'dir')
 				mkdir(['~' filesep 'MatlabFiles' filesep]);
 			end
-			sv.matlabroot=matlabroot;
-			sv.usingmac=1;
-			sv.historypath=['~' filesep 'MatlabFiles' filesep];
-			sv.temppath=tempdir;
-			oldlook=javax.swing.UIManager.getLookAndFeel;
+			sv.matlabroot = matlabroot;
+			sv.usingmac = 1;
+			sv.historypath = ['~' filesep 'MatlabFiles' filesep];
+			sv.temppath = tempdir;
+			oldlook = javax.swing.UIManager.getLookAndFeel;
 			if sv.mversion<7.12
 				javax.swing.UIManager.setLookAndFeel('javax.swing.plaf.metal.MetalLookAndFeel');
 			end
@@ -78,15 +47,15 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			if ~exist(['c:' filesep 'MatlabFiles' filesep],'dir')
 				mkdir(['c:' filesep 'MatlabFiles' filesep])
 			end
-			sv.matlabroot=regexprep(matlabroot,'Program files','Progra~1','ignorecase');
-			sv.usingmac=0;
-			sv.historypath=['c:' filesep 'MatlabFiles' filesep];
-			sv.temppath=tempdir;
+			sv.matlabroot = regexprep(matlabroot,'Program files','Progra~1','ignorecase');
+			sv.usingmac = 0;
+			sv.historypath = ['c:' filesep 'MatlabFiles' filesep];
+			sv.temppath = tempdir;
 		end
 		
-		sv.userroot=fileparts(mfilename('fullpath'));
+		sv.userroot = fileparts(mfilename('fullpath'));
 		
-		sv.uihandle=spikes_UI; %our GUI file
+		sv.uihandle = spikes_UI; %our GUI file
 		if ismac
 			if sv.mversion<7.12
 				javax.swing.UIManager.setLookAndFeel(oldlook);
@@ -96,16 +65,16 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(sv.uihandle,'Name', [sv.title ' | Started at ' datestr(now)]);
 		colormap(jet(256)); %this gives us a much higher resolution colormap
 		%-------The following sv structure sets up the GUI interface structure--
-		sv.BinWidth=10;
-		sv.StartMod=1;
-		sv.EndMod=Inf;
-		sv.StartTrial=1;
-		sv.EndTrial=Inf;
-		sv.Wrapped=1;
-		sv.AnalysisMethod=1;
-		sv.firstunit=1;
-		sv.loop=0;
-		sv.HeldVariable=3;
+		sv.BinWidth = 10;
+		sv.StartMod = 1;
+		sv.EndMod = Inf;
+		sv.StartTrial = 1;
+		sv.EndTrial = Inf;
+		sv.Wrapped = 1;
+		sv.AnalysisMethod = 1;
+		sv.firstunit = 1;
+		sv.loop = 0;
+		sv.HeldVariable = 3;
 		sv.HeldValue=1;
 		sv.PropAxis=1;
 		sv.PlotType='Raw Data';
