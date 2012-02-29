@@ -179,11 +179,13 @@ classdef getDensity < handle
 				pn = panel(h);
 				if obj.isDataEqualLength == false
 					figpos(1,[1000,1000]);
+					delete(gca)
 					pn.pack('v',[0.5 0.5]);
 					pn(1).pack('h',[1/3 1/3 -1])
 					pn(2).pack('h',[1/3 -1])
 				else
 					figpos(1,[1200,1000]);
+					delete(gca)
 					pn.pack('v',[0.5 0.5]);
 					pn(1).pack('h',[1/3 1/3 -1])
 					pn(2).pack('h',[1/3 1/3 -1])
@@ -244,6 +246,7 @@ classdef getDensity < handle
 				end
 				
 				axis tight;
+				ticks out
 				lim=ylim;
 				text(xmean,lim(2),'\downarrow','Color',[0 0 0],'HorizontalAlignment','center',...
 					'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
@@ -309,6 +312,7 @@ classdef getDensity < handle
 						'widths',0.5,'symbol','ro');
 				end
 				axis tight
+				ticks out
 				xlim([0.5 2.5])
 				set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 				pn(py,px).title('Box / Density Plots')
@@ -354,6 +358,7 @@ classdef getDensity < handle
 				xlim([0 3]);
 				pn(py,px).title('ScatterBox Plots')
 				hold off
+				ticks out
 				box on
 				
 				
@@ -451,6 +456,7 @@ classdef getDensity < handle
 					pn(py,px).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
 					hold off
 					grid on
+					ticks out
 					box on
 					set(gca,'Layer','top');
 				end
@@ -566,6 +572,7 @@ classdef getDensity < handle
 				hold off
 				
 				grid on
+				ticks out
 				box on
 				pn(py,px).title(['Cumulative Distribution Function, p=' num2str(obj.alpha)]);
 				pn(py,px).xlabel(obj.columnlabels{i});
@@ -588,6 +595,7 @@ classdef getDensity < handle
 				axis tight
 				title(['BootStrap Density Plots; using: ' func2str(obj.fhandle)]);
 				box on
+				ticks out
 				set(gca,'Layer','top');
 				
 				supt=[obj.columnlabels{i} ' # = ' num2str(length(xcol)) '[' num2str(length(obj.x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(obj.y(:,i))) ']'];

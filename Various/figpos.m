@@ -1,7 +1,10 @@
 function figpos(position,size,mult)
+
 oldunits = get(gcf,'Units');
 set(gcf,'Units','pixels');
-if nargin<1;
+
+
+if nargin<1 || isempty(position);
 	position=1;
 end
 if nargin<2 || isempty(size);
@@ -60,3 +63,4 @@ otherwise %center it
 	set(gcf,'Position',[x y size(1) size(2)]);
 end
 set(gcf,'Units',oldunits);
+ticks out
