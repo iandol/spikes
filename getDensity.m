@@ -82,6 +82,8 @@ classdef getDensity < handle
 		densityBounds = 'unbounded'
 		%> should scatterbox use 95% SEM or bootstrap?
 		scatterBoxType = 'bootstrap'
+		%> for multiple columns only run a subset; empty runs all.
+		index = []
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -155,10 +157,18 @@ classdef getDensity < handle
 			if isempty(obj.x)
 				error('You haven''t supplied any data yet!')
 			end
-			for i = 1: obj.nColumns
+			warning('off', 'stats:lillietest:OutOfRangePLow')
+			warning('off', 'stats:lillietest:OutOfRangePHigh')
+			warning('off', 'stats:jbtest:PTooSmall')
+			warning('off', 'stats:jbtest:PTooBig')
+			if ~isempty(obj.index)
+				nVals = length(obj.index);
+			end
+			for i = 1:nVals
+				idx=obj.index(i);
 				tic
-				xcol=obj.x(:,i);
-				ycol=obj.y(:,i);
+				xcol=obj.x(:,idx);
+				ycol=obj.y(:,idx);
 				cases = obj.cases;
 				uniquecases = obj.uniquecases;
 				
@@ -169,7 +179,7 @@ classdef getDensity < handle
 				xouttext='';
 				youttext='';
 				
-				fieldn = obj.columnlabels{i};
+				fieldn = obj.columnlabels{idx};
 				fieldn = regexprep(fieldn,'\s+','_');
 				
 				h=figure;
@@ -182,7 +192,7 @@ classdef getDensity < handle
 					delete(gca)
 					pn.pack('v',[0.5 0.5]);
 					pn(1).pack('h',[1/3 1/3 -1])
-					pn(2).pack('h',[1/3 -1])
+					pn(2).pack('h',[1/3 1/3 -1])
 				else
 					figpos(1,[1200,1000]);
 					delete(gca)
@@ -278,7 +288,7 @@ classdef getDensity < handle
 					hold off
 				end
 				
-				pn(py,px).xlabel(obj.columnlabels{i});
+				pn(py,px).xlabel(obj.columnlabels{idx});
 				pn(py,px).ylabel('Number of cells');
 				pn(py,px).title('Histogram and Gaussian Fits');
 				
@@ -290,11 +300,9 @@ classdef getDensity < handle
 				if obj.isDataEqualLength && exist('distributionPlot','file')
 					hold on
 					distributionPlot({xcol,ycol},0.3);
-					pn(1,2).ylabel(obj.columnlabels{i});
 				elseif obj.isDataEqualLength==false && exist('distributionPlot','file')
 					hold on
 					distributionPlot({xcol,ycol},0.3);
-					pn(1,2).ylabel(obj.columnlabels{i});
 				end
 				if obj.isDataEqualLength
 					boxplot([xcol ycol],'positions',[1 2],'notch',1,'whisker',1,...
@@ -311,6 +319,7 @@ classdef getDensity < handle
 						'boxstyle','outline','medianstyle','line',...
 						'widths',0.5,'symbol','ro');
 				end
+				pn(py,px).ylabel(obj.columnlabels{idx});
 				axis tight
 				ticks out
 				xlim([0.5 2.5])
@@ -343,7 +352,7 @@ classdef getDensity < handle
 % 					end
 					notBoxPlot([xcol ycol],[1 2],[],[],[],options);
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
-					pn(py,px).ylabel(obj.columnlabels{i});
+					pn(py,px).ylabel(obj.columnlabels{idx});
 					
 				elseif obj.isDataEqualLength==false && exist('notBoxPlot','file')
 
@@ -351,7 +360,7 @@ classdef getDensity < handle
 					hold on
 					notBoxPlot(ycol,2,[],[],[],options);
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
-					pn(py,px).ylabel(obj.columnlabels{i});
+					pn(py,px).ylabel(obj.columnlabels{idx});
 					
 				end
 				
@@ -536,8 +545,14 @@ classdef getDensity < handle
 				
 				[xci,xmean,xpop]=bootci(obj.nboot,{obj.fhandle,xcol},'alpha',obj.alpha);
 				[yci,ymean,ypop]=bootci(obj.nboot,{obj.fhandle,ycol},'alpha',obj.alpha);
+				[xxci,xxmean,xxpop]=bootci(obj.nboot,{@median,xcol},'alpha',obj.alpha);
+				[yyci,yymean,yypop]=bootci(obj.nboot,{@median,ycol},'alpha',obj.alpha);
+				[xxxci,xxxmean,xxxpop]=bootci(obj.nboot,{@geomean,xcol},'alpha',obj.alpha);
+				[yyyci,yyymean,yyypop]=bootci(obj.nboot,{@geomean,ycol},'alpha',obj.alpha);
 				
 				t=[t 'BootStrap: ' sprintf('%0.3g', xci(1)) ' < ' sprintf('%0.3g', xmean) ' > ' sprintf('%0.3g', xci(2)) ' | ' sprintf('%0.3g', yci(1)) ' < ' sprintf('%0.3g', ymean) ' > ' sprintf('%0.3g', yci(2))];
+				t=[t '\newlineMedian BS: ' sprintf('%0.3g', xxci(1)) ' < ' sprintf('%0.3g', xxmean) ' > ' sprintf('%0.3g', xxci(2)) ' | ' sprintf('%0.3g', yyci(1)) ' < ' sprintf('%0.3g', yymean) ' > ' sprintf('%0.3g', yyci(2))];
+				t=[t '\newlineGeomean BS: ' sprintf('%0.3g', xxxci(1)) ' < ' sprintf('%0.3g', xxxmean) ' > ' sprintf('%0.3g', xxxci(2)) ' | ' sprintf('%0.3g', yyyci(1)) ' < ' sprintf('%0.3g', yyymean) ' > ' sprintf('%0.3g', yyyci(2))];
 				
 				[fx,xax]=ksdensity(xpop, 'kernel', obj.densityKernel,...
 					'function', obj.densityFunction, 'support', obj.densityBounds);
@@ -575,7 +590,7 @@ classdef getDensity < handle
 				ticks out
 				box on
 				pn(py,px).title(['Cumulative Distribution Function, p=' num2str(obj.alpha)]);
-				pn(py,px).xlabel(obj.columnlabels{i});
+				pn(py,px).xlabel(obj.columnlabels{idx});
 				
 				%==========================================Do DENSITY
 				if obj.isDataEqualLength
@@ -598,7 +613,7 @@ classdef getDensity < handle
 				ticks out
 				set(gca,'Layer','top');
 				
-				supt=[obj.columnlabels{i} ' # = ' num2str(length(xcol)) '[' num2str(length(obj.x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(obj.y(:,i))) ']'];
+				supt=[obj.columnlabels{idx} ' # = ' num2str(length(xcol)) '[' num2str(length(obj.x(:,i))) '] & ' num2str(length(ycol)) '[' num2str(length(obj.y(:,i))) ']'];
 				
 				if ~isempty(xouttext) && ~strcmp(xouttext,' ') && length(xouttext)<25
 					supt=[supt ' | ' obj.dooutlier ': 1 = ' xouttext];
@@ -1201,6 +1216,7 @@ classdef getDensity < handle
 				end
 			end
 		end
+		
 		
 		% ===================================================================
 		%> @brief Sets properties from a structure or normal arguments,
