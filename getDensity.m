@@ -163,6 +163,9 @@ classdef getDensity < handle
 			warning('off', 'stats:jbtest:PTooBig')
 			if ~isempty(obj.index)
 				nVals = length(obj.index);
+			else 
+				nVals = size(obj.x,2);
+				obj.index = 1:nVals;
 			end
 			for i = 1:nVals
 				idx=obj.index(i);
@@ -192,7 +195,7 @@ classdef getDensity < handle
 					delete(gca)
 					pn.pack('v',[0.5 0.5]);
 					pn(1).pack('h',[1/3 1/3 -1])
-					pn(2).pack('h',[1/3 1/3 -1])
+					pn(2).pack('h',[1/3 -1])
 				else
 					figpos(1,[1200,1000]);
 					delete(gca)

@@ -413,7 +413,7 @@ switch type
 end
 
 axes(gh(axeslabel));
-s=view;
+[az,el]=view;
 if docontour==0
 	surf(gabc.xvals,gabc.yvals,data);
 else
@@ -426,7 +426,7 @@ else
 end
 title([label ' - min=' num2str(min(min(data))) ' | max =  ' num2str(max(max(data)))]);
 set(gca,'Tag',axeslabel);
-view(s);
+view([az,el]);
 box on;
 axis square;
 axis tight;
