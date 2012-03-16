@@ -24,9 +24,9 @@ switch(action)
 		header='';
 		pdata=[];
 		x=0;
-		version='PSTH Phase Plotter V1.2b';
+		version='PSTH Phase Plotter V1.3a';
 		set(gcf,'Name', version); %Sets Version data
-		set(gcf,'DefaultLineLineWidth', 1.25);
+		set(gcf,'DefaultLineLineWidth', 1.15);
 		
 	case 'Load'
 		pdata=[];

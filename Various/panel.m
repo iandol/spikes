@@ -15,8 +15,10 @@
 
 % CHANGE LOG
 % 
+% ################################################
 % 22/05/2011
 % First Public Release Version 2.0
+% ################################################
 % 
 % 23/05/2011
 % Incorporated an LP solver, since the one we were using
@@ -47,8 +49,10 @@
 % aiming for print figures. Or, you could have the ability
 % to turn off auto-refresh on resize().
 %
+% ################################################
 % 20/07/2011
 % Release Version 2.1
+% ################################################
 %
 % 05/10/2011
 % Tidied in-file documentation (panel.m).
@@ -57,8 +61,28 @@
 % Added flag "no-manage-font" to constructor, as requested
 % by Matlab Central user Mukhtar Ullah.
 %
+% ################################################
 % 13/12/2011
 % Release Version 2.2
+% ################################################
+%
+% 21/01/2012
+% Fixed bug in explicit height export option "-hX" which
+% wasn't working right at all.
+%
+% 25/01/12
+% Fixed bug in tick label display during print. _Think_ I've
+% got it right, this time! Some notes below, search for
+% "25/01/12".
+%
+% 25/01/12
+% Fixed DPI bug in smoothed export figures. Bug was flagged
+% up by Jesper at Matlab Central.
+%
+% ################################################
+% 26/01/2012
+% Release Version 2.3
+% ################################################
 
 
 
@@ -1244,12 +1268,9 @@ classdef (Sealed = true) panel < handle
 			w = (sz(1) + pars.intercolumnspacing) / pars.cols - pars.intercolumnspacing;
 			sz(1) = w;
 			
-			% explicit measurements override automatics
+			% explicit measurement overrides automatic
 			if pars.width
 				sz(1) = pars.width;
-			end
-			if pars.height
-				sz(2) = pars.height;
 			end
 			
 			% apply fill / aspect ratio
@@ -1259,6 +1280,11 @@ classdef (Sealed = true) panel < handle
 			elseif pars.fill < 0
 				% aspect ratio
 				sz(2) = sz(1) * (-1 / pars.fill);
+			end
+			
+			% explicit measurement overrides automatic
+			if pars.height
+				sz(2) = pars.height;
 			end
 			
 			% orientation of figure is upright, unless printing
@@ -1316,15 +1342,16 @@ classdef (Sealed = true) panel < handle
 			end
 			
 			% handle smoothing
+			pars.write_dpi = pars.dpi;
 			if pars.smooth > 1
-				pars.dpi = pars.dpi * pars.smooth;
+				pars.write_dpi = pars.write_dpi * pars.smooth;
 				print_filename = [pars.filename '-temp'];
 			else
 				print_filename = pars.filename;
 			end
 			
 			% do the export
-			print(p.h_figure, '-loose', ['-d' pars.fmt], ['-r' int2str(pars.dpi)], print_filename)
+			print(p.h_figure, '-loose', ['-d' pars.fmt], ['-r' int2str(pars.write_dpi)], print_filename)
 			
 			% handle smoothing
 			if pars.smooth > 1
@@ -1342,7 +1369,21 @@ classdef (Sealed = true) panel < handle
 					end
 				end
 				im = uint8(im / (pars.smooth^2));
-				imwrite(im, pars.filename);
+				
+				% set the DPI correctly in the new file
+				switch pars.fmt
+					case 'png'
+						dpm = pars.dpi / 25.4 * 1000; 
+						imwrite(im, pars.filename, ... 
+							'XResolution', dpm, ... 
+							'YResolution', dpm, ... 
+							'ResolutionUnit', 'meter');
+					case 'tiff'
+						imwrite(im, pars.filename, ... 
+							'Resolution', pars.dpi * [1 1]);
+					otherwise
+						imwrite(im, pars.filename);
+				end
 			end
 			
 			% enable warnings
@@ -2743,21 +2784,6 @@ classdef (Sealed = true) panel < handle
 			p.state.lp(1).size_in_mm = context.size_in_mm(1);
 			p.state.lp(2).size_in_mm = context.size_in_mm(2);
 			
-% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
-% LINPROG() IF NECESSARY
-%
-% 			% prepare parameters of linear programming problem
-% 			p.state.lin = [];
-% 			p.state.lin.numVars = numVars;
-% 			p.state.lin.context_size_in_mm = context.size_in_mm;
-% 			p.state.lin.A = zeros(0, numVars);
-% 			p.state.lin.b = zeros(0, 1);
-% 			p.state.lin.Aeq = zeros(0, numVars);
-% 			p.state.lin.beq = zeros(0, 1);
-% 			
-% 			% there are two problems, one for each dimension
-% 			p.state.lin(2) = p.state.lin(1);
-			
 			% add constraints
 			p.addConstraints(p, [1 1]);
 			p.addConstraintsFigureEdge();
@@ -2786,47 +2812,6 @@ classdef (Sealed = true) panel < handle
 				for dim = 1:2
 					xxyy(:, dim*2+[-1 0]) = reshape(p.state.lp(dim).x, 2, numPanels)' / context.size_in_mm(dim);
 				end
-
-	% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
-	% LINPROG() IF NECESSARY
-	%
-	% 			% construct linprog problems. there are two separate
-	% 			% problems, one for x and one for y, and they are
-	% 			% independent. yippee. for each dimension, we have
-	% 			% 2*numPanels variables (for the d1 and d2 position of that
-	% 			% dimension).
-	% 			for dim = 1:2
-	% 				
-	% 				% get parameters
-	% 				A = p.state.lin(dim).A;
-	% 				b = p.state.lin(dim).b;
-	% 				Aeq = p.state.lin(dim).Aeq;
-	% 				beq = p.state.lin(dim).beq;
-	% 				
-	% 				% if we've no constraints, can't do this
-	% 				if isempty(A) && isempty(Aeq)
-	% 					disp('not refreshing (no constraints)...');
-	% 					continue
-	% 				end
-	% 				
-	% 				% finalise problem
-	% 				lb = zeros(1, numVars);
-	% 				ub = ones(1, numVars) * context.size_in_mm(dim);
-	% 				f = repmat([1 -1], 1, numPanels);
-	% 				opt = optimset('Display', 'off');
-	% 				
-	% 				% and solve it
-	% 				ti = clock();
-	% 				r_linprog = [r_linprog sprintf('%i (%i)', size(A, 1), size(Aeq, 1)) ' '];
-	% 				x = linprog(f, A, b, Aeq, beq, lb, ub, [], opt);
-	% % 				max(abs(diff([x p.state.lp(dim).x], 1, 2)))
-	% 				tf = clock();
-	% 				t_linprog = t_linprog + etime(tf, ti);
-	% 				
-	% 				% store result
-	% 				xxyy(:, dim*2+[-1 0]) = reshape(x(1:numVars), 2, numPanels)' / context.size_in_mm(dim);
-	% 				
-	% 			end
 
 				% because we pack top-bottom (zero to one), but the
 				% actual object positions in matlab are +ve is upwards,
@@ -3192,26 +3177,6 @@ classdef (Sealed = true) panel < handle
 % 				'align on edge ' edgestr(edgespec) ...
 % 				]);
 			
-% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
-% LINPROG() IF NECESSARY
-%
-% 			% get dims
-% 			numVars = p.state.lin(edgespec(1)).numVars;
-% 			
-% 			% form constraint
-% 			a = zeros(1, numVars);
-% 			p1 = p1.state.index;
-% 			p2 = p2.state.index;
-% 			i1 = (p1-1) * 2 + edgespec(2);
-% 			i2 = (p2-1) * 2 + edgespec(2);
-% 			a(i1) = -1;
-% 			a(i2) = 1;
-% 			b = 0;
-% 			
-% 			% store constraint
-% 			p.state.lin(edgespec(1)).Aeq = [p.state.lin(edgespec(1)).Aeq; a];
-% 			p.state.lin(edgespec(1)).beq = [p.state.lin(edgespec(1)).beq; b];
-			
 			% add
 			dim = edgespec(1);
 			p1 = p1.state.index;
@@ -3234,31 +3199,6 @@ classdef (Sealed = true) panel < handle
 % 				sprintf('%i  %.3f', dim, ratio) ...
 % 				]);
 			
-% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
-% LINPROG() IF NECESSARY
-%
-% 			% get dims
-% 			numVars = p.state.lin(dim).numVars;
-% 			
-% 			p1 = p1.state.index;
-% 			p2 = p2.state.index;
-% 			i1 = p1*2-1;
-% 			i2 = p1*2;
-% 			i3 = p2*2-1;
-% 			i4 = p2*2;
-% 			
-% 			% form constraint
-% 			a = zeros(1, numVars);
-% 			a(i1) = -ratio;
-% 			a(i2) = ratio;
-% 			a(i3) = 1;
-% 			a(i4) = -1;
-% 			b = 0;
-% 			
-% 			% store constraint
-% 			p.state.lin(dim).Aeq = [p.state.lin(dim).Aeq; a];
-% 			p.state.lin(dim).beq = [p.state.lin(dim).beq; b];
-
 			% add
 			p1 = p1.state.index;
 			p2 = p2.state.index;
@@ -3285,63 +3225,6 @@ classdef (Sealed = true) panel < handle
 % 				lpad([p1name ' ' edgestr([dim e1])]) ' : ' rpad([p2name ' ' edgestr([dim e2])]) ...
 % 				sprintf('[margin = %i]', margin) ...
 % 				]);
-			
-% OLD IMPLEMENTATION, REPLACED SO WE CAN AVOID USING
-% LINPROG() IF NECESSARY
-%
-% 			% get dims
-% 			numVars = p.state.lin(dim).numVars;
-% 			
-% 			% form constraint
-% 			a = zeros(1, numVars);
-% 			b = -margin;
-% 			
-% 			% does p1 indicate figure or panel?
-% 			if isempty(p1)
-%  				b = - (0 + margin);
-% 			else
-% 				p1 = p1.state.index;
-% 				a((p1-1) * 2 + e1) = 1;
-% 			end
-% 			
-% 			% does p2 indicate figure or panel?
-% 			if isempty(p2)
-%  				b = p.state.lin(dim).context_size_in_mm(dim) - margin;
-% 			else
-% 				p2 = p2.state.index;
-% 				a((p2-1) * 2 + e2) = -1;
-% 			end
-% 			
-% % 			% THIS OPTIMISATION ONLY PLACES A CONSTRAINT IF A
-% % 			% TIGHTER ONE DOES NOT ALREADY EXIST. it's a
-% % 			% trade-off; more complex preparation of the linprog
-% % 			% problem, but a simpler linprog problem when we're
-% % 			% done. however, the linprog is so fast, this is
-% % 			% probably actually a performance hit, so i'm leaving
-% % 			% it out for now (it works, though).
-% % 			
-% % 			% if constraint is already there, replace or ignore
-% % 			A = p.state.lin(dim).A;
-% % 			B = p.state.lin(dim).b;
-% % 			for j = 1:size(A, 1)
-% % 				if all(a == A(j, :))
-% % 					if b < p.state.lin(dim).b(j)
-% % 						% constraint is tighter, replace
-% % 						p.state.lin(dim).b(j) = b;
-% % 						return
-% % 					else
-% % 						% constraint is same or looser, ignore
-% % 						return
-% % 					end
-% % 				end
-% % 			end
-% 			
-% 			% store constraint
-% 			p.state.lin(dim).A = [p.state.lin(dim).A; a];
-% 			p.state.lin(dim).b = [p.state.lin(dim).b; b];
-			
-			
-			
 			
 			% add
 			if isempty(p1)
@@ -4236,47 +4119,124 @@ end
 
 function store = storeAxisState(h)
 
-store = [];
+% lock state so that the ticks and labels do not change when
+% the figure is resized for printing. this is what the user
+% will expect, which is why we go through this palaver.
+%
+% however, for fuck's sake. the following code illustrates
+% an idiosyncrasy of matlab (i would call this an
+% inconsistency, myself, but there you go).
+%
+% figure
+% axis([0 1 0 1])
+% set(gca, 'ytick', [-1 0 1 2])
+% get(gca, 'yticklabel')
+% set(gca, 'yticklabelmode', 'manual')
+%
+% now, resize the figure window. at least in R2011b, the
+% tick labels change on the first resize event. presumably,
+% this is because matlab treats the ticklabel value
+% differently depending on if the ticklabelmode is auto or
+% manual. if it's manual, the value is used as documented,
+% and [0 1] is used to label [-1 0 1 2], cyclically.
+% however, if the ticklabelmode is auto, and the ticks
+% extend outside the figure, then the ticklabels are set
+% sensibly, but the _value_ of ticklabel is not consistent
+% with what it would need to be to get this tick labelling
+% were the mode manual. and, in a final bizarre twist, this
+% doesn't become evident until the resize event. i think
+% this is a bug, no other way of looking at it; at best it's
+% an inconsistency that is either tedious or impossible to
+% work around in the general case.
+%
+% in any case, we have to lock the ticks to manual as we go
+% through the print cycle, so that the ticks do not get
+% changed if they were in automatic mode. but we mustn't fix
+% the tick labels to manual, since if we do we may encounter
+% this inconsistency and end up with the wrong tick labels
+% in the print out. i can't, at time of writing, think of a
+% case where we'd have to fix the tick labels to manual too.
+% the possible cases are:
+%
+% ticks auto, labels auto: in this case, fixing the ticks to
+%		manual should be enough.
+%
+% ticks manual, labels auto: leave as is.
+%
+% ticks manual, labels manual: leave as is.
+%
+% the only other case is ticks auto, labels manual, which is
+% a risky case to use, but in any case we can also fix the
+% ticks to manual in that case. thus, our preferred solution
+% is to always switch the ticks to manual, if they're not
+% already, and otherwise leave things be.
 
-% store current state
-store.XTick = get(h, 'XTick');
-store.XTickLabel = get(h, 'XTickLabel');
-store.XTickLabelMode = get(h, 'XTickLabelMode');
-store.XTickMode = get(h, 'XTickMode');
-store.YTick = get(h, 'YTick');
-store.YTickLabel = get(h, 'YTickLabel');
-store.YTickLabelMode = get(h, 'YTickLabelMode');
-store.YTickMode = get(h, 'YTickMode');
-store.ZTick = get(h, 'ZTick');
-store.ZTickLabel = get(h, 'ZTickLabel');
-store.ZTickLabelMode = get(h, 'ZTickLabelMode');
-store.ZTickMode = get(h, 'ZTickMode');
+store = '';
 
-% lock state
-set(h, 'XTickLabelMode', 'manual');
-set(h, 'XTickMode', 'manual');
-set(h, 'YTickLabelMode', 'manual');
-set(h, 'YTickMode', 'manual');
-set(h, 'ZTickLabelMode', 'manual');
-set(h, 'ZTickMode', 'manual');
+% manual-ise ticks on any axis where they are currently
+% automatic, and indicate that we need to switch them back
+% afterwards.
+if strcmp(get(h, 'XTickMode'), 'auto')
+	store = [store 'X'];
+	set(h, 'XTickMode', 'manual');
+end
+if strcmp(get(h, 'YTickMode'), 'auto')
+	store = [store 'Y'];
+	set(h, 'YTickMode', 'manual');
+end
+if strcmp(get(h, 'ZTickMode'), 'auto')
+	store = [store 'Z'];
+	set(h, 'ZTickMode', 'manual');
+end
+
+% % OLD CODE OBSOLETED 25/01/12 - see notes above
+% 
+% % store current state
+% store.XTick = get(h, 'XTick');
+% store.XTickMode = get(h, 'XTickMode');
+% store.XTickLabel = get(h, 'XTickLabel');
+% store.XTickLabelMode = get(h, 'XTickLabelMode');
+% store.YTickMode = get(h, 'YTickMode');
+% store.YTick = get(h, 'YTick');
+% store.YTickLabel = get(h, 'YTickLabel');
+% store.YTickLabelMode = get(h, 'YTickLabelMode');
+% store.ZTick = get(h, 'ZTick');
+% store.ZTickMode = get(h, 'ZTickMode');
+% store.ZTickLabel = get(h, 'ZTickLabel');
+% store.ZTickLabelMode = get(h, 'ZTickLabelMode');
+% 
+% % lock state to manual
+% set(h, 'XTickLabelMode', 'manual');
+% set(h, 'XTickMode', 'manual');
+% set(h, 'YTickLabelMode', 'manual');
+% set(h, 'YTickMode', 'manual');
+% set(h, 'ZTickLabelMode', 'manual');
+% set(h, 'ZTickMode', 'manual');
 
 end
 
 function restoreAxisState(h, store)
 
-% restore passed state
-set(h, 'XTick', store.XTick);
-set(h, 'XTickLabel', store.XTickLabel);
-set(h, 'XTickLabelMode', store.XTickLabelMode);
-set(h, 'XTickMode', store.XTickMode);
-set(h, 'YTick', store.YTick);
-set(h, 'YTickLabel', store.YTickLabel);
-set(h, 'YTickLabelMode', store.YTickLabelMode);
-set(h, 'YTickMode', store.YTickMode);
-set(h, 'ZTick', store.ZTick);
-set(h, 'ZTickLabel', store.ZTickLabel);
-set(h, 'ZTickLabelMode', store.ZTickLabelMode);
-set(h, 'ZTickMode', store.ZTickMode);
+% unmanualise
+for ax = store
+	set(h, [ax 'TickMode'], 'auto');
+end
+
+% % OLD CODE OBSOLETED 25/01/12 - see notes above
+% 
+% % restore passed state
+% set(h, 'XTick', store.XTick);
+% set(h, 'XTickMode', store.XTickMode);
+% set(h, 'XTickLabel', store.XTickLabel);
+% set(h, 'XTickLabelMode', store.XTickLabelMode);
+% set(h, 'YTick', store.YTick);
+% set(h, 'YTickMode', store.YTickMode);
+% set(h, 'YTickLabel', store.YTickLabel);
+% set(h, 'YTickLabelMode', store.YTickLabelMode);
+% set(h, 'ZTick', store.ZTick);
+% set(h, 'ZTickMode', store.ZTickMode);
+% set(h, 'ZTickLabel', store.ZTickLabel);
+% set(h, 'ZTickLabelMode', store.ZTickLabelMode);
 
 end
 
