@@ -38,7 +38,7 @@ switch(action)
 		set(gh('PHEditScale'),'Enable','on');
 		set(gcbf, 'UserData', '');
 		
-		if sv.ylock==0
+		if data.numvars > 1 && sv.ylock==0
 			for i=1:length(data.yvalueso)
 				pdata.psth{i}(:,1)=1:length(data.psth{i,sv.xval,sv.zval});
 				pdata.psth{i}(:,2)=data.time{i,sv.xval,sv.zval}/1000;
@@ -67,8 +67,11 @@ switch(action)
 		end
 		
 		%------------set up the data structure----------
-		
-		pdata.numberOfModulations=data.nummods;
+		if data.wrapped == 2
+			pdata.numberOfModulations=data.cycles;
+		else
+			pdata.numberOfModulations=data.nummods;
+		end
 		pdata.inner=cell(size(pdata.psth));
 		pdata.interaction=cell(size(pdata.psth));
 		pdata.maxtime=max(pdata.psth{1}(:,2));

@@ -415,10 +415,18 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		
 		if (get(gh('SCutTransient'),'Value')>0) %this gets a time for optinally cutting the first transient out of the data
 			cuttime=str2num(get(gh('STransientValue'),'String'))*10; %*10 converts into raw timebase from milliseconds
+			if length(cuttime) == 2
+				if cuttime(1) == 0
+					cuttime = cuttime(2);
+				end
+			elseif length(cuttime) > 2
+				cuttime = 0;
+				set(gh('STransientValue'),'String','0');
+			end
 		else
 			cuttime=0;
 		end
-		
+
 		data.numvars=data.meta.numvars;
 		data.protocol.name=data.meta.protocol;
 		if isfield(data.meta,'description')
@@ -457,11 +465,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('YHoldMenu'),'Value',1);
 				set(gh('YHoldMenu'),'String',' ');
 				set(gh('YHoldMenu'),'Enable','off');
+				set(gh('YHoldCheck'),'Value',1);
 				set(gh('YHoldCheck'),'Enable','off');
 				set(gh('HoldZText'),'String',' ');
 				set(gh('ZHoldMenu'),'Value',1);
 				set(gh('ZHoldMenu'),'String',' ');
 				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Value',1);
 				set(gh('ZHoldCheck'),'Enable','off');
 				
 				%%%Disenables the 3D plotting options menus
@@ -573,11 +583,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('YHoldMenu'),'Value',1);
 				set(gh('YHoldMenu'),'String',' ');
 				set(gh('YHoldMenu'),'Enable','off');
+				set(gh('YHoldCheck'),'Value',1);
 				set(gh('YHoldCheck'),'Enable','off');
 				set(gh('HoldZText'),'String','');
 				set(gh('ZHoldMenu'),'Value',1);
 				set(gh('ZHoldMenu'),'String',' ');
 				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Value',1);
 				set(gh('ZHoldCheck'),'Enable','off');
 				
 				%%%Set the plotting options
@@ -713,10 +725,12 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('YHoldMenu'),'Value',1);
 				set(gh('YHoldMenu'),'String',' ')
 				set(gh('YHoldMenu'),'Enable','on');
+				set(gh('YHoldCheck'),'Value',1);
 				set(gh('YHoldCheck'),'Enable','on');
 				set(gh('ZHoldMenu'),'Value',1);
 				set(gh('ZHoldMenu'),'String',' ');
 				set(gh('ZHoldMenu'),'Enable','off');
+				set(gh('ZHoldCheck'),'Value',1);
 				set(gh('ZHoldCheck'),'Enable','off');
 				set(gh('HoldZText'),'String','');
 				
@@ -856,6 +870,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('YHoldMenu'),'Value',1);
 				set(gh('YHoldMenu'),'String',' ')
 				set(gh('YHoldMenu'),'Enable','on');
+				set(gh('YHoldCheck'),'Value',1);
 				set(gh('YHoldCheck'),'Enable','on');
 				set(gh('HoldZText'),'String','Hold Z Value');
 				set(gh('ZHoldMenu'),'Value',1);
@@ -1032,10 +1047,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('SYSlice'),'String',yvals);
 		end
 		set(gh('XHoldCheck'),'Value',0);
-		set(gh('YHoldCheck'),'Value',0);
+		set(gh('YHoldCheck'),'Value',1);
 		set(gh('ZHoldCheck'),'Value',1);
 		sv.xlock=0;
-		sv.ylock=0;
+		sv.ylock=1;
 		sv.zlock=1;
 		data.xindex=1:data.xrange;
 		data.yindex=1:data.yrange;

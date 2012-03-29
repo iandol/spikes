@@ -1,7 +1,7 @@
 % ========================================================================
 %> @brief Zipspikes loads VS smr data from, and to, ZIP files
 %> ZIPSPIKES
-%>   
+%>
 % ========================================================================
 classdef zipspikes < handle
 	
@@ -18,6 +18,8 @@ classdef zipspikes < handle
 		sourcedir
 		userroot
 		verbose = true
+		%> do we overwrite zips or skip to next file?
+		overwriteZips = false
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -29,8 +31,8 @@ classdef zipspikes < handle
 	
 	%=======================================================================
 	methods %------------------PUBLIC METHODS
-	%=======================================================================
-	
+		%=======================================================================
+		
 		% ===================================================================
 		%> @brief Class constructor
 		%>
@@ -46,7 +48,7 @@ classdef zipspikes < handle
 				obj.rmCommand = 'rmdir /s /q';
 				obj.mkdirCommand = 'mkdir';
 			end
-
+			
 			%start to build our parameters
 			if exist('args','var') && isstruct(args)
 				fnames = fieldnames(args); %find our argument names
@@ -61,7 +63,7 @@ classdef zipspikes < handle
 			if isempty(obj.tmppath)
 				obj.tmppath = tempname;
 			end
-
+			
 			obj.userroot = fileparts(mfilename('fullpath'));
 			p=regexp(obj.userroot,['(?<path>^.+\' filesep 'spikes\' filesep ')'],'names');
 			obj.userroot = p.path;
@@ -69,12 +71,12 @@ classdef zipspikes < handle
 		end
 		
 		% ===================================================================
-		%> @brief Do the randomisation
+		%> @brief generate
 		%>
-		%> Do the randomisation
+		%> actually create the zips
 		% ===================================================================
 		function generate(obj,~)
-
+			
 			if ismac
 				error('You can only generate zip files on PC');
 			end
@@ -103,30 +105,46 @@ classdef zipspikes < handle
 			end
 			
 			function makeZip(name)
+				doMake = true;
 				tmpname=[pwd filesep name];
-				[p,f,e]=fileparts(tmpname);
-				if isdir([p filesep f]) %stops annoying "directory alread exists" messages
-					disp('Deleting existing directory...');
-					rmdir([p filesep f],'s');
+				fileinf = dir(name);
+				if fileinf.bytes == 0
+					obj.salutation(['Skipping ' name ' as SMR is empty...']);
+				else
+					[p,f,e]=fileparts(tmpname);
+					if isdir([p filesep f]) %stops annoying "directory alread exists" messages
+						disp('Deleting existing directory...');
+						rmdir([p filesep f],'s');
+					end
+					if exist([f '.zip'],'file')
+						if obj.overwriteZips == true
+							delete([f '.zip']);
+						else
+							doMake = false; %zip exists and we don't want to remake it
+							obj.salutation(['Skipping ' p filesep f ' as zip already exists...']);
+						end
+					end
+					if doMake == true
+						[s,w]=dos(['"' obj.userroot 'various\vsx\vsx.exe" "' tmpname '"']);
+						if s>0; error(w); end
+						zip([pwd filesep f '.zip'], {[f '.smr'],f});
+						rmdir([p filesep f],'s');
+						obj.salutation(['Zipfile: ' p filesep f '.zip generated']);
+					end
 				end
-				if exist([f '.zip'],'file')
-					delete([f '.zip']);
-				end
-				[s,w]=dos(['"' obj.userroot 'various\vsx\vsx.exe" "' tmpname '"']);
-				if s>0; error(w); end
-				zip([pwd filesep f '.zip'], {[f '.smr'],f});
-				rmdir([p filesep f],'s');
 			end
-
 		end
 		
 		% ===================================================================
-		%> @brief Do the randomisation
+		%> @brief Find protocol, change name to append it
 		%>
-		%> Do the randomisation
+		%> medify names
 		% ===================================================================
-		function modifyNames(obj)
+		function modifyNames(obj,dummyRun)
 			meta = [];
+			if ~exist('dummyRun','var')
+				dummyRun = false;
+			end
 			olddir = pwd;
 			obj.sourcedir = uigetdir;
 			if obj.sourcedir == 0
@@ -134,48 +152,61 @@ classdef zipspikes < handle
 				return
 			end
 			cd(obj.sourcedir)
+			fid1 = fopen('protocols.txt','w');
 			d=dir;
 			for i = 1:length(d)
 				name=d(i).name;
 				if d(i).isdir && ~isempty(regexpi(name, obj.pathfilter)) && ~strcmp(name,'.') && ~strcmp(name,'..')
 					cd(name)
+					fid2 = fopen('protocols.txt','w');
 					dd=dir;
 					for j = 1:length(dd)
 						name2 = dd(j).name;
 						if regexpi(name2,'zip$')
-							[meta,~,~] = obj.readarchive(name2);
-							if ~isempty(meta) && isfield(meta,'protocol')
-								[p,f,e]=fileparts(name2);
-								if isempty(regexpi(f,' -- ','once'));
-									newname = [f ' - ' meta.protocol];
-									newname = [p filesep newname e];
-									obj.salutation(['Renamed: ' name2],newname);
-									movefile(name2,newname);
-								else
-									obj.salutation([' Not Renamed: ' name2]);
-								end
-							end
+							doMove(name2,dummyRun,fid2,fid1);
 						end
 					end
+					fclose(fid2);
 					cd(obj.sourcedir)
 				elseif regexpi(name,'zip$')
-					[meta,~,~] = obj.readarchive(name);
-					if ~isempty(meta) && isfield(meta,'protocol')
-						[p,f,e]=fileparts(name);
-						if isempty(regexpi(f,' -- ','once'));
-							newname = [f ' -- ' meta.protocol];
-							newname = [newname e];
-							obj.salutation(['Renamed: ' name],newname);
-							movefile(name,newname);
-						else
-							obj.salutation([' Not Renamed: ' name]);
-						end
-					end
+					doMove(name,dummyRun,fid1);
 				end
 				meta = [];
 			end
-			
+			fclose(fid1);
 			cd(olddir);
+			
+			function doMove(name,dummyRun,fida,fidb)
+				if ~exist('fidb','var')
+					fidb = [];
+				end
+				[meta,~,~] = obj.readarchive(name, false);
+				if ~isempty(meta) && isfield(meta,'protocol')
+					[p,f,e]=fileparts(name);
+					if isempty(regexpi(f,' -- ','once'));
+						newname = [f ' - ' meta.protocol];
+						printname = newname;
+						newname = [p filesep newname e];
+						if dummyRun == true
+							obj.salutation(['Renamed: ' newname],name);
+							fprintf(fida, [printname '\n']);
+							if ~isempty(fidb)
+								fprintf(fidb, [printname '\n']);
+							end
+							movefile(name2,newname);
+						else
+							obj.salutation(['Dummy Renamed: ' newname],name);
+							fprintf(fida, [printname '\n']);
+							if ~isempty(fidb)
+								fprintf(fidb, [printname '\n']);
+							end
+						end
+					else
+						obj.salutation([' Not Renamed: ' name]);
+					end
+				end
+			end
+			
 		end
 		
 		% ===================================================================
@@ -183,12 +214,16 @@ classdef zipspikes < handle
 		%>
 		%> Class method to read a Zipped spikes file and get out the data to pass to spikes
 		% ===================================================================
-		function [meta,txtcomment,txtprotocol] = readarchive(obj,myfile)
+		function [meta,txtcomment,txtprotocol] = readarchive(obj,myfile,correctValues)
 			
 			meta = [];
 			txtcomment = [];
 			txtprotocol = [];
-
+			
+			if ~exist('correctValues','var')
+				correctValues = true;
+			end
+			
 			if ~exist('myfile','var')
 				myfile = obj.sourcepath;
 			end
@@ -213,7 +248,7 @@ classdef zipspikes < handle
 			
 			if exist(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'),'file')
 				try
-					meta=loadvstext(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'));
+					meta=loadvstext(strcat(obj.tmppath,filesep,f,filesep,f,'.txt'), correctValues);
 					txtcomment=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.cmt'),'%s','delimiter','\n','whitespace','');
 					txtprotocol=textread(strcat(obj.tmppath,filesep,f,filesep,f,'.prt'),'%s','delimiter','\n','whitespace','');
 				catch ME
@@ -225,7 +260,7 @@ classdef zipspikes < handle
 	
 	%=======================================================================
 	methods ( Access = private ) %-------PRIVATE METHODS-----%
-	%=======================================================================
+		%=======================================================================
 		% ===================================================================
 		%> @brief Prints messages dependent on verbosity
 		%>
@@ -238,10 +273,15 @@ classdef zipspikes < handle
 				if ~exist('in','var')
 					in = 'undefined';
 				end
-				if exist('message','var')
-					fprintf(['---> Zipspikes: ' message ' | ' in '\n']);
-				else
+				if ~exist('message','var')
+					message = '';
+				end
+				in = regexprep(in,'\','/');
+				message = regexprep(message,'\','/');
+				if isempty(message)
 					fprintf(['---> Zipspikes: ' in '\n']);
+				else
+					fprintf(['---> Zipspikes: ' message ' | ' in '\n']);
 				end
 			end
 		end
