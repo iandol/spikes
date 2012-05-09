@@ -32,7 +32,11 @@ scale=modvals(6); %scale model to data;
 %-------------------------------------------------------------
 resolution=length(X); %find out how long the raw psth is
 
-p=freq*(nmods);  % we want 5 modulations of the centre,so multiply by 5 to get outer mods 
+if freq == -1
+	p = nmods*2;
+else
+	p=freq*(nmods);  % we want 5 modulations of the centre,so multiply by 5 to get outer mods
+end
 
 o=linspace(0, p*pi, resolution);
 outer=sin(o-piphase2); %work out outer with phase shift

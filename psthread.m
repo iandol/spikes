@@ -24,12 +24,14 @@ switch(action)
 		header='';
 		pdata=[];
 		x=0;
-		version='PSTH Phase Plotter V1.3a';
+		version='PSTH Phase Plotter V1.4';
 		set(gcf,'Name', version); %Sets Version data
 		set(gcf,'DefaultLineLineWidth', 1.15);
 		
 	case 'Load'
 		pdata=[];
+		pdata.usetf = false;
+		pdata.tf = [];
 		set(gh('EditSelectBox'),'String','0');
 		set(gh('EditPhaseBox'),'String','180');
 		set(gh('EditPhaseBox2'),'String','180');
@@ -39,6 +41,7 @@ switch(action)
 		set(gcbf, 'UserData', '');
 		
 		if data.numvars > 1 && sv.ylock==0
+			if ~isempty(regexpi(data.ytitle,'Angle'));pdata.usetf = true;end
 			for i=1:length(data.yvalueso)
 				pdata.psth{i}(:,1)=1:length(data.psth{i,sv.xval,sv.zval});
 				pdata.psth{i}(:,2)=data.time{i,sv.xval,sv.zval}/1000;
@@ -52,6 +55,7 @@ switch(action)
 			pdata.values=data.yvalueso;
 			pdata.title=data.matrixtitle;
 		elseif sv.ylock==1
+			if ~isempty(regexpi(data.xtitle,'Angle'));pdata.usetf = true;end
 			for i=1:length(data.xvalueso)
 				pdata.psth{i}(:,1)=1:length(data.psth{sv.yval,i,sv.zval});
 				pdata.psth{i}(:,2)=data.time{sv.yval,i,sv.zval}/1000;
@@ -67,8 +71,8 @@ switch(action)
 		end
 		
 		%------------set up the data structure----------
-		if data.wrapped == 2
-			pdata.numberOfModulations=data.cycles;
+		if data.wrapped == 1
+			pdata.numberOfModulations=1;
 		else
 			pdata.numberOfModulations=data.nummods;
 		end
@@ -85,6 +89,7 @@ switch(action)
 		if isempty(idx);
 			idx=25;
 		end
+		pdata.tf = data.tempfreq;
 		pdata.firstModIndex=idx;
 		
 		% -------- get scale to plot all psths-----------
@@ -153,11 +158,11 @@ switch(action)
 				end
 			end
 		else
-			if phase==0 & phase2==0
+			if phase==0 && phase2==0
 				pdata.optphase=phase;
 				pdata.optphase2=phase2;
 				pdata.piphase=0;
-				pdata.piphase2=0
+				pdata.piphase2=0;
 				if strcmp(pdata.currentplot,'fft');
 					pdata.currentplot='FFT';
 					psthread('FFT');
@@ -184,7 +189,7 @@ switch(action)
 	case 'Measure'
 		cutoff=get(gh('EditRatio'),'String');
 		cutoff=str2num(cutoff);
-		peaks=find(inner>cutoff)
+		peaks=find(inner>cutoff);
 		inner(peaks)
 		a=1;
 		%figure
@@ -437,6 +442,12 @@ elseif pdata.num<=9
 elseif pdata.num<=10
 	a=2;
 	b=5;
+elseif pdata.num<=12
+	a=2;
+	b=6;
+elseif pdata.num<=14
+	a=2;
+	b=7;
 end
 
 subplot(1,1,1);
@@ -461,7 +472,6 @@ title(pdata.title,'FontSize',7);
 %---------------------------------------------------------------------------
 
 function Plotsingle(index)
-
 
 global pdata
 
@@ -522,7 +532,12 @@ if rectify==0
 	rlevel2=1;
 end
 
-freq=pdata.values(a);
+if pdata.usetf == false
+	freq=pdata.values(a);
+else
+	freq = -1; %use same tf as centre...
+	%freq = pdata.tf;
+end
 x=pdata.psth{a}(:,2);
 y=pdata.psth{a}(:,3);
 
@@ -532,7 +547,7 @@ if doplot==1;
 	
 	hold on
 	plot(x,interaction,'r-',x,inner,'g--',x,outer,'b--');
-	xlabel(num2str(freq));
+	xlabel(num2str(pdata.values(a)));
 	hold off
 	
 else

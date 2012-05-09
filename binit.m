@@ -14,6 +14,7 @@ function [time,psth,rawspikes,sums,rawstruct]=binit(sd,binwidth,startmod,endmod,
 % Allowed raw spike times to be extracted
 
 global data
+global xdata
 
 rawspikes=[];
 sums=[];
@@ -39,7 +40,6 @@ end
 if exist('cor','var')
 	if isempty(cor)
 	else
-		global xdata
 		xcinuse=1;
 	end
 end

@@ -28,7 +28,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv = [];
 		data = [];
 		rlist = [];
-		sv.version = 1.920;
+		sv.version = 1.930;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -944,7 +944,6 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
 					drawnow;
 					filename = [basefilename '.' int2str(i)];
-					filename = strcat(basefilename,'.',int2str(i));
 					filenamet = [filename ' ' num2str(data.meta.matrix(i,end-2:end))];
 					filenamet = regexprep(filenamet,'\s+',' ');
 					data.names{yi,xi,zi}=filenamet;
@@ -955,7 +954,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 					end
 					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
-					
+					data.raw{yi,xi,zi}=x;
 					%lets make sure our modulation selection is valid
 					if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
 					  sv.StartMod=1;
@@ -966,7 +965,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					   set(gh('SEndMod'),'String',num2str(sv.EndMod));
 					end
 					data.nummods = (sv.EndMod - sv.StartMod) + 1;
-					data.numtrials = data.raw{1}.numtrials; %this value comes from lsd2.m
+					data.numtrials = x.numtrials; %this value comes from lsd2.m
 					
 					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
@@ -975,7 +974,6 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 						psth=gausssmooth(time,psth,sigma);
 						bpsth=gausssmooth(time2,bpsth,sigma);
 					end
-					data.raw{yi,xi,zi}=x;
 					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
 					data.bpsth{yi,xi,zi}=bpsth;
 					data.psth{yi,xi,zi}=psth;
@@ -3396,7 +3394,7 @@ elseif sv.zlock==0 && sv.ylock==1 && sv.xlock==1
 	%----------------------------------------------------------Z and X locked
 elseif sv.zlock==1 && sv.ylock==0 && sv.xlock==1
 	if data.numvars==3
-		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xzval)) '/' data.ytitle '=' num2str(data.yvalues(sv.yval))];
+		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xval)) '/' data.ytitle '=' num2str(data.yvalues(sv.yval))];
 	elseif data.numvars==2
 		data.lockedtitle=' r ';
 		data.lockedtitle=[data.xtitle '=' num2str(data.xvalues(sv.xval))];

@@ -548,14 +548,22 @@ classdef getDensity < handle
 				
 				[xci,xmean,xpop]=bootci(obj.nboot,{obj.fhandle,xcol},'alpha',obj.alpha);
 				[yci,ymean,ypop]=bootci(obj.nboot,{obj.fhandle,ycol},'alpha',obj.alpha);
-				[xxci,xxmean,xxpop]=bootci(obj.nboot,{@median,xcol},'alpha',obj.alpha);
-				[yyci,yymean,yypop]=bootci(obj.nboot,{@median,ycol},'alpha',obj.alpha);
-				[xxxci,xxxmean,xxxpop]=bootci(obj.nboot,{@geomean,xcol},'alpha',obj.alpha);
-				[yyyci,yyymean,yyypop]=bootci(obj.nboot,{@geomean,ycol},'alpha',obj.alpha);
+				try
+					[xxci,xxmean,xxpop]=bootci(obj.nboot,{@median,xcol},'alpha',obj.alpha);
+					[yyci,yymean,yypop]=bootci(obj.nboot,{@median,ycol},'alpha',obj.alpha);
+				end
+				try
+					[xxxci,xxxmean,xxxpop]=bootci(obj.nboot,{@geomean,xcol},'alpha',obj.alpha);
+					[yyyci,yyymean,yyypop]=bootci(obj.nboot,{@geomean,ycol},'alpha',obj.alpha);
+				end
 				
 				t=[t 'BootStrap: ' sprintf('%0.3g', xci(1)) ' < ' sprintf('%0.3g', xmean) ' > ' sprintf('%0.3g', xci(2)) ' | ' sprintf('%0.3g', yci(1)) ' < ' sprintf('%0.3g', ymean) ' > ' sprintf('%0.3g', yci(2))];
-				t=[t '\newlineMedian BS: ' sprintf('%0.3g', xxci(1)) ' < ' sprintf('%0.3g', xxmean) ' > ' sprintf('%0.3g', xxci(2)) ' | ' sprintf('%0.3g', yyci(1)) ' < ' sprintf('%0.3g', yymean) ' > ' sprintf('%0.3g', yyci(2))];
-				t=[t '\newlineGeomean BS: ' sprintf('%0.3g', xxxci(1)) ' < ' sprintf('%0.3g', xxxmean) ' > ' sprintf('%0.3g', xxxci(2)) ' | ' sprintf('%0.3g', yyyci(1)) ' < ' sprintf('%0.3g', yyymean) ' > ' sprintf('%0.3g', yyyci(2))];
+				if exist('xxci','var') && exist('yyci','var')
+					t=[t '\newlineMedian BS: ' sprintf('%0.3g', xxci(1)) ' < ' sprintf('%0.3g', xxmean) ' > ' sprintf('%0.3g', xxci(2)) ' | ' sprintf('%0.3g', yyci(1)) ' < ' sprintf('%0.3g', yymean) ' > ' sprintf('%0.3g', yyci(2))];
+				end
+				if exist('xxxci','var') && exist('yyyci','var')
+					t=[t '\newlineGeomean BS: ' sprintf('%0.3g', xxxci(1)) ' < ' sprintf('%0.3g', xxxmean) ' > ' sprintf('%0.3g', xxxci(2)) ' | ' sprintf('%0.3g', yyyci(1)) ' < ' sprintf('%0.3g', yyymean) ' > ' sprintf('%0.3g', yyyci(2))];
+				end
 				
 				[fx,xax]=ksdensity(xpop, 'kernel', obj.densityKernel,...
 					'function', obj.densityFunction, 'support', obj.densityBounds);

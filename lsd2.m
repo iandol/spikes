@@ -1,4 +1,4 @@
-function sd=lsd2(file,cell,starttrial,endtrial,trialtime,modtime,cuttime,startmod,endmod)
+function sd=lsd2(file,cellnumber,starttrial,endtrial,trialtime,modtime,cuttime,startmod,endmod)
 
 % LSD2 - Load Spike Data (adapted for VSX data structure):
 % This function generates a matlab structure from the text files of spikes times.
@@ -18,8 +18,8 @@ function sd=lsd2(file,cell,starttrial,endtrial,trialtime,modtime,cuttime,startmo
 %   sd.trial(x).mod{x}=the actual spike times of each modulation relative to trial start
 % 
 % Format for Use:
-% sd=lsd(file,cell,starttrial,endtrial,trialtime,modtime,cuttime) - where file is the text file of 
-% spike times, and cell is the channel of interest. Also enter the starttrial and endtrial, 
+% sd=lsd(file,cellnumber,starttrial,endtrial,trialtime,modtime,cuttime) - where file is the text file of 
+% spike times, and cellnumber is the channel of interest. Also enter the starttrial and endtrial, 
 % the total trial time and modulation time. cuttime chops the first
 % modulation's transient reponse if greater than 0.
 
@@ -110,13 +110,15 @@ end
 %-----------------This is the actual routine for spike extraction----------------%
 
 a=1;
+
 for i=starttrial:endtrial %run through each trial
     sd.trial(a).basetime=sd.raw(trials(i),2);
-    lmods=mods(find(mods>trials(i) & mods<trials(i+1))); %this finds the mod markers between each trial
-    sd.trial(a).modtimes=sd.raw(lmods,2)-sd.trial(a).basetime; %the relative modulation times
-    lmods=[lmods;trials(i+1)]; %the last mod marker is actually the total trial time
+    cmods=mods(mods>trials(i) & mods<trials(i+1)); %this finds the mod markers between each trial
+    sd.trial(a).modtimes=sd.raw(cmods,2)-sd.trial(a).basetime; %the relative modulation times
+    lmods=[cmods; trials(i+1)]; %the last mod marker is actually the total trial time
+	n = cell(1,sd.nummods);
     for j=1:sd.nummods
-        x=find(sd.raw(lmods(j)+1:lmods(j+1)-1,1)==cell+10)+lmods(j); %this finds the lines for the specified cell for the specific modulation
+        x=find(sd.raw(lmods(j)+1:lmods(j+1)-1,1)==cellnumber+10)+lmods(j); %this finds the lines for the specified cell for the specific modulation
         n{j}=sd.raw(x,2)-sd.trial(a).basetime; %assigns it as a cell matrix with time relative to trial start  
 		if j==1 && cuttime(1)>0
 			if length(cuttime) == 1
