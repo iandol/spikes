@@ -28,7 +28,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv = [];
 		data = [];
 		rlist = [];
-		sv.version = 1.930;
+		sv.version = 1.940;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -538,7 +538,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				  sv.StartMod=1;
 				  set(gh('SStartMod'),'String',num2str(sv.StartMod));
 				end
-				if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+				if get(gh('SEndModToggle'),'Value')==1 || isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
 				   sv.EndMod=x.nummods;
 				   set(gh('SEndMod'),'String',num2str(sv.EndMod));
 				end
@@ -672,7 +672,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					  sv.StartMod=1;
 					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
 					end
-					if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+					if get(gh('SEndModToggle'),'Value')==1 || isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
 					   sv.EndMod=x.nummods;
 					   set(gh('SEndMod'),'String',num2str(sv.EndMod));
 					end
@@ -813,7 +813,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					  sv.StartMod=1;
 					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
 					end
-					if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+					if get(gh('SEndModToggle'),'Value')==1 || isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
 					   sv.EndMod=x.nummods;
 					   set(gh('SEndMod'),'String',num2str(sv.EndMod));
 					end
@@ -960,7 +960,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					  sv.StartMod=1;
 					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
 					end
-					if isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
+					if get(gh('SEndModToggle'),'Value')==1 || isempty(sv.EndMod) || sv.EndMod>x.nummods || sv.EndMod<1
 					   sv.EndMod=x.nummods;
 					   set(gh('SEndMod'),'String',num2str(sv.EndMod));
 					end

@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 06-Nov-2011 14:26:56
+% Last Modified by GUIDE v2.5 15-May-2012 11:37:34
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -603,25 +603,6 @@ function SContourLevels_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SContourLevels as text
 %        str2double(get(hObject,'String')) returns contents of SContourLevels as a double
 
-
-function SISIWindow_Callback(hObject, eventdata, handles)
-% hObject    handle to SISIWindow (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of SISIWindow as text
-%        str2double(get(hObject,'String')) returns contents of SISIWindow as a double
-
-
-function SISIShift_Callback(hObject, eventdata, handles)
-% hObject    handle to SISIShift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of SISIShift as text
-%        str2double(get(hObject,'String')) returns contents of SISIShift as a double
-
-
 % --- Executes on button press in SShowError.
 function SShowError_Callback(hObject, eventdata, handles)
 % hObject    handle to SShowError (see GCBO)
@@ -629,7 +610,6 @@ function SShowError_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of SShowError
-
 
 
 function SXSlice_Callback(hObject, eventdata, handles)
