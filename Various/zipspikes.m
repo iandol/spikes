@@ -163,22 +163,25 @@ classdef zipspikes < handle
 					for j = 1:length(dd)
 						name2 = dd(j).name;
 						if regexpi(name2,'zip$')
-							doMove(name2,dummyRun,fid2,fid1);
+							doMove(name2,dummyRun,fid2,fid1,name);
 						end
 					end
 					fclose(fid2);
 					cd(obj.sourcedir)
 				elseif regexpi(name,'zip$')
-					doMove(name,dummyRun,fid1);
+					doMove(name,dummyRun,fid1,[],obj.sourcedir);
 				end
 				meta = [];
 			end
 			fclose(fid1);
 			cd(olddir);
 			
-			function doMove(name,dummyRun,fida,fidb)
+			function doMove(name,dummyRun,fida,fidb,dirname)
 				if ~exist('fidb','var')
 					fidb = [];
+				end
+				if ~exist('dirname','var')
+					dirname = '';
 				end
 				[meta,~,~] = obj.readarchive(name, false);
 				if ~isempty(meta) && isfield(meta,'protocol')
@@ -187,18 +190,18 @@ classdef zipspikes < handle
 						newname = [f ' - ' meta.protocol];
 						printname = newname;
 						newname = [p filesep newname e];
-						if dummyRun == true
+						if dummyRun == false
 							obj.salutation(['Renamed: ' newname],name);
-							fprintf(fida, [printname '\n']);
+							fprintf(fida, [dirname printname '\n']);
 							if ~isempty(fidb)
-								fprintf(fidb, [printname '\n']);
+								fprintf(fidb, [dirname printname '\n']);
 							end
 							movefile(name2,newname);
 						else
 							obj.salutation(['Dummy Renamed: ' newname],name);
-							fprintf(fida, [printname '\n']);
+							fprintf(fida, [dirname printname '\n']);
 							if ~isempty(fidb)
-								fprintf(fidb, [printname '\n']);
+								fprintf(fidb, [dirname printname '\n']);
 							end
 						end
 					else
@@ -235,13 +238,17 @@ classdef zipspikes < handle
 			
 			[p,f,e]=fileparts(myfile);
 			
-			switch lower(e)
-				case '.zip'
-					unzip(myfile,obj.tmppath);
-				case '.gz'
-					gunzip(myfile,obj.tmppath);
-				otherwise
-					return
+			try
+				switch lower(e)
+					case '.zip'
+						unzip(myfile,obj.tmppath);
+					case '.gz'
+						gunzip(myfile,obj.tmppath);
+					otherwise
+						return
+				end
+			catch ME
+				disp(getReport(ME))
 			end
 			
 			f = regexprep(f, '\s--\s.*$','');%we need to remove the appended protocol string

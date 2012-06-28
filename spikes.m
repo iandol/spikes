@@ -534,7 +534,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				if ~isempty(x.error); data.error=x.error; end
 				
 				%lets make sure our modulation selection is valid
-				if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
+				if get(gh('SEndModToggle'),'Value')==1 || isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
 				  sv.StartMod=1;
 				  set(gh('SStartMod'),'String',num2str(sv.StartMod));
 				end
@@ -668,7 +668,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
 					
 					%lets make sure our modulation selection is valid
-					if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
+					if get(gh('SEndModToggle'),'Value')==1 || isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
 					  sv.StartMod=1;
 					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
 					end
@@ -809,7 +809,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
 					
 					%lets make sure our modulation selection is valid
-					if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
+					if get(gh('SEndModToggle'),'Value')==1 || isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
 					  sv.StartMod=1;
 					  set(gh('SStartMod'),'String',num2str(sv.StartMod));
 					end
