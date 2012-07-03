@@ -77,7 +77,7 @@ for i=1:(data.xrange*data.yrange*data.zrange)
       fftmatrix.fftvalue(i)=val;
    else            %if we're calculating a single harmonic
       [a,f]=fftval(data.psth{i},time,harmn1,tempfreq);      
-      fftmatrix.fftvalue(i)=sf*a;
+      fftmatrix.fftvalue(i)=sf*a(end);
    end
 end
 

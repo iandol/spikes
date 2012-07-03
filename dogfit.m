@@ -502,6 +502,7 @@ switch(action)
 			plot(x,yy,'r-');
 			axis tight
 			hold off;
+			axis([min(fd.x)-0.5 max(fd.x)+0.5 0 inf])
 		else
 			plot(x,y,'k-',x,yy,'r-');
 		end

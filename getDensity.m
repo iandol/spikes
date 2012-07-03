@@ -34,8 +34,6 @@ classdef getDensity < handle
 		dogauss = true
 		%> if X/Y have more than 1 column, you can detail column names here
 		columnlabels = {'DataSet1'}
-		%> remove outliers using 'grubb', 'rosner', 3SD' or 'none'
-		dooutlier = 'none'
 		%> add jitter to scatterplot? 'x', 'y', 'both', 'equal', 'none'
 		addjitter = 'none'
 		%>  celllist of case names the same length as X/Y
@@ -46,12 +44,16 @@ classdef getDensity < handle
 		xrownames = []
 		%> a cell of names for each row
 		yrownames = []
+		%> remove outliers using 'grubb', 'rosner', 'limit', '3SD' or 'none'
+		dooutlier = 'none'
 		%> rosner outlier number of outliers
-		rosnern = 2 
+		rosnern = 2
 		%> p to use for outlier removal for rosner and grubb
-		outlierp = 0.001 
+		outlierp = 0.001
+		%> outlier limit for limit method
+		outlierlimit = Inf
 		%> scalefactor for jitter of scatter plot
-		jitterfactor = 100 
+		jitterfactor = 100
 		%> do we spit out each plot in its own figure for easy export?
 		singleplots = false
 		%> do we show the original points in the scatter before scattering them?
@@ -92,9 +94,9 @@ classdef getDensity < handle
 		%> number of columns
 		nColumns = []
 		%> the layout when plotting mutliple plots
-		plotX = 3 
+		plotX = 3
 		%> layout when plotting mutliple plots
-		plotY = 2 
+		plotY = 2
 		%> the unique cases
 		uniquecases = []
 	end
@@ -121,7 +123,7 @@ classdef getDensity < handle
 	
 	%=======================================================================
 	methods %------------------PUBLIC METHODS
-	%=======================================================================
+		%=======================================================================
 		
 		% ===================================================================
 		%> @brief Class constructor
@@ -163,7 +165,7 @@ classdef getDensity < handle
 			warning('off', 'stats:jbtest:PTooBig')
 			if ~isempty(obj.index)
 				nVals = length(obj.index);
-			else 
+			else
 				nVals = size(obj.x,2);
 				obj.index = 1:nVals;
 			end
@@ -172,12 +174,12 @@ classdef getDensity < handle
 				tic
 				xcol=obj.x(:,idx);
 				ycol=obj.y(:,idx);
-				cases = obj.cases;
+				casesLocal = obj.cases;
 				uniquecases = obj.uniquecases;
 				
 				outs.x = obj.x;
 				outs.y = obj.y;
-				outs.cases = cases;
+				outs.cases = casesLocal;
 				
 				xouttext='';
 				youttext='';
@@ -195,7 +197,7 @@ classdef getDensity < handle
 					delete(gca)
 					pn.pack('v',[0.5 0.5]);
 					pn(1).pack('h',[1/3 1/3 -1])
-					pn(2).pack('h',[1/3 -1])
+					pn(2).pack('h',[1/3 1/3 -1])
 				else
 					figpos(1,[1200,1000]);
 					delete(gca)
@@ -211,12 +213,7 @@ classdef getDensity < handle
 					ycol = ycol(isnan(ycol)==0);
 				end
 				
-				xmean=nanmean(xcol); %initial values before outlier removal
-				ymean=nanmean(ycol);
-				xstd=nanstd(xcol);
-				ystd=nanstd(ycol);
-				
-				[xcol,ycol,cases,xouttext,youttext] = obj.removeOutliers(xcol,ycol,cases,xouttext,youttext);
+				[xcol,ycol,casesLocal,xouttext,youttext] = obj.removeOutliers(xcol,ycol,casesLocal,xouttext,youttext);
 				
 				xmean=nanmean(xcol);
 				xmedian=nanmedian(xcol);
@@ -224,8 +221,8 @@ classdef getDensity < handle
 				ymedian=nanmedian(ycol);
 				xstd=nanstd(xcol);
 				ystd=nanstd(ycol);
-				xstderr=stderr(xcol,'SE',1);
-				ystderr=stderr(ycol,'SE',1);
+				xstderr=obj.stderr(xcol,'SE',1);
+				ystderr=obj.stderr(ycol,'SE',1);
 				
 				
 				%==========================================DO HISTOGRAM
@@ -244,7 +241,7 @@ classdef getDensity < handle
 					xn = xn';
 					yn = yn';
 				end
-
+				
 				px = 1;
 				py = 1;
 				pn(py,px).select();
@@ -343,22 +340,22 @@ classdef getDensity < handle
 				end
 				
 				if obj.isDataEqualLength && exist('notBoxPlot','file')
-% 					if ~isempty(uniquecases) && ~isempty(cases)
-% 						for jj = 1:length(uniquecases)
-% 							caseidx = ismember(cases,uniquecases{jj});
-% 							xtmp(:,jj) = xcol(caseidx);
-% 							ytmp(:,jj) = ycol(caseidx);
-% 						end
-% 						notBoxPlot([xtmp ytmp],[1 1 2 2]);
-% 					else
-% 						notBoxPlot([xcol ycol],[1 1]);
-% 					end
+					% 					if ~isempty(uniquecases) && ~isempty(casesLocal)
+					% 						for jj = 1:length(uniquecases)
+					% 							caseidx = ismember(casesLocal,uniquecases{jj});
+					% 							xtmp(:,jj) = xcol(caseidx);
+					% 							ytmp(:,jj) = ycol(caseidx);
+					% 						end
+					% 						notBoxPlot([xtmp ytmp],[1 1 2 2]);
+					% 					else
+					% 						notBoxPlot([xcol ycol],[1 1]);
+					% 					end
 					notBoxPlot([xcol ycol],[1 2],[],[],[],options);
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 					pn(py,px).ylabel(obj.columnlabels{idx});
 					
 				elseif obj.isDataEqualLength==false && exist('notBoxPlot','file')
-
+					
 					notBoxPlot(xcol,1,[],[],[],options);
 					hold on
 					notBoxPlot(ycol,2,[],[],[],options);
@@ -383,11 +380,11 @@ classdef getDensity < handle
 					pn(py,px).select()
 					[r,p]=corr(xcol,ycol);
 					[r2,p2]=corr(xcol,ycol,'type','spearman');
-
+					
 					xrange = max(xcol) - min(xcol);
 					yrange = max(ycol) - min(ycol);
 					range = max(xrange,yrange);
-
+					
 					
 					if obj.addjitter == true
 						obj.addjitter = 'both';
@@ -422,7 +419,7 @@ classdef getDensity < handle
 					else
 						axrange = [min(xcol) min(xcol)+range min(ycol) min(ycol)+range];
 					end
-					if ~isempty(cases)
+					if ~isempty(casesLocal)
 						t = 'Group: ';
 						for jj = 1:length(uniquecases)
 							t = [t num2str(jj) '=' uniquecases{jj} ' '];
@@ -432,8 +429,8 @@ classdef getDensity < handle
 						t = '';
 					end
 					hold on
-					if ~isempty(cases)
-						gscatter(xcolout,ycolout,cases,'krbgmyc','o');
+					if ~isempty(casesLocal)
+						gscatter(xcolout,ycolout,casesLocal,'krbgmyc','o');
 					else
 						scatter(xcolout,ycolout,repmat(80,length(xcol),1),[0 0 0]);
 					end
@@ -548,6 +545,7 @@ classdef getDensity < handle
 				
 				[xci,xmean,xpop]=bootci(obj.nboot,{obj.fhandle,xcol},'alpha',obj.alpha);
 				[yci,ymean,ypop]=bootci(obj.nboot,{obj.fhandle,ycol},'alpha',obj.alpha);
+				
 				try
 					[xxci,xxmean,xxpop]=bootci(obj.nboot,{@median,xcol},'alpha',obj.alpha);
 					[yyci,yymean,yypop]=bootci(obj.nboot,{@median,ycol},'alpha',obj.alpha);
@@ -580,12 +578,12 @@ classdef getDensity < handle
 				end
 				pn(py,px).select();
 				
-% 				h = cdfplot(xcol);
-% 				set(h,'Color',[0 0 0])
-% 				hold on
-% 				h = cdfplot(ycol);
-% 				set(h,'Color',[1 0 0])
-% 				hold off
+				% 				h = cdfplot(xcol);
+				% 				set(h,'Color',[0 0 0])
+				% 				hold on
+				% 				h = cdfplot(ycol);
+				% 				set(h,'Color',[1 0 0])
+				% 				hold off
 				hold on
 				[f,x,flo,fup] = ecdf(xcol,'alpha',obj.alpha);
 				stairs(x,f,'k','LineWidth',2);
@@ -661,8 +659,10 @@ classdef getDensity < handle
 				outs.(fieldn).ycol = ycol;
 				outs.(fieldn).xmean = xmean;
 				outs.(fieldn).xmedian = xmedian;
+				outs.(fieldn).xstd = xstd;
 				outs.(fieldn).ymean = ymean;
 				outs.(fieldn).ymedian = ymedian;
+				outs.(fieldn).ystd = ystd;
 				outs.(fieldn).xcolout = xcolout;
 				outs.(fieldn).ycolout = ycolout;
 				outs.(fieldn).text = t;
@@ -675,9 +675,9 @@ classdef getDensity < handle
 					obj.doSinglePlots(pn);
 				end
 				
-				if obj.isDataEqualLength && ~isempty(uniquecases) && ~isempty(cases)
+				if obj.isDataEqualLength && ~isempty(uniquecases) && ~isempty(casesLocal)
 					for jj = 1:length(uniquecases)
-						caseidx = ismember(cases,uniquecases{jj});
+						caseidx = ismember(casesLocal,uniquecases{jj});
 						xtmp = xcol(caseidx);
 						ytmp = ycol(caseidx);
 						name = ['Case_' uniquecases{jj}];
@@ -788,9 +788,9 @@ classdef getDensity < handle
 					jitter = (randn(length(datain),1))*(range/obj.jitterfactor);
 				end
 			end
-					
+			
 			data = datain + jitter;
-				
+			
 		end
 		
 		% ===================================================================
@@ -943,7 +943,7 @@ classdef getDensity < handle
 	
 	%=======================================================================
 	methods ( Access = private ) %-------PRIVATE METHODS-----%
-	%=======================================================================
+		%=======================================================================
 		
 		% ===================================================================
 		%> @brief Function that runs after the checkData event fires
@@ -976,7 +976,7 @@ classdef getDensity < handle
 					ntmp{i} = ['Obs_' num2str(i)];
 				end
 				obj.yrownames = ntmp;
-			end			
+			end
 			if ~isempty(obj.x)
 				if ~isempty(obj.cases) && obj.isDataEqualLength
 					obj.xdata = dataset({obj.x,obj.columnlabels{:}},'ObsNames',obj.xrownames);
@@ -1003,44 +1003,53 @@ classdef getDensity < handle
 		%> @param obj this instance object
 		% ===================================================================
 		function [xcol,ycol,cases,xouttext,youttext] = removeOutliers(obj,xcol,ycol,cases,xouttext,youttext)
+			xmean=nanmean(xcol); %initial values before outlier removal
+			ymean=nanmean(ycol);
+			xstd=nanstd(xcol);
+			ystd=nanstd(ycol);
 			switch obj.dooutlier
-					case 'quantiles'
-						idx1=qoutliers(xcol);
-						idx2=qoutliers(ycol);
+				case 'limit'
+					idx1=find(xcol > obj.outlierlimit);
+					idx2=find(ycol > obj.outlierlimit);
+					if ~isempty(idx1) || ~isempty(idx2)
 						if length(xcol)==length(ycol)
-							idx=idx1+idx2;
-							xouttext=sprintf('%0.3g ',xcol(idx>0)');
-							youttext=sprintf('%0.3g ',ycol(idx>0)');
-							xcol(idx>0)=[];
-							ycol(idx>0)=[];
-							cases(idx>0)=[];
+							idx=unique([idx1;idx2]);
+							xouttext=sprintf('%0.3g ',xcol(idx)');
+							youttext=sprintf('%0.3g ',ycol(idx)');
+							xcol(idx)=[];
+							ycol(idx)=[];
+							if ~isempty(cases); cases(idx)=[]; end
 						else
-							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
-							youttext=sprintf('%0.3g ',ycol(idx2>0)');
-							xcol(idx1>0)=[];
-							ycol(idx2>0)=[];
-						end
-					case 'rosner'
-						idx1=outlier(xcol,obj.outlierp,obj.rosnern);
-						idx2=outlier(ycol,obj.outlierp,obj.rosnern);
-						if ~isempty(idx1) || ~isempty(idx2)
-							if length(xcol)==length(ycol)
-								idx=unique([idx1;idx2]);
-								xouttext=sprintf('%0.3g ',xcol(idx)');
-								youttext=sprintf('%0.3g ',ycol(idx)');
-								xcol(idx)=[];
-								ycol(idx)=[];
-								if ~isempty(cases); cases(idx)=[]; end
-							else
+							if length(idx1)+2 < length(xcol)
 								xouttext=sprintf('%0.3g ',xcol(idx1)');
-								youttext=sprintf('%0.3g ',ycol(idx2)');
 								xcol(idx1)=[];
+							end
+							if length(idx2)+2 < length(ycol)
+								youttext=sprintf('%0.3g ',ycol(idx2)');
 								ycol(idx2)=[];
 							end
 						end
-					case 'grubb'
-						[~,idx1]=deleteoutliers(xcol,obj.outlierp);
-						[~,idx2]=deleteoutliers(ycol,obj.outlierp);
+					end
+				case 'quantiles'
+					idx1=qoutliers(xcol);
+					idx2=qoutliers(ycol);
+					if length(xcol)==length(ycol)
+						idx=idx1+idx2;
+						xouttext=sprintf('%0.3g ',xcol(idx>0)');
+						youttext=sprintf('%0.3g ',ycol(idx>0)');
+						xcol(idx>0)=[];
+						ycol(idx>0)=[];
+						cases(idx>0)=[];
+					else
+						xouttext=sprintf('%0.3g ',xcol(idx1>0)');
+						youttext=sprintf('%0.3g ',ycol(idx2>0)');
+						xcol(idx1>0)=[];
+						ycol(idx2>0)=[];
+					end
+				case 'rosner'
+					idx1=outlier(xcol,obj.outlierp,obj.rosnern);
+					idx2=outlier(ycol,obj.outlierp,obj.rosnern);
+					if ~isempty(idx1) || ~isempty(idx2)
 						if length(xcol)==length(ycol)
 							idx=unique([idx1;idx2]);
 							xouttext=sprintf('%0.3g ',xcol(idx)');
@@ -1054,51 +1063,68 @@ classdef getDensity < handle
 							xcol(idx1)=[];
 							ycol(idx2)=[];
 						end
-					case '2SD'
-						mtmp=repmat(xmean,length(xcol),1);
-						stmp=repmat(xstd,length(xcol),1);
-						idx1=abs(xcol-mtmp)>2*stmp;
-						
-						mtmp=repmat(ymean,length(ycol),1);
-						stmp=repmat(ystd,length(ycol),1);
-						idx2=abs(ycol-mtmp)>2*stmp;
-						if length(xcol)==length(ycol)
-							idx=idx1+idx2;
-							xouttext=sprintf('%0.3g ',xcol(idx>0)');
-							youttext=sprintf('%0.3g ',ycol(idx>0)');
-							xcol(idx>0)=[];
-							ycol(idx>0)=[];
-							if ~isempty(cases); cases(idx>0)=[]; end
-						else
-							xouttext=sprintf('%0.3g ',xcol(idx1>0)');
-							youttext=sprintf('%0.3g ',ycol(idx2>0)');
-							xcol(idx1>0)=[];
-							ycol(idx2>0)=[];
-						end
-					case '3SD'
-						mtmp=repmat(xmean,length(xcol),1);
-						stmp=repmat(xstd,length(xcol),1);
-						idx1=abs(xcol-mtmp)>3*stmp;
-						
-						mtmp=repmat(ymean,length(ycol),1);
-						stmp=repmat(ystd,length(ycol),1);
-						idx2=abs(ycol-mtmp)>3*stmp;
-						if length(xcol)==length(ycol)
-							idx=idx1+idx2;
-							xouttext=sprintf('%0.3g ',xcol(idx>0));
-							youttext=sprintf('%0.3g ',ycol(idx>0));
-							xcol(idx>0)=[];
-							ycol(idx>0)=[];
-							if ~isempty(cases); cases(idx>0)=[]; end
-						else
-							xouttext=sprintf('%0.3g ',xcol(idx1>0));
-							youttext=sprintf('%0.3g ',ycol(idx2>0));
-							xcol(idx1>0)=[];
-							ycol(idx2>0)=[];
-						end
-					otherwise
-						
-				end
+					end
+				case 'grubb'
+					[~,idx1]=deleteoutliers(xcol,obj.outlierp);
+					[~,idx2]=deleteoutliers(ycol,obj.outlierp);
+					if length(xcol)==length(ycol)
+						idx=unique([idx1;idx2]);
+						xouttext=sprintf('%0.3g ',xcol(idx)');
+						youttext=sprintf('%0.3g ',ycol(idx)');
+						xcol(idx)=[];
+						ycol(idx)=[];
+						if ~isempty(cases); cases(idx)=[]; end
+					else
+						xouttext=sprintf('%0.3g ',xcol(idx1)');
+						youttext=sprintf('%0.3g ',ycol(idx2)');
+						xcol(idx1)=[];
+						ycol(idx2)=[];
+					end
+				case '2SD'
+					mtmp=repmat(xmean,length(xcol),1);
+					stmp=repmat(xstd,length(xcol),1);
+					idx1=abs(xcol-mtmp)>2*stmp;
+					
+					mtmp=repmat(ymean,length(ycol),1);
+					stmp=repmat(ystd,length(ycol),1);
+					idx2=abs(ycol-mtmp)>2*stmp;
+					if length(xcol)==length(ycol)
+						idx=idx1+idx2;
+						xouttext=sprintf('%0.3g ',xcol(idx>0)');
+						youttext=sprintf('%0.3g ',ycol(idx>0)');
+						xcol(idx>0)=[];
+						ycol(idx>0)=[];
+						if ~isempty(cases); cases(idx>0)=[]; end
+					else
+						xouttext=sprintf('%0.3g ',xcol(idx1>0)');
+						youttext=sprintf('%0.3g ',ycol(idx2>0)');
+						xcol(idx1>0)=[];
+						ycol(idx2>0)=[];
+					end
+				case '3SD'
+					mtmp=repmat(xmean,length(xcol),1);
+					stmp=repmat(xstd,length(xcol),1);
+					idx1=abs(xcol-mtmp)>3*stmp;
+					
+					mtmp=repmat(ymean,length(ycol),1);
+					stmp=repmat(ystd,length(ycol),1);
+					idx2=abs(ycol-mtmp)>3*stmp;
+					if length(xcol)==length(ycol)
+						idx=idx1+idx2;
+						xouttext=sprintf('%0.3g ',xcol(idx>0));
+						youttext=sprintf('%0.3g ',ycol(idx>0));
+						xcol(idx>0)=[];
+						ycol(idx>0)=[];
+						if ~isempty(cases); cases(idx>0)=[]; end
+					else
+						xouttext=sprintf('%0.3g ',xcol(idx1>0));
+						youttext=sprintf('%0.3g ',ycol(idx2>0));
+						xcol(idx1>0)=[];
+						ycol(idx2>0)=[];
+					end
+				otherwise
+					
+			end
 		end
 		
 		% ===================================================================
@@ -1225,6 +1251,67 @@ classdef getDensity < handle
 				else
 					fprintf(['---> getDensity: ' in '\n']);
 				end
+			end
+		end
+		
+		% ===================================================================
+		%> @brief Converts properties to a structure
+		%>
+		%>
+		%> @param obj this instance object
+		%> @return out the structure
+		% ===================================================================
+		function [avg,error] = stderr(obj,data,type,onlyerror)
+			avg=nanmean(data);
+			if nargin<4
+				onlyerror=0;
+			end
+			if nargin<3
+				type='SE';
+			end
+			
+			if size(type,1)>1
+				type=reshape(type,1,size(type,1));
+			end
+			
+			switch(type)
+				
+				case 'SE'
+					err=nanstd(data);
+					error=sqrt(err.^2/length(data));
+				case '2SE'
+					err=nanstd(data);
+					error=sqrt((err.^2/length(data)))*2;
+				case 'SD'
+					error=nanstd(data);
+				case '2SD'
+					error=(nanstd(data))*2;
+				case '3SD'
+					error=(nanstd(data))*3;
+				case 'V'
+					error=nanstd(data).^2;
+				case 'F'
+					if max(data)==0
+						error=0;
+					else
+						error=nanvar(data)/nanmean(data);
+					end
+				case 'C'
+					if max(data)==0
+						error=0;
+					else
+						error=nanstd(data)/nanmean(data);
+					end
+				case 'A'
+					if max(data)==0
+						error=0;
+					else
+						error=nanvar(diff(data))/(2*nanmean(data));
+					end
+			end
+			
+			if onlyerror==1
+				avg=error;
 			end
 		end
 		

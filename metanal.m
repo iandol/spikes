@@ -33,6 +33,8 @@ case 'Initialize'
 case 'Load'
    cla;
    meta='';
+   set(findobj('Tag','MACellCheck'),'Value',0);
+   set(findobj('Tag','MACellMenu'),'Enable','off');
    [file,path]=uigetfile('*.mat','Meta-Analysis:Choose Meta File');
    if ~file
       errordlg('No File Specified', 'Meta-Analysis Error')
@@ -281,12 +283,17 @@ case 'InitCell'
       str='';
       for i=1:meta.size         
          str{i}=strtok(meta.cell(i).header); 
-         str=str';
-      end 
+	  end 
+	  str=str';
+	  if get(findobj('Tag','MACellMenu'),'Value') > meta.size
+		  set(findobj('Tag','MACellMenu'),'Value',1);
+	  end
       set(findobj('Tag','MACellMenu'),'Visible','on');
-      set(findobj('Tag','MACellMenu'),'String',str);      
+	  set(findobj('Tag','MACellMenu'),'Enable','on');  
+      set(findobj('Tag','MACellMenu'),'String',str);
+	  metanal('SeeCell')
    else
-      set(findobj('Tag','MACellMenu'),'Visible','off');      
+      set(findobj('Tag','MACellMenu'),'Enable','off');      
       plotdata;
    end
    
@@ -358,9 +365,9 @@ case 'Grid'
    
 %%%%%%%%%%%%%%%%%Close the Program%%%%%%%%%%%%%%%%%%%%   
 case 'Finish' 
-   clear all
+   clear meta
    close(gcf)
-   vs
+  
 
 
 end   % end of main switch
@@ -410,8 +417,8 @@ case 'Patch Percentage Plot'
    
 case 'MinMax Analysis'
    for i=1:meta.size  
-      data(:,i)=meta.cell(i).data(:,3);
-      minmax(:,i)=(data(:,i)-min(data(:,i)))/(max(data(:,i)-min(data(:,i))))*100;
+      raw(:,i)=meta.cell(i).data(:,3);
+      minmax(:,i)=(raw(:,i)-min(raw(:,i)))/(max(raw(:,i)-min(raw(:,i))))*100;
    end
    xvalues=meta.cell(1).data(:,2);
    ydata=minmax;
@@ -426,10 +433,10 @@ case 'MinMax Analysis'
    
 case 'Raw Firing Data'
    for i=1:meta.size
-      data(:,i)=meta.cell(i).data(:,3); 
+      raw(:,i)=meta.cell(i).data(:,3); 
    end
    xvalues=meta.cell(1).data(:,2);
-   ydata=data;
+   ydata=raw;
    type=ErrorMode;
    areabar(xvalues,ydata,type); 
    title('Meta-Analysis of Raw Firing Data')
@@ -448,16 +455,18 @@ case 'Distribution'
       p1=polyval(p1,x(4:5));
       p2=polyfit(x(6:8),y(6:8),1);
       p2=polyval(p2,x(6:8));
-      %plot(x,y,x(4:5),p1,x(6:8),p2)
+      plot(x,y,x(4:5),p1,x(6:8),p2)
       slope1(i)=(p1(2)-p1(1))/(x(5)-x(4));
       slope2(i)=(p2(3)-p2(1))/(x(8)-x(6));
       text(2,max(y)/1.5,[num2str(slope1(i)) '  |  ' num2str(slope2(i))]);
-      %pause(1.5)
+      pause(0.25)
    end
-   slope1
-   slope2
-   value=slope1./slope2
-   save('c:\temp.mat', 'slope1', 'slope2', 'value')
+   slope1;
+   slope2;
+   value=slope1./slope2;
+   assignin('base','slope1', slope1);
+   assignin('base','slope2', slope2);
+   assignin('base','sloperatio', value);
    hist(value,10)
    title('Distribution of Cells');
    ylabel('Number of Cells','FontName','Arial','FontSize', 12);   
@@ -485,7 +494,7 @@ case 'CurveFit'
    axis([0  8.5 -inf inf]);
    figure
    %hist(x)
-   save('c:\temp.mat', 'p1',  'p2',  'x')
+   %save('c:\temp.mat', 'p1',  'p2',  'x')
    
    doangle=1;
    if doangle==1
@@ -509,8 +518,10 @@ case 'CurveFit'
          %   angle2(i)=angle2(i)-(2*angle2(i));  
          %end               
       end
-      angle1
-      angle2
+      angle1;
+      angle2;
+	  assignin('base','angle1', angle1);
+	  assignin('base','angle2', angle2);
       %x=55:1:95
       angle1=angle1*(pi/180);
       angle2=angle2*(pi/180);

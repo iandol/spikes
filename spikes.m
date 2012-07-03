@@ -150,7 +150,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'BARS';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Analysis';'Area Analysis';'2D Curves';'Plateau Analysis';'Tuning Curves';'Temporal Movie'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'BARS';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Bootstrap curve';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Analysis';'Area Analysis';'2D Curves';'Save for MetaAnal';'Plateau Analysis';'Tuning Curves';'Temporal Movie'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
 		set(gcf,'DefaultAxesFontName','Helvetica');
@@ -443,10 +443,21 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			data.cycles=data.meta.cycles;
 			data.trialtime=data.meta.trialtime;
 			data.modtime=data.meta.modtime;
-			if isfield(data.meta,'tempfreq')
-				data.tempfreq=data.meta.tempfreq;
+			tempfreq = [];
+			for jj = 1:length(data.info)
+				rx=regexp(data.info{jj},'Stim1:.+Drift.+Period:.+\((?<freq>\d.\d).+\)','names');
+				if ~isempty(rx)
+					tempfreq = [tempfreq str2num(rx.freq)];
+				end
+			end
+			if isempty(tempfreq)
+				if isfield(data.meta,'tempfreq')
+					data.tempfreq=data.meta.tempfreq;
+				else
+					data.tempfreq=[];
+				end
 			else
-				data.tempfreq=[];
+				data.tempfreq = tempfreq;
 			end
 		end
 		
@@ -736,6 +747,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				
 				%%%Set the plotting options
 				if get(gh('SPlotMenu'),'Value')>7; set(gh('SPlotMenu'),'Value',7); end
+				if get(gh('SPlotMenu'),'Value')==6; set(gh('SPlotMenu'),'Value',7); end
 				set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 				set(gh('STypeMenu'),'Enable','on');
 				set(gh('CMapMenu'),'Enable','on');
@@ -1407,11 +1419,11 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				if get(gh('FFTDefaults'),'Value')==0
 					vals=fftoptions(data.tempfreq);
 				else
-					vals = [1 Inf Inf 0];
+					vals = [1 Inf Inf 0 data.tempfreq];
 				end
 				
 				%call up fft finding routine and assign values
-				tmp=computefft(vals(1),vals(2),sv.ErrorMode,data.tempfreq,vals(3),vals(4));
+				tmp=computefft(vals(1),vals(2),sv.ErrorMode,vals(5),vals(3),vals(4));
 				tmat=tmp.fftvalue;
 				emat=tmp.errvalue;
 				
@@ -1595,6 +1607,81 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				tune.data.xcurveerror=data.errormat(:,x);
 				tune.data.ycurveerror=data.errormat(y,:);
 				save([sv.historypath 'tune.mat'], 'tune');
+		end
+
+		
+		%-----------------------------Surround Suppression Measurement----------
+	case 'Bootstrap curve'
+		
+		if data.numvars<4
+			switch get(gh('SpikeMenu'),'Value');
+				case 1 %all spikes
+					a=data.matrix;
+					w=data.xvalues;
+					T='all spikes';
+				case 2 %burst spikes
+					a=data.matrix;
+					w=data.xvalues;
+					T='Burst spikes';
+				case 3 %subtract burst from all to get tonic, only surfaces etc
+					a=data.matrix;
+					w=data.xvalues;
+					T='Tonic spikes';
+				otherwise
+					errordlg('Spike Selection Error')
+					error('spike selection error in spikeset')
+			end
+			aerr=data.errormat;
+			
+			figure;
+			figpos(1,[700 700])
+			
+			h=areabar(w, a, aerr);
+			sa = [w;a;aerr]';
+			%save([sv.historypath 'tuningcurve.mat'], 'sa');
+			assignin('base','tuningcurve',sa);
+			%ylim([-0.1 1.1]);
+			set(gca,'FontSize',12);
+			t=data.matrixtitle;
+			title(t);
+			ylabel('Normalized Firing Rate');
+			xlabel('Diameter');
+			
+			pval = str2num(get(gh('SErrorEdit'),'String'));
+			if pval == 0 || pval > 1
+				pval = 0.05;
+			end
+			
+			for i=1:length(a)
+				if data.numvars == 1
+					tr = [data.sums{i}];
+				elseif data.numvars > 1 && sv.xlock == 0
+					tr = [data.sums{sv.yval, i, sv.zval}];
+				elseif data.numvars > 1 && sv.ylock == 0
+					tr = [data.sums{i, sv.xval, sv.zval}];
+				end
+
+				if data.wrapped == 1
+					timet = data.modtime / 10;
+				else
+					timet = data.trialtime / 10;
+				end
+				modt = 1000 / timet;
+				tr = tr .* modt; %convert to Hz
+
+				ci = bootci(1000,{@mean, tr},'alpha',pval);
+				modx = (max(w) / length(w)) / 2;
+				coly = [rand rand rand];
+				h = line([w(i)-modx w(i)+modx],[ci(1) ci(1)]);
+				set(h,'Color',coly,'LineStyle','-.','LineWidth',1);
+				h=text(w(i),ci(1)+0.01,sprintf('%.5g : %.5g',i,ci(1)));
+				set(h,'Color',coly,'FontSize',10)
+				
+				h = line([w(i)-modx w(i)+modx],[ci(2) ci(2)]);
+				set(h,'Color',coly,'LineStyle','-.','LineWidth',1);
+				h=text(w(i),ci(2)+0.01,sprintf('%.5g : %.5g',i,ci(2)));
+				set(h,'Color',coly,'FontSize',10);
+			end
 		end
 		
 		%-----------------------------Surround Suppression Measurement----------
@@ -1942,6 +2029,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 			data.ratio=ratio;
 			MR=mean(data.ratio);
+			assignin('base','ratios',ratio);
 			save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
 			s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',ratio),sprintf('%0.6g\t',MR)];
 			clipboard('Copy',s);
@@ -1960,6 +2048,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			data.ratio=ratio;
 			R=data.ratio(Y,:);
 			MR=mean(R);
+			assignin('base','ratios',ratio);
 			save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
 			s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',R),sprintf('%0.6g\t',MR)];
 			clipboard('Copy',s);
@@ -2565,6 +2654,43 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			end
 		end
 		
+		%-----------------------------------------------------------------------------------------
+	case 'Save for MetaAnal'
+		%-----------------------------------------------------------------------------------------
+		if ~isempty(data);
+			pp=str2num(get(gh('SErrorEdit'),'String'))
+			if pp <= 0
+				error('Please enter a firing rate for centre alone!!!')
+			end
+
+			x = data.xvalues';
+			xr = data.xrange;
+			y = data.matrix';
+			e = data.errormat';
+
+			acell.header = data.matrixtitle;
+			acell.type = 'Percentage Plot';
+			acell.data = zeros(xr, 6);
+			acell.data(:,1) = 1:xr;
+			acell.data(:,2) = x;
+			acell.data(:,3) = y;
+			acell.data(:,4) = e;
+			acell.data(:,5) = (y / pp) * 100;
+			acell.data(:,6) = pp;
+
+			oldpath=pwd;
+
+			fname = regexprep(data.runname,'\s\|\s','');
+			fname = [fname '_' data.meta.protocol ' Cell=' num2str(data.cell) ' Wrap=' num2str(data.wrapped) ' T=' num2str(sv.StartTrial) '-' num2str(sv.EndTrial)];
+			fname = regexprep(fname,'(>|\|)','_');
+			[fn,pn]=uiputfile('*.mat','Save the Processed Matrix',fname);
+			if isequal(fn,0)||isequal(pn,0); helpdlg('Sorry, no file selected'); return; end
+			cd(pn);
+			save(fn,'acell');
+			cd(oldpath);
+		else
+			warndlg('No Data has been Processed...');
+		end
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Polar Diagonals'

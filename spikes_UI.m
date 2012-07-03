@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 15-May-2012 11:37:34
+% Last Modified by GUIDE v2.5 30-Jun-2012 13:04:21
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -175,6 +175,37 @@ function varargout = SMeasureButton_Callback(h, eventdata, handles, varargin)
 global sv
 set(findobj('Tag','SMinEdit'),'UserData','no');
 set(findobj('Tag','SMaxEdit'),'UserData','no');
+sv.MeasureButton = true;
+spikes('Measure');
+
+% --- Executes on button press in SQuickFFT.
+function SQuickFFT_Callback(hObject, eventdata, handles)
+% hObject    handle to SQuickFFT (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global sv
+if ~isfield(sv,'ffttoggle')
+	sv.ffttoggle = true;
+end
+if sv.ffttoggle == true
+	set(findobj('Tag','SMinEdit'),'UserData','no');
+	set(findobj('Tag','SMaxEdit'),'UserData','no');
+	set(findobj('Tag','AnalysisMenu'),'Value',6);
+	sv.AnalysisMethod=6;
+	set(gh('SOverrideTime'),'Value',1);
+	set(gh('SMinEdit'),'String','0');
+	set(gh('SMinEdit'),'Enable','off');
+	set(gh('SMinEdit'),'UserData','no');
+	set(gh('SMaxEdit'),'String','Inf');
+	set(gh('SMaxEdit'),'Enable','off');
+	set(gh('SMinEdit'),'UserData','no');
+	set(gh('Measurebutton'),'Enable','off');
+	sv.ffttoggle = false;
+else
+	set(findobj('Tag','AnalysisMenu'),'Value',1);
+	sv.AnalysisMethod=1;
+	sv.ffttoggle = true;
+end
 sv.MeasureButton = true;
 spikes('Measure');
 
@@ -858,3 +889,5 @@ function SdoBARS_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of SdoBARS
 global sv
 sv.plotBARS = get(hObject,'Value');
+
+
