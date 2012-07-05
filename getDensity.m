@@ -197,7 +197,7 @@ classdef getDensity < handle
 					delete(gca)
 					pn.pack('v',[0.5 0.5]);
 					pn(1).pack('h',[1/3 1/3 -1])
-					pn(2).pack('h',[1/3 1/3 -1])
+					pn(2).pack('h',[1/3 -1])
 				else
 					figpos(1,[1200,1000]);
 					delete(gca)

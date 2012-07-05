@@ -4556,17 +4556,17 @@ if sv.xlock == 1 && data.numvars > 1
 else
 	xrange = 1:data.xrange;
 	xvalues = data.xvalues;
-	range=length(xrange);
+	ttrange=length(xrange);
 end
 
 if sv.ylock == 1 || data.numvars == 1
 	yrange = sv.yval;
-	yvalues = data.yvalues(sv.yval);
+	%yvalues = data.yvalues(sv.yval);
 	isSurface = false;
 else
 	yrange = 1:data.yrange;
 	yvalues = data.yvalues;
-	range=length(yrange);
+	ttrange=length(yrange);
 end
 
 ttime = sv.maxt - sv.mint;
@@ -4574,6 +4574,12 @@ mini = find(time == sv.mint);
 maxi = find(time == sv.maxt);
 
 msteps = floor(ttime / sh);
+
+if sv.ylock == 1 || data.numvars == 1
+	tt=zeros(length(xrange),msteps);
+else
+	tt=zeros(length(yrange),msteps);
+end
 
 if maxi+wsum > totalsteps
 	msteps = msteps - wsum;
@@ -4594,8 +4600,10 @@ for i=1:msteps   %for each bin
 			if mx <= maxi
 				if length(yrange) == 1
 					tmatrix(1,j,i)=sum(psth{k,j,z}(mi:mx));
+					tt(j,i)=sum(psth{k,j,z}(mi:mx));
 				elseif length(xrange) == 1
 					tmatrix(k,1,i)=sum(psth{k,j,z}(mi:mx));
+					tt(k,i)=sum(psth{k,j,z}(mi:mx));
 				else
 					tmatrix(k,j,i)=sum(psth{k,j,z}(mi:mx));
 				end
@@ -4610,11 +4618,15 @@ end
 
 mmax=max(tmatrix(:));
 
-tsurface = zeros(msteps,range);
+tsurface = zeros(msteps,ttrange);
 
 h=figure;
 figpos(1,[1000 1000]);	%position the figure
 set(gcf,'Color',[1 1 1]);
+imagesc(tt);
+
+assignin('base','tmatrix',tt)
+return
 
 for i=1:msteps
 	d=tmatrix(:,:,i);
