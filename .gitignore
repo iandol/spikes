@@ -1,0 +1,5 @@
+*.asv
+*~
+*.tmp
+.DS_Store
+.bzrignore

@@ -1610,7 +1610,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		end
 
 		
-		%-----------------------------Surround Suppression Measurement----------
+		%-----------------------------Bootstrap CI Measurement----------
 	case 'Bootstrap curve'
 		
 		if data.numvars<4
