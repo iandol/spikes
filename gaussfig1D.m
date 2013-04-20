@@ -1,4 +1,4 @@
-function varargout = gaussfig1D(varargin)
+function varargout = gaussfig1d(varargin)
 % GAUSSFIG Application M-file for gaussfig.fig
 %    FIG = GAUSSFIG launch gaussfig GUI.
 %    GAUSSFIG('callback_name', ...) invoke the named callback.
@@ -71,117 +71,117 @@ end
 % --------------------------------------------------------------------
 function varargout = H1Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d1d('HPlot');
+gaussfit1D('HPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = H2Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('HPlot');
+gaussfit1D('HPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = H3Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('HPlot');
+gaussfit1D('HPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = H4Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('HPlot');
+gaussfit1D('HPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = V1Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('VPlot');
+gaussfit1D('VPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = V2Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('VPlot');
+gaussfit1D('VPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = V3Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('VPlot');
+gaussfit1D('VPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = V4Edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('VPlot');
+gaussfit1D('VPlot');
 
 
 % --------------------------------------------------------------------
 function varargout = d11edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D1Plot');
+gaussfit1D('D1Plot');
 
 
 % --------------------------------------------------------------------
 function varargout = d12edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D1Plot');
+gaussfit1D('D1Plot');
 
 
 % --------------------------------------------------------------------
 function varargout = d13edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D1Plot');
+gaussfit1D('D1Plot');
 
 
 % --------------------------------------------------------------------
 function varargout = d14edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D1Plot');
+gaussfit1D('D1Plot');
 
 % --------------------------------------------------------------------
 function varargout = d21edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D2Plot');
+gaussfit1D('D2Plot');
 
 
 % --------------------------------------------------------------------
 function varargout = d22edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D2Plot');
+gaussfit1D('D2Plot');
 
 
 % --------------------------------------------------------------------
 function varargout = d23edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D2Plot');
+gaussfit1D('D2Plot');
 
 
 % --------------------------------------------------------------------
 function varargout = d24edit_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D2Plot');
+gaussfit1D('D2Plot');
 
 
 % --------------------------------------------------------------------
 function varargout = HButton_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('HFit');
+gaussfit1D('HFit');
 
 % --------------------------------------------------------------------
 function varargout = VButton_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('VFit');
+gaussfit1D('VFit');
 
 % --------------------------------------------------------------------
 function varargout = D1Button_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D1Fit');
+gaussfit1D('D1Fit');
 
 % --------------------------------------------------------------------
 function varargout = D2Button_Callback(h, eventdata, handles, varargin)
 
-gaussfit1d('D2Fit');
+gaussfit1D('D2Fit');
 
 
 % --------------------------------------------------------------------
