@@ -84,6 +84,9 @@ for j=1:length(cell)
 	end
 
 	for i=1:run.numtrials
+		if isfield(run,'tDelta');
+			len = run.tDelta(i);
+		end
 		x=vertcat(run.trial(i).mod{:})';		
 		x=x/10000;	%convert into seconds
 		%xx=[x(:,:);x(:,:)+width;x(:,:)+width;x(:,:)]; %this constructs a set of patch co-ordinates for each spike time
@@ -115,6 +118,11 @@ for j=1:length(cell)
 		%yb=repmat([startpos+trialoffset; endpos+trialoffset],1,length(b));
 		
 		%patch(xx,yy,cols(j,:),'EdgeColor','none');
+		if exist('len','var')
+			st=startpos+trialoffset;
+			et=endpos+trialoffset
+			patch([0 len len 0],[st st et et],[1 1 0.5],'EdgeColor','none');
+		end
 		line(xx,yy,'Color',cols(j,:),'LineWidth',0.025);
 		hold on;
 		if burst==1 plot(b,yb,'r.','MarkerSize',5); end
