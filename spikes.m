@@ -28,7 +28,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv = [];
 		data = [];
 		rlist = [];
-		sv.version = 1.940;
+		sv.version = 2.001;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -92,6 +92,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.layer='top';
 		sv.box='on';
 		sv.auto='no';
+		sv.startOffset = 0;
 		sv.xval=1;
 		sv.yval=1;
 		sv.zval=1;
@@ -201,8 +202,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				sourcepath=data.sourcepath;
 				zipload = data.zipload;
 				zs=data.zs;
+				if isfield(data,'pR'); pR = data.pR; end
 				data=struct;
 				data.zs=zs;
+				if exist('pR','var'); data.pR = pR;	end
 				data.meta=meta;
 				data.info=info;
 				data.filetype=t;
@@ -303,7 +306,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					sv.reload='no';
 				else %we need the user to specify a file
 					if isfield(sv,'dataloadpath') && exist(sv.dataloadpath,'dir');cd(sv.dataloadpath);end
-					[fn,pn]=uigetfile({'*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.zip *.smr *.txt *.doc)'; ...
+					[fn,pn]=uigetfile({'*.plx;*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.plx *.zip *.smr *.txt *.doc)'; ...
+						'*.plx','Plexon Data (PLX)';...
 						'*.zip','VS RAW DATA File (ZIP)';...
 						'*.smr','VS RAW DATA File (SMR)';...
 						'*.txt','VSX Output File (TXT)'; ...
@@ -326,7 +330,21 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
 				automeasure=0;
 				
-				if regexpi(e,'\.zip')
+				if regexpi(e, '\.plx')
+					set(gh('LoadText'),'String','Parsing PLX Files, please wait...')
+					data.wrapped=2; %force off wrapping;
+					sv.Wrapped=2;
+					set(gh('WrappedMenu'),'Value',2);
+					pR = plxReader('file',fn,'dir',pn,'startOffset',sv.startOffset);
+					pR.parse;
+					data.zipload=false;
+					data.filetype='plx';
+					data.sourcepath = [pn fn];
+					data.info=pR.info;
+					data.meta = pR.meta;
+					data.pR = pR;
+				
+				elseif regexpi(e,'\.zip')
 					
 					data.zipload=true;
 					data.filetype='txt';
@@ -439,7 +457,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		data.repeats=data.meta.repeats;
 		data.error=[];
 		
-		if strcmp(data.filetype,'smr') || strcmp(data.filetype,'txt')
+		if strcmp(data.filetype,'plx') || strcmp(data.filetype,'smr') || strcmp(data.filetype,'txt')
 			data.cycles=data.meta.cycles;
 			data.trialtime=data.meta.trialtime;
 			data.modtime=data.meta.modtime;
@@ -535,6 +553,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				filename = [basefilename '.1'];
 				data.names=filename;
 				switch data.filetype
+					case 'plx'
+						
 					case 'doc'
 						x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 					otherwise
@@ -660,7 +680,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				data.textload=0;
 				data.areaplot=0;
 				
-				% 		h=waitbar(0,'Processing: binning data and finding bursts...');
+				%h=waitbar(0,'Processing: binning data and finding bursts...');
 				for i=firstnumber:lastnumber
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
@@ -669,6 +689,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					filenamet = regexprep(filenamet,'\s+',' ');
 					data.names{i}=filenamet;
 					switch data.filetype
+						case 'plx'
+							data.names{i} = ['plxvariable ' num2str(i)];
+							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 						otherwise
@@ -811,6 +834,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					filenamet = regexprep(filenamet,'\s+',' ');
 					data.names{i}=filenamet;
 					switch data.filetype
+						case 'plx'
+							data.names{i} = ['plxvariable ' num2str(i)];
+							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 						otherwise
@@ -950,16 +976,24 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				index=data.meta.matrix(:,2:4); %the list of variable values for each file
 				
 				for i=1:data.xrange*data.yrange*data.zrange
-					xi=index(i,1);
-					yi=index(i,2);
-					zi=index(i,3);
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
 					drawnow;
 					filename = [basefilename '.' int2str(i)];
 					filenamet = [filename ' ' num2str(data.meta.matrix(i,end-2:end))];
 					filenamet = regexprep(filenamet,'\s+',' ');
-					data.names{yi,xi,zi}=filenamet;
+					if strcmpi(data.filetype,'plx');
+						[yi,xi,zi] = ind2sub(size(data.raw),i);
+						data.names{yi,xi,zi}=filenamet;
+					else
+						xi=index(i,1);
+						yi=index(i,2);
+						zi=index(i,3);
+						data.names{yi,xi,zi}=filenamet;
+					end
 					switch data.filetype
+						case 'plx'
+							data.names{i} = ['plxvariable ' num2str(i)];
+							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 						otherwise
@@ -2625,7 +2659,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				sv.infoboxhandle=datainfobox;
 			end
 		
-			if strcmp(data.filetype,'txt') || strcmp(data.filetype,'smr')
+			if strcmp(data.filetype,'txt') || strcmp(data.filetype,'smr') || strcmp(data.filetype,'plx')
 				pos=get(gh('SpikeFig'),'Position');
 				pos2=get(gh('DataInfoBox'),'Position');
 				x=pos(1)+pos(3)+2;
@@ -2648,7 +2682,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				else
 					out=data.info;
 				end
-				set(gh('DITextDisplay'),'String',out);
+				set(gh('DITextDisplay'),'String',out,'FontSize',14);
 				figure(gh('DataInfoBox'));
 				figure(gh('SpikeFig'));
 			end

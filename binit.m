@@ -109,7 +109,7 @@ else  % Wrapped is OFF, we thus don't care about mod selection
 			x=floor(x);
 			x=x+1; % We need to do this because binning starts from 0, but the index starts from 1
 			for k=1:size(x,1)
-			psth(x(k))=psth(x(k))+1;
+				psth(x(k))=psth(x(k))+1;
 			end
 		end
 		sums=[sums;sum(sumst)];
