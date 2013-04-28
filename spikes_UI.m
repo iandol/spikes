@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 28-Apr-2013 16:05:31
+% Last Modified by GUIDE v2.5 28-Apr-2013 21:23:00
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -890,10 +890,6 @@ function SdoBARS_Callback(hObject, eventdata, handles)
 global sv
 sv.plotBARS = get(hObject,'Value');
 
-
-
-
-
 function SPLXOffset_Callback(hObject, eventdata, handles)
 % hObject    handle to SPLXOffset (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -902,4 +898,16 @@ function SPLXOffset_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SPLXOffset as text
 %        str2double(get(hObject,'String')) returns contents of SPLXOffset as a double
 global sv
-sv.startOffset = num2str(get(hObject,'String'));
+sv.startOffset = str2num(get(hObject,'String'));
+
+
+
+function SPLXcellmap_Callback(hObject, eventdata, handles)
+% hObject    handle to SPLXcellmap (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SPLXcellmap as text
+%        str2double(get(hObject,'String')) returns contents of SPLXcellmap as a double
+global sv
+sv.cellmap = str2num(get(hObject,'String'));

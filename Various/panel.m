@@ -15,10 +15,10 @@
 
 % CHANGE LOG
 % 
-% ################################################
+% ############################################################
 % 22/05/2011
 % First Public Release Version 2.0
-% ################################################
+% ############################################################
 % 
 % 23/05/2011
 % Incorporated an LP solver, since the one we were using
@@ -49,10 +49,10 @@
 % aiming for print figures. Or, you could have the ability
 % to turn off auto-refresh on resize().
 %
-% ################################################
+% ############################################################
 % 20/07/2011
 % Release Version 2.1
-% ################################################
+% ############################################################
 %
 % 05/10/2011
 % Tidied in-file documentation (panel.m).
@@ -61,10 +61,10 @@
 % Added flag "no-manage-font" to constructor, as requested
 % by Matlab Central user Mukhtar Ullah.
 %
-% ################################################
+% ############################################################
 % 13/12/2011
 % Release Version 2.2
-% ################################################
+% ############################################################
 %
 % 21/01/2012
 % Fixed bug in explicit height export option "-hX" which
@@ -79,10 +79,119 @@
 % Fixed DPI bug in smoothed export figures. Bug was flagged
 % up by Jesper at Matlab Central.
 %
-% ################################################
+% ############################################################
 % 26/01/2012
 % Release Version 2.3
-% ################################################
+% ############################################################
+%
+% 09/03/12
+% Fixed bug whereby re-positioning never got done if only
+% one panel was created in an existing figure window.
+%
+% ############################################################
+% 13/03/2012
+% Release Version 2.4
+% ############################################################
+%
+% 15/03/12
+% NB: On 2008b, and possibly later versions, the fact that
+% the resizeCallback() and closeCallback() are private makes
+% things not work. You can fix this by removing the "Access
+% = Private" modifier on that section of "methods". It works
+% fine in later versions, they must have changed the access
+% rules I guess.
+%
+% 19/07/12
+% Modified so that more than one object can be managed by
+% one axis. Just use p.select([h1 h2 ...]). Added function
+% "getAllManagedAxes()" which returns only objects from the
+% "object list" (h_object), as it now is, which represent
+% axes. Suggested by Brendan Sullivan @ Matlab Central.
+%
+% 19/07/12
+% Added support for zlabel() call (not applicable to parent
+% panels, since they are implicitly 2D for axis labelling).
+%
+% 19/07/12
+% Fixed another export bug - how did this one not get
+% noticed? XLimMode (etc.) was not getting locked during
+% export, so that axes without manual limits might get
+% re-dimensioned during export, which is bad news. Added
+% locking of limits as well as ticks, in storeAxisState().
+% Hope this has no side effects!
+%
+% ############################################################
+% 19/07/12
+% Release Version 2.5
+%
+% NB: Owing to the introduction of management of multiple
+% objects by each panel, this release should be considered
+% possibly flaky. Revert to 2.4 if you have problems with
+% 2.5.
+% ############################################################
+%
+% 23/07/12
+% Improved documentation for figure export in demopanelA.
+%
+% 24/07/12
+% Added support for export to SVG, using "plot2svg" (Matlab
+% Central File Exchange) as the renderer. Along the way,
+% tidied the behaviour of export() a little, and improved
+% reporting to the user. Changed default DPI for EPS to 600,
+% since otherwise the output files are pretty shoddy, and
+% the filesize is relatively unaffected.
+%
+% 24/07/12
+% Updated documentation, particularly HTML pages and
+% associated figures. Bit nicer, now.
+%
+% ############################################################
+% 24/07/12
+% Release Version 2.6
+% ############################################################
+%
+% 22/09/12
+% Added demopanelH, which illustrates how to do insets. Kudos
+% to Ann Hickox for the idea.
+%
+% 20/03/13
+% Added panel.plot() to work around poor rendering of dashed
+% lines, etc. Added demopanelI to illustrate its use.
+%
+% 20/03/13
+% Renamed setCallback to addCallback, so we can have more
+% than one. Added "userdata" argument to addCallback(), and
+% "event" field (and "userdata" field) to "data" passed when
+% callback is fired.
+%
+% ############################################################
+% 21/03/13
+% Release Version 2.7
+% ############################################################
+%
+% 21/03/13
+% Fixed bug in panel.plot() which did not handle solid lines
+% correctly.
+%
+% 12/04/13
+% Added back setCallback() with appropriate semantics, for
+% the use of legacy code (or, really, future code, these
+% semantics might be useful to someone). Also added the
+% function clearCallbacks().
+%
+% 12/04/13
+% Removed panel.plot() because it just seemed to be too hard
+% to manage. Instead, we'll let the user plot things in the
+% usual way, but during export (when things are well under
+% our control), we'll fix up any dashed lines that the user
+% has requested using the call fixdash(). Thus, we apply the
+% fix only where it's needed, when printing to an image
+% file, and save all the faffing with resize callbacks.
+%
+% ############################################################
+% 12/04/13
+% Release Version 2.8
+% ############################################################
 
 
 
@@ -106,7 +215,11 @@ classdef (Sealed = true) panel < handle
 		PANEL_TYPE_UNCOMMITTED = 0;
 		PANEL_TYPE_PARENT = 1;
 		PANEL_TYPE_OBJECT = 2;
-
+		
+	end
+	
+	properties (Constant = true)
+		
 		RENDER_MODE_NORMAL = 0;
 		RENDER_MODE_PREPRINT = 1;
 		RENDER_MODE_POSTPRINT = 2;
@@ -331,6 +444,10 @@ classdef (Sealed = true) panel < handle
 		% panel type
 		m_panelType
 		
+		% fixdash lines
+		m_fixdash
+		m_fixdash_restore
+		
 		% associated managed graphics object (usually, an axis)
 		h_object
 		
@@ -340,8 +457,7 @@ classdef (Sealed = true) panel < handle
 		% children (only a parent panel has non-empty, here)
 		m_children
 		
-		% callback (if set, this function is called after a
-		% resize)
+		% callback (any functions listed in this cell array are called when events occur)
 		m_callback
 		
 		% local properties (actual properties is this overlaid on inherited/default properties)
@@ -453,7 +569,7 @@ classdef (Sealed = true) panel < handle
 							continue;
 							
 						otherwise
-							error('panel:InvalidArguments', ['unrecognised text argument "' arg '"']);
+							error('panel:InvalidArgument', ['unrecognised text argument "' arg '"']);
 							
 					end
 					
@@ -466,9 +582,15 @@ classdef (Sealed = true) panel < handle
 				end
 				
 				% error
-				error('panel:InvalidArguments', 'unrecognised argument to panel constructor');
+				error('panel:InvalidArgument', 'unrecognised argument to panel constructor');
 				
 			end
+			
+			% no callbacks
+			p.m_callback = {};
+			
+			% no fixdash
+			p.m_fixdash = {};
 			
 			% debug output
 			panel.debugmsg('creating new panel...');
@@ -504,7 +626,7 @@ classdef (Sealed = true) panel < handle
 						p.h_figure = passed_h_parent;
 						
 					otherwise
-						error('panel:InvalidArguments', ['panel() cannot be attached to an object of type "' parentType '"']);
+						error('panel:InvalidArgument', ['panel() cannot be attached to an object of type "' parentType '"']);
 						
 				end
 				
@@ -525,7 +647,7 @@ classdef (Sealed = true) panel < handle
 			else
 				
 				% error
-				error('panel:InvalidArguments', 'argument to panel() constructor must be a figure handle or a panel object');
+				error('panel:InvalidArgument', 'argument to panel() constructor must be a figure handle or a panel object');
 				
 			end
 			
@@ -539,8 +661,8 @@ classdef (Sealed = true) panel < handle
 			if p.isRoot()
 				
 				% lay in callbacks
-				addCallback(p.h_figure, 'CloseRequestFcn', @panel.closeCallback);
-				addCallback(p.h_parent, 'ResizeFcn', @panel.resizeCallback);
+				addHandleCallback(p.h_figure, 'CloseRequestFcn', @panel.closeCallback);
+				addHandleCallback(p.h_parent, 'ResizeFcn', @panel.resizeCallback);
 				
 				% register for callbacks
 				if add
@@ -574,9 +696,12 @@ classdef (Sealed = true) panel < handle
 			% debug output
 			panel.debugmsg(['deleting "' p.state.name '"...']);
 			
-			% delete managed graphics object
-			if ~isempty(p.h_object) && ishandle(p.h_object)
-				delete(p.h_object);
+			% delete managed graphics objects
+			for n = 1:length(p.h_object)
+				h = p.h_object(n);
+				if ishandle(h)
+					delete(h);
+				end
 			end
 			
 			% delete associated show axis
@@ -749,6 +874,26 @@ classdef (Sealed = true) panel < handle
 			
 		end
 		
+		function zlabel(p, text)
+			
+			% apply a zlabel to the panel (or group)
+			%
+			% p.zlabel(...)
+			%   behaves just like zlabel() at the prompt (you can
+			%   use that as an alternative) when called on an axis
+			%   panel. when called on a parent panel, however,
+			%   this method raises an error, since parent panels
+			%   are assumed to be 2D, with respect to axes.
+			
+			if p.isParent()
+				error('panel:ZLabelOnParentAxis', 'can only call zlabel() on an object panel');
+			end
+			
+			h = get(p.getOrCreateAxis(), 'zlabel');
+			set(h, 'string', text);
+			
+		end
+		
 		function title(p, text)
 			
 			% apply a title to the panel (or group)
@@ -818,18 +963,108 @@ classdef (Sealed = true) panel < handle
 			% alternative.
 			
 			% check
-			if ~p.isObject() || ~isaxis(p.h_object)
-				error('panel:HoldWhenNotAxisPanel', 'can only call hold() on an axis panel');
+			if ~p.isObject()
+				error('panel:HoldWhenNotObjectPanel', 'can only call hold() on an object panel');
+			end
+			
+			% check
+			h_axes = p.getAllManagedAxes();
+			if isempty(h_axes)
+				error('panel:HoldWhenNoAxes', 'can only call hold() on a panel that manages one or more axes');
 			end
 			
 			% switch
 			switch state
 				case {'on' true 1}
-					set(p.h_object, 'nextplot', 'add');
+					set(h_axes, 'nextplot', 'add');
 				case {'off' false 0}
-					set(p.h_object, 'nextplot', 'replacechildren');
+					set(h_axes, 'nextplot', 'replacechildren');
 				otherwise
-					error('panel:InvalidArguments', 'argument to hold() must be ''on'', ''off'', or boolean');
+					error('panel:InvalidArgument', 'argument to hold() must be ''on'', ''off'', or boolean');
+			end
+			
+		end
+		
+		function fixdash(p, hs, linestyle)
+			
+			% pass dashed lines to be fixed up during export
+			%
+			% p.fixdash(h, linestyle)
+			%   add the lines specified as handles in "h" to the
+			%   list of lines to be "fixed up" during export.
+			%   panel will attempt to get the lines to look right
+			%   during export to all formats where they would
+			%   usually get mussed up. see demopanelI for an
+			%   example of how it works.
+			%
+			%   the above is the usual usage of fixdash(), but
+			%   you can get more control over linestyle by
+			%   specifying the additional argument, "linestyle".
+			%   if "linestyle" is supplied, it is used as the
+			%   linestyle; if not, the current linestyle of the
+			%   line (-, --, -., :) is used. "linestyle" can
+			%   either be a text string or a series of numbers, as
+			%   described below.
+			%
+			%     '-' solid
+			%     '--' dashed, equal to [2 0.75]
+			%     '-.' dash-dot, equal to [2 0.75 0.5 0.75]
+			%     ':', '.' dotted, equal to [0.5 0.5]
+			%
+			%   a number series should be 1xN, where N is a
+			%   multiple of 2, as in the examples above, and
+			%   specifies the lengths of any number of dash
+			%   components that are used before being repeated.
+			%   for instance, '-.' generates a 2 unit segment
+			%   (dash), a 0.75 unit gap, then a 0.5 unit segment
+			%   (dot) and a final 0.75 unit gap. at present, the
+			%   units are always millimetres. this system is
+			%   extensible, so that the following examples are
+			%   also valid:
+			%
+			%     '--..' dash-dash-dot-dot
+			%     '-..-.' dash-dot-dot-dash-dot
+			%     [2 1 4 1 6 1] 2 dash, 4 dash, 6 dash
+
+			% default
+			if nargin < 3
+				linestyle = [];
+			end
+			
+			% bubble up to root
+			if ~p.isRoot()
+				p.m_root.fixdash(hs, linestyle);
+				return
+			end
+			
+			% for each passed handle
+			for h = (hs(:)')
+				
+				% check it's still a handle
+				if ~ishandle(h)
+					continue
+				end
+				
+				% check it's a line
+				if ~isequal(get(h, 'type'), 'line')
+					continue
+				end
+				
+				% update if in list
+				found = false;
+				for i = 1:length(p.m_fixdash)
+					if h == p.m_fixdash{i}.h
+						p.m_fixdash{i}.linestyle = linestyle;
+						found = true;
+						break
+					end
+				end
+				
+				% else add to list
+				if ~found
+					p.m_fixdash{end+1} = struct('h', h, 'linestyle', linestyle);
+				end
+				
 			end
 			
 		end
@@ -872,7 +1107,7 @@ classdef (Sealed = true) panel < handle
 			% be the root panel (the first panel that was
 			% created).
 			%
-			% if you are targeting a print publication, you should
+			% if you are targeting a print publication, you may
 			% find it easiest to size your output using the "paper
 			% model". if you prefer, you can use the "explicit
 			% sizing model", instead. these two sizing models are
@@ -887,27 +1122,20 @@ classdef (Sealed = true) panel < handle
 			%
 			%
 			%
-			% PAPER MODEL:
+			% PAPER SIZING MODEL:
 			%
-			% using the paper model, you specify your target as a
-			% region of a piece of paper, and the actual size in
-			% millimeters is calculated for you. this is usually
-			% very convenient, but if you find it unsuitable, the
-			% explicit sizing model (next section) is provided as
-			% an alternative.
+			% using the paper sizing model, you specify your
+			% target as a region of a piece of paper, and the
+			% actual size in millimeters is calculated for you.
+			% this is usually very convenient, but if you find it
+			% unsuitable, the explicit sizing model (next section)
+			% is provided as an alternative.
 			%
 			% to specify the region, you specify the type (size)
 			% of paper, the orientation, the number of columns,
 			% and the aspect ratio of the figure (or the fraction
 			% of a column to fill). usually, the remaining options
 			% can be left as defaults.
-			%
-			% note that 'letter' size paper is very similar to
-			% 'A4' - in particular, if you are using the -a option
-			% (to specify aspect ratio) and portrait mode (usual
-			% for print publications), the resulting file will
-			% differ by only a couple of percent if you don't
-			% bother distinguishing between A4 and letter.
 			%
 			% -pX
 			%   X is the paper type, A2-A6, letter (default is
@@ -947,7 +1175,7 @@ classdef (Sealed = true) panel < handle
 			%   ratios greater than 10 or less than 0.1 are
 			%   disallowed, since these can cause a very large
 			%   figure file to be created accidentally. default is
-			%   to use the golden ratio.
+			%   to use the landscape golden ratio.
 			%
 			% -fX
 			%   X is the fraction of the column (or page, if there
@@ -967,12 +1195,12 @@ classdef (Sealed = true) panel < handle
 			% which case all paper model options are ignored).
 			%
 			% -wX
-			%   X is explicit width (default is to use the width
-			%   produced by the paper model).
+			%   X is explicit width in mm (default is to use the
+			%   width produced by the paper model).
 			%
 			% -hX
-			%   X is explicit height (default is to use the height
-			%   produced by the paper model).
+			%   X is explicit height in mm (default is to use the
+			%   height produced by the paper model).
 			%
 			%
 			%
@@ -983,17 +1211,17 @@ classdef (Sealed = true) panel < handle
 			% 150 is only recommended for sizing drafts, since
 			% font and line sizes are not rendered even vaguely
 			% accurately in some cases. at the other end, DPI
-			% above 600 is unlikely to be useful for any
-			% application (copy editors will be more than happy
-			% with 600DPI for artwork).
+			% above 600 is unlikely to be useful except when
+			% submitting camera-ready copy.
 			%
 			% -rX
 			%   X is the resolution (DPI) at which to produce the
 			%   output file. X can be one of the following strings
 			%   - d (draft, 75DPI), n (normal, 150DPI), h (high,
-			%   300DPI), p (publication quality, 600DPI) - or just
-			%   the DPI as a number (must be in 75-2400, default
-			%   is to use 'normal').
+			%   300DPI), p (publication quality, 600DPI), x
+			%   (extremely high quality, 1200DPI) - or just
+			%   the DPI as a number (must be in 75-2400). the
+			%   default depends on the output format (see below).
 			%
 			% -rX/S
 			%   X is the DPI, S is the smoothing factor, which can
@@ -1003,10 +1231,13 @@ classdef (Sealed = true) panel < handle
 			%   produced by the renderer are smoothed - the effect
 			%   is much like "anti-aliasing".
 			%
-			% NB: the DPI setting has relatively little impact on
-			% vector formats (PS and EPS), but not no impact at
-			% all (though i'm not sure what it does, puts more
-			% features in at higher DPI, perhaps).
+			% NB: the DPI setting might be expected to have no
+			% effect on vector formats. this is true for SVG, but
+			% not for EPS, where the DPI affects the numerical
+			% precision used as well as the size of some image
+			% elements, but has little effect on file size. for
+			% this reason, the default DPI is 150 for bitmap
+			% formats but 600 for vector formats.
 			%
 			% -s
 			%   print sideways (default is to print upright)
@@ -1017,7 +1248,10 @@ classdef (Sealed = true) panel < handle
 			%   (try "help print"). this includes "png", "jpg",
 			%   "tif", "eps" and "pdf". note that "eps"/"ps"
 			%   resolve to "epsc2"/"psc2", for convenience. to use
-			%   the "eps"/"ps" devices, use "-oeps!"/"-ops!".
+			%   the "eps"/"ps" devices, use "-oeps!"/"-ops!". you
+			%   may also specify "svg", if you have the tool
+			%   "plot2svg" on your path (available at Matlab
+			%   Central File Exchange).
 			%
 			%
 			%
@@ -1035,7 +1269,7 @@ classdef (Sealed = true) panel < handle
 			% when producing the final camera-ready image for a
 			% square figure that will sit in one of the two
 			% columns of a letter-size paper journal with default
-			% margins and inter-column space, we would use this:
+			% margins and inter-column space, we might use this:
 			%
 			% p.export('myfig', '-pletter', '-c2', '-as', '-rp');
 			
@@ -1049,7 +1283,7 @@ classdef (Sealed = true) panel < handle
 			pars.filename = '';
 			pars.fmt = 'png';
 			pars.ext = 'png';
-			pars.dpi = 150;
+			pars.dpi = [];
 			pars.smooth = 1;
 			pars.paper = 'A4';
 			pars.landscape = false;
@@ -1068,176 +1302,179 @@ classdef (Sealed = true) panel < handle
 				% extract
 				arg = varargin{a};
 				
-				% is char?
+				% all arguments must be non-empty strings
 				if ~isstring(arg)
-					error('panel:InvalidArguments', 'arguments to export() must be non-empty strings');
+					error('panel:InvalidArgument', ...
+						'all arguments to export() must be non-empty strings');
 				end
 				
-				% is option?
-				if arg(1) == '-'
+				% is filename?
+				if arg(1) ~= '-'
 					
-					if length(arg) < 2
-						
-						invalid = true;
-						
-					else
-						
-						val = arg(3:end);
-						
-						switch arg(2)
-							
-							case 'p'
-								pars.paper = val;
-								invalid = ~isin({'A2' 'A3' 'A4' 'A5' 'A6' 'letter'}, val);
-								
-							case 'l'
-								pars.landscape = true;
-								invalid = ~isempty(val);
-								
-							case 'm'
-								pars.margin = str2double(val);
-								invalid = ~isdimension(pars.margin);
-								
-							case 'i'
-								pars.intercolumnspacing = str2double(val);
-								invalid = ~isnumeric(pars.intercolumnspacing) || ~isscalar(pars.intercolumnspacing);
-								
-							case 'c'
-								pars.cols = str2double(val);
-								invalid = ~isnumeric(pars.cols) || ~isscalar(pars.cols) || ~isintegral(pars.cols);
-								
-							case 'f'
-								switch val
-									case 'a', pars.fill = 1;      % all
-									case 'w', pars.fill = 1;      % whole (legacy, not documented)
-									case 'tt', pars.fill = 2/3;   % two thirds
-									case 'h', pars.fill = 1/2;    % half
-									case 't', pars.fill = 1/3;    % third
-									case 'q', pars.fill = 1/4;    % quarter
-									otherwise
-										if length(val) > 1 && all((val >= 48 & val <= 57) | val == '.')
-											pars.fill = str2double(val);
-											if pars.fill <= 0 || pars.fill > 1
-												invalid = true;
-											end
-										else
-											invalid = true;
-										end
-								end
-								
-							case 'a'
-								switch val
-									case 's', pars.fill = -1;         % square
-									case 'g', pars.fill = -1.618;     % golden ratio (landscape)
-									case 'gp', pars.fill = -1/1.618;  % golden ratio (portrait)
-									case 'h', pars.fill = -2;         % half height
-									case 'd', pars.fill = -0.5;       % double height
-									otherwise
-										if length(val) >= 1 && all((val >= 48 & val <= 57) | val == '.' | val == '/')
-											pars.fill = -str2double(val);
-											if pars.fill >= -0.1 || pars.fill < -10
-												invalid = true;
-											end
-										else
-											invalid = true;
-										end
-								end
-								
-							case 'w'
-								pars.width = str2double(val);
-								invalid = ~isnumeric(pars.width) || ~isscalar(pars.width);
-								
-							case 'h'
-								pars.height = str2double(val);
-								invalid = ~isnumeric(pars.height) || ~isscalar(pars.height);
-								
-							case 'r'
-								f = find(val == '/', 1);
-								if ~isempty(f)
-									S = str2double(val(f+1:end));
-									val = val(1:f-1);
-									if ~isscalar(S) || ~any(S == [2 4])
-										invalid = true;
-									else
-										pars.smooth = S;
-									end
-								end
-								
-								switch val
-									case 'd', pars.dpi = 75;      % draft
-									case 'n', pars.dpi = 150;     % normal
-									case 'h', pars.dpi = 300;     % high
-									case 'p', pars.dpi = 600;     % publication quality
-									otherwise
-										pars.dpi = str2double(val);
-										invalid = ~isnumeric(pars.dpi) || ~isscalar(pars.dpi) || pars.dpi < 75 || pars.dpi > 2400;
-								end
-								
-							case 's'
-								pars.sideways = true;
-								invalid = ~isempty(val);
-								
-							case 'o'
-								fmts = {
-									'png' 'png' 'png'
-									'tif' 'tiff' 'tif'
-									'tiff' 'tiff' 'tif'
-									'jpg' 'jpeg' 'jpg'
-									'jpeg' 'jpeg' 'jpg'
-									'ps' 'psc2' 'ps'
-									'ps!' 'psc' 'ps'
-									'psc' 'psc' 'ps'
-									'ps2' 'ps2' 'ps'
-									'psc2' 'psc2' 'ps'
-									'eps' 'epsc2' 'eps'
-									'eps!' 'eps' 'eps'
-									'epsc' 'epsc' 'eps'
-									'eps2' 'eps2' 'eps'
-									'epsc2' 'epsc2' 'eps'
-									'pdf' 'pdf' 'pdf'
-									};
-								index = isin(fmts(:, 1), val);
-								if index
-									pars.fmt = fmts{index, 2};
-									pars.ext = fmts{index, 3};
-								else
-									invalid = true;
-								end
-								
+					% error if already set
+					if ~isempty(pars.filename)
+						error('panel:InvalidArgument', ...
+							['at argument "' arg '", the filename is already set ("' pars.filename '")']);
+					end
+					
+					% ok, continue
+					pars.filename = arg;
+					continue
+					
+				end
+
+				% split off option key and option value
+				if length(arg) < 2
+					error('panel:InvalidArgument', ...
+						['at argument "' arg '", no option specified']);
+				end
+				key = arg(2);
+				val = arg(3:end);
+				
+				% switch on option key
+				switch key
+
+					case 'p'
+						pars.paper = validate_par(val, arg, {'A2' 'A3' 'A4' 'A5' 'A6' 'letter'});
+
+					case 'l'
+						pars.landscape = true;
+						validate_par(val, arg, 'empty');
+
+					case 'm'
+						pars.margin = validate_par(str2num(val), arg, 'dimension', 'nonneg');
+
+					case 'i'
+						pars.intercolumnspacing = validate_par(str2num(val), arg, 'scalar', 'nonneg');
+
+					case 'c'
+						pars.cols = validate_par(str2num(val), arg, 'scalar', 'integer');
+
+					case 'f'
+						switch val
+							case 'a', pars.fill = 1;      % all
+							case 'w', pars.fill = 1;      % whole (legacy, not documented)
+							case 'tt', pars.fill = 2/3;   % two thirds
+							case 'h', pars.fill = 1/2;    % half
+							case 't', pars.fill = 1/3;    % third
+							case 'q', pars.fill = 1/4;    % quarter
 							otherwise
-								error('panel:InvalidArguments', ['option "' arg(2) '" is not recognised']);
-								
+								pars.fill = validate_par(str2num(val), arg, 'scalar', [0 1]);
 						end
-						
-					end
-					
-				else
-					
-					% filename
-					if isempty(pars.filename)
-						pars.filename = arg;
-					else
-						error('panel:InvalidArguments', ['argument "' arg '" is a second filename']);
-					end
-					
-				end
-				
-				% validate
-				if invalid
-					error('panel:InvalidArguments', ['argument "' arg '" is invalid']);
+
+					case 'a'
+						switch val
+							case 's', pars.fill = -1;         % square
+							case 'g', pars.fill = -1.618;     % golden ratio (landscape)
+							case 'gp', pars.fill = -1/1.618;  % golden ratio (portrait)
+							case 'h', pars.fill = -2;         % half height
+							case 'd', pars.fill = -0.5;       % double height
+							otherwise
+								pars.fill = -validate_par(str2num(val), arg, 'scalar', [0.1 10]);
+						end
+
+					case 'w'
+						pars.width = validate_par(str2num(val), arg, 'scalar', 'nonneg', [10 Inf]);
+
+					case 'h'
+						pars.height = validate_par(str2num(val), arg, 'scalar', 'nonneg', [10 Inf]);
+
+					case 'r'
+						% peel off smoothing ("/...")
+						if any(val == '/')
+							f = find(val == '/', 1);
+							switch val(f+1:end)
+								case '2', pars.smooth = 2;
+								case '4', pars.smooth = 4;
+								otherwise, error('panel:InvalidArgument', ...
+										['invalid argument "' arg '", part after / must be "2" or "4"']);
+							end
+							val = val(1:end-2);
+						end
+
+						switch val
+							case 'd', pars.dpi = 75;      % draft
+							case 'n', pars.dpi = 150;     % normal
+							case 'h', pars.dpi = 300;     % high
+							case 'p', pars.dpi = 600;     % publication quality
+							case 'x', pars.dpi = 1200;    % extremely high quality
+							otherwise
+								pars.dpi = validate_par(str2num(val), arg, 'scalar', [75 2400]);
+						end
+
+					case 's'
+						pars.sideways = true;
+						validate_par(val, arg, 'empty');
+
+					case 'o'
+						fmts = {
+							'png' 'png' 'png'
+							'tif' 'tiff' 'tif'
+							'tiff' 'tiff' 'tif'
+							'jpg' 'jpeg' 'jpg'
+							'jpeg' 'jpeg' 'jpg'
+							'ps' 'psc2' 'ps'
+							'ps!' 'psc' 'ps'
+							'psc' 'psc' 'ps'
+							'ps2' 'ps2' 'ps'
+							'psc2' 'psc2' 'ps'
+							'eps' 'epsc2' 'eps'
+							'eps!' 'eps' 'eps'
+							'epsc' 'epsc' 'eps'
+							'eps2' 'eps2' 'eps'
+							'epsc2' 'epsc2' 'eps'
+							'pdf' 'pdf' 'pdf'
+							'svg' 'svg' 'svg'
+							};
+						validate_par(val, arg, fmts(:, 1)');
+						index = isin(fmts(:, 1), val);
+						pars.fmt = fmts{index, 2};
+						pars.ext = fmts{index, 3};
+
+					otherwise
+						error('panel:InvalidArgument', ...
+							['invalid argument "' argtext '", option is not recognised']);
+
 				end
 				
 			end
 			
+			% extract
+			is_bitmap = ismember(pars.fmt, {'png' 'jpeg' 'tiff'});
+			
+			% default DPI
+			if isempty(pars.dpi)
+				if is_bitmap
+					pars.dpi = 150;
+				else
+					pars.dpi = 600;
+				end
+			end
+
+			% validate
+			if isequal(pars.fmt, 'svg') && isempty(which('plot2svg'))
+				error('panel:Plot2SVGMissing', 'export to SVG requires plot2svg (Matlab Central File Exchange)');
+			end
+			
+			% validate
+			if ~is_bitmap && pars.smooth ~= 1
+				pars.smooth = 1;
+				warning('panel:NoSmoothVectorFormat', 'requested smoothing will not be performed (chosen export format is not a bitmap format)');
+			end
+			
 			% validate
 			if isempty(pars.filename)
-				error('panel:InvalidArguments', 'filename not supplied');
+				error('panel:InvalidArgument', 'filename not supplied');
 			end
 			
 			% make sure filename has extension
 			if ~any(pars.filename == '.')
 				pars.filename = [pars.filename '.' pars.ext];
 			end
+			
+			
+			
+%%%% GET TARGET DIMENSIONS (BEGIN)
 			
 			% get space for figure
 			switch pars.paper
@@ -1287,6 +1524,10 @@ classdef (Sealed = true) panel < handle
 				sz(2) = pars.height;
 			end
 			
+%%%% GET TARGET DIMENSIONS (END)
+
+			
+			
 			% orientation of figure is upright, unless printing
 			% sideways, in which case the printing space is rotated too
 			if pars.sideways
@@ -1296,14 +1537,15 @@ classdef (Sealed = true) panel < handle
 				set(p.h_figure, 'PaperOrientation', 'portrait')
 			end
 			
-			% set size of figure
-			set(p.h_figure, ...
-				'PaperUnits', 'centimeters', ...
-				'PaperPosition', [0 0 sz] / 10, ...
-				'PaperSize', sz / 10 ... % * 1.5 / 10 ... % CHANGED 21/06/2011 so that -opdf works correctly - why was this * 1.5, anyway? presumably was spurious...
-				);
-			psz = sz / 25.4 * pars.dpi;
-			disp(['exporting to ' int2str(sz(1)) 'x' int2str(sz(2)) 'mm (' int2str(psz(1)) 'x' int2str(psz(2)) 'px)'])
+			% report export size
+			msg = ['exporting to ' int2str(sz(1)) 'x' int2str(sz(2)) 'mm'];
+			if is_bitmap
+				psz = sz / 25.4 * pars.dpi;
+				msg = [msg ' (' int2str(psz(1)) 'x' int2str(psz(2)) 'px @ ' int2str(pars.dpi) 'DPI)'];
+			else
+				msg = [msg ' (vector format @ ' int2str(pars.dpi) 'DPI)'];
+			end
+			disp(msg);
 			
 			% if we are in defer state, we need to do a clean
 			% render first so that axes get positioned so that
@@ -1314,7 +1556,7 @@ classdef (Sealed = true) panel < handle
 				p.state.defer = 0;
 				p.renderAll();
 			end
-			
+
 			% enable rendering
 			p.state.defer = 0;
 			
@@ -1323,23 +1565,10 @@ classdef (Sealed = true) panel < handle
 			context.mode = panel.RENDER_MODE_PREPRINT;
 			p.renderAll(context);
 			
-			% disable rendering
-			p.state.defer = 1;
-			
 			% need also to disable the warning that we should set
 			% PaperPositionMode to auto during this operation -
 			% we're setting it explicitly.
 			w = warning('off', 'MATLAB:Print:CustomResizeFcnInPrint');
-			
-			% select smoothing
-			if pars.smooth > 1
-				switch pars.fmt
-					case {'png' 'tiff' 'jpeg'}
-					otherwise
-						disp(['smoothing ignored for format "' pars.fmt '"']);
-						pars.smooth = 1;
-				end
-			end
 			
 			% handle smoothing
 			pars.write_dpi = pars.dpi;
@@ -1349,13 +1578,85 @@ classdef (Sealed = true) panel < handle
 			else
 				print_filename = pars.filename;
 			end
+
+			% disable rendering so we don't get automatic
+			% rendering during any figure resize operations.
+			p.state.defer = 1;
+			
+			% set size of figure now. it's important we do this
+			% after the pre-print render, because in SVG export
+			% mode the on-screen figure size is changed and that
+			% would otherwise affect ticks and limits.
+			switch pars.fmt
+				
+				case 'svg'
+					% plot2svg (our current SVG export mechanism) uses
+					% 'Units' and 'Position' (i.e. on-screen position)
+					% rather than the Paper- prefixed ones used by the
+					% Matlab export functions.
+					
+					% store old on-screen position
+					svg_units = get(p.h_figure, 'Units');
+					svg_pos = get(p.h_figure, 'Position');
+					
+					% update on-screen position
+					set(p.h_figure, 'Units', 'centimeters');
+					pos = get(p.h_figure, 'Position');
+					pos(3:4) = sz / 10;
+					set(p.h_figure, 'Position', pos);
+					
+				otherwise
+					set(p.h_figure, ...
+						'PaperUnits', 'centimeters', ...
+						'PaperPosition', [0 0 sz] / 10, ...
+						'PaperSize', sz / 10 ... % * 1.5 / 10 ... % CHANGED 21/06/2011 so that -opdf works correctly - why was this * 1.5, anyway? presumably was spurious...
+						);
+					
+			end
+			
+			% do fixdash (not for SVG, since plot2svg does a nice
+			% job of dashed lines without our meddling...)
+			if ~isequal(pars.fmt, 'svg')
+				p.do_fixdash(context);
+			end
 			
 			% do the export
-			print(p.h_figure, '-loose', ['-d' pars.fmt], ['-r' int2str(pars.write_dpi)], print_filename)
+			switch pars.fmt
+				case 'svg'
+					plot2svg(print_filename, p.h_figure);
+				otherwise
+					print(p.h_figure, '-loose', ['-d' pars.fmt], ['-r' int2str(pars.write_dpi)], print_filename)
+			end
+
+			% undo fixdash
+			if ~isequal(pars.fmt, 'svg')
+				p.do_fixdash([]);
+			end
+			
+			% set on-screen figure size back to what it was, if it
+			% was changed.
+			switch pars.fmt
+				case 'svg'
+					set(p.h_figure, 'Units', svg_units);
+					set(p.h_figure, 'Position', svg_pos);
+			end
+			
+			% enable rendering
+			p.state.defer = 0;
+			
+			% enable warnings
+			warning(w);
+			
+			% do a post-print render
+			context.size_in_mm = [];
+			context.mode = panel.RENDER_MODE_POSTPRINT;
+			p.renderAll(context);
 			
 			% handle smoothing
 			if pars.smooth > 1
-				disp(['smoothing by factor ' int2str(pars.smooth) '...']);
+				psz = sz * pars.smooth / 25.4 * pars.dpi;
+				msg = [' (reducing from ' int2str(psz(1)) 'x' int2str(psz(2)) 'px)'];
+				disp(['smoothing by factor ' int2str(pars.smooth) msg]);
 				im1 = imread(print_filename);
 				delete(print_filename);
 				sz = size(im1);
@@ -1386,36 +1687,61 @@ classdef (Sealed = true) panel < handle
 				end
 			end
 			
-			% enable warnings
-			warning(w);
+		end
+
+		function clearCallbacks(p)
 			
-			% enable rendering
-			p.state.defer = 0;
-			
-			% do a post-print render
-			context.size_in_mm = [];
-			context.mode = panel.RENDER_MODE_POSTPRINT;
-			p.renderAll(context);
+			% clear all callback functions for the panel
+			%
+			% p.clearCallbacks()
+			p.m_callback = {};
 			
 		end
 		
-		function setCallback(p, func)
+		function setCallback(p, func, userdata)
+			
+			% set the callback function for the panel
+			%
+			% p.setCallback(myCallbackFunction, userdata)
+			%
+			% NB: this function clears all current callbacks, then
+			%   calls addCallback(myCallbackFunction, userdata).
+			p.clearCallbacks();
+			p.addCallback(func, userdata);
+			
+		end
+		
+		function addCallback(p, func, userdata)
 			
 			% attach a callback function to the resize event
 			%
-			% p.setCallback(myCallbackFunction)
+			% p.addCallback(myCallbackFunction, userdata)
 			%   register myCallbackFunction() to be called when
 			%   the panel is updated (usually, resized).
 			%   myCallbackFunction() should accept one argument,
-			%   "data", which will have a field "panel" containing
-			%   a reference to the panel. this object can be
-			%   queried for the axis, position, etc.
+			%   "data", which will have the following fields.
+			%
+			% "userdata": the userdata passed to this function, if
+			%     any was supplied, else empty.
+			%
+			% "panel": a reference to the panel on which the
+			%     callback was set. this object can be queried in
+			%     the usual way.
+			%
+			% "event": name of event (currently only
+			%	    "render-complete").
+			%
+			% "context": the rendering context for the panel.
 			
 			invalid = ~isscalar(func) || ~isa(func, 'function_handle');
 			if invalid
-				error('panel:InvalidArguments', 'argument to callback() must be a function handle');
+				error('panel:InvalidArgument', 'argument to callback() must be a function handle');
 			end
-			p.m_callback = func;
+			if nargin == 2
+				p.m_callback{end+1} = {func []};
+			else
+				p.m_callback{end+1} = {func userdata};
+			end
 			
 		end
 		
@@ -1434,17 +1760,21 @@ classdef (Sealed = true) panel < handle
 			% see also: show()
 			
 			if p.isObject()
+				
+				% get managed axes
+				h_axes = p.getAllManagedAxes();
 			
-				% if not an axis, ignore
-				if isempty(p.h_object) || ~isaxis(p.h_object)
+				% if no axes, ignore
+				if isempty(h_axes)
 					return
 				end
 				
-				% mark axis
-				cla(p.h_object);
-				text(0.5, 0.5, p.state.name, 'fontsize', 12, 'hori', 'center', 'parent', p.h_object);
-				axis(p.h_object, [0 1 0 1]);
-				grid(p.h_object, 'off')
+				% mark first axis
+				h_axes = h_axes(1);
+				cla(h_axes);
+				text(0.5, 0.5, p.state.name, 'fontsize', 12, 'hori', 'center', 'parent', h_axes);
+				axis(h_axes, [0 1 0 1]);
+				grid(h_axes, 'off')
 
 			else
 				
@@ -1475,7 +1805,7 @@ classdef (Sealed = true) panel < handle
 				
 				% root can only accept absolute positioning
 				if ~isofsize(packpos, [1 4])
-					error('panel:InvalidArguments', 'root panel can only use absolute positioning mode');
+					error('panel:InvalidArgument', 'root panel can only use absolute positioning mode');
 				end
 				
 			else
@@ -1487,14 +1817,14 @@ classdef (Sealed = true) panel < handle
 				if nsiblings > 1
 					if isofsize(packpos, [1 4])
 						if ~isofsize(p.packpos, [1 4])
-							error('panel:InvalidArguments', 'repack() cannot change the packing mode - this panel''s siblings use relative positioning');
+							error('panel:InvalidArgument', 'repack() cannot change the packing mode - this panel''s siblings use relative positioning');
 						end
 					elseif (isscalar(packpos) && (packpos == -1 || (packpos > 0 && packpos <= 100)))
 						if ~isscalar(p.packpos) && ~isempty(p.packpos)
-							error('panel:InvalidArguments', 'repack() cannot change the packing mode - this panel''s siblings use absolute positioning');
+							error('panel:InvalidArgument', 'repack() cannot change the packing mode - this panel''s siblings use absolute positioning');
 						end
 					else
-						error('panel:InvalidArguments', 'repack() only accepts -1 (stretch), positive scalar <= 1 (relative positioning), or 1x4 (absolute positioning)');
+						error('panel:InvalidArgument', 'repack() only accepts -1 (stretch), positive scalar <= 1 (relative positioning), or 1x4 (absolute positioning)');
 					end
 				end
 				
@@ -1616,7 +1946,7 @@ classdef (Sealed = true) panel < handle
 						case 'norender'
 							norender = true;
 						otherwise
-							error('panel:InvalidArguments', ['pack() did not recognise the argument "' arg '"']);
+							error('panel:InvalidArgument', ['pack() did not recognise the argument "' arg '"']);
 					end
 					
 				else
@@ -1626,7 +1956,7 @@ classdef (Sealed = true) panel < handle
 						
 						% error if absolute
 						if absolute
-							error('panel:InvalidArguments', 'after "abs", pack() expects a [1x4] numeric argument to specify the absolute position');
+							error('panel:InvalidArgument', 'after "abs", pack() expects a [1x4] numeric argument to specify the absolute position');
 						end
 						
 						% treat as "number of panels to pack"
@@ -1647,12 +1977,12 @@ classdef (Sealed = true) panel < handle
 							
 							% error if absolute
 							if ~isofsize(arg, [1 4])
-								error('panel:InvalidArguments', 'after "abs", pack() expects a [1x4] numeric argument to specify the absolute position');
+								error('panel:InvalidArgument', 'after "abs", pack() expects a [1x4] numeric argument to specify the absolute position');
 							end
 							
 							% error if non-positive width or height
 							if any(arg(3:4) <= 0)
-								error('panel:InvalidArguments', 'absolute position must have non-zero width and height');
+								error('panel:InvalidArgument', 'absolute position must have non-zero width and height');
 							end
 							
 							% error if any panels are already packed
@@ -1687,12 +2017,12 @@ classdef (Sealed = true) panel < handle
 							
 							% error if not in range
 							if size(arg, 1) ~= 1
-								error('panel:InvalidArguments', 'argument to pack() must be a row vector');
+								error('panel:InvalidArgument', 'argument to pack() must be a row vector');
 							end
 							
 							% error if not in range
 							if ~all(arg == -1 | (arg > 0 & arg <= 100)) || any(isnan(arg))
-								error('panel:InvalidArguments', 'argument to pack() must contain only -1 (stretch) and non-zero values no larger than 100');
+								error('panel:InvalidArgument', 'argument to pack() must contain only -1 (stretch) and non-zero values no larger than 100');
 							end
 							
 							% error if any panels are already absolute
@@ -1740,7 +2070,7 @@ classdef (Sealed = true) panel < handle
 						
 					else
 						
-						error('panel:InvalidArguments', 'invalid numerical argument passed to pack()');
+						error('panel:InvalidArgument', 'invalid numerical argument passed to pack()');
 						
 					end
 					
@@ -1766,18 +2096,19 @@ classdef (Sealed = true) panel < handle
 			%   this call will return the handle of the object
 			%   associated with the panel. if the panel is not yet
 			%   committed, this will involve first committing it
-			%   as an "object panel". if an object ("h") is
-			%   passed, this is the object associated with the
-			%   panel. if not, a new axis is created by the panel.
+			%   as an "object panel". if a list of objects ("h")
+			%   is passed, these are the objects associated with
+			%   the panel. if not, a new axis is created by the
+			%   panel.
 			%
-			%   if the object is an axis, then the "object panel"
-			%   is also known as an "axis panel". in this case,
-			%   the call to select() will make the axis current,
-			%   unless an output argument is requested, in which
-			%   case the handle of the axis is returned but the
-			%   axis is not made current.
+			%   if the object list includes axes, then the "object
+			%   panel" is also known as an "axis panel". in this
+			%   case, the call to select() will make the (first)
+			%   axis current, unless an output argument is
+			%   requested, in which case the handle of the axes
+			%   are returned but no axis is made current.
 			%
-			%   the passed object can be a user-created axis (e.g.
+			%   the passed objects can be user-created axes (e.g.
 			%   a colorbar) or any graphics object that is to have
 			%   its position managed (e.g. a uipanel). your
 			%   mileage may vary with different types of graphics
@@ -1832,13 +2163,13 @@ classdef (Sealed = true) panel < handle
 			if nargin >= 2
 				
 				% validate
-				if ~ishandle(h_object)
-					error('panel:InvalidArguments', 'argument to select() must be a handle to a graphics object');
+				if ~all(ishandle(h_object))
+					error('panel:InvalidArgument', 'argument to select() must be a list of handles to graphics objects');
 				end
 				
 				% validate
 				if ~isempty(p.h_object)
-					error('panel:SelectWithObjectWhenObject', 'cannot select() a new object into this panel - it is already managing one');
+					error('panel:SelectWithObjectWhenObject', 'cannot select() new objects into this panel - it is already managing objects');
 				end
 				
 				% store
@@ -1863,9 +2194,10 @@ classdef (Sealed = true) panel < handle
 				newObject = true;
 			end
 			
-			% if wrapped object is an axis, and no output args, make it current
-			if isaxis(p.h_object) && ~nargout
-				set(p.h_figure, 'CurrentAxes', p.h_object);
+			% if wrapped objects include an axis, and no output args, make it current
+			h_axes = p.getAllManagedAxes();
+			if ~isempty(h_axes) && ~nargout
+				set(p.h_figure, 'CurrentAxes', h_axes(1));
 				
 				% 12/07/11: this call is slow, because it implies "drawnow"
 % 				figure(p.h_figure);
@@ -1875,7 +2207,7 @@ classdef (Sealed = true) panel < handle
 				
 			end
 			
-			% and return it
+			% and return object list
 			if nargout
 				h_out = p.h_object;
 			end
@@ -1883,7 +2215,21 @@ classdef (Sealed = true) panel < handle
 			% this must generate a renderPanel(), since the axis
 			% will need positioning appropriately
 			if newObject
-				p.renderPanel();
+				% 09/03/12 mitch
+				% if there isn't a context yet, we'll have to
+				% renderAll(), in fact, to generate a context first.
+				% this will happen, for instance, if a single panel
+				% is generated in a window that was already open
+				% (no resize event will fire, and since pack() is
+				% not called, it will not call renderAll() either).
+				% nonetheless, we have to reposition this object, so
+				% this forces us to renderAll() now and generate
+				% that context we need.
+				if isempty(p.m_context)
+					p.renderAll();
+				else
+					p.renderPanel();
+				end
 			end
 			
 		end
@@ -2123,16 +2469,21 @@ classdef (Sealed = true) panel < handle
 				case 'figure'
 					out = p.h_figure;
 					
+				case 'packpos'
+					out = p.packpos;
+					
 				case 'axis'
-					if p.isObject() && isaxis(p.h_object)
-						out = p.h_object;
+					if p.isObject()
+						out = p.getAllManagedAxes();
 					else
 						out = [];
 					end
 					
 				case 'object'
-					if p.isObject() && ishandle(p.h_object)
-						out = p.h_object;
+					if p.isObject()
+						h = p.h_object;
+						ih = ishandle(h);
+						out = h(ih);
 					else
 						out = [];
 					end
@@ -2171,8 +2522,8 @@ classdef (Sealed = true) panel < handle
 					refs = refs(2:end);
 					
 				case { ...
-						'setCallback' ...
-						'xlabel' 'ylabel' 'title' 'hold' ...
+						'addCallback' 'setCallback' 'clearCallbacks' ...
+						'xlabel' 'ylabel' 'zlabel' 'title' 'hold' ...
 						'refresh' 'export' ...
 						'pack' 'repack' ...
 						'identify' 'show' ...
@@ -2188,7 +2539,7 @@ classdef (Sealed = true) panel < handle
 					return
 					
 				case { ...
-						'select' ...
+						'select' 'fixdash' ...
 						}
 					
 					% validate
@@ -2430,6 +2781,18 @@ classdef (Sealed = true) panel < handle
 			
 		end
 
+		function h_axes = getAllManagedAxes(p)
+			
+			h_axes = [];
+			for n = 1:length(p.h_object)
+				h = p.h_object(n);
+				if isaxis(h)
+					h_axes = [h_axes h];
+				end
+			end
+			
+		end
+		
 		function h_object = getOrCreateAxis(p)
 			
 			switch p.m_panelType
@@ -2468,8 +2831,8 @@ classdef (Sealed = true) panel < handle
 				case p.PANEL_TYPE_OBJECT
 					
 					% ok
-					h_object = p.h_object;
-					if ~isaxis(h_object)
+					h_object = p.getAllManagedAxes();
+					if isempty(h_object)
 						error('panel:ManagedObjectNotAnAxis', 'this object panel does not manage an axis');
 					end
 					
@@ -2540,6 +2903,28 @@ classdef (Sealed = true) panel < handle
 			
 		end
 		
+		function fireCallbacks(p, event)
+		
+			% for each attached callback
+			for c = 1:length(p.m_callback)
+				
+				% extract
+				callback = p.m_callback{c};
+				func = callback{1};
+				userdata = callback{2};
+				
+				% fire
+				data = [];
+				data.panel = p;
+				data.event = event;
+				data.context = p.m_context;
+				data.userdata = userdata;
+				func(data);
+				
+			end
+				
+		end
+		
 	end
 	
 	
@@ -2589,6 +2974,55 @@ classdef (Sealed = true) panel < handle
 	end
 		
 	methods (Access = private)
+		
+		function do_fixdash(p, context)
+			
+			% if context is [], this is _after_ the render for
+			% export, so we need to restore
+			if isempty(context)
+				
+				% restore lines we changed to their original state
+				for r = 1:length(p.m_fixdash_restore)
+					
+					% get
+					restore = p.m_fixdash_restore{r};
+					
+					% if empty, no change was made
+					if ~isempty(restore)
+						set(restore.h_line, ...
+							'xdata', restore.xdata, 'ydata', restore.ydata);
+						delete([restore.h_supp restore.h_mark]);
+					end
+					
+				end
+				
+			else
+				
+% 				% get handles to objects that still exist
+% 				h_lines = p.m_fixdash(ishandle(p.m_fixdash));
+				
+				% no restores
+				p.m_fixdash_restore = {};
+				
+				% for each line
+				for i = 1:length(p.m_fixdash)
+					
+					% get
+					fix = p.m_fixdash{i};
+					
+					% final check
+					if ~ishandle(fix.h) || ~isequal(get(fix.h, 'type'), 'line')
+						continue
+					end
+					
+					% apply dashstyle
+					p.m_fixdash_restore{end+1} = dashstyle_line(fix, context);
+
+				end
+				
+			end
+
+		end
 
 		function p = renderAll(p, varargin)
 			
@@ -2910,11 +3344,7 @@ classdef (Sealed = true) panel < handle
 			
 			% callbacks
 			for pi = 1:length(pp)
-				if ~isempty(pp{pi}.m_callback)
-					data = [];
-					data.panel = pp{pi};
-					pp{pi}.m_callback(data);
-				end
+				fireCallbacks(pp{pi}, 'render-complete');
 			end
 			
 		end
@@ -2940,7 +3370,7 @@ classdef (Sealed = true) panel < handle
 				return
 			end
 			
-			% if no object, skip this call
+			% if no managed objects, skip this call
 			if isempty(p.h_object)
 				return
 			end
@@ -2957,8 +3387,9 @@ classdef (Sealed = true) panel < handle
 					% layout (ticks and ticklabels) and lock them into
 					% manual mode so they don't get changed during the
 					% print operation
-					if isaxis(p.h_object)
-						p.state.store = storeAxisState(p.h_object);
+					h_axes = p.getAllManagedAxes();
+					for n = 1:length(h_axes)
+						p.state.store{n} = storeAxisState(h_axes(n));
 					end
 
 				case panel.RENDER_MODE_POSTPRINT
@@ -2966,8 +3397,9 @@ classdef (Sealed = true) panel < handle
 					% if in RENDER_MODE_POSTPRINT, restore axis
 					% layout, leaving it as it was before we ran
 					% export
-					if isaxis(p.h_object)
-						restoreAxisState(p.h_object, p.state.store);
+					h_axes = p.getAllManagedAxes();
+					for n = 1:length(h_axes)
+						restoreAxisState(h_axes(n), p.state.store{n});
 					end
 
 			end
@@ -3016,25 +3448,32 @@ classdef (Sealed = true) panel < handle
 				end
 			end
 
-			% apply properties to object
-			h = p.h_object;
-			
-			% and to labels/title, if it's an axis
-			if isaxis(p.h_object)
-				h = [h ...
-					get(p.h_object, 'xlabel') ...
-					get(p.h_object, 'ylabel') ...
-					get(p.h_object, 'title') ...
-					];
-			end
-			
-			% apply
+			% if managing fonts
 			if p.ismanagefont()
+				
+				% apply properties to objects
+				h = p.h_object;
+				
+				% get those which are axes
+				h_axes = p.getAllManagedAxes();
+
+				% and labels/title objects, for any that are axes
+				for n = 1:length(h_axes)
+					h = [h ...
+						get(h_axes(n), 'xlabel') ...
+						get(h_axes(n), 'ylabel') ...
+						get(h_axes(n), 'zlabel') ...
+						get(h_axes(n), 'title') ...
+						];
+				end
+
+				% apply font properties
 				set(h, ...
 					'fontname', p.getPropertyValue('fontname'), ...
 					'fontsize', p.getPropertyValue('fontsize'), ...
 					'fontweight', p.getPropertyValue('fontweight') ...
 					);
+				
 			end
 
 		end
@@ -3051,13 +3490,18 @@ classdef (Sealed = true) panel < handle
 				return
 			end
 
-			% if not an axis, skip this call
-			if ~isaxis(p.h_object)
+			% if not a parent, skip this call
+			if ~p.isParent()
 				return
 			end
 
-			% if not a parent, skip this call
-			if ~p.isParent()
+			% if not an axis, skip this call - NB: this is not a
+			% displayed and managed object, rather it is the
+			% invisible axis used to display parent labels/titles.
+			% we checked above if this panel is a parent. thus,
+			% the member h_object must be scalar, if it is
+			% non-empty.
+			if ~isaxis(p.h_object)
 				return
 			end
 
@@ -3079,10 +3523,13 @@ classdef (Sealed = true) panel < handle
 			y = 0;
 			for c = 1:length(cs)
 				ch = cs{c};
-				h_object = ch.h_object;
-				if isaxis(h_object)
-					if ~isempty(get(h_object, 'xticklabel')) && ~isempty(get(h_object, 'xtick'))
-						fontoffset_mm = get(h_object, 'fontsize') * font_fudge(2) + font_fudge(1);
+				h_axes = ch.getAllManagedAxes();
+				for h_axis = h_axes
+					% only if there are some tick labels, and they're
+					% at the bottom...
+					if ~isempty(get(h_axis, 'xticklabel')) && ~isempty(get(h_axis, 'xtick')) ...
+							&& strcmp(get(h_axis, 'xaxislocation'), 'bottom')
+						fontoffset_mm = get(h_axis, 'fontsize') * font_fudge(2) + font_fudge(1);
 						y = max(y, fontoffset_mm);
 					end
 				end
@@ -3107,10 +3554,13 @@ classdef (Sealed = true) panel < handle
 			x = 0;
 			for c = 1:length(cs)
 				ch = cs{c};
-				h_object = ch.h_object;
-				if isaxis(h_object)
-					if ~isempty(get(h_object, 'yticklabel')) && ~isempty(get(h_object, 'ytick'))
-						yt = get(h_object, 'yticklabel');
+				h_axes = ch.getAllManagedAxes();
+				for h_axis = h_axes
+					% only if there are some tick labels, and they're
+					% at the left...
+					if ~isempty(get(h_axis, 'yticklabel')) && ~isempty(get(h_axis, 'ytick')) ...
+							&& strcmp(get(h_axis, 'yaxislocation'), 'left')
+						yt = get(h_axis, 'yticklabel');
 						if ischar(yt)
 							ml = size(yt, 2);
 						else
@@ -3119,7 +3569,7 @@ classdef (Sealed = true) panel < handle
 								ml = max(ml, length(yt{i}));
 							end
 						end
-						fontoffset_mm = get(h_object, 'fontsize') * ml * font_fudge(2) + font_fudge(1);
+						fontoffset_mm = get(h_axis, 'fontsize') * ml * font_fudge(2) + font_fudge(1);
 						x = max(x, fontoffset_mm);
 					end
 				end
@@ -3685,13 +4135,27 @@ classdef (Sealed = true) panel < handle
 			%
 			% p = recover(h_fig)
 			%   if you have not got a handle to the root panel of
-			%   the figure h_fig, this call will retrieve it.
+			%   the figure h_fig, this call will retrieve it. if
+			%   h_fig is not supplied, gcf is used.
 			
 			if nargin < 1
 				h_figure = gcf;
 			end
 			
 			p = panel.callbackDispatcher('recover', h_figure);
+			
+		end
+		
+		function panic()
+			
+			% call delete on all children of the global workspace,
+			% to recover from bugs that leave us with uncloseable
+			% figures. call this as "panel.panic()".
+			%
+			% NB: if you have to call panic(), something has gone
+			% wrong. if you are able to reproduce the problem,
+			% please contact me to report the bug.
+			delete(allchild(0));
 			
 		end
 		
@@ -3730,7 +4194,7 @@ classdef (Sealed = true) panel < handle
 				if ~panel.isDebug()
 					% in production code, must mlock() file at this point,
 					% to avoid persistent variables being cleared by user
-					if strcmp(getenv('USERDOMAIN'), 'MITCH-HOME')
+					if strcmp(getenv('USERDOMAIN'), 'BERGEN')
 						% do nothing
 					else
 						mlock
@@ -4010,12 +4474,207 @@ end
 
 
 
-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % HELPERS
 %
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function restore = dashstyle_line(fix, context)
+
+% get axis size in mm
+h_line = fix.h;
+h_axis = get(h_line, 'parent');
+u = get(h_axis, 'units');
+set(h_axis, 'units', 'norm');
+pos = get(h_axis, 'position');
+set(h_axis, 'units', u);
+axis_in_mm = pos(3:4) .* context.size_in_mm;
+
+% recover data
+xdata = get(h_line, 'xdata');
+ydata = get(h_line, 'ydata');
+zdata = get(h_line, 'zdata');
+linestyle = get(h_line, 'linestyle');
+marker = get(h_line, 'marker');
+
+% empty restore
+restore = [];
+
+% do not handle 3D
+if ~isempty(zdata)
+	warning('panel:NoFixdash3D', 'panel cannot fixdash() a 3D line - no action taken');
+	return
+end
+
+% get range of axis
+ax = axis(h_axis);
+
+% get scale in each dimension (mm per unit)
+sc = axis_in_mm ./ (ax([2 4]) - ax([1 3]));
+
+% create empty line
+data = NaN;
+
+% override linestyle
+if ~isempty(fix.linestyle)
+	linestyle = fix.linestyle;
+end
+
+% transcribe linestyle
+linestyle = dashstyle_parse_linestyle(linestyle);
+if isempty(linestyle)
+	return
+end
+
+% scale
+scale = 1;
+dashes = linestyle * scale;
+
+% store for restore
+restore.h_line = h_line;
+restore.xdata = xdata;
+restore.ydata = ydata;
+
+% create another, separate, line to overlay on the original
+% line and render the fixed-up dashes.
+restore.h_supp = copyobj(h_line, h_axis);
+
+% if the original line has markers, we'll have to create yet
+% another separate line instance to represent them, because
+% they shouldn't be "dashed", as it were. note that we don't
+% currently attempt to get the z-order right for these
+% new lines.
+if ~isequal(marker, 'none')
+	restore.h_mark = copyobj(h_line, h_axis);
+	set(restore.h_mark, 'linestyle', 'none');
+	set(restore.h_supp, 'marker', 'none');
+else
+	restore.h_mark = [];
+end
+
+% hide the original line. this line remains in existence so
+% that if there is a legend, it doesn't get messed up.
+set(h_line, 'xdata', NaN, 'ydata', NaN);
+
+% extract pattern length
+patlen = sum(dashes);
+
+% position within pattern is initially zero
+pos = 0;
+
+% linedata
+line_xy = complex(xdata, ydata);
+
+% for each line segment
+while length(line_xy) > 1
+	
+	% get line segment
+	xy = line_xy(1:2);
+	line_xy = line_xy(2:end);
+	
+	% any NaNs, and we're outta here
+	if any(isnan(xy))
+		continue
+	end
+	
+	% get start etc.
+	O = xy(1);
+	V = xy(2) - xy(1);
+	
+	% get mm length of this line segment
+	d = sqrt(sum(([real(V) imag(V)] .* sc) .^ 2));
+	
+	% and mm unit vector
+	U = V / d;
+	
+	% generate a long-enough pattern for this segment
+	n = ceil((pos + d) / patlen);
+	pat = [0 cumsum(repmat(dashes, [1 n]))] - pos;
+	pos = d - (pat(end) - patlen);
+	pat = [pat(1:2:end-1); pat(2:2:end)];
+	
+	% trim spurious segments
+	pat = pat(:, any(pat >= 0) & any(pat <= d));
+	
+	% skip if that's it
+	if isempty(pat)
+		continue
+	end
+	
+	% and reduce ones that are oversized
+	pat(1) = max(pat(1), 0);
+	pat(end) = min(pat(end), d);
+
+	% finally, add these segments to the line data
+	seg = [O + pat * U; NaN(1, size(pat, 2))];
+	data = [data seg(:).'];
+	
+end
+
+% update line
+set(restore.h_supp, 'xdata', real(data), 'ydata', imag(data), ...
+	'linestyle', '-');
+
+end
+
+
+function linestyle = dashstyle_parse_linestyle(linestyle)
+
+if isequal(linestyle, 'none') || isequal(linestyle, '-')
+	linestyle = [];
+	return
+end
+
+while 1
+
+	% if numbers
+	if isnumeric(linestyle)
+		if ~isa(linestyle, 'double') || ~isrow(linestyle) || mod(length(linestyle), 2) ~= 0
+			break
+		end
+		% no need to parse
+		return
+	end
+
+	% else, must be char
+	if ~ischar(linestyle) || ~isrow(linestyle)
+		break
+	end
+	
+	% translate matlab non-standard codes into codes we can
+	% easily parse
+	switch linestyle
+		case ':'
+			linestyle = '.';
+		case '--'
+			linestyle = '-';
+	end
+	
+	% must be only - and .
+	if any(linestyle ~= '.' & linestyle ~= '-')
+		break
+	end
+	
+	% transcribe
+	c = linestyle;
+	linestyle = [];
+	for l = c
+		switch l
+			case '-'
+				linestyle = [linestyle 2 0.75];
+			case '.'
+				linestyle = [linestyle 0.5 0.75];
+		end
+	end
+	return
+
+end
+
+warning('panel:BadFixdashLinestyle', 'unusable linestyle in fixdash()');
+linestyle = [];
+
+end
 
 
 
@@ -4085,7 +4744,7 @@ end
 
 end
 
-function addCallback(h, name, func)
+function addHandleCallback(h, name, func)
 
 % % get current list of callbacks
 % callbacks = get(h, name);
@@ -4119,6 +4778,10 @@ end
 
 function store = storeAxisState(h)
 
+% LOCK TICKS AND LIMITS
+%
+% (LOCK TICKS)
+%
 % lock state so that the ticks and labels do not change when
 % the figure is resized for printing. this is what the user
 % will expect, which is why we go through this palaver.
@@ -4170,6 +4833,13 @@ function store = storeAxisState(h)
 % ticks to manual in that case. thus, our preferred solution
 % is to always switch the ticks to manual, if they're not
 % already, and otherwise leave things be.
+%
+% (LOCK LIMITS)
+%
+% the other thing that may get modified, if the user hasn't
+% fixed it, is the axis limits. so we lock them too, any
+% that are set to auto, and mark them for unlocking when the
+% print is complete.
 
 store = '';
 
@@ -4187,6 +4857,22 @@ end
 if strcmp(get(h, 'ZTickMode'), 'auto')
 	store = [store 'Z'];
 	set(h, 'ZTickMode', 'manual');
+end
+
+% manual-ise limits on any axis where they are currently
+% automatic, and indicate that we need to switch them back
+% afterwards.
+if strcmp(get(h, 'XLimMode'), 'auto')
+	store = [store 'x'];
+	set(h, 'XLimMode', 'manual');
+end
+if strcmp(get(h, 'YLimMode'), 'auto')
+	store = [store 'y'];
+	set(h, 'YLimMode', 'manual');
+end
+if strcmp(get(h, 'ZLimMode'), 'auto')
+	store = [store 'z'];
+	set(h, 'ZLimMode', 'manual');
 end
 
 % % OLD CODE OBSOLETED 25/01/12 - see notes above
@@ -4218,8 +4904,13 @@ end
 function restoreAxisState(h, store)
 
 % unmanualise
-for ax = store
-	set(h, [ax 'TickMode'], 'auto');
+for item = store
+	switch item
+		case {'X' 'Y' 'Z'}
+			set(h, [item 'TickMode'], 'auto');
+		case {'x' 'y' 'z'}
+			set(h, [upper(item) 'TickMode'], 'auto');
+	end
 end
 
 % % OLD CODE OBSOLETED 25/01/12 - see notes above
@@ -4271,6 +4962,89 @@ end
 
 
 % VARIABLE TYPE HELPERS
+
+function val = validate_par(val, argtext, varargin)
+
+% this helper validates arguments to some functions in the
+% main body
+
+for n = 1:length(varargin)
+	
+	% get validation constraint
+	arg = varargin{n};
+	
+	% handle string list
+	if iscell(arg)
+		% string list
+		if ~isin(arg, val)
+			error('panel:InvalidArgument', ...
+				['invalid argument "' argtext '", "' val '" is not a recognised data value for this option']);
+		end
+		continue;
+	end
+	
+	% handle strings
+	if isstring(arg)
+		switch arg
+			case 'empty'
+				if ~isempty(val)
+					error('panel:InvalidArgument', ...
+						['invalid argument "' argtext '", option does not expect any data']);
+				end
+			case 'dimension'
+				if ~isdimension(val)
+					error('panel:InvalidArgument', ...
+						['invalid argument "' argtext '", option expects a dimension']);
+				end
+			case 'scalar'
+				if ~(isnumeric(val) && isscalar(val) && ~isnan(val))
+					error('panel:InvalidArgument', ...
+						['invalid argument "' argtext '", option expects a scalar value']);
+				end
+			case 'nonneg'
+				if any(val(:) < 0)
+					error('panel:InvalidArgument', ...
+						['invalid argument "' argtext '", option expects non-negative values only']);
+				end
+			case 'integer'
+				if any(val(:) ~= round(val(:)))
+					error('panel:InvalidArgument', ...
+						['invalid argument "' argtext '", option expects integer values only']);
+				end
+		end
+		continue;
+	end
+	
+	% handle numeric range
+	if isnumeric(arg) && isofsize(arg, [1 2])
+		if any(val(:) < arg(1)) || any(val(:) > arg(2))
+			error('panel:InvalidArgument', ...
+				['invalid argument "' argtext '", option data must be between ' num2str(arg(1)) ' and ' num2str(arg(2))]);
+		end
+		continue;
+	end
+	
+	% not recognised
+	arg
+	error('panel:InternalError', 'internal error - bad argument to validate_par (above)');
+	
+end
+
+end
+
+function b = checkpar(value, mn, mx)
+
+b = isscalar(value) && isnumeric(value) && ~isnan(value);
+if b
+	if nargin >= 2
+		b = b && value >= mn;
+	end
+	if nargin >= 3
+		b = b && value <= mx;
+	end
+end
+
+end
 
 function b = isintegral(v)
 

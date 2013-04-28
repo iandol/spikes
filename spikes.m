@@ -28,7 +28,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv = [];
 		data = [];
 		rlist = [];
-		sv.version = 2.001;
+		sv.version = 2.01;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -93,6 +93,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.box='on';
 		sv.auto='no';
 		sv.startOffset = 0;
+		sv.cellmap = [1 2 3 4 5 6];
 		sv.xval=1;
 		sv.yval=1;
 		sv.zval=1;
@@ -323,9 +324,16 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				else
 					zs=[];
 				end
+				%we have a file so we reset our data and axes
+				if exist('data','var') && isfield(data,'pR')
+					pR=data.pR;
+				else
+					pR=[];
+				end
 				data=struct;
 				data.zipload = false;
 				data.zs=zs;
+				data.pR=pR;
 				cla;  reset(gca);  set(gca,'Tag','SpikeFigMainAxes');	%this resets the axis
 				set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
 				automeasure=0;
@@ -335,14 +343,26 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					data.wrapped=2; %force off wrapping;
 					sv.Wrapped=2;
 					set(gh('WrappedMenu'),'Value',2);
-					pR = plxReader('file',fn,'dir',pn,'startOffset',sv.startOffset);
-					pR.parse;
+					if ~isa(data.pR,'plxReader')
+						data.pR = plxReader('file',fn,'dir',pn,'startOffset',sv.startOffset,'cellmap',sv.cellmap);
+						data.pR.parse;
+					else
+						if strcmpi(data.pR.file,fn) %same file; reparse
+							data.startOffset = sv.startOffset;
+							data.pR.reparse;
+						else
+							data.pR.file = fn;
+							data.pR.dir = pn;
+							data.startOffset = sv.startOffset;
+							data.pR.cellmap = sv.cellmap;
+							data.pR.parse;
+						end
+					end
 					data.zipload=false;
 					data.filetype='plx';
 					data.sourcepath = [pn fn];
-					data.info=pR.info;
-					data.meta = pR.meta;
-					data.pR = pR;
+					data.info = data.pR.info;
+					data.meta = data.pR.meta;
 				
 				elseif regexpi(e,'\.zip')
 					
@@ -420,6 +440,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		t=find(data.sourcepath==filesep);
 		if ~isempty(regexpi(data.sourcepath,'(smr|zip)'));
 			data.runname=[data.sourcepath((t(end-1))+1:end-4) ' | '];
+		elseif ~isempty(regexpi(data.sourcepath,'(plx)'));
+			data.runname=[data.sourcepath((t(end)+1):end-4) ' | '];
 		else
 			t=find(data.sourcepath==filesep);
 			data.runname=data.sourcepath((t(end-2))+1:t(end));
@@ -554,7 +576,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				data.names=filename;
 				switch data.filetype
 					case 'plx'
-						
+						data.names = ['plxvariable ' num2str(1)];
+						x=data.pR.exportToRawSpikes(1,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 					case 'doc'
 						x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 					otherwise
@@ -983,7 +1006,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					filenamet = regexprep(filenamet,'\s+',' ');
 					if strcmpi(data.filetype,'plx');
 						[yi,xi,zi] = ind2sub(size(data.raw),i);
-						data.names{yi,xi,zi}=filenamet;
+						tr = [1 3 5 7 2 4 6 8];
 					else
 						xi=index(i,1);
 						yi=index(i,2);
@@ -992,8 +1015,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					end
 					switch data.filetype
 						case 'plx'
-							data.names{i} = ['plxvariable ' num2str(i)];
-							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+							x=data.pR.exportToRawSpikes(tr(i),sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+							data.names{yi,xi,zi} = ['PLXIN:' num2str(i) '>' x.name];
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 						otherwise
@@ -3871,8 +3894,6 @@ end
 mini=find(data.time{1}==str2double(mint));
 maxi=find(data.time{1}==str2double(maxt));
 
-
-
 switch data.numvars
 	case 0
 		if ~strcmp(sv.auto,'report')
@@ -3908,6 +3929,7 @@ switch data.numvars
 			if i<data.xrange
 				set(gca,'XTickLabel',[]);
 			end
+			set(gca,'TickLength',[0.01 0.01],'TickDir','in','YTickLabel',[]);
 			text(data.time{1}(mini),(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			ylabel(num2str(data.xvalues(i)));
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
@@ -3970,14 +3992,12 @@ switch data.numvars
 		for i=1:length(x)
 			[i1,i2] = ind2sub([data.yrange,data.xrange],xx(i));
 			p(i1,i2).select();
-			%subaxis(yrange,xrange,i,'S',0,'M',0.1,'P',0);
 			h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
 			p(i1,i2).hold('on')
 			h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
 			p(i1,i2).hold('off')
 			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
-			set(gca,'XTick',[]);
-			set(gca,'YTick',[]);
+			set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 			text(data.time{1}(mini),(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			a=a+1;
