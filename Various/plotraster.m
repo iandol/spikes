@@ -114,25 +114,26 @@ for j=1:length(cell)
 		%[xt,yy]=meshgrid([1:length(x)],[startpos+trialoffset; startpos+trialoffset; endpos+trialoffset; endpos+trialoffset]); %gets y coordinates to match x for patch
 		%[xt,yy]=meshgrid([1:length(x)],[startpos+trialoffset; endpos+trialoffset]); %generates y coordinates for lines
 		yy=repmat([startpos+trialoffset; endpos+trialoffset],1,length(x));
-		if burst==1 yb=repmat((startpos+trialoffset)-0.1,1,length(b)); end
+		if burst==1 yb=repmat((startpos+trialoffset)-0.15,1,length(b)); end
 		%yb=repmat([startpos+trialoffset; endpos+trialoffset],1,length(b));
 		
 		%patch(xx,yy,cols(j,:),'EdgeColor','none');
 		if exist('len','var')
 			st=startpos+trialoffset;
-			et=endpos+trialoffset
+			et=endpos+trialoffset;
 			patch([0 len len 0],[st st et et],[1 1 0.5],'EdgeColor','none');
 		end
-		line(xx,yy,'Color',cols(j,:),'LineWidth',0.025);
 		hold on;
-		if burst==1 plot(b,yb,'r.','MarkerSize',5); end
-		if drawline==2 & j==1
+		if burst==1; plot(b,yb,'r^','MarkerSize',4); end
+		line(xx,yy,'Color',cols(j,:),'LineWidth',0.025);
+		if drawline==2 && j==1
 			line([0 time],[trialoffset+seed trialoffset+seed],'Color',[.8 .8 .8]);
-			text(time/20,trialoffset+(seed/6),num2str(length(x)));
-		elseif drawline==1 & j==1
+			text(time-(time/30),trialoffset+(seed/6),num2str(length(x)));
+		elseif drawline==1 && j==1
 			line([0 time], [trialoffset+(seed/2) trialoffset+(seed/2)],'Color',[.8 .8 .8]);
-			text(time/20,trialoffset+(seed/6),num2str(length(x)));
+			text(time-(time/30),trialoffset+(seed/6),num2str(length(x)));
 		end
+		hold off;
 	end
 end
 
@@ -145,7 +146,7 @@ else
 	set(gca,'YTickLabel','');
 end
 
-axis([0 time 0 run.numtrials*seed]);
+axis([-0.01 time 0 run.numtrials*seed]);
 xlabel('Time (s)');
 ylabel('Trials')
 box on;
