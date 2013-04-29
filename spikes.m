@@ -348,13 +348,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 						data.pR.parse;
 					else
 						if strcmpi(data.pR.file,fn) %same file; reparse
-							data.startOffset = sv.startOffset;
+							data.pR.startOffset = sv.startOffset;
 							data.pR.reparse;
 						else
 							[data.pR.matfile, ~] = uigetfile('*.mat','Load Behaviour MAT File');
 							data.pR.file = fn;
 							data.pR.dir = pn;
-							data.startOffset = sv.startOffset;
+							data.pR.startOffset = sv.startOffset;
 							data.pR.cellmap = sv.cellmap;
 							data.pR.parse;
 						end
