@@ -910,4 +910,8 @@ function SPLXcellmap_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SPLXcellmap as text
 %        str2double(get(hObject,'String')) returns contents of SPLXcellmap as a double
 global sv
+global data
 sv.cellmap = str2num(get(hObject,'String'));
+if isa(data.pR,'plxReader')
+	data.pR.cellmap = sv.cellmap;
+end
