@@ -206,7 +206,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				if isfield(data,'pR'); pR = data.pR; end
 				data=struct;
 				data.zs=zs;
-				if exist('pR','var'); data.pR = pR;	end
+				if exist('pR','var'); data.pR = pR;	else; data.pR=[]; end
 				data.meta=meta;
 				data.info=info;
 				data.filetype=t;
@@ -3429,6 +3429,10 @@ switch data.numvars
 				end
 				data.matrixtitle=[ data.runname 'Cell:' num2str(data.cell) ' [' o ':' m '-' n ' BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod)  ']\newline ' data.lockedtitle];
 		end
+end
+
+if isa(data.pR,'plxReader')
+	data.matrixtitle=[ data.matrixtitle '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell))];
 end
 
 %data.matrixtitle = ['\fontname{Helvetica}\fontsize{12}' data.matrixtitle];

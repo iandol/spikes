@@ -911,7 +911,12 @@ function SPLXcellmap_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of SPLXcellmap as a double
 global sv
 global data
-sv.cellmap = str2num(get(hObject,'String'));
-if isa(data.pR,'plxReader')
-	data.pR.cellmap = sv.cellmap;
+cellmap = str2num(get(hObject,'String'));
+if length(cellmap) == 6
+	sv.cellmap = cellmap;
+	if isa(data.pR,'plxReader')
+		data.pR.cellmap = sv.cellmap;
+	end
+else
+	warndlg('You must enter 6 numerical values that map cell1-6 to plexon units!')
 end
