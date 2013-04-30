@@ -1,4 +1,4 @@
-function plotraster(cell1, cell2, cell3, drawline, burst)
+function plotraster(cell1, cell2, cell3, drawline, burst, tmax)
 % plotraster(cell1, cell2, cell3)
 %
 %Plotraster allows the raw spike times of a run for each trial to be
@@ -10,17 +10,34 @@ seed=10;
 cols=[0 0 0;0.6 0 0;0 0 0.5];
 width=0.03; %time width of the Spike drawn in seconds
 yticks=1;
+ncells = 3;
 
-if ~exist('drawline','var') 
+if ~exist('cell3','var') || isempty(cell3) || ~isstruct(cell3)
+	ncells=2;
+end
+
+if ~exist('cell2','var') || isempty(cell2) || ~isstruct(cell2)
+	ncells = 1;
+end
+
+if ~exist('cell1','var') || isempty(cell1) || ~isstruct(cell1)
+	ncells = 0;
+end
+
+if ~exist('drawline','var') || isempty(drawline)
 	drawline=2;
 end
 
-if ~exist('burst','var') 
+if ~exist('burst','var') || isempty(burst)
 	burst=1;
 end
 
-switch nargin
-	case 4
+if ~exist('tmax','var') || isempty(tmax)
+	tmax=0;
+end
+
+switch ncells
+	case 3
 		cell{1}=cell1;
 		cell{2}=cell2;
 		cell{3}=cell3;
@@ -29,35 +46,11 @@ switch nargin
 		if drawline>0
 			drawline=2;
 		end
-	case 3
-		if isstruct(cell3)
-			cell{1}=cell1;
-			cell{2}=cell2;
-			cell{3}=cell3;
-			height=seed/6; %for scaling rasters
-			gap=(seed-(height*3))/4;
-		else
-			cell{1}=cell1;
-			cell{2}=cell2;
-			height=seed/4; %for scaling rasters
-			gap=(seed-(height*2))/3;
-			drawline=cell3;
-		end		
-		if drawline>0
-			drawline=2;
-		end
 	case 2
-		if isstruct(cell2)
-			cell{1}=cell1;
-			cell{2}=cell2;
-			height=seed/4; %for scaling rasters
-			gap=(seed-(height*2))/3;
-		else
-			cell{1}=cell1;
-			height=seed/3; %for scaling rasters
-			gap=(seed-(height))/2;
-			drawline=cell2;
-		end
+		cell{1}=cell1;
+		cell{2}=cell2;
+		height=seed/4; %for scaling rasters
+		gap=(seed-(height*2))/3;
 		if drawline>0
 			drawline=2;
 		end
@@ -78,6 +71,9 @@ end
 for j=1:length(cell)
 	run=cell{j};
 	time=run.maxtime/10000;
+	if tmax == 0
+		tmax = time;
+	end
 	
 	if  ~isfield(run,'btrial') %double check for burst structure
 		burst = 0;
@@ -128,10 +124,10 @@ for j=1:length(cell)
 		line(xx,yy,'Color',cols(j,:),'LineWidth',0.025);
 		if drawline==2 && j==1
 			line([0 time],[trialoffset+seed trialoffset+seed],'Color',[.8 .8 .8]);
-			text(time-(time/30),trialoffset+(seed/6),num2str(length(x)));
+			text(tmax+0.01,trialoffset+(seed/2),num2str(length(x)));
 		elseif drawline==1 && j==1
 			line([0 time], [trialoffset+(seed/2) trialoffset+(seed/2)],'Color',[.8 .8 .8]);
-			text(time-(time/30),trialoffset+(seed/6),num2str(length(x)));
+			text(tmax+0.01,trialoffset+(seed/2),num2str(length(x)));
 		end
 		hold off;
 	end
@@ -146,7 +142,11 @@ else
 	set(gca,'YTickLabel','');
 end
 
-axis([-0.01 time 0 run.numtrials*seed]);
+if exist('tmax','var')
+	axis([-0.01 tmax 0 run.numtrials*seed]);
+else
+	axis([-0.01 time 0 run.numtrials*seed]);
+end
 xlabel('Time (s)');
 ylabel('Trials')
 box on;

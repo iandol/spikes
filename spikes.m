@@ -3859,7 +3859,18 @@ function PlotCellRaster
 
 global data sv;
 
-plotraster(data.raw{sv.yval, sv.xval, sv.zval});
+mint=str2num(get(gh('SMinEdit'),'String'));   %this selects what to plot
+maxt=str2num(get(gh('SMaxEdit'),'String'));
+if isempty(mint) || mint < min(data.time{1})
+	mint=min(data.time{1});
+	set(gh('SMinEdit'),'String',num2str(min(data.time{1})));
+end
+if isempty(maxt) || maxt > max(data.time{1})
+	maxt=max(data.time{1});
+	set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
+end
+maxt = maxt/1000;
+plotraster(data.raw{sv.yval, sv.xval, sv.zval},[],[],[],[],maxt);
 MakeTitle('raster');
 nr=sum(data.psth{sv.yval, sv.xval, sv.zval});
 bnr=sum(data.bpsth{sv.yval, sv.xval, sv.zval});
