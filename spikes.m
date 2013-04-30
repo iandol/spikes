@@ -3432,7 +3432,7 @@ switch data.numvars
 end
 
 if isa(data.pR,'plxReader')
-	data.matrixtitle=[ data.matrixtitle '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell))];
+	data.matrixtitle=[ data.matrixtitle '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 end
 
 %data.matrixtitle = ['\fontname{Helvetica}\fontsize{12}' data.matrixtitle];
