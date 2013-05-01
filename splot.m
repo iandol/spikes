@@ -625,63 +625,25 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 					psth=spdata.psths;
 				end
 			end
-
-			opsth = psth;
-
-			m=max(psth);
-			[m,trials]=converttotime(m);
-			if max(psth)>0;psth=(psth/max(psth))*m;end
-
-			mini=find(time==mint);
-			maxi=find(time==maxt);
-
-			psth=psth(mini:maxi);
-			opsth=opsth(mini:maxi);
-
-			%for firing rate version
-			[spdata.spont.mean,spdata.spont.sd]=stderr(psth,'SD'); %get mean and s.d.
-			[~,spdata.spont.se]=stderr(psth); %get mean and s.e.
-
-			%------this block gets confidence intervals from a poisson distribution
-			[spdata.spont.ci05]=poissinv([0.025 0.975],spdata.spont.mean);		%p=0.05
-			[spdata.spont.ci025]=poissinv([0.0125 0.9875],spdata.spont.mean);	%p=0.025
-			[spdata.spont.ci01]=poissinv([0.005 0.995],spdata.spont.mean);		%p=0.01
-			[spdata.spont.ci005]=poissinv([0.0025 0.9975],spdata.spont.mean);	%p=0.005
-			[spdata.spont.ci001]=poissinv([0.0005 0.9995],spdata.spont.mean);	%p=0.001
-			spdata.spont.bin1=spdata.spont.ci01(2); %sets defaults to p=0.01
-			spdata.spont.bin2=spdata.spont.ci01(2);
-			spdata.spont.bin3=spdata.spont.ci05(2);
-			%--------------------------------------------------------------
-
-			%for spikes/bin version
-			[spdata.spont.meano,spdata.spont.sdo]=stderr(opsth,'SD'); %get mean and s.d.
-			[~,spdata.spont.seo]=stderr(opsth); %get mean and s.e.
-
-			%------this block gets confidence intervals from a poisson distribution
-			[spdata.spont.ci05o]=poissinv([0.025 0.975],spdata.spont.meano);		%p=0.05
-			[spdata.spont.ci025o]=poissinv([0.0125 0.9875],spdata.spont.meano);	%p=0.025
-			[spdata.spont.ci01o]=poissinv([0.005 0.995],spdata.spont.meano);		%p=0.01
-			[spdata.spont.ci005o]=poissinv([0.0025 0.9975],spdata.spont.meano);	%p=0.005
-			[spdata.spont.ci001o]=poissinv([0.0005 0.9995],spdata.spont.meano);	%p=0.001
-			spdata.spont.bin1o=spdata.spont.ci01o(2); %sets defaults to p=0.01
-			spdata.spont.bin2o=spdata.spont.ci01o(2);
-			spdata.spont.bin3o=spdata.spont.ci05o(2);
-			%--------------------------------------------------------------
-
-			data.spontaneous.mean=spdata.spont.meano;
-			data.spontaneous.sd=spdata.spont.sdo;
-			data.spontaneous.se=spdata.spont.seo;
-			data.spontaneous.limit=spdata.spont.meano+(2*spdata.spont.sdo);
-			data.spontaneous.limitse=spdata.spont.meano+(2*spdata.spont.seo);
-			data.spontaneous.poisson=spdata.spont.ci01o(2);
-
-			data.spontaneous.meant=spdata.spont.mean;
-			data.spontaneous.sdt=spdata.spont.sd;
-			data.spontaneous.sdt=spdata.spont.se;
-			data.spontaneous.limitt=spdata.spont.mean+(2*spdata.spont.sd);
-			data.spontaneous.limitset=spdata.spont.mean+(2*spdata.spont.se);
-			data.spontaneous.poissont=spdata.spont.ci01(2);
 		end
+		
+		sp = calculatespontaneous(psth,time,mint,maxt);
+		
+		spdata.spont = sp;
+		
+		data.spontaneous.mean=spdata.spont.meano;
+		data.spontaneous.sd=spdata.spont.sdo;
+		data.spontaneous.se=spdata.spont.seo;
+		data.spontaneous.limit=spdata.spont.meano+(2*spdata.spont.sdo);
+		data.spontaneous.limitse=spdata.spont.meano+(2*spdata.spont.seo);
+		data.spontaneous.poisson=spdata.spont.ci01o(2);
+
+		data.spontaneous.meant=spdata.spont.mean;
+		data.spontaneous.sdt=spdata.spont.sd;
+		data.spontaneous.sdt=spdata.spont.se;
+		data.spontaneous.limitt=spdata.spont.mean+(2*spdata.spont.sd);
+		data.spontaneous.limitset=spdata.spont.mean+(2*spdata.spont.se);
+		data.spontaneous.poissont=spdata.spont.ci01(2);
 		
 		if datatype == 1 || datatype == 4
 			t = 'All Spikes ';

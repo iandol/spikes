@@ -3,7 +3,7 @@ function varargout = opro_UI(varargin)
 %    FIG = OPRO_UI launch opro_UI GUI.
 %    OPRO_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 08-Dec-2006 16:06:01
+% Last Modified by GUIDE v2.5 01-May-2013 00:06:01
 
 if nargin == 0  % LAUNCH GUI
 
@@ -291,3 +291,11 @@ function OPAutoMeasure_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of OPAutoMeasure
 
 
+
+
+% --- Executes on button press in OReparseVars.
+function OReparseVars_Callback(hObject, eventdata, handles)
+% hObject    handle to OReparseVars (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+opro('Reparse')

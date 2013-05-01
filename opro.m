@@ -140,17 +140,17 @@ case 'Load'
 			error('Mismatch between cells');
 	end
 	
-	if ~isfield('o.cell1','xindex')
+	if ~isfield(o.cell1,'xindex')
 		o.cell1.xindex=[1:o.cell1.xrange];
 	end
-	if ~isfield('o.cell2','xindex')
+	if ~isfield(o.cell2,'xindex')
 		o.cell2.xindex=[1:o.cell2.xrange];
 	end
-	if ~isfield('o.cell1','yindex')
+	if ~isfield(o.cell1,'yindex')
 		o.cell1.yindex=1:o.cell1.yrange;
-		o.cell2.yindex=1:o.cell2.yrange;
+		
 	end
-	if ~isfield('o.cell2','yindex')
+	if ~isfield(o.cell2,'yindex')
 		o.cell2.yindex=1:o.cell2.yrange;
 	end
 	
@@ -164,7 +164,7 @@ case 'Load'
 	if strcmp(o.filetype,'mat')
 		set(findobj('UserData','PSTH'),'Enable','On');
 		set(gh('BinWidthEdit'),'String',o.cell1.binwidth);
-		set(gh('WrappedBox'),'Value',o.cell1.wrapped);
+		if o.cell1.wrapped == 1; set(gh('WrappedBox'),'Value',1); else set(gh('WrappedBox'),'Value',1); end
 		t=num2str((1:o.cell1.raw{1}.numtrials)');
 		set(gh('StartTrialMenu'),'String',t);
 		set(gh('StartTrialMenu'),'Value',1);
@@ -223,6 +223,74 @@ case 'Load'
 % 	end
 	if get(gh('OPAutoMeasure'),'Value')==1
 		opro('Measure');
+	end
+	
+	
+
+	%-----------------------------------------------------------------------------------------
+case 'Reparse'
+	%-----------------------------------------------------------------------------------------
+	binwidth=str2num(get(gh('BinWidthEdit'),'String'));
+	options.Resize='on';
+	options.WindowStyle='normal';
+	options.Interpreter='tex';
+	prompt = {'Choose Cell 1 variables to merge (ground):','Choose Cell 2 variables to merge (figure):','Sigma'};
+	dlg_title = 'REPARSE DATA VARIABLES';
+	num_lines = [1 100];
+	def = {'1 2','7 8','0'};
+	answer = inputdlg(prompt,dlg_title,num_lines,def,options);
+	groundmap = str2num(answer{1});
+	figuremap = str2num(answer{2});
+	sigma = str2num(answer{3});
+	
+	map{1}=groundmap;
+	map{2}=figuremap;
+	
+	for i = 1:2
+		c = o.(['cell' num2str(i)]);
+		vars = map{i};
+		raw = c.raw{vars(1)};
+		for j = 2:length(vars)
+			raw.name = [raw.name '|' c.raw{vars(j)}.name];
+			raw.totaltrials = raw.totaltrials + c.raw{vars(j)}.totaltrials;
+			raw.numtrials = raw.numtrials + c.raw{vars(j)}.numtrials;
+			raw.endtrial = raw.numtrials;
+			raw.trial = [raw.trial, c.raw{vars(j)}.trial];
+			raw.maxtime = max([raw.maxtime, c.raw{vars(j)}.maxtime]);
+			raw.tDelta = [raw.tDelta; c.raw{vars(j)}.tDelta];
+			raw.btrial = [raw.btrial, c.raw{vars(j)}.btrial];
+		end
+		
+		c.raw = {};
+		c.raw{1} = raw;
+		c.xrange = 1;
+		c.xtitle = 'Meta1';
+		c.xvalues = [5];
+		c.xvalueso = c.xvalues;
+		c.ytitle = 'Meta2';
+		c.yvalues = [5];
+		c.yvalueso = c.yvalues;
+
+		[time,psth,rawspikes,sums]=binit(raw,binwidth*10, raw.startmod, raw.endmod, raw.starttrial, raw.endtrial, 0);
+		[time2,bpsth]=binitb(raw,binwidth*10, raw.startmod, raw.endmod, raw.starttrial, raw.endtrial, 0);
+		if sigma > 0
+			psth=gausssmooth(time,psth,sigma);
+			bpsth=gausssmooth(time2,bpsth,sigma);
+		end
+		
+		c.bpsth = {};
+		c.bpsth{1}=bpsth;
+		c.psth = {};
+		c.psth{1}=psth;
+		c.time = {};
+		c.time{1}=time;
+		c.rawspikes = {};
+		c.rawspikes{1}=rawspikes;
+		c.sums = {};
+		c.sums{1}=sums;
+		c.names = {};
+		c.names{1} = raw.name;
+		%o.(['cell' num2str(i)]) = c;
 	end
 	
 	%-----------------------------------------------------------------------------------------
