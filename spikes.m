@@ -4040,6 +4040,168 @@ switch data.numvars
 end
 set(gcf,'Renderer','painters','ResizeFcn',[]);
 
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+% Plot PSTHs in a grid
+
+function PlotAll
+
+global data sv;
+
+data.areaplot=0;
+sv.allhandle=figure;
+set(gcf,'Tag','allplotfig');
+figpos(1,[850 750]);
+set(gcf,'Color',[1 1 1]);
+
+mint=get(gh('SMinEdit'),'String');   %this selects what to plot
+maxt=get(gh('SMaxEdit'),'String');
+if isempty(mint) || str2double(mint)<min(data.time{1})
+	mint=min(data.time{1});
+	set(gh('SMinEdit'),'String',num2str(min(data.time{1})));
+end
+if isempty(maxt) || str2double(maxt)>max(data.time{1})
+	maxt=max(data.time{1});
+	set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
+end
+mini=find(data.time{1}==str2double(mint));
+maxi=find(data.time{1}==str2double(maxt));
+
+for i = 1:data.xrange*data.yrange*data.zrange
+	
+end
+
+switch data.numvars
+	case 0
+		if ~strcmp(sv.auto,'report')
+			splot;
+			return;
+		end
+	case 1
+		p=panel(sv.psthhandle,'defer');
+		if get(gh('PSTHEdit'),'String')=='0'
+			m=1; %this will find the max value out of all the PSTH's and scale by this
+			for i=1:data.xrange
+				maxm = max(data.psth{data.xindex(i)});
+				if m<=maxm
+					m=maxm;
+				end
+			end
+			m=round(m+m/20);  %just to scale a bit bigger than the maximum value
+			set(gh('PSTHText'),'String',num2str(m));
+		else
+			m=str2double(get(gh('PSTHEdit'),'String'));
+			set(gh('PSTHText'),'String',num2str(m));
+		end
+		
+		p.pack(data.xrange,1);
+		for i=1:data.xrange
+			p(i,1).select();
+			%subaxis(data.xrange,1,i,'S',0,'P',0,'M',0.1);
+			h(1)=bar(data.time{data.xindex(i)}(mini:maxi),data.psth{data.xindex(i)}(mini:maxi),1,'k');
+			p(i,1).hold('on')
+			h(2)=bar(data.time{data.xindex(i)}(mini:maxi),data.bpsth{data.xindex(i)}(mini:maxi),1,'r');
+			p(i,1).hold('off')
+			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
+			if i<data.xrange
+				set(gca,'XTickLabel',[]);
+			end
+			set(gca,'TickLength',[0.01 0.01],'TickDir','in','YTickLabel',[]);
+			text(data.time{1}(mini),(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
+			ylabel(num2str(data.xvalues(i)));
+			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
+		end
+		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
+		%[ax,h2]=suplabel(t ,'t');
+		p.xlabel('Time (ms)');
+		p.title(t);
+		p.de.margin = 0;
+		p.margin = [15 15 5 15];
+		p.fontsize = 12;
+		p.de.fontsize = 10;
+		% because we 'defer'red, we have to refresh.
+		p.refresh();
+	otherwise
+		p=panel(sv.psthhandle,'defer');
+		xrange=length(data.xvalueso); %we'll ignore the subselection
+		yrange=length(data.yvalueso);
+		zrange=length(data.zvalueso);
+		
+		if data.numvars==3 %we need to correct the index for the third variable
+			if sv.zval==1
+				starti=1;
+				endi=xrange*yrange;
+			else
+				starti=(xrange*yrange*(sv.zval-1))+1;
+				endi=xrange*yrange*sv.zval;
+			end
+		else
+			starti=1;
+			endi=xrange*yrange;
+		end
+		
+		if strcmp(get(gh('PSTHEdit'),'String'),'0')
+			m=1; %this will find the max value out of all the PSTH's and scale by this
+			for i=starti:endi
+				maxm=max(data.psth{i});
+				if m < maxm
+					m = maxm;
+				end
+			end
+			m=round(m+m/10);  %just to scale a bit bigger than the maximum value
+			set(gh('PSTHText'),'String',num2str(m));
+		else
+			m=str2double(get(gh('PSTHEdit'),'String'));
+			set(gh('PSTHText'),'String',num2str(m));
+		end
+		%the problem is that our data is in rows, but subplot indexes in columns
+		%so we have to create an index that converts between the 2 as
+		%i want the data to look that same as it is loaded into the matrices
+		x = starti:endi;
+		xx = x - (xrange*yrange*(sv.zval-1));
+		y = reshape(x,data.yrange,data.xrange);
+		yy = reshape(xx,data.yrange,data.xrange);
+		%y=fliplr(y'); %order it so we can load our data to look like the surface plots
+		%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
+		a=1;
+		p.pack(data.yrange,data.xrange);
+		for i=1:length(x)
+			[i1,i2] = ind2sub([data.yrange,data.xrange],xx(i));
+			p(i1,i2).select();
+			h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
+			p(i1,i2).hold('on')
+			h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
+			p(i1,i2).hold('off')
+			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
+			set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
+			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
+			text(data.time{1}(mini),(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
+			a=a+1;
+		end
+		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		if data.numvars==3
+			t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
+		end
+		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
+		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
+		p.title(t);
+		p.de.margin = 0;
+		p.margin = [15 15 5 15];
+		p.fontsize = 12;
+		p.de.fontsize = 10;
+		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
+		%[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
+		%[ax,h3]=suplabel(t ,'t');
+		%set(h1,'FontSize',12)
+		% because we 'defer'red, we have to refresh.
+		p.refresh();
+		
+end
+set(gcf,'Renderer','painters','ResizeFcn',[]);
+
 %----------------------------------END----------------------------------------
 
 function [time,psth,bpsth,mint,maxt] = selectPSTH()

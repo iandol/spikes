@@ -154,77 +154,7 @@ case 'Load'
 		o.cell2.yindex=1:o.cell2.yrange;
 	end
 	
-	
-	set(gh('OPHoldX'),'String',{o.cell1.xvalues'});
-	set(gh('OPHoldY'),'String',{o.cell1.yvalues'});
-	set(gh('OPHoldX'),'Value',ceil(o.cell1.xrange/2));
-	set(gh('OPHoldY'),'Value',ceil(o.cell1.yrange/2));
-	set(gh('OPCellMenu'),'String',{'Cell 1';'Cell 2'});
-	
-	if strcmp(o.filetype,'mat')
-		set(findobj('UserData','PSTH'),'Enable','On');
-		set(gh('BinWidthEdit'),'String',o.cell1.binwidth);
-		if o.cell1.wrapped == 1; set(gh('WrappedBox'),'Value',1); else set(gh('WrappedBox'),'Value',1); end
-		t=num2str((1:o.cell1.raw{1}.numtrials)');
-		set(gh('StartTrialMenu'),'String',t);
-		set(gh('StartTrialMenu'),'Value',1);
-		set(gh('EndTrialMenu'),'String',t);
-		set(gh('EndTrialMenu'),'Value',o.cell1.raw{1}.numtrials);
-		set(gh('InfoText'),'String',['Spike Data Loaded:' o.cell1.matrixtitle '/' o.cell2.matrixtitle]);
-		set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance';'M: Fano T-test';'M: Fano Wilcoxon';'M: Fano Paired Wilcoxon';'M: Fano Spearman';'---------';'Column: Spontaneous';'---------';'I: Paired T-test';'I: Paired Sign Test';'I: Wilcoxon Rank Sum';'I: Wilcoxon Paired Test';'I: Bootstrap';'I: Spearman Correlation';'I: Pearsons Correlation';'I: 1-Way Anova';'I: Kolmogorov-Smirnof Distribution Test'});
-		o.cell1.max=max(max(o.cell1.matrix));
-		o.cell2.max=max(max(o.cell2.matrix));
-		if get(gh('MatrixBox'),'Value')==1
-			o.cell1.matrix=(o.cell1.matrix/o.cell1.max)*100;
-			o.cell2.matrix=(o.cell2.matrix/o.cell2.max)*100;
-		end
-	else
-		set(findobj('UserData','PSTH'),'Enable','Off');
-		set(gh('InfoText'),'String','Text Files Loaded');
-		set(gh('NormaliseMenu'),'String',{'none';'% of Max'});
-		set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance'});
-	end
-	
-	if get(gh('RatioBox'),'Value')==1
-		o.cell1.temp=o.cell1.matrix;
-		o.cell1.matrix=o.cell1.bmatrix./o.cell1.matrix;
-		o.cell2.temp=o.cell2.matrix;
-		o.cell2.matrix=o.cell2.bmatrix./o.cell2.matrix;
-	end
-	
-	axes(gh('Cell1Axis'))
-	imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1.matrix);
-	%if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
-	%if o.cell1.yvalues(1) < o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
-	set(gca,'YDir','normal')
-	colormap(hot);
-	set(gca,'Tag','Cell1Axis');	
-	colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
-	set(gh('Cell1Axis'),'Position',o.ax1pos);
-	
-	axes(gh('Cell2Axis'));
-	imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
-	%if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
-	%if o.cell2.yvalues(1) > o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
-	set(gca,'YDir','normal')
-	colormap(hot);
-	set(gca,'Tag','Cell2Axis');
-	colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
-	set(gh('Cell2Axis'),'Position',o.ax2pos);	
-	
-	axes(gh('OutputAxis'));
-	plot(0,0);
-	set(gca,'Tag','OutputAxis');
-	set(gh('OutputAxis'),'Position',o.ax3pos);	
-% 	if strcmp(o.filetype,'mat')
-% 		%helpdlg('Both cells have been loaded, select your analysis routine, and measure the PSTH for the statistics');
-% 	else
-% 		%helpdlg('You have loaded text files, select your analysis routine, and OrbanizeIT!');
-% 	end
-	if get(gh('OPAutoMeasure'),'Value')==1
-		opro('Measure');
-	end
-	
+	updategui();
 	
 
 	%-----------------------------------------------------------------------------------------
@@ -290,8 +220,11 @@ case 'Reparse'
 		c.sums{1}=sums;
 		c.names = {};
 		c.names{1} = raw.name;
-		%o.(['cell' num2str(i)]) = c;
+		o.(['cell' num2str(i) 'bak']) = o.(['cell' num2str(i)]);
+		o.(['cell' num2str(i)]) = c;
 	end
+	
+	updategui()
 	
 	%-----------------------------------------------------------------------------------------
 case 'Normalise'
@@ -2520,4 +2453,75 @@ switch boottype
 	case 8
 		ci1=bootci(nboot,{@stderr,data1,'A',1},'alpha',alpha);
 		ci2=bootci(nboot,{@stderr,data2,'A',1},'alpha',alpha);
+end
+
+function updategui()
+set(gh('OPHoldX'),'String',{o.cell1.xvalues'});
+set(gh('OPHoldY'),'String',{o.cell1.yvalues'});
+set(gh('OPHoldX'),'Value',ceil(o.cell1.xrange/2));
+set(gh('OPHoldY'),'Value',ceil(o.cell1.yrange/2));
+set(gh('OPCellMenu'),'String',{'Cell 1';'Cell 2'});
+
+if strcmp(o.filetype,'mat')
+	set(findobj('UserData','PSTH'),'Enable','On');
+	set(gh('BinWidthEdit'),'String',o.cell1.binwidth);
+	if o.cell1.wrapped == 1; set(gh('WrappedBox'),'Value',1); else set(gh('WrappedBox'),'Value',1); end
+	t=num2str((1:o.cell1.raw{1}.numtrials)');
+	set(gh('StartTrialMenu'),'String',t);
+	set(gh('StartTrialMenu'),'Value',1);
+	set(gh('EndTrialMenu'),'String',t);
+	set(gh('EndTrialMenu'),'Value',o.cell1.raw{1}.numtrials);
+	set(gh('InfoText'),'String',['Spike Data Loaded:' o.cell1.matrixtitle '/' o.cell2.matrixtitle]);
+	set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance';'M: Fano T-test';'M: Fano Wilcoxon';'M: Fano Paired Wilcoxon';'M: Fano Spearman';'---------';'Column: Spontaneous';'---------';'I: Paired T-test';'I: Paired Sign Test';'I: Wilcoxon Rank Sum';'I: Wilcoxon Paired Test';'I: Bootstrap';'I: Spearman Correlation';'I: Pearsons Correlation';'I: 1-Way Anova';'I: Kolmogorov-Smirnof Distribution Test'});
+	o.cell1.max=max(max(o.cell1.matrix));
+	o.cell2.max=max(max(o.cell2.matrix));
+	if get(gh('MatrixBox'),'Value')==1
+		o.cell1.matrix=(o.cell1.matrix/o.cell1.max)*100;
+		o.cell2.matrix=(o.cell2.matrix/o.cell2.max)*100;
+	end
+else
+	set(findobj('UserData','PSTH'),'Enable','Off');
+	set(gh('InfoText'),'String','Text Files Loaded');
+	set(gh('NormaliseMenu'),'String',{'none';'% of Max'});
+	set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance'});
+end
+
+if get(gh('RatioBox'),'Value')==1
+	o.cell1.temp=o.cell1.matrix;
+	o.cell1.matrix=o.cell1.bmatrix./o.cell1.matrix;
+	o.cell2.temp=o.cell2.matrix;
+	o.cell2.matrix=o.cell2.bmatrix./o.cell2.matrix;
+end
+
+axes(gh('Cell1Axis'))
+imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1.matrix);
+%if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
+%if o.cell1.yvalues(1) < o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
+set(gca,'YDir','normal')
+colormap(hot);
+set(gca,'Tag','Cell1Axis');	
+colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
+set(gh('Cell1Axis'),'Position',o.ax1pos);
+
+axes(gh('Cell2Axis'));
+imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
+%if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
+%if o.cell2.yvalues(1) > o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
+set(gca,'YDir','normal')
+colormap(hot);
+set(gca,'Tag','Cell2Axis');
+colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
+set(gh('Cell2Axis'),'Position',o.ax2pos);	
+
+axes(gh('OutputAxis'));
+plot(0,0);
+set(gca,'Tag','OutputAxis');
+set(gh('OutputAxis'),'Position',o.ax3pos);	
+% 	if strcmp(o.filetype,'mat')
+% 		%helpdlg('Both cells have been loaded, select your analysis routine, and measure the PSTH for the statistics');
+% 	else
+% 		%helpdlg('You have loaded text files, select your analysis routine, and OrbanizeIT!');
+% 	end
+if get(gh('OPAutoMeasure'),'Value')==1
+	opro('Measure');
 end
