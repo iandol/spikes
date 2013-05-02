@@ -197,9 +197,11 @@ case 'Reparse'
 		c.xtitle = 'Meta1';
 		c.xvalues = [5];
 		c.xvalueso = c.xvalues;
+		c.xindex = c.xrange; 		c.yrange = 1;
 		c.ytitle = 'Meta2';
 		c.yvalues = [5];
 		c.yvalueso = c.yvalues;
+		c.yindex = c.yrange;
 
 		[time,psth,rawspikes,sums]=binit(raw,binwidth*10, raw.startmod, raw.endmod, raw.starttrial, raw.endtrial, 0);
 		[time2,bpsth]=binitb(raw,binwidth*10, raw.startmod, raw.endmod, raw.starttrial, raw.endtrial, 0);
@@ -207,6 +209,9 @@ case 'Reparse'
 			psth=gausssmooth(time,psth,sigma);
 			bpsth=gausssmooth(time2,bpsth,sigma);
 		end
+		
+		c.matrix = mean(psth);
+		c.errormat = std(psth);
 		
 		c.bpsth = {};
 		c.bpsth{1}=bpsth;
@@ -224,7 +229,7 @@ case 'Reparse'
 		o.(['cell' num2str(i)]) = c;
 	end
 	
-	updategui()
+	set(gh('WrappedBox'),'Value',0); 	updategui()
 	
 	%-----------------------------------------------------------------------------------------
 case 'Normalise'
@@ -352,11 +357,12 @@ case 'Measure'
 			rawl2=rawl2(find(rawl2>=mint&rawl2<=maxt));
 			for k=1:length(raws)
 				raws(k).trial=raws(k).trial(find(raws(k).trial>=mint&raws(k).trial<=maxt));
-				raws2(k).trial=raws2(k).trial(find(raws2(k).trial>=mint&raws2(k).trial<=maxt));
 				sm(k)=length(raws(k).trial);
+			end
+			for k=1:length(raws2)
+				raws2(k).trial=raws2(k).trial(find(raws2(k).trial>=mint&raws2(k).trial<=maxt));
 				sm2(k)=length(raws2(k).trial);
 			end
-			
 			o.cell1psth{j,i}=psth;
 			o.cell2psth{j,i}=psth2;
 			o.cell1time{j,i}=time;
@@ -2455,7 +2461,9 @@ switch boottype
 		ci2=bootci(nboot,{@stderr,data2,'A',1},'alpha',alpha);
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function updategui()
+global o
 set(gh('OPHoldX'),'String',{o.cell1.xvalues'});
 set(gh('OPHoldY'),'String',{o.cell1.yvalues'});
 set(gh('OPHoldX'),'Value',ceil(o.cell1.xrange/2));
