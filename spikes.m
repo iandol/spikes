@@ -3779,7 +3779,7 @@ global data sv;
 
 window=str2double(get(gh('SISIWindow'),'String'));
 shift=str2double(get(gh('SISIShift'),'String'));
-
+maxt=str2num(get(gh('SMaxEdit'),'String'));
 
 [ff,cv,af,time]=fanogram(data.raw{sv.yval, sv.xval, sv.zval},window,shift,data.wrapped);
 
@@ -3789,6 +3789,10 @@ plot(time,cv,'b-.');
 plot(time,af,'r-.');
 hold off;
 axis tight;
+if maxt > max(time)-window
+	maxt = max(time)-window;
+end
+axis([window maxt -inf inf]);
 legend('fano factor','CV','Allan Factor');
 MakeTitle('raster');
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
@@ -3955,6 +3959,9 @@ switch data.numvars
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		if isa(data.pR,'plxReader')
+			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
+		end
 		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
 		%[ax,h2]=suplabel(t ,'t');
 		p.xlabel('Time (ms)');
@@ -4025,6 +4032,9 @@ switch data.numvars
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
 		if data.numvars==3
 			t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
+		end
+		if isa(data.pR,'plxReader')
+			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
 		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
 		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);

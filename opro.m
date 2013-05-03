@@ -29,7 +29,7 @@ case 'Initialize'
 	set(0,'DefaultAxesTickDir','out');
 	set(0,'DefaultAxesTickDirMode','manual');
 	h=opro_UI; %this is the GUI figure
-	set(h,'Name', 'Orban-Pro Spike Statistics V1.6b');
+	set(h,'Name', 'Orban-Pro Spike Statistics V1.80');
 	set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance';'M: Fano T-test';'M: Fano Wilcoxon';'M: Fano Paired Wilcoxon';'M: Fano Spearman';'---------';'Column: Spontaneous';'---------';'I: Paired T-test';'I: Paired Sign Test';'I: Wilcoxon Rank Sum';'I: Wilcoxon Paired Test';'I: Spearman Correlation';'I: Pearsons Correlation';'I: 1-Way Anova';'I: Kolmogorov-Smirnof Distribution Test'});
 	set(gh('NormaliseMenu'),'String',{'none';'% of Max';'% of 3 Bin Max';'Z-Score'});
 	set(gh('OPPlotMenu'),'String',{'p-value';'Hypothesis Test';'r correlation';'r2 correlation';'1-r correlation'});
@@ -197,7 +197,8 @@ case 'Reparse'
 		c.xtitle = 'Meta1';
 		c.xvalues = [5];
 		c.xvalueso = c.xvalues;
-		c.xindex = c.xrange; 		c.yrange = 1;
+		c.xindex = c.xrange; 		
+		c.yrange = 1;
 		c.ytitle = 'Meta2';
 		c.yvalues = [5];
 		c.yvalueso = c.yvalues;
@@ -229,7 +230,9 @@ case 'Reparse'
 		o.(['cell' num2str(i)]) = c;
 	end
 	
-	set(gh('WrappedBox'),'Value',0); 	updategui()
+	set(gh('WrappedBox'),'Value',0); 	
+	set(gh('OPAllTrials','Value',1);
+	updategui()
 	
 	%-----------------------------------------------------------------------------------------
 case 'Normalise'
@@ -301,6 +304,10 @@ case 'Measure'
 	Normalise=get(gh('NormaliseMenu'),'Value');
 	starttrial=get(gh('StartTrialMenu'),'Value');
 	endtrial=get(gh('EndTrialMenu'),'Value');
+	if get(gh('OPAllTrials','Value') > 0
+		starttrial = 1;
+		endtrial = inf;
+	end
 	
 	if ccell==1 %choose our cell
 		sd=o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)};
