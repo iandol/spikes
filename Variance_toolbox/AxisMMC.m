@@ -172,15 +172,7 @@ Pfields{ipf} = 'fontSize'; ipf=ipf+1;
 if ~isempty(varargin) && isfield(varargin{1}, 'fontSize')
     fontSize = varargin{1}.fontSize;
 else
-    fontSize = 12; % default fontsize is 8 points (numerical labels are 1 pt smaller)
-end
-
-% font size
-Pfields{ipf} = 'fontName'; ipf=ipf+1;
-if ~isempty(varargin) && isfield(varargin{1}, 'fontName')
-    fontName = varargin{1}.fontName;
-else
-    fontName = 'Georgia'; % default fontsize is 8 points (numerical labels are 1 pt smaller)
+    fontSize = 8; % default fontsize is 8 points (numerical labels are 1 pt smaller)
 end
 
 % warn if there is an unrecognized field in the input parameter structure
@@ -253,14 +245,14 @@ for i = 1:length(tickLabelLocations)
     x = tickLabelLocations(i);
     y = axisOffset - tickLim - tickLabelOffset;
     if axisOrientation == 'h', h = text(x, y, tickLabels{i}); else h = text(y, x, tickLabels{i}); end
-    set(h,'HorizontalA', NalignH, 'VerticalA', NalignV, 'fontname', fontName, 'fontsize', fontSize-1, 'color', color);
+    set(h,'HorizontalA', NalignH, 'VerticalA', NalignV, 'fontsize', fontSize-1, 'color', color);
 end
 
 % PLOT AXIS LABEL
 x = (start+fin)/2;
 y = axisOffset - tickLim - axisLabelOffset;
 if axisOrientation == 'h', h = text(x, y, axisLabel); else h = text(y, x, axisLabel); end
-set(h,'HorizontalA', LalignH, 'VerticalA', LalignV, 'fontname', fontName, 'fontsize', fontSize, 'color', color);
+set(h,'HorizontalA', LalignH, 'VerticalA', LalignV, 'fontsize', fontSize, 'color', color);
 if axisOrientation == 'v', set(h,'rotation',90); end
 % DONE PLOTTING
 

@@ -2850,7 +2850,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		fp = fanoPlotter;
 		fp.convertSpikesFormat(data,sv);
 		try
-			fp.matchReps = 1;
+			fp.matchReps = 10;
 			fp.compute;
 			fp.plot;
 			fp.movie;
@@ -2861,6 +2861,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				fp.compute;
 				fp.plot;
 				fp.movie;
+			catch ME
+				fprintf('\nNon-mean matched fano plot failed too...\n');
+				ple(ME)
 			end
 		end
 		
