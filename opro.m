@@ -263,9 +263,9 @@ case 'Reparse'
 	updategui()
 	
 	o.fano1.analyse
-	title(gca,'CELL 1')
+	set(gcf,'Name','FanoM CELL 1')
 	o.fano2.analyse
-	title(gca,'CELL 1')
+	set(gcf,'Name','FanoM CELL 2')
 	
 	%-----------------------------------------------------------------------------------------
 case 'Normalise'
@@ -472,8 +472,8 @@ case 'Measure'
 			o.cell2bsums{j,i}=bsm2;
 			o.cell1error{j,i}=e1;
 			o.cell2error{j,i}=e2;
-			o.cell1bratio{j,i} = sum(bpsth) / sum(psth);
-			o.cell2bratio{j,i} = sum(bpsth2) / sum(psth2);
+			o.cell1bratio{j,i} = length(brawl) / length(rawl);
+			o.cell2bratio{j,i} = length(brawl2) / length(rawl2);
 			o.cell1names{j,i} = raw1.name;
 			o.cell2names{j,i} = raw2.name;
 			
