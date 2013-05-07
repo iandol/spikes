@@ -5,7 +5,6 @@ classdef fanoPlotter < handle
 	properties
 		times
 		data
-		sv
 		fanoParams
 		plotFanoParams
 		scatterParams
@@ -37,14 +36,18 @@ classdef fanoPlotter < handle
 			obj.matchReps = str2num(ans{4});
 		end
 		
-		function convertSpikesFormat(obj,data,sv)
+		function convertSpikesFormat(obj,data,select)
 			obj.data = data;
-			obj.sv = sv;
 			obj.maxTime = floor(obj.data.modtime/10);
 			obj.times = 0:obj.shiftTime:(obj.maxTime-obj.boxWidth);
 			obj.times = obj.times(2:end-1);
-			if isempty(obj.loop)
-				obj.loop = 1:obj.data.xrange * obj.data.yrange;
+			
+			if ~exist('select','var')
+				if isempty(obj.loop)
+					obj.loop = 1:obj.data.xrange * obj.data.yrange;
+				end
+			else
+				obj.loop = select;
 			end
 			lin=1;
 			for l = obj.loop

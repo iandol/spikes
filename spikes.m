@@ -2791,6 +2791,12 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		PlotAllPSTHs;
 		
 		%-----------------------------------------------------------------------------------------
+	case 'Plot All'
+		%-----------------------------------------------------------------------------------------
+		
+		PlotAll;
+		
+		%-----------------------------------------------------------------------------------------
 	case 'BARS'
 		%-----------------------------------------------------------------------------------------
 % 		try
@@ -4066,25 +4072,21 @@ global data sv;
 data.areaplot=0;
 sv.allhandle=figure;
 set(gcf,'Tag','allplotfig');
-figpos(1,[850 750]);
+figpos(3,[1000 1000]);
 set(gcf,'Color',[1 1 1]);
 
-mint=get(gh('SMinEdit'),'String');   %this selects what to plot
-maxt=get(gh('SMaxEdit'),'String');
-if isempty(mint) || str2double(mint)<min(data.time{1})
+mint=str2num(get(gh('SMinEdit'),'String'));   %this selects what to plot
+maxt=str2num(get(gh('SMaxEdit'),'String'));
+if isempty(mint) || mint < min(data.time{1})
 	mint=min(data.time{1});
 	set(gh('SMinEdit'),'String',num2str(min(data.time{1})));
 end
-if isempty(maxt) || str2double(maxt)>max(data.time{1})
+if isempty(maxt) || maxt > max(data.time{1})
 	maxt=max(data.time{1});
 	set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
 end
-mini=find(data.time{1}==str2double(mint));
-maxi=find(data.time{1}==str2double(maxt));
-
-for i = 1:data.xrange*data.yrange*data.zrange
-	
-end
+mini = find( data.time{1} == mint );
+maxi = find( data.time{1} == maxt );
 
 switch data.numvars
 	case 0
@@ -4093,7 +4095,7 @@ switch data.numvars
 			return;
 		end
 	case 1
-		p=panel(sv.psthhandle,'defer');
+		p=panel(sv.allhandle,'defer');
 		if get(gh('PSTHEdit'),'String')=='0'
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=1:data.xrange
@@ -4112,12 +4114,28 @@ switch data.numvars
 		p.pack(data.xrange,1);
 		for i=1:data.xrange
 			p(i,1).select();
-			%subaxis(data.xrange,1,i,'S',0,'P',0,'M',0.1);
+			p(i,1).pack(2,1);
+			p(i,1,1,1).select();
+			time = data.time{data.xindex(i)}(mini:maxi);
+			psth = data.psth{data.xindex(i)}(mini:maxi);
+			bpsth = data.bpsth{data.xindex(i)}(mini:maxi);
 			h(1)=bar(data.time{data.xindex(i)}(mini:maxi),data.psth{data.xindex(i)}(mini:maxi),1,'k');
-			p(i,1).hold('on')
+			p(i,1,1,1).hold('on')
 			h(2)=bar(data.time{data.xindex(i)}(mini:maxi),data.bpsth{data.xindex(i)}(mini:maxi),1,'r');
-			p(i,1).hold('off')
 			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
+			if sv.plotBARS == 1
+				trials = data.numtrials;
+				doBARS(time, psth, trials);
+				close(wh);
+				if ~isempty(data.bars)
+					if isfield(data.bars,'mean')
+						set(gca, 'NextPlot', 'add');
+						plot(data.bars.time_fine,data.bars.mode_fine,'r-','LineWidth',1);
+						plot(data.bars.time_fine,data.bars.confBands_fine,'r:');
+						set(gca, 'NextPlot', 'replace');
+					end
+				end
+			end
 			if i<data.xrange
 				set(gca,'XTickLabel',[]);
 			end
@@ -4125,10 +4143,17 @@ switch data.numvars
 			text(data.time{1}(mini),(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			ylabel(num2str(data.xvalues(i)));
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
+			p(i,1,1,1).hold('off')
+			p(i,1,2,1).select();
+			plotraster(data.raw{i});
+			axis([time(mini)*1000 time(maxi)*1000 -inf inf]);
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
 		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
 		%[ax,h2]=suplabel(t ,'t');
+		if isa(data.pR,'plxReader')
+			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
+		end
 		p.xlabel('Time (ms)');
 		p.title(t);
 		p.de.margin = 0;
@@ -4138,65 +4163,93 @@ switch data.numvars
 		% because we 'defer'red, we have to refresh.
 		p.refresh();
 	otherwise
-		p=panel(sv.psthhandle,'defer');
-		xrange=length(data.xvalueso); %we'll ignore the subselection
-		yrange=length(data.yvalueso);
-		zrange=length(data.zvalueso);
+		p=panel(sv.allhandle,'defer');
+		s = size(data.psth);
+		xrange=s(2);
+		yrange=s(1);
+		zrange=s(3);
+		
+		starti=1;
+		endi=xrange*yrange*zrange;
 		
 		if data.numvars==3 %we need to correct the index for the third variable
-			if sv.zval==1
-				starti=1;
-				endi=xrange*yrange;
-			else
-				starti=(xrange*yrange*(sv.zval-1))+1;
-				endi=xrange*yrange*sv.zval;
-			end
+			xmult = xrange*zrange;
 		else
-			starti=1;
-			endi=xrange*yrange;
+			xmult = xrange;
 		end
 		
 		if strcmp(get(gh('PSTHEdit'),'String'),'0')
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=starti:endi
-				maxm=max(data.psth{i});
+				maxm=max(data.psth{i}(mini:maxi));
 				if m < maxm
 					m = maxm;
 				end
 			end
-			m=round(m+m/10);  %just to scale a bit bigger than the maximum value
-			set(gh('PSTHText'),'String',num2str(m));
+			mm = converttotime(m);
+			xm=round(m+m/10);  %just to scale a bit bigger than the maximum value
+			set(gh('PSTHText'),'String',num2str(xm));
 		else
-			m=str2double(get(gh('PSTHEdit'),'String'));
-			set(gh('PSTHText'),'String',num2str(m));
+			xm=str2double(get(gh('PSTHEdit'),'String'));
 		end
-		%the problem is that our data is in rows, but subplot indexes in columns
-		%so we have to create an index that converts between the 2 as
-		%i want the data to look that same as it is loaded into the matrices
+		
 		x = starti:endi;
-		xx = x - (xrange*yrange*(sv.zval-1));
-		y = reshape(x,data.yrange,data.xrange);
-		yy = reshape(xx,data.yrange,data.xrange);
-		%y=fliplr(y'); %order it so we can load our data to look like the surface plots
-		%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
+		xx = reshape(x,yrange,xmult);
 		a=1;
-		p.pack(data.yrange,data.xrange);
+		p.pack(yrange,xmult);
 		for i=1:length(x)
-			[i1,i2] = ind2sub([data.yrange,data.xrange],xx(i));
-			p(i1,i2).select();
-			h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
-			p(i1,i2).hold('on')
-			h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
-			p(i1,i2).hold('off')
+			[i1,i2] = ind2sub([yrange,xmult],xx(i));
+			time = data.time{i}(mini:maxi);
+			psth = data.psth{i}(mini:maxi);
+			psth = (psth/m) * mm;
+			bpsth = data.bpsth{i}(mini:maxi);
+			p(i1,i2).pack('v',[2/3 -1]);
+			p(i1,i2,1).select();
+			h(1)=bar(time, psth , 1, 'k');
+			p(i1,i2,1).hold('on')
+			h(2)=bar(time, bpsth, 1, 'r');
 			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
-			set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
-			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-			text(data.time{1}(mini),(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
+			if i <= yrange
+				p(i1,i2,1).ylabel('Firing Rate (Hz)');
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'XGrid','on','YGrid','on');
+			else
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
+			end
+			axis([data.time{i}(mini) data.time{i}(maxi) 0 mm]);
+			text(data.time{i}(mini), (mm-mm/20), data.names{i},'FontSize',12,'Color',[0.7 0.7 0.7]);
+			if sv.plotBARS == 1
+				wh=waitbar(0.3,'Calculating BARS, please wait...');
+				trials = data.raw{i}.numtrials;
+				doBARS(data.time{i}, data.psth{i}, trials);
+				if ~isempty(data.bars)
+					if isfield(data.bars,'mean')
+						plot(data.bars.time_fine,(data.bars.mode_fine/m)*mm,'r-','LineWidth',1);
+						plot(data.bars.time_fine,(data.bars.confBands_fine/m)*mm,'r:');
+					end
+				end
+				close(wh);
+			end
+			p(i1,i2,1).hold('off')
+			p(i1,i2,2).select();
+			plotraster(data.raw{i});
+			axis([data.time{i}(mini)/1000 data.time{i}(maxi)/1000 -inf inf]);
+			if i <= yrange
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in');
+			else
+				p(i1,i2,2).ylabel('');
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in','YTickLabel',[]);
+			end
+			if ~mod(i,yrange) == 0
+				set(gca, 'XTickLabel',[]);
+			end
 			a=a+1;
 		end
-		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(mm) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
 		if data.numvars==3
-			t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
+			t=[t '\newline Z VALUES ' data.ztitle '=' num2str(data.zvalues)];
+		end
+		if isa(data.pR,'plxReader')
+			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
 		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
 		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);

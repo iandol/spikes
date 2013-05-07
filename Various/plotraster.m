@@ -82,6 +82,11 @@ for j=1:length(cell)
 	for i=1:run.numtrials
 		if isfield(run,'tDelta');
 			len = run.tDelta(i);
+			if isfield(run,'startOffset');
+				slen = abs(run.startOffset);
+			else
+				slen = 0;
+			end
 		end
 		x=vertcat(run.trial(i).mod{:})';		
 		x=x/10000;	%convert into seconds
@@ -117,19 +122,19 @@ for j=1:length(cell)
 		if exist('len','var')
 			st=startpos+trialoffset;
 			et=endpos+trialoffset;
-			patch([0 len len 0],[st st et et],[1 1 0.5],'EdgeColor','none');
+			patch([slen len+slen len+slen slen],[st st et et],[0.8 0.8 0.5],'EdgeColor','none');
 		end
-		hold on;
+		set(gca, 'NextPlot', 'add');
 		if burst==1; plot(b,yb,'r^','MarkerSize',4); end
 		line(xx,yy,'Color',cols(j,:),'LineWidth',0.025);
 		if drawline==2 && j==1
 			line([0 time],[trialoffset+seed trialoffset+seed],'Color',[.8 .8 .8]);
-			text(tmax+0.01,trialoffset+(seed/2),num2str(length(x)));
+			text(tmax-(tmax/15),trialoffset+(seed/2),num2str(length(x)));
 		elseif drawline==1 && j==1
 			line([0 time], [trialoffset+(seed/2) trialoffset+(seed/2)],'Color',[.8 .8 .8]);
-			text(tmax+0.01,trialoffset+(seed/2),num2str(length(x)));
+			text(tmax-(tmax/15),trialoffset+(seed/2),num2str(length(x)));
 		end
-		hold off;
+		set(gca, 'NextPlot', 'replace');
 	end
 end
 

@@ -167,7 +167,11 @@ case 'Reparse'
 	prompt = {'Choose Cell 1 variables to merge (ground):','Choose Cell 2 variables to merge (figure):','Sigma'};
 	dlg_title = 'REPARSE DATA VARIABLES';
 	num_lines = [1 100];
-	def = {'1 2','7 8','0'};
+	if isfield(o,'map')
+		def = {num2str(o.map{1}), num2str(o.map{2}), '0'};
+	else
+		def = {'1 2','7 8','0'};
+	end
 	answer = inputdlg(prompt,dlg_title,num_lines,def,options);
 	groundmap = str2num(answer{1});
 	figuremap = str2num(answer{2});
@@ -175,10 +179,15 @@ case 'Reparse'
 	
 	map{1}=groundmap;
 	map{2}=figuremap;
+	o.map = map;
 	
 	for i = 1:2
-		c = o.(['cell' num2str(i)]);
-		vars = map{i};
+		if isfield(o,['cell' num2str(i) 'bak']);
+			c = o.(['cell' num2str(i) 'bak']);
+		else
+			c = o.(['cell' num2str(i)]);
+		end
+		vars = sort( map{i} );
 		raw = c.raw{vars(1)};
 		for j = 2:length(vars)
 			raw.name = [raw.name '|' c.raw{vars(j)}.name];
@@ -225,13 +234,23 @@ case 'Reparse'
 		c.sums = {};
 		c.sums{1}=sums;
 		c.names = {};
+		c.numtrials = c.raw{1}.numtrials;
 		c.names{1} = raw.name;
-		o.(['cell' num2str(i) 'bak']) = o.(['cell' num2str(i)]);
+		if ~isfield(o,['cell' num2str(i) 'bak']);
+			o.(['cell' num2str(i) 'bak']) = o.(['cell' num2str(i)]);
+		end
 		o.(['cell' num2str(i)]) = c;
 	end
 	
-	set(gh('WrappedBox'),'Value',0); 	
-	set(gh('OPAllTrials','Value',1);
+	
+	o.fano1 = fanoPlotter;
+	o.fano2 = fanoPlotter;
+	
+	o.fano1.convertSpikesFormat(o.cell1, map{1});
+	o.fano2.convertSpikesFormat(o.cell2, map{2});
+	
+	set(gh('WrappedBox'), 'Value', 0);
+	set(gh('OPAllTrials'), 'Value', 1);
 	updategui()
 	
 	%-----------------------------------------------------------------------------------------
@@ -304,7 +323,7 @@ case 'Measure'
 	Normalise=get(gh('NormaliseMenu'),'Value');
 	starttrial=get(gh('StartTrialMenu'),'Value');
 	endtrial=get(gh('EndTrialMenu'),'Value');
-	if get(gh('OPAllTrials','Value') > 0
+	if get(gh('OPAllTrials'),'Value') > 0
 		starttrial = 1;
 		endtrial = inf;
 	end
@@ -548,7 +567,7 @@ case 'Measure'
 				set(hh,'Color',[1 0 0]);				
 				hold off
 			end
-			grid off
+			%grid off
 			title('');
 			xlabel('');
 			ylabel('');
@@ -2480,7 +2499,7 @@ set(gh('OPCellMenu'),'String',{'Cell 1';'Cell 2'});
 if strcmp(o.filetype,'mat')
 	set(findobj('UserData','PSTH'),'Enable','On');
 	set(gh('BinWidthEdit'),'String',o.cell1.binwidth);
-	if o.cell1.wrapped == 1; set(gh('WrappedBox'),'Value',1); else set(gh('WrappedBox'),'Value',1); end
+	if o.cell1.wrapped == 1; set(gh('WrappedBox'),'Value',1); else set(gh('WrappedBox'),'Value',0); end
 	t=num2str((1:o.cell1.raw{1}.numtrials)');
 	set(gh('StartTrialMenu'),'String',t);
 	set(gh('StartTrialMenu'),'Value',1);

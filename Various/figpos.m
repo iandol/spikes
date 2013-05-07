@@ -35,7 +35,7 @@ case 2 %a third off
 	set(gcf,'Position',[x y size(1) size(2)]);
 case 3 %full height
 	size(2) = height;
-	x=(width/3)-(size(1)/2);
+	x=(width/2)-(size(1)/2);
 	y=(height/2)-(size(2)/2);
 	if x < 1; x=0; end
 	if y < 1; y=0; end
