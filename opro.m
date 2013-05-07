@@ -181,12 +181,21 @@ case 'Reparse'
 	map{2}=figuremap;
 	o.map = map;
 	
+	if isfield(o,'cell1bak');
+		o.cell1 = o.cell1bak; o = rmfield(o,'cell1bak');
+	end
+	if isfield(o,'cell2bak');
+		o.cell2 = o.cell2bak; o = rmfield(o,'cell2bak');
+	end
+	
+	o.fano1 = fanoPlotter;
+	o.fano2 = fanoPlotter;
+	
+	o.fano1.convertSpikesFormat(o.cell1, map{1});
+	o.fano2.convertSpikesFormat(o.cell2, map{2});
+	
 	for i = 1:2
-		if isfield(o,['cell' num2str(i) 'bak']);
-			c = o.(['cell' num2str(i) 'bak']);
-		else
-			c = o.(['cell' num2str(i)]);
-		end
+		c = o.(['cell' num2str(i)]);
 		vars = sort( map{i} );
 		raw = c.raw{vars(1)};
 		for j = 2:length(vars)
@@ -242,15 +251,9 @@ case 'Reparse'
 		o.(['cell' num2str(i)]) = c;
 	end
 	
-	
-	o.fano1 = fanoPlotter;
-	o.fano2 = fanoPlotter;
-	
-	o.fano1.convertSpikesFormat(o.cell1, map{1});
-	o.fano2.convertSpikesFormat(o.cell2, map{2});
-	
 	set(gh('WrappedBox'), 'Value', 0);
 	set(gh('OPAllTrials'), 'Value', 1);
+	set(gh('OPShowPlots'), 'Value', 1);
 	updategui()
 	
 	%-----------------------------------------------------------------------------------------
@@ -343,17 +346,31 @@ case 'Measure'
 	end
 	
 	o.cell1spike=cell(o.cell1.yrange,o.cell1.xrange);  %set up our spike holding matrices
-	o.cell2spike=cell(o.cell2.yrange,o.cell2.xrange);
-	o.cell1time=cell(o.cell1.yrange,o.cell1.xrange);
-	o.cell2time=cell(o.cell1.yrange,o.cell1.xrange);
-	o.cell1raws=cell(o.cell1.yrange,o.cell1.xrange);
-	o.cell2raws=cell(o.cell1.yrange,o.cell1.xrange);
-	o.cell1raw=cell(o.cell1.yrange,o.cell1.xrange);
-	o.cell2raw=cell(o.cell1.yrange,o.cell1.xrange);
-	o.cell1mat=zeros(o.cell1.yrange,o.cell1.xrange);
-	o.cell2mat=zeros(o.cell2.yrange,o.cell2.xrange);
-	o.position1=ones(o.cell1.yrange,o.cell1.xrange);
-	o.position2=ones(o.cell2.yrange,o.cell2.xrange);
+	o.cell2spike = o.cell1spike;
+	o.cell1time = o.cell1spike;
+	o.cell2time = o.cell1spike;
+	o.cell1raws = o.cell1spike;
+	o.cell2raws = o.cell1spike;
+	o.cell1raw = o.cell1spike;
+	o.cell2raw = o.cell1spike;
+	o.cell1mat = zeros(o.cell1.yrange,o.cell1.xrange);
+	o.cell2mat = zeros(o.cell1.yrange,o.cell1.xrange);
+	o.position1 = o.cell1spike;
+	o.position2 = o.cell1spike;
+	o.cell1psth = o.cell1spike;
+	o.cell2psth = o.cell1spike;
+	o.cell1time = o.cell1spike;
+	o.cell2time = o.cell1spike;
+	o.cell1raw = o.cell1spike;
+	o.cell2raw = o.cell1spike;
+	o.cell1raws = o.cell1spike;
+	o.cell2raws = o.cell1spike;
+	o.cell1sums = o.cell1spike;
+	o.cell2sums = o.cell1spike;
+	o.cell1error = o.cell1spike;
+	o.cell2error = o.cell1spike;
+	o.cell1names = o.cell1spike;
+	o.cell2names = o.cell1spike;
 	
 	m=1;
 	mm=1;
@@ -401,6 +418,8 @@ case 'Measure'
 			o.cell2sums{j,i}=sm2;
 			o.cell1error{j,i}=e1;
 			o.cell2error{j,i}=e2;
+			o.cell1names{j,i} = raw1.name;
+			o.cell2names{j,i} = raw2.name;
 			
 			switch(get(gh('OPMeasureMenu'),'Value'))
 				case 1 %raw spikes
@@ -494,38 +513,7 @@ case 'Measure'
 		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.trialtime/10));
 	end
 		
-	axes(gh('Cell1Axis'))
-	imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1.matrix);
-	set(gca,'Tag','Cell1Axis');
-	%if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
-	%if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
-	set(gca,'YDir','normal')
-	colormap(hot);
-	%axis square
-	colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
-	xlabel(o.cell1.xtitle);
-	ylabel(o.cell1.ytitle);
-	set(gca,'Position',o.ax1pos);
-   set(gca,'Tag','Cell1Axis');
-	
-	axes(gh('Cell2Axis'));
-	imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
-	set(gca,'Tag','Cell2Axis');
-	%if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
-	%if o.cell2.yvalues(1) > o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
-	set(gca,'YDir','normal')
-	colormap(hot);
-	colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
-	%axis square
-	xlabel(o.cell2.xtitle);
-	ylabel(o.cell2.ytitle);
-	set(gca,'Position',o.ax2pos);
-	set(gca,'Tag','Cell2Axis');	
-	
-	axes(gh('OutputAxis'));
-	plot(0,0);
-	set(gca,'Tag','OutputAxis');
-	set(gh('OutputAxis'),'Position',o.ax3pos);	
+	updategui();
 	
 	%---Now we are going to plot out both spike trains for visual comparison.
 	
@@ -533,7 +521,7 @@ case 'Measure'
 		set(gh('StatsText'),'String','Please wait, plotting additional info for each matrix point...');
 		figure;
 		set(gcf,'Position',[150 10 700 650]);
-		set(gcf,'Name','PSTH/ISI Plots for Control (black) and Drug (Red) Receptive Fields','NumberTitle','off');
+		set(gcf,'Name','PSTH/ISI Plots for Control (black) and Test (Red) Receptive Fields','NumberTitle','off');
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
 		y=y'; %order it so we can load our data to look like the surface plots
@@ -541,6 +529,7 @@ case 'Measure'
 		for i=1:o.cell1.xrange*o.cell1.yrange
 			subplot(o.cell1.yrange,o.cell1.xrange,i);
 			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-');
+			title([o.cell1names{i} ' | ' o.cell2names{i}])
 			set(gca,'FontSize',5);
 			axis tight;
 			if strcmp(o.spiketype,'psth') && (Normalise==2 || Normalise==3)
@@ -551,7 +540,7 @@ case 'Measure'
 		end
 		figure;
 		set(gcf,'Position',[150 10 700 650]);
-		set(gcf,'Name','CDF Plots for Control (Black) and Drug (Red) Receptive Fields','NumberTitle','off')
+		set(gcf,'Name','CDF Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
 		y=y'; %order it so we can load our data to look like the surface plots
@@ -568,14 +557,14 @@ case 'Measure'
 				hold off
 			end
 			%grid off
-			title('');
+			title([o.cell1names{i} ' | ' o.cell2names{i}])
 			xlabel('');
 			ylabel('');
 			set(gca,'FontSize',4);			
 		end
 		figure;
 		set(gcf,'Position',[100 10 700 650]);
-		set(gcf,'Name','Spikes (y) per Trial (x) Plots for Control (Black) and Drug (Red) Receptive Fields','NumberTitle','off')
+		set(gcf,'Name','Spikes (y) per Trial (x) Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
 		y=y'; %order it so we can load our data to look like the surface plots
@@ -591,6 +580,7 @@ case 'Measure'
 			end
 			grid off
 			axis tight
+			title([o.cell1names{i} ' | ' o.cell2names{i}])
 			set(gca,'FontSize',4.5);
 		end
 		%jointfig(h,o.cell1.yrange,o.cell1.xrange)
@@ -730,7 +720,7 @@ case 'Spontaneous'
 	plot(0,0);
 	set(gca,'Tag','OutputAxis');
 	set(gh('OutputAxis'),'Position',o.ax3pos);	
-	o.spontaneous=1
+	o.spontaneous=1;
 	
 % 	h=figure;
 % 	set(gcf,'Position',[150 10 700 650]);
@@ -2536,6 +2526,17 @@ colormap(hot);
 set(gca,'Tag','Cell1Axis');	
 colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
 set(gh('Cell1Axis'),'Position',o.ax1pos);
+if length(o.cell1.names) < 3
+	title(o.cell1.names,'FontSize',10)
+end
+for i = 1:o.cell1.xrange
+	for j = 1:o.cell1.yrange
+		t = {num2str([o.cell1.xvalues(i) o.cell1.yvalues(j)])};
+		t{1} = regexprep(t{1},'\s+',' ');
+		t{2} = o.cell1.names{j,i};
+		text(o.cell1.xvalues(i),o.cell1.yvalues(j), t, 'FontSize', 7, 'Color', [0 0.5 1]);
+	end
+end
 
 axes(gh('Cell2Axis'));
 imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
@@ -2545,7 +2546,18 @@ set(gca,'YDir','normal')
 colormap(hot);
 set(gca,'Tag','Cell2Axis');
 colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
-set(gh('Cell2Axis'),'Position',o.ax2pos);	
+set(gh('Cell2Axis'),'Position',o.ax2pos);
+if length(o.cell2.names) < 3
+	title(o.cell2.names,'FontSize',10)
+end
+for i = 1:o.cell2.xrange
+	for j = 1:o.cell2.yrange
+		t = {num2str([o.cell2.xvalues(i) o.cell2.yvalues(j)])};
+		t{1} = regexprep(t{1},'\s+',' ');
+		t{2} = o.cell2.names{j,i};
+		text(o.cell2.xvalues(i),o.cell2.yvalues(j), t, 'FontSize', 7, 'Color', [0 0.5 1]);
+	end
+end
 
 axes(gh('OutputAxis'));
 plot(0,0);
@@ -2559,3 +2571,123 @@ set(gh('OutputAxis'),'Position',o.ax3pos);
 if get(gh('OPAutoMeasure'),'Value')==1
 	opro('Measure');
 end
+
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+% Plot PSTHs in a grid
+
+function PlotAll(data)
+
+
+o.allhandle=figure;
+set(gcf,'Tag','allplotfig');
+figpos(3,[1000 1000]);
+set(gcf,'Color',[1 1 1]);
+
+switch data.numvars
+	case 0
+		
+	case 1
+		
+	otherwise
+		p = panel(o.allhandle,'defer');
+		s = size(data.psth);
+		xrange=s(2);
+		yrange=s(1);
+		zrange=s(3);
+		
+		starti=1;
+		endi=xrange*yrange*zrange;
+		
+		if data.numvars==3 %we need to correct the index for the third variable
+			xmult = xrange*zrange;
+		else
+			xmult = xrange;
+		end
+		
+		m=1; %this will find the max value out of all the PSTH's and scale by this
+		for i=starti:endi
+			maxm=max(data.psth{i}(mini:maxi));
+			if m < maxm
+				m = maxm;
+			end
+		end
+		mm = converttotime(m);
+		xm=round(m+m/10);  %just to scale a bit bigger than the maximum value
+		
+		x = starti:endi;
+		xx = reshape(x,yrange,xmult);
+		a=1;
+		p.pack(yrange,xmult);
+		for i=1:length(x)
+			[i1,i2] = ind2sub([yrange,xmult],xx(i));
+			time = data.time{i}(mini:maxi);
+			psth = data.psth{i}(mini:maxi);
+			psth = (psth/m) * mm;
+			bpsth = data.bpsth{i}(mini:maxi);
+			p(i1,i2).pack('v',[2/3 -1]);
+			p(i1,i2,1).select();
+			h(1)=bar(time, psth , 1, 'k');
+			p(i1,i2,1).hold('on')
+			h(2)=bar(time, bpsth, 1, 'r');
+			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
+			if i <= yrange
+				p(i1,i2,1).ylabel('Firing Rate (Hz)');
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'XGrid','on','YGrid','on');
+			else
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
+			end
+			axis([data.time{i}(mini) data.time{i}(maxi) 0 mm]);
+			text(data.time{i}(mini), (mm-mm/20), data.names{i},'FontSize',12,'Color',[0.7 0.7 0.7]);
+			if sv.plotBARS == 1
+				wh=waitbar(0.3,'Calculating BARS, please wait...');
+				trials = data.raw{i}.numtrials;
+				doBARS(data.time{i}, data.psth{i}, trials);
+				if ~isempty(data.bars)
+					if isfield(data.bars,'mean')
+						plot(data.bars.time_fine,(data.bars.mode_fine/m)*mm,'r-','LineWidth',1);
+						plot(data.bars.time_fine,(data.bars.confBands_fine/m)*mm,'r:');
+					end
+				end
+				close(wh);
+			end
+			p(i1,i2,1).hold('off')
+			p(i1,i2,2).select();
+			plotraster(data.raw{i});
+			axis([data.time{i}(mini)/1000 data.time{i}(maxi)/1000 -inf inf]);
+			if i <= yrange
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in');
+			else
+				p(i1,i2,2).ylabel('');
+				set(gca,'TickLength',[0.01 0.01],'TickDir','in','YTickLabel',[]);
+			end
+			if ~mod(i,yrange) == 0
+				set(gca, 'XTickLabel',[]);
+			end
+			a=a+1;
+		end
+		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(mm) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		if data.numvars==3
+			t=[t '\newline Z VALUES ' data.ztitle '=' num2str(data.zvalues)];
+		end
+		if isa(data.pR,'plxReader')
+			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
+		end
+		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
+		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
+		p.title(t);
+		p.de.margin = 0;
+		p.margin = [15 15 5 15];
+		p.fontsize = 12;
+		p.de.fontsize = 10;
+		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
+		%[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
+		%[ax,h3]=suplabel(t ,'t');
+		%set(h1,'FontSize',12)
+		% because we 'defer'red, we have to refresh.
+		p.refresh();
+		
+end
+set(gcf,'Renderer','painters','ResizeFcn',[]);
