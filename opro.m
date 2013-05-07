@@ -160,6 +160,8 @@ case 'Load'
 	%-----------------------------------------------------------------------------------------
 case 'Reparse'
 	%-----------------------------------------------------------------------------------------
+	starttrial=get(gh('StartTrialMenu'),'Value');
+	endtrial=get(gh('EndTrialMenu'),'Value');
 	binwidth=str2num(get(gh('BinWidthEdit'),'String'));
 	options.Resize='on';
 	options.WindowStyle='normal';
@@ -201,17 +203,36 @@ case 'Reparse'
 		c = o.(['cell' num2str(i)]);
 		vars = sort( map{i} );
 		raw = c.raw{vars(1)};
-		for j = 2:length(vars)
-			raw.name = [raw.name '|' c.raw{vars(j)}.name];
-			raw.totaltrials = raw.totaltrials + c.raw{vars(j)}.totaltrials;
-			raw.numtrials = raw.numtrials + c.raw{vars(j)}.numtrials;
+		if get(gh('OPAllTrials'), 'Value') < 1
+			raw.totaltrials = (endtrial-starttrial)+1;
+			raw.numtrials = raw.totaltrials;
+			raw.starttrial = 1;
 			raw.endtrial = raw.numtrials;
-			raw.trial = [raw.trial, c.raw{vars(j)}.trial];
-			raw.maxtime = max([raw.maxtime, c.raw{vars(j)}.maxtime]);
-			raw.tDelta = [raw.tDelta; c.raw{vars(j)}.tDelta];
-			raw.btrial = [raw.btrial, c.raw{vars(j)}.btrial];
+			raw.trial = raw.trial(starttrial:endtrial);
+			raw.btrial = raw.btrial(starttrial:endtrial);
+			raw.tDelta = raw.tDelta(starttrial:endtrial);
 		end
-		
+		for j = 2:length(vars)
+			rawn = c.raw{vars(j)};
+			if get(gh('OPAllTrials'), 'Value') < 1
+				rawn.totaltrials = (endtrial-starttrial)+1;
+				rawn.numtrials = rawn.totaltrials;
+				rawn.starttrial = 1;
+				rawn.endtrial = rawn.numtrials;
+				rawn.trial = rawn.trial(starttrial:endtrial);
+				rawn.btrial = rawn.btrial(starttrial:endtrial);
+				rawn.tDelta = rawn.tDelta(starttrial:endtrial);
+			end
+			raw.name = [raw.name '|' rawn.name];
+			raw.totaltrials = raw.totaltrials + rawn.totaltrials;
+			raw.numtrials = raw.numtrials + rawn.numtrials;
+			raw.endtrial = raw.numtrials;
+			raw.trial = [raw.trial, rawn.trial];
+			raw.maxtime = max([raw.maxtime, c.raw{vars(j)}.maxtime]);
+			raw.tDelta = [raw.tDelta; rawn.tDelta];
+			raw.btrial = [raw.btrial, rawn.btrial];
+		end
+			
 		c.raw = {};
 		c.raw{1} = raw;
 		c.xrange = 1;
@@ -259,6 +280,7 @@ case 'Reparse'
 	set(gh('OPShowPlots'), 'Value', 1);
 	set(gh('OPMeasureMenu'), 'Value', 2);
 	
+	opro('Spontaneous')
 	opro('Measure')
 	updategui()
 	
@@ -581,7 +603,7 @@ case 'Measure'
 	if get(gh('OPShowPlots'),'Value')==1 %plot histograms
 		set(gh('StatsText'),'String','Please wait, plotting additional info for each matrix point...');
 		figure;
-		set(gcf,'Position',[150 10 700 650]);
+		figpos(3,[1000 1000])
 		set(gcf,'Name','PSTH/ISI Plots for Control (black) and Test (Red) Receptive Fields','NumberTitle','off');
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
@@ -610,9 +632,15 @@ case 'Measure'
 			elseif strcmp(o.spiketype,'psth') && Normalise==1
 				axis([-inf inf 0 m]);
 			end
+			v = axis;
+			t{1} = sprintf('Cell 1 Burst Ratio = %g', o.cell1bratio{i});
+			t{2} = sprintf('Cell 2 Burst Ratio = %g', o.cell2bratio{i});
+			t{3} = sprintf('Cell 1 Mean = %g', o.cell1mat(i));
+			t{4} = sprintf('Cell 2 Mean = %g', o.cell2mat(i));
+			text(o.cell1time{i}(1),v(4)-(v(4)/10),t,'FontSize',10);
 		end
 		figure;
-		set(gcf,'Position',[150 10 700 650]);
+		figpos(3,[1000 1000])
 		set(gcf,'Name','CDF Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
@@ -636,7 +664,7 @@ case 'Measure'
 			%set(gca,'FontSize',4);			
 		end
 		figure;
-		set(gcf,'Position',[100 10 700 650]);
+		figpos(3,[1000 1000])
 		set(gcf,'Name','Spikes (y) per Trial (x) Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
@@ -659,9 +687,9 @@ case 'Measure'
 		%jointfig(h,o.cell1.yrange,o.cell1.xrange)
 		
 		figure
-		
-		window=100;
-		shift=25;
+		figpos(3,[1000 1000])
+		window=str2num(get(gh('OPWindow'),'String'));
+		shift=str2num(get(gh('OPShift'),'String'));
 		maxt=o.maxt;
 		for i=1:o.cell1.xrange*o.cell1.yrange
 			subplot(o.cell1.yrange,o.cell1.xrange,i)
@@ -691,10 +719,10 @@ case 'Measure'
 case 'Spontaneous'
 	%-----------------------------------------------------------------------------------------
 	
-	if strcmp(o.spiketype,'none')
-		errordlg('Sorry, you need to measure the PSTH in OPRO first, set your parameters and click on the measure PSTH to do so...');
-		error('need to measure psth');
-	end
+% 	if strcmp(o.spiketype,'none')
+% 		errordlg('Sorry, you need to measure the PSTH in OPRO first, set your parameters and click on the measure PSTH to do so...');
+% 		error('need to measure psth');
+% 	end
 	if (strcmp(o.spiketype,'isiraw') | strcmp(o.spiketype,'isih'))
 		errordlg('Sorry, you can only do Spontaneous Calculation on Binned Spikes, not ISIs')
 		error('Incorrect data for spontaneous measurement')

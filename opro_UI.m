@@ -3,7 +3,7 @@ function varargout = opro_UI(varargin)
 %    FIG = OPRO_UI launch opro_UI GUI.
 %    OPRO_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 03-May-2013 11:25:59
+% Last Modified by GUIDE v2.5 07-May-2013 20:04:58
 
 if nargin == 0  % LAUNCH GUI
 
@@ -299,3 +299,72 @@ function OReparseVars_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 opro('Reparse')
+
+
+
+function OPWindow_Callback(hObject, eventdata, handles)
+% hObject    handle to OPWindow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of OPWindow as text
+%        str2double(get(hObject,'String')) returns contents of OPWindow as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function OPWindow_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to OPWindow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function OPShift_Callback(hObject, eventdata, handles)
+% hObject    handle to OPShift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of OPShift as text
+%        str2double(get(hObject,'String')) returns contents of OPShift as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function OPShift_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to OPShift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in OPHoldZ.
+function OPHoldZ_Callback(hObject, eventdata, handles)
+% hObject    handle to OPHoldZ (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns OPHoldZ contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from OPHoldZ
+
+
+% --- Executes during object creation, after setting all properties.
+function OPHoldZ_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to OPHoldZ (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
