@@ -254,6 +254,9 @@ case 'Reparse'
 	set(gh('WrappedBox'), 'Value', 0);
 	set(gh('OPAllTrials'), 'Value', 1);
 	set(gh('OPShowPlots'), 'Value', 1);
+	set(gh('OPMeasureMenu'), 'Value', 2);
+	
+	opro('Measure')
 	updategui()
 	
 	%-----------------------------------------------------------------------------------------
@@ -344,7 +347,7 @@ case 'Measure'
 		[time,psth]=binit(sd,binwidth*10,1,inf,starttrial,endtrial,wrapped);
 		[mint,maxt]=measureq(time,psth,binwidth);
 	end
-	
+	o.mint = mint; o.maxt = maxt;
 	o.cell1spike=cell(o.cell1.yrange,o.cell1.xrange);  %set up our spike holding matrices
 	o.cell2spike = o.cell1spike;
 	o.cell1time = o.cell1spike;
@@ -359,18 +362,30 @@ case 'Measure'
 	o.position2 = o.cell1spike;
 	o.cell1psth = o.cell1spike;
 	o.cell2psth = o.cell1spike;
+	o.cell1bpsth = o.cell1spike;
+	o.cell2bpsth = o.cell1spike;
 	o.cell1time = o.cell1spike;
 	o.cell2time = o.cell1spike;
+	o.cell1btime = o.cell1spike;
+	o.cell2btime = o.cell1spike;
 	o.cell1raw = o.cell1spike;
 	o.cell2raw = o.cell1spike;
+	o.cell1braw = o.cell1spike;
+	o.cell2braw = o.cell1spike;
 	o.cell1raws = o.cell1spike;
 	o.cell2raws = o.cell1spike;
+	o.cell1braws = o.cell1spike;
+	o.cell2braws = o.cell1spike;
 	o.cell1sums = o.cell1spike;
 	o.cell2sums = o.cell1spike;
+	o.cell1bsums = o.cell1spike;
+	o.cell2bsums = o.cell1spike;
 	o.cell1error = o.cell1spike;
 	o.cell2error = o.cell1spike;
 	o.cell1names = o.cell1spike;
 	o.cell2names = o.cell1spike;
+	o.cell1bratio = o.cell1spike;
+	o.cell2bratio = o.cell1spike;
 	
 	m=1;
 	mm=1;
@@ -381,30 +396,45 @@ case 'Measure'
 		for j=1:o.cell1.yrange			
 			raw1=o.cell1.raw{o.cell1.yindex(j),o.cell1.xindex(i)};
 			raw2=o.cell2.raw{o.cell2.yindex(j),o.cell2.xindex(i)};
-			if get(gh('BurstBox'),'Value')==0
-				[time,psth,rawl,sm,raws]=binit(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
-				[time2,psth2,rawl2,sm2,raws2]=binit(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
-				e1=finderror(raw1,'Fano Factor',mint,maxt+binwidth,wrapped,0);
-				e2=finderror(raw2,'Fano Factor',mint,maxt+binwidth,wrapped,0);
-			else
-				[time,psth,rawl,sm,raws]=binitb(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
-				[time2,psth2,rawl2,sm2,raws2]=binitb(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
-				e1=finderror(raw1,'Fano Factor',mint,maxt+binwidth,wrapped,1);
-				e2=finderror(raw2,'Fano Factor',mint,maxt+binwidth,wrapped,1);
-			end			
+			
+			[time,psth,rawl,sm,raws]=binit(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+			[time2,psth2,rawl2,sm2,raws2]=binit(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+			e1=finderror(raw1,'Fano Factor',mint,maxt+binwidth,wrapped,0);
+			e2=finderror(raw2,'Fano Factor',mint,maxt+binwidth,wrapped,0);
+			
+			psth = converttotime(psth, binwidth, raw1.numtrials, raw1.nummods, wrapped);
+			psth2 = converttotime(psth2, binwidth, raw2.numtrials, raw2.nummods, wrapped);
+			
+			[btime,bpsth,brawl,bsm,braws]=binitb(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+			[btime2,bpsth2,brawl2,bsm2,braws2]=binitb(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+			
+			bpsth = converttotime(bpsth, binwidth, raw1.numtrials, raw1.nummods, wrapped);
+			bpsth2 = converttotime(bpsth2, binwidth, raw2.numtrials, raw2.nummods, wrapped);
+				
 			psth=psth(find(time>=mint&time<=maxt));
 			psth2=psth2(find(time2>=mint&time2<=maxt));
 			time=time(find(time>=mint&time<=maxt));
 			time2=time2(find(time2>=mint&time2<=maxt));
 			rawl=rawl(find(rawl>=mint&rawl<=maxt));
 			rawl2=rawl2(find(rawl2>=mint&rawl2<=maxt));
+			bpsth=bpsth(find(time>=mint&time<=maxt));
+			bpsth2=bpsth2(find(time2>=mint&time2<=maxt));
+			btime=btime(find(time>=mint&time<=maxt));
+			btime2=btime2(find(time2>=mint&time2<=maxt));
+			brawl=brawl(find(brawl>=mint&brawl<=maxt));
+			brawl2=brawl2(find(brawl2>=mint&brawl2<=maxt));
+			
 			for k=1:length(raws)
 				raws(k).trial=raws(k).trial(find(raws(k).trial>=mint&raws(k).trial<=maxt));
 				sm(k)=length(raws(k).trial);
+				braws(k).trial=braws(k).trial(find(braws(k).trial>=mint&braws(k).trial<=maxt));
+				bsm(k)=length(braws(k).trial);
 			end
 			for k=1:length(raws2)
 				raws2(k).trial=raws2(k).trial(find(raws2(k).trial>=mint&raws2(k).trial<=maxt));
 				sm2(k)=length(raws2(k).trial);
+				braws2(k).trial=braws2(k).trial(find(braws2(k).trial>=mint&braws2(k).trial<=maxt));
+				bsm2(k)=length(braws2(k).trial);
 			end
 			o.cell1psth{j,i}=psth;
 			o.cell2psth{j,i}=psth2;
@@ -416,8 +446,20 @@ case 'Measure'
 			o.cell2raws{j,i}=raws2;
 			o.cell1sums{j,i}=sm;
 			o.cell2sums{j,i}=sm2;
+			o.cell1bpsth{j,i}=bpsth;
+			o.cell2bpsth{j,i}=bpsth2;
+			o.cell1btime{j,i}=btime;
+			o.cell2btime{j,i}=btime2;
+			o.cell1braw{j,i}=brawl;
+			o.cell2braw{j,i}=brawl2;
+			o.cell1braws{j,i}=braws;
+			o.cell2braws{j,i}=braws2;
+			o.cell1bsums{j,i}=bsm;
+			o.cell2bsums{j,i}=bsm2;
 			o.cell1error{j,i}=e1;
 			o.cell2error{j,i}=e2;
+			o.cell1bratio{j,i} = sum(bpsth) / sum(psth);
+			o.cell2bratio{j,i} = sum(bpsth2) / sum(psth2);
 			o.cell1names{j,i} = raw1.name;
 			o.cell2names{j,i} = raw2.name;
 			
@@ -473,12 +515,16 @@ case 'Measure'
 % 			end
 			switch(get(gh('OPMeasureMenu'),'Value'))
 				case 1 %raw spikes						
-					o.cell1mat(j,i)=length(o.cell1spike{j,i});
-					o.cell2mat(j,i)=length(o.cell2spike{j,i});
-					set(gh('StatsText'),'String','Plotting the number of spikes per variable');
+					o.cell1mat(j,i)=length(o.cell1spike{j,i}) / length(o.cell1sums{j,i});
+					o.cell2mat(j,i)=length(o.cell2spike{j,i}) / length(o.cell2sums{j,i});
+					set(gh('StatsText'),'String','Plotting the number of spikes/trials per variable');
 				case 2 %psth
+					if Normalise > 1
 					[o.cell1spike{j,i},o.cell1mat(j,i)]=normaliseit(o.cell1spike{j,i},Normalise,m,mm,raw1.numtrials,raw1.nummods,maxt-mint,wrapped);
 					[o.cell2spike{j,i},o.cell2mat(j,i)]=normaliseit(o.cell2spike{j,i},Normalise,m2,mm2,raw2.numtrials,raw2.nummods,maxt-mint,wrapped);					
+					else
+						
+					end
 					set(gh('StatsText'),'String','Plotting the mean response, possibly normalised');
 				case 3 %isi
 					o.cell1mat(j,i)=mean(o.cell1spike{j,i});
@@ -529,8 +575,16 @@ case 'Measure'
 		for i=1:o.cell1.xrange*o.cell1.yrange
 			subplot(o.cell1.yrange,o.cell1.xrange,i);
 			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-');
-			title([o.cell1names{i} ' | ' o.cell2names{i}])
-			set(gca,'FontSize',5);
+			if isfield(o,'spontaneous1') && o.spontaneous1 > -1
+				hold on
+				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1 o.spontaneous1],'Color',[0 0 0]);
+				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2 o.spontaneous2],'Color',[1 0 0]);
+				hold off
+			end
+			title([o.cell1names{i} ' \newline ' o.cell2names{i}])
+			xlabel('Time(s)')
+			ylabel('Firing Rate (Hz)')
+			%set(gca,'FontSize',5);
 			axis tight;
 			if strcmp(o.spiketype,'psth') && (Normalise==2 || Normalise==3)
 				axis([-inf inf 0 1]);
@@ -560,7 +614,7 @@ case 'Measure'
 			title([o.cell1names{i} ' | ' o.cell2names{i}])
 			xlabel('');
 			ylabel('');
-			set(gca,'FontSize',4);			
+			%set(gca,'FontSize',4);			
 		end
 		figure;
 		set(gcf,'Position',[100 10 700 650]);
@@ -581,7 +635,7 @@ case 'Measure'
 			grid off
 			axis tight
 			title([o.cell1names{i} ' | ' o.cell2names{i}])
-			set(gca,'FontSize',4.5);
+			%set(gca,'FontSize',4.5);
 		end
 		%jointfig(h,o.cell1.yrange,o.cell1.xrange)
 	end	
@@ -611,11 +665,18 @@ case 'Spontaneous'
 	starttrial=get(gh('StartTrialMenu'),'Value');
 	endtrial=get(gh('EndTrialMenu'),'Value');
 	
+	raw1 = o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)};
+	raw2 = o.cell2.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)};
+	
 	if (sp1==-1 || sp2==-1)
 		t={'Will Measure Spontaneous at the location indicated by the Held X / Y Variable Position';'';'';'You Chose';['X = ' num2str(o.cell1.xvalues(xhold))];['Y = ' num2str(o.cell1.yvalues(yhold))]};
-		[t1,psth1]=binit(o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)},binwidth*10,1,inf,starttrial,endtrial,wrapped);
-		[t2,psth2]=binit(o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)},binwidth*10,1,inf,starttrial,endtrial,wrapped);
-		[mint,maxt]=measureq(t1,psth1,binwidth,psth2);
+		[t1,psth]=binit(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+		[t2,psth2]=binit(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+		
+		psth = converttotime(psth, binwidth, o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)}.numtrials, o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)}.nummods, wrapped);
+		psth2 = converttotime(psth2, binwidth, o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)}.numtrials, o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)}.nummods, wrapped);
+		
+		[mint,maxt]=measureq(t1,psth,binwidth,psth2);
 	end
 	
 	if (sp1==-1 && sp2==-1) %only if nothing input
@@ -626,34 +687,53 @@ case 'Spontaneous'
 				o.spontaneous1=mean(spikes1)+(2*std(spikes1));
 				o.spontaneous2=mean(spikes2)+(2*std(spikes2));
 			case 'psth'
-				[time1,psth1]=binit(o.cell1.raw{yhold,xhold},binwidth*10,1,inf,starttrial,endtrial,wrapped);
-				[time2,psth2]=binit(o.cell2.raw{yhold,xhold},binwidth*10,1,inf,starttrial,endtrial,wrapped);
-				psth1=psth1;
-				psth2=psth2;
-				mini=find(time1==mint);
-				maxi=find(time1==maxt);
-				psth1=psth1(mini:maxi);
-				psth2=psth2(mini:maxi);
-				time1=time1(mini:maxi);
-				time2=time2(mini:maxi);
+				[time,psth,rawl,sm,raws]=binit(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+				[time2,psth2,rawl2,sm2,raws2]=binit(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+				
+				psth = converttotime(psth, binwidth, raw1.numtrials, raw1.nummods, wrapped);
+				psth2 = converttotime(psth2, binwidth, raw2.numtrials, raw2.nummods, wrapped);
+				
+				psth=psth(time>=mint&time<=maxt);
+				psth2=psth2(time2>=mint&time2<=maxt);
+				time=time(time>=mint&time<=maxt);
+				time2=time2(time2>=mint&time2<=maxt);
+				rawl=rawl(rawl>=mint&rawl<=maxt);
+				rawl2=rawl2(rawl2>=mint&rawl2<=maxt);
 
+				for k=1:length(raws)
+					raws(k).trial=raws(k).trial(find(raws(k).trial>=mint&raws(k).trial<=maxt));
+					sm(k)=length(raws(k).trial);					
+				end
+				for k=1:length(raws2)
+					raws2(k).trial=raws2(k).trial(find(raws2(k).trial>=mint&raws2(k).trial<=maxt));
+					sm2(k)=length(raws2(k).trial);
+				end
+				
+				sm = (sm / (maxt-mint)) * 1000; %convert spikes/trial to Hz
+				sm2 = (sm2 / (maxt-mint)) * 1000;
+				
 				switch Normalise
 
 				case 1 %no normalisation
 
 				case 2 % use % of peak single bin
-					psth1=psth1/o.peak;
+					psth=psth/o.peak;
 					psth2=psth2/o.peak2;
 				case 3  % use % of max bin +- a bin
-					psth1=psth1/o.max;
+					psth=psth/o.max;
 					psth2=psth2/o.max2;
 				case 4 % z-score
-					psth1=zscore(psth1);
+					psth=zscore(psth);
 					psth2=zscore(psth2);
 				end
 				
-				o.spontaneous1=mean(psth1)+(2*std(psth1));
-				o.spontaneous2=mean(psth2)+(2*std(psth2));
+				o.spontaneous1ci = bootci(1000,@mean,sm);
+				o.spontaneous2ci = bootci(1000,@mean,sm2);
+				g = getdensity(sm,sm2);
+				
+				[o.spontaneous1, o.spontaneous1error] = stderr(sm);
+				[o.spontaneous2, o.spontaneous2error] = stderr(sm2);
+				
 				set(gh('SP1Edit'),'String',num2str(o.spontaneous1));
 				set(gh('SP2Edit'),'String',num2str(o.spontaneous2));
 		end
@@ -662,64 +742,42 @@ case 'Spontaneous'
 		o.spontaneous2=sp2;
 	end
 
-	for i=1:o.cell1.xrange*o.cell1.yrange
-		switch o.spiketype
-			case 'raw'
-				testvalue1=mean(o.cell1sums{i});
-				testvalue2=mean(o.cell2sums{i});
-				if testvalue1<=o.spontaneous1
-					o.cell1spike{i}=[];
-					o.position1(i)=0;
-				end
-				if testvalue2<=o.spontaneous2
-					o.cell2spike{i}=[];zeros(size(o.cell2spike{i}));
-					o.position2(i)=0;
-				end
-				o.cell1mat(i)=length(o.cell1spike{i});
-				o.cell2mat(i)=length(o.cell2spike{i});
-			case 'psth'
-				testvalue1=mean(o.cell1spike{i});
-				testvalue2=mean(o.cell2spike{i});
-				if testvalue1<=o.spontaneous1
-					o.cell1spike{i}=zeros(size(o.cell1spike{i}));
-					o.position1(i)=0;
-				end
-				if testvalue2<=o.spontaneous2
-					o.cell2spike{i}=zeros(size(o.cell2spike{i}));
-					o.position2(i)=0;
-				end
-				o.cell1mat(i)=mean(o.cell1spike{i});
-				o.cell2mat(i)=mean(o.cell2spike{i});
-		end
-	end
+% 	for i=1:o.cell1.xrange*o.cell1.yrange
+% 		switch o.spiketype
+% 			case 'raw'
+% 				testvalue1=mean(o.cell1sums{i});
+% 				testvalue2=mean(o.cell2sums{i});
+% 				if testvalue1<=o.spontaneous1
+% 					o.cell1spike{i}=[];
+% 					o.position1(i)=0;
+% 				end
+% 				if testvalue2<=o.spontaneous2
+% 					o.cell2spike{i}=[];zeros(size(o.cell2spike{i}));
+% 					o.position2(i)=0;
+% 				end
+% 				o.cell1mat(i)=length(o.cell1spike{i});
+% 				o.cell2mat(i)=length(o.cell2spike{i});
+% 			case 'psth'
+% 				testvalue1=mean(o.cell1spike{i});
+% 				testvalue2=mean(o.cell2spike{i});
+% 				if testvalue1<=o.spontaneous1
+% 					o.cell1spike{i}=zeros(size(o.cell1spike{i}));
+% 					o.position1(i)=0;
+% 				end
+% 				if testvalue2<=o.spontaneous2
+% 					o.cell2spike{i}=zeros(size(o.cell2spike{i}));
+% 					o.position2(i)=0;
+% 				end
+% 				o.cell1mat(i)=mean(o.cell1spike{i});
+% 				o.cell2mat(i)=mean(o.cell2spike{i});
+% 		end
+% 	end
 	
-	o.cell1.matrix=o.cell1mat;
-	o.cell2.matrix=o.cell2mat;
+% 	o.cell1.matrix=o.cell1mat;
+% 	o.cell2.matrix=o.cell2mat;
 	
-	axes(gh('Cell1Axis'))
-	imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1mat);
-	%if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
-	%if o.cell1.yvalues(1) < o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
-	set(gca,'YDir','normal')
-	colormap(hot);
-	set(gca,'Tag','Cell1Axis');	
-	colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
-	set(gh('Cell1Axis'),'Position',o.ax1pos);
+	updategui();	
 	
-	axes(gh('Cell2Axis'));
-	imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2mat);
-	%if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
-	%if o.cell2.yvalues(1) > o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
-	set(gca,'YDir','normal')
-	colormap(hot);
-	set(gca,'Tag','Cell2Axis');
-	colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
-	set(gh('Cell2Axis'),'Position',o.ax2pos);	
-	
-	axes(gh('OutputAxis'));
-	plot(0,0);
-	set(gca,'Tag','OutputAxis');
-	set(gh('OutputAxis'),'Position',o.ax3pos);	
 	o.spontaneous=1;
 	
 % 	h=figure;
@@ -2421,11 +2479,11 @@ function [m,mm]=findmax(psth,m,mm)
 function [spikes,mat]=normaliseit(spikes,Normalise,m,mm,numtrials,nummods,time,wrapped)
 switch Normalise				
 	case 1 %no normalisation
-			if wrapped==0
-				mat=((sum(spikes)/numtrials)/time)*1000;
+			if wrapped==1
+				mat=((sum(spikes)/(numtrials*nummods))/time)*1000;		
 				%spikes=smooth2(spikes,1); %apply a little smoothing
-			elseif wrapped==1
-				mat=((sum(spikes)/(numtrials*nummods))/time)*1000;				
+			else
+				mat=((sum(spikes)/numtrials)/time)*1000;		
 				%spikes=smooth2(spikes,1); %apply a little smoothing
 			end	
 	case 2 % use % of max single bin
@@ -2522,7 +2580,7 @@ imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1.matrix);
 %if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
 %if o.cell1.yvalues(1) < o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 set(gca,'YDir','normal')
-colormap(hot);
+%colormap(hot);
 set(gca,'Tag','Cell1Axis');	
 colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
 set(gh('Cell1Axis'),'Position',o.ax1pos);
@@ -2543,7 +2601,7 @@ imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
 %if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
 %if o.cell2.yvalues(1) > o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 set(gca,'YDir','normal')
-colormap(hot);
+%colormap(hot);
 set(gca,'Tag','Cell2Axis');
 colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
 set(gh('Cell2Axis'),'Position',o.ax2pos);
