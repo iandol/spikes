@@ -279,6 +279,7 @@ case 'Reparse'
 	set(gh('OPAllTrials'), 'Value', 1);
 	set(gh('OPShowPlots'), 'Value', 1);
 	set(gh('OPMeasureMenu'), 'Value', 2);
+	o.spiketype = 'psth';
 	
 	opro('Spontaneous')
 	opro('Measure')
@@ -603,7 +604,7 @@ case 'Measure'
 	if get(gh('OPShowPlots'),'Value')==1 %plot histograms
 		set(gh('StatsText'),'String','Please wait, plotting additional info for each matrix point...');
 		figure;
-		figpos(3,[1000 1000])
+		figpos(1,[1000 1000])
 		set(gcf,'Name','PSTH/ISI Plots for Control (black) and Test (Red) Receptive Fields','NumberTitle','off');
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
@@ -637,10 +638,10 @@ case 'Measure'
 			t{2} = sprintf('Cell 2 Burst Ratio = %g', o.cell2bratio{i});
 			t{3} = sprintf('Cell 1 Mean = %g', o.cell1mat(i));
 			t{4} = sprintf('Cell 2 Mean = %g', o.cell2mat(i));
-			text(o.cell1time{i}(1),v(4)-(v(4)/10),t,'FontSize',10);
+			text(o.cell1time{i}(1),v(4)-(v(4)/10),t,'FontSize',12);
 		end
 		figure;
-		figpos(3,[1000 1000])
+		figpos(1,[1000 1000])
 		set(gcf,'Name','CDF Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
@@ -664,7 +665,7 @@ case 'Measure'
 			%set(gca,'FontSize',4);			
 		end
 		figure;
-		figpos(3,[1000 1000])
+		figpos(1,[1000 1000])
 		set(gcf,'Name','Spikes (y) per Trial (x) Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
 		x=1:(o.cell1.yrange*o.cell1.xrange);
 		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
@@ -687,7 +688,7 @@ case 'Measure'
 		%jointfig(h,o.cell1.yrange,o.cell1.xrange)
 		
 		figure
-		figpos(3,[1000 1000])
+		figpos(1,[1000 1000])
 		window=str2num(get(gh('OPWindow'),'String'));
 		shift=str2num(get(gh('OPShift'),'String'));
 		maxt=o.maxt;
@@ -699,17 +700,18 @@ case 'Measure'
 			plot(time,ff,'k-',time2,ff2,'r-');
 			hold on;
 			plot(time,cv,'k--',time2,cv2,'r--');
-			plot(time,af,'k-.',time2,af2,'r--');
+			plot(time,af,'k-.',time2,af2,'r-.');
 			hold off;
 			axis tight;
 			if maxt > max(time)-window
 				maxt = max(time)-window;
 			end
 			axis([window maxt -inf inf]);
-			legend('Cell1 FF', 'Cell2 FF','Cell1 CV','Cell 2CV','Cell 1 Allan Factor','Cell 2Allan Factor');
+			legend('Control FF', 'Test FF','Control CV','Test CV','Control Allan Factor','Test Allan Factor');
 			title([o.cell1names{i} ' | ' o.cell2names{i}])
 			xlabel('Time (ms)');
 			ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)]);
+			set(gcf,'Name','Fanogram for Control and Test Cells')
 		end
 	end	
 	set(gh('StatsText'),'String','Data has been measured.');
@@ -723,6 +725,12 @@ case 'Spontaneous'
 % 		errordlg('Sorry, you need to measure the PSTH in OPRO first, set your parameters and click on the measure PSTH to do so...');
 % 		error('need to measure psth');
 % 	end
+	o.spontaneous1ci = 0;
+	o.spontaneous2ci = 0;
+	o.spontaneous1 = 0;
+	o.spontaneous1error = 0;
+	o.spontaneous2 = 0;
+	o.spontaneous2error = 0;
 	if (strcmp(o.spiketype,'isiraw') | strcmp(o.spiketype,'isih'))
 		errordlg('Sorry, you can only do Spontaneous Calculation on Binned Spikes, not ISIs')
 		error('Incorrect data for spontaneous measurement')
@@ -752,7 +760,7 @@ case 'Spontaneous'
 		[mint,maxt]=measureq(t1,psth,binwidth,psth2);
 	end
 	
-	if (sp1==-1 && sp2==-1) %only if nothing input
+	if (sp1==-1 || sp2==-1) %only if nothing input
 		switch o.spiketype
 			case 'raw'
 				spikes1=o.cell1sums{yhold,xhold};
@@ -802,7 +810,8 @@ case 'Spontaneous'
 				
 				o.spontaneous1ci = bootci(1000,@mean,sm);
 				o.spontaneous2ci = bootci(1000,@mean,sm2);
-				o.g = getDensity('x',sm,'y',sm2,'autorun',true);
+				o.g = [];
+				o.g = getDensity('x',sm,'y',sm2,'autorun',true,'columnlabels',{'Spontaneous'},'legendtxt',{'Control','Test'});
 				
 				[o.spontaneous1, o.spontaneous1error] = stderr(sm);
 				[o.spontaneous2, o.spontaneous2error] = stderr(sm2);
