@@ -39,7 +39,7 @@ classdef fanoPlotter < handle
 		function convertSpikesFormat(obj,data,select)
 			obj.data = data;
 			obj.maxTime = floor(obj.data.modtime/10);
-			obj.times = 0:obj.shiftTime:(obj.maxTime-obj.boxWidth);
+			obj.times = obj.boxWidth:obj.shiftTime:(obj.maxTime-obj.boxWidth);
 			obj.times = obj.times(2:end-1);
 			
 			if ~exist('select','var')
@@ -67,6 +67,29 @@ classdef fanoPlotter < handle
 			end
 		end
 		
+		function analyse(obj)
+			try
+				obj.compute;
+				obj.plot;
+			catch ME
+				fprintf('\nPlot Fano mean matching failed! Falling back to non-mean matched fano plot...\n');
+				ple(ME)
+				oldreps = obj.matchReps;
+				try
+					obj.matchReps = 0;
+					obj.compute;
+					obj.plot;
+					obj.matchReps = oldreps;
+				catch ME
+					obj.matchReps = oldreps;
+					warndlg('Non-mean matched fano plot failed too...')
+					fprintf('\nNon-mean matched fano plot failed too...\n');
+					ple(ME)
+				end
+			end
+			
+		end
+		
 		function compute(obj)
 			obj.fanoParams.alignTime = obj.alignTime;
 			obj.fanoParams.boxWidth = obj.boxWidth;
@@ -83,14 +106,17 @@ classdef fanoPlotter < handle
 		
 		function plot(obj)
 			plotFano(obj.result,obj.plotFanoParams);
-			for i = 1:length(obj.scatterTimes)
-				plotScatter(obj.result, obj.scatterTimes(i), obj.scatterParams)
-			end
+% 			for i = 1:length(obj.scatterTimes)
+% 				plotScatter(obj.result, obj.scatterTimes(i), obj.scatterParams)
+% 			end
 		end
 		
 		function movie(obj)
 			ScatterMovie(obj.result)
 		end
+		
+		
+		
 	end
 	
 end

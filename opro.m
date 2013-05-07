@@ -188,6 +188,9 @@ case 'Reparse'
 		o.cell2 = o.cell2bak; o = rmfield(o,'cell2bak');
 	end
 	
+	o.fano1 = [];
+	o.fano2 = [];
+	
 	o.fano1 = fanoPlotter;
 	o.fano2 = fanoPlotter;
 	
@@ -258,6 +261,11 @@ case 'Reparse'
 	
 	opro('Measure')
 	updategui()
+	
+	o.fano1.analyse
+	title(gca,'CELL 1')
+	o.fano2.analyse
+	title(gca,'CELL 1')
 	
 	%-----------------------------------------------------------------------------------------
 case 'Normalise'
@@ -436,6 +444,12 @@ case 'Measure'
 				braws2(k).trial=braws2(k).trial(find(braws2(k).trial>=mint&braws2(k).trial<=maxt));
 				bsm2(k)=length(braws2(k).trial);
 			end
+			
+			sm = (sm / (maxt-mint)) * 1000; %convert spikes/trial to Hz
+			sm2 = (sm2 / (maxt-mint)) * 1000;
+			bsm = (bsm / (maxt-mint)) * 1000; %convert spikes/trial to Hz
+			bsm2 = (bsm2 / (maxt-mint)) * 1000;
+			
 			o.cell1psth{j,i}=psth;
 			o.cell2psth{j,i}=psth2;
 			o.cell1time{j,i}=time;
@@ -520,10 +534,11 @@ case 'Measure'
 					set(gh('StatsText'),'String','Plotting the number of spikes/trials per variable');
 				case 2 %psth
 					if Normalise > 1
-					[o.cell1spike{j,i},o.cell1mat(j,i)]=normaliseit(o.cell1spike{j,i},Normalise,m,mm,raw1.numtrials,raw1.nummods,maxt-mint,wrapped);
-					[o.cell2spike{j,i},o.cell2mat(j,i)]=normaliseit(o.cell2spike{j,i},Normalise,m2,mm2,raw2.numtrials,raw2.nummods,maxt-mint,wrapped);					
+						[o.cell1spike{j,i},o.cell1mat(j,i)]=normaliseit(o.cell1spike{j,i},Normalise,m,mm,raw1.numtrials,raw1.nummods,maxt-mint,wrapped);
+						[o.cell2spike{j,i},o.cell2mat(j,i)]=normaliseit(o.cell2spike{j,i},Normalise,m2,mm2,raw2.numtrials,raw2.nummods,maxt-mint,wrapped);					
 					else
-						
+						o.cell1mat(j,i)=mean(o.cell1spike{j,i});
+						o.cell2mat(j,i)=mean(o.cell2spike{j,i});
 					end
 					set(gh('StatsText'),'String','Plotting the mean response, possibly normalised');
 				case 3 %isi
@@ -547,17 +562,17 @@ case 'Measure'
 
 	o.cell1.matrixold=o.cell1.matrix;
 	o.cell2.matrixold=o.cell2.matrix;
-	if wrapped==1
-		o.cell1.matrix=o.cell1mat/length(o.cell1sums{1});
-		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.modtime/10));
-		o.cell2.matrix=o.cell2mat/length(o.cell2sums{1});
-		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.modtime/10));
-	else
-		o.cell1.matrix=o.cell1mat/length(o.cell1sums{1});
-		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.trialtime/10));
-		o.cell2.matrix=o.cell2mat/length(o.cell2sums{1});
-		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.trialtime/10));
-	end
+% 	if wrapped==1
+% 		o.cell1.matrix=o.cell1mat/length(o.cell1sums{1});
+% 		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.modtime/10));
+% 		o.cell2.matrix=o.cell2mat/length(o.cell2sums{1});
+% 		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.modtime/10));
+% 	else
+% 		o.cell1.matrix=o.cell1mat/length(o.cell1sums{1});
+% 		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.trialtime/10));
+% 		o.cell2.matrix=o.cell2mat/length(o.cell2sums{1});
+% 		o.cell2.matrix=o.cell2.matrix*(1000/(o.cell2.trialtime/10));
+% 	end
 		
 	updategui();
 	
@@ -579,6 +594,10 @@ case 'Measure'
 				hold on
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1 o.spontaneous1],'Color',[0 0 0]);
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2 o.spontaneous2],'Color',[1 0 0]);
+				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(1) o.spontaneous1ci(1)],'Color',[0 0 0],'LineStyle','--');
+				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(1) o.spontaneous2ci(1)],'Color',[1 0 0],'LineStyle','--');
+				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(2) o.spontaneous1ci(2)],'Color',[0 0 0],'LineStyle','--');
+				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(2) o.spontaneous2ci(2)],'Color',[1 0 0],'LineStyle','--');
 				hold off
 			end
 			title([o.cell1names{i} ' \newline ' o.cell2names{i}])
@@ -638,6 +657,32 @@ case 'Measure'
 			%set(gca,'FontSize',4.5);
 		end
 		%jointfig(h,o.cell1.yrange,o.cell1.xrange)
+		
+		figure
+		
+		window=100;
+		shift=25;
+		maxt=o.maxt;
+		for i=1:o.cell1.xrange*o.cell1.yrange
+			subplot(o.cell1.yrange,o.cell1.xrange,i)
+			[ff,cv,af,time]=fanogram(o.cell1.raw{i},window,shift,wrapped);
+			[ff2,cv2,af2,time2]=fanogram(o.cell2.raw{i},window,shift,wrapped);
+			
+			plot(time,ff,'k-',time2,ff2,'r-');
+			hold on;
+			plot(time,cv,'k--',time2,cv2,'r--');
+			plot(time,af,'k-.',time2,af2,'r--');
+			hold off;
+			axis tight;
+			if maxt > max(time)-window
+				maxt = max(time)-window;
+			end
+			axis([window maxt -inf inf]);
+			legend('Cell1 FF', 'Cell2 FF','Cell1 CV','Cell 2CV','Cell 1 Allan Factor','Cell 2Allan Factor');
+			title([o.cell1names{i} ' | ' o.cell2names{i}])
+			xlabel('Time (ms)');
+			ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)]);
+		end
 	end	
 	set(gh('StatsText'),'String','Data has been measured.');
 	
@@ -729,7 +774,7 @@ case 'Spontaneous'
 				
 				o.spontaneous1ci = bootci(1000,@mean,sm);
 				o.spontaneous2ci = bootci(1000,@mean,sm2);
-				g = getdensity(sm,sm2);
+				o.g = getDensity('x',sm,'y',sm2,'autorun',true);
 				
 				[o.spontaneous1, o.spontaneous1error] = stderr(sm);
 				[o.spontaneous2, o.spontaneous2error] = stderr(sm2);

@@ -426,6 +426,7 @@ for i=1:size(x,2) %iterate through columns
 	
 	t=['Mn/Mdn: ' sprintf('%0.3g', xmean) '\pm' sprintf('%0.3g', xstderr) '/' sprintf('%0.3g', xmedian) ' | ' sprintf('%0.3g', ymean) '\pm' sprintf('%0.3g', ystderr) ' / ' sprintf('%0.3g', ymedian)];
 	
+	warning('off')
 	if ystd > 0
 		if length(xcol) == length(ycol)
 			[h,p1]=ttest2(xcol,ycol,inopts.alpha);
@@ -467,6 +468,7 @@ for i=1:size(x,2) %iterate through columns
 		p9=0;
 		p10=kstest(xcol);
 	end
+	warning('on')
 	
 	t=[t '\newlineT-test: ' sprintf('%0.3g', p1) '\newline'];
 	t=[t 'Wilcox: ' sprintf('%0.3g', p2) '\newline'];
