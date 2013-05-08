@@ -378,6 +378,9 @@ case 'Measure'
 		[time,psth]=binit(sd,binwidth*10,1,inf,starttrial,endtrial,wrapped);
 		[mint,maxt]=measureq(time,psth,binwidth);
 	end
+	set(gh('OPmint'),'String',num2str(mint));
+	set(gh('OPmaxt'),'String',num2str(maxt));
+	
 	o.mint = mint; o.maxt = maxt;
 	o.cell1spike=cell(o.cell1.yrange,o.cell1.xrange);  %set up our spike holding matrices
 	o.cell2spike = o.cell1spike;
@@ -2622,8 +2625,12 @@ function updategui()
 global o
 set(gh('OPHoldX'),'String',{o.cell1.xvalues'});
 set(gh('OPHoldY'),'String',{o.cell1.yvalues'});
+set(gh('OPHoldZ'),'String',{o.cell1.zvalues'});
 set(gh('OPHoldX'),'Value',ceil(o.cell1.xrange/2));
 set(gh('OPHoldY'),'Value',ceil(o.cell1.yrange/2));
+set(gh('OPHoldZ'),'Value',ceil(o.cell1.zrange/2));
+set(gh('OPHoldZ'),'Enable','off');
+	
 set(gh('OPCellMenu'),'String',{'Cell 1';'Cell 2'});
 
 if strcmp(o.filetype,'mat')
@@ -2719,7 +2726,6 @@ end
 % Plot PSTHs in a grid
 
 function PlotAll(data)
-
 
 o.allhandle=figure;
 set(gcf,'Tag','allplotfig');

@@ -3,7 +3,7 @@ function varargout = opro_UI(varargin)
 %    FIG = OPRO_UI launch opro_UI GUI.
 %    OPRO_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 07-May-2013 20:04:58
+% Last Modified by GUIDE v2.5 08-May-2013 17:46:20
 
 if nargin == 0  % LAUNCH GUI
 
@@ -364,6 +364,52 @@ function OPHoldZ_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function OPmint_Callback(hObject, eventdata, handles)
+% hObject    handle to OPmint (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of OPmint as text
+%        str2double(get(hObject,'String')) returns contents of OPmint as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function OPmint_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to OPmint (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function OPmaxt_Callback(hObject, eventdata, handles)
+% hObject    handle to OPmaxt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of OPmaxt as text
+%        str2double(get(hObject,'String')) returns contents of OPmaxt as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function OPmaxt_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to OPmaxt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
