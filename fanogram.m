@@ -9,6 +9,8 @@ else
 	maxtime=cell.maxtime/10;	
 end
 
+halfwindow = floor(window/2);
+maxtime = maxtime - window;
 shifts=floor(maxtime/shift)-1;
 mint=0;
 maxt=window;
@@ -19,7 +21,7 @@ cv=zeros(shifts,1);
 af=zeros(shifts,1);
 
 for i=1:shifts	
-	time(i)=mint;
+	time(i)=maxt;
 	ff(i)=finderror(cell,'Fano Factor',mint,maxt,wrapped,0);
 	cv(i)=finderror(cell,'Coefficient of Variation',mint,maxt,wrapped,0);
 	af(i)=finderror(cell,'Allan Factor',mint,maxt,wrapped,0);

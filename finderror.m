@@ -29,7 +29,7 @@ if burst==0
    else %wrapped is OFF
       l=1;
       a=[];      
-      for j=1:x.numtrials                 
+      for j=1:x.numtrials             
          for k=1:x.nummods
             s=x.trial(j).mod{k}-x.trial(j).modtimes(1);   %not wrapped
             m=find(s>mit & s<=mxt);

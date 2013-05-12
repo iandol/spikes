@@ -44,6 +44,8 @@ case 'Initialize'
 case 'Load'
 	%-----------------------------------------------------------------------------------------
 	
+	[file path]=uigetfile('*.*','Load 1st Processed Matrix:');
+	if file==0; error('1st File appears empty.'); end;
 	ax1=o.ax1pos;
 	ax2=o.ax2pos;
 	ax3=o.ax3pos;
@@ -56,8 +58,6 @@ case 'Load'
 	o.cell2=[];
 	o.spontaneous=0;
 	set(gh('StatsText'),'String','Statistical Results:');
-	[file path]=uigetfile('*.*','Load 1st Processed Matrix:');
-	if file==0; error('1st File appears empty.'); end;
 	cd(path);
 	op=pwd;
 	[poo,poo2,ext]=fileparts(file);
@@ -147,15 +147,19 @@ case 'Load'
 		o.cell2.xindex=[1:o.cell2.xrange];
 	end
 	if ~isfield(o.cell1,'yindex')
-		o.cell1.yindex=1:o.cell1.yrange;
-		
+		o.cell1.yindex=1:o.cell1.yrange;	
 	end
 	if ~isfield(o.cell2,'yindex')
 		o.cell2.yindex=1:o.cell2.yrange;
 	end
+	if ~isfield(o.cell1,'zindex')
+		o.cell1.zindex=1:o.cell1.zrange;	
+	end
+	if ~isfield(o.cell2,'zindex')
+		o.cell2.zindex=1:o.cell2.zrange;
+	end
 	
 	updategui();
-	
 
 	%-----------------------------------------------------------------------------------------
 case 'Reparse'
@@ -354,9 +358,11 @@ case 'Measure'
 	set(gh('SP2Edit'),'String','-1');
 	xhold=get(gh('OPHoldX'),'Value');
 	yhold=get(gh('OPHoldY'),'Value');
+	zhold=get(gh('OPHoldZ'),'Value');
 	binwidth=str2num(get(gh('BinWidthEdit'),'String'));
 	wrapped=get(gh('WrappedBox'),'Value');
 	ccell=get(gh('OPCellMenu'),'Value');
+	sigma = str2num(get(gh('OPSigma'),'String'));
 	Normalise=get(gh('NormaliseMenu'),'Value');
 	starttrial=get(gh('StartTrialMenu'),'Value');
 	endtrial=get(gh('EndTrialMenu'),'Value');
@@ -433,6 +439,10 @@ case 'Measure'
 			
 			[time,psth,rawl,sm,raws]=binit(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
 			[time2,psth2,rawl2,sm2,raws2]=binit(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
+			if sigma > 0
+				psth=gausssmooth(time,psth,sigma);
+				psth2=gausssmooth(time2,psth2,sigma);
+			end
 			e1=finderror(raw1,'Fano Factor',mint,maxt+binwidth,wrapped,0);
 			e2=finderror(raw2,'Fano Factor',mint,maxt+binwidth,wrapped,0);
 			
@@ -441,22 +451,25 @@ case 'Measure'
 			
 			[btime,bpsth,brawl,bsm,braws]=binitb(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
 			[btime2,bpsth2,brawl2,bsm2,braws2]=binitb(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
-			
+			if sigma > 0
+				bpsth=gausssmooth(btime,bpsth,sigma);
+				bpsth2=gausssmooth(btime2,bpsth2,sigma);
+			end
 			bpsth = converttotime(bpsth, binwidth, raw1.numtrials, raw1.nummods, wrapped);
 			bpsth2 = converttotime(bpsth2, binwidth, raw2.numtrials, raw2.nummods, wrapped);
 				
-			psth=psth(find(time>=mint&time<=maxt));
-			psth2=psth2(find(time2>=mint&time2<=maxt));
-			time=time(find(time>=mint&time<=maxt));
-			time2=time2(find(time2>=mint&time2<=maxt));
-			rawl=rawl(find(rawl>=mint&rawl<=maxt));
-			rawl2=rawl2(find(rawl2>=mint&rawl2<=maxt));
-			bpsth=bpsth(find(time>=mint&time<=maxt));
-			bpsth2=bpsth2(find(time2>=mint&time2<=maxt));
-			btime=btime(find(time>=mint&time<=maxt));
-			btime2=btime2(find(time2>=mint&time2<=maxt));
-			brawl=brawl(find(brawl>=mint&brawl<=maxt));
-			brawl2=brawl2(find(brawl2>=mint&brawl2<=maxt));
+			psth=psth(time>=mint&time<=maxt);
+			psth2=psth2(time2>=mint&time2<=maxt);
+			time=time(time>=mint&time<=maxt);
+			time2=time2(time2>=mint&time2<=maxt);
+			rawl=rawl(rawl>=mint&rawl<=maxt);
+			rawl2=rawl2(rawl2>=mint&rawl2<=maxt);
+			bpsth=bpsth(time>=mint&time<=maxt);
+			bpsth2=bpsth2(time2>=mint&time2<=maxt);
+			btime=btime(time>=mint&time<=maxt);
+			btime2=btime2(time2>=mint&time2<=maxt);
+			brawl=brawl(brawl>=mint&brawl<=maxt);
+			brawl2=brawl2(brawl2>=mint&brawl2<=maxt);
 			
 			for k=1:length(raws)
 				raws(k).trial=raws(k).trial(find(raws(k).trial>=mint&raws(k).trial<=maxt));
@@ -588,6 +601,8 @@ case 'Measure'
 
 	o.cell1.matrixold=o.cell1.matrix;
 	o.cell2.matrixold=o.cell2.matrix;
+	o.cell1.matrix = o.cell1mat;
+	o.cell2.matrix = o.cell2mat;
 % 	if wrapped==1
 % 		o.cell1.matrix=o.cell1mat/length(o.cell1sums{1});
 % 		o.cell1.matrix=o.cell1.matrix*(1000/(o.cell1.modtime/10));
@@ -704,17 +719,38 @@ case 'Measure'
 			hold on;
 			plot(time,cv,'k--',time2,cv2,'r--');
 			plot(time,af,'k-.',time2,af2,'r-.');
+			
+			p = o.cell1psth{i};
+			p2 = o.cell2psth{i};
+			
+			m1 = max(p);
+			m2 = max(p2);
+			
+			m = max([m1 m2]);
+			
+			t = o.cell1time{i};
+			t2 = o.cell2time{i};
+			p = (p / m) * max(ff);
+			p2 = (p2 / m) * max(ff);
+			
+			plot(t,p,'ko-',t2,p2,'ro-');
+			
 			hold off;
 			axis tight;
 			if maxt > max(time)-window
 				maxt = max(time)-window;
 			end
 			axis([window maxt -inf inf]);
-			legend('Control FF', 'Test FF','Control CV','Test CV','Control Allan Factor','Test Allan Factor');
+			legend('Control FF', 'Test FF','Control CV','Test CV','Control Allan Factor','Test Allan Factor','PSTH1','PSTH2');
 			title([o.cell1names{i} ' | ' o.cell2names{i}])
 			xlabel('Time (ms)');
 			ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)]);
 			set(gcf,'Name','Fanogram for Control and Test Cells')
+		end
+		try
+			opro('PlotAll');
+		catch
+			fprintf('Raw plots failed...\n')
 		end
 	end	
 	set(gh('StatsText'),'String','Data has been measured.');
@@ -2534,6 +2570,12 @@ case 'Spawn'
 	axis square
 	
 	%-----------------------------------------------------------------------------------------
+case 'PlotAll'
+	%-----------------------------------------------------------------------------------------
+	PlotAll(o.cell1)
+	PlotAll(o.cell2)
+	
+	%-----------------------------------------------------------------------------------------
 case 'Exit'
 	%-----------------------------------------------------------------------------------------
 	
@@ -2726,14 +2768,33 @@ end
 % Plot PSTHs in a grid
 
 function PlotAll(data)
+global o
 
+xhold=get(gh('OPHoldX'),'Value');
+yhold=get(gh('OPHoldY'),'Value');
+zhold=get(gh('OPHoldZ'),'Value');
+binwidth=str2num(get(gh('BinWidthEdit'),'String'));
+wrapped=get(gh('WrappedBox'),'Value');
+ccell=get(gh('OPCellMenu'),'Value');
+Normalise=get(gh('NormaliseMenu'),'Value');
+starttrial=get(gh('StartTrialMenu'),'Value');
+endtrial=get(gh('EndTrialMenu'),'Value');
+if get(gh('OPAllTrials'),'Value') > 0
+	starttrial = 1;
+	endtrial = inf;
+end
+	
 o.allhandle=figure;
 set(gcf,'Tag','allplotfig');
 figpos(3,[1000 1000]);
 set(gcf,'Color',[1 1 1]);
+mint = o.mint;
+maxt = o.maxt;
+mini=find(data.time{1}==mint);
+maxi=find(data.time{1}==maxt);
 
 switch data.numvars
-	case 0
+		case 0
 		
 	case 1
 		
@@ -2742,7 +2803,11 @@ switch data.numvars
 		s = size(data.psth);
 		xrange=s(2);
 		yrange=s(1);
-		zrange=s(3);
+		if length(s) < 3
+			zrange = 1;
+		else
+			zrange=s(3);
+		end
 		
 		starti=1;
 		endi=xrange*yrange*zrange;
@@ -2760,7 +2825,7 @@ switch data.numvars
 				m = maxm;
 			end
 		end
-		mm = converttotime(m);
+		mm = converttotime(m,binwidth,data.numtrials,data.nummods,wrapped);
 		xm=round(m+m/10);  %just to scale a bit bigger than the maximum value
 		
 		x = starti:endi;
@@ -2787,18 +2852,6 @@ switch data.numvars
 			end
 			axis([data.time{i}(mini) data.time{i}(maxi) 0 mm]);
 			text(data.time{i}(mini), (mm-mm/20), data.names{i},'FontSize',12,'Color',[0.7 0.7 0.7]);
-			if sv.plotBARS == 1
-				wh=waitbar(0.3,'Calculating BARS, please wait...');
-				trials = data.raw{i}.numtrials;
-				doBARS(data.time{i}, data.psth{i}, trials);
-				if ~isempty(data.bars)
-					if isfield(data.bars,'mean')
-						plot(data.bars.time_fine,(data.bars.mode_fine/m)*mm,'r-','LineWidth',1);
-						plot(data.bars.time_fine,(data.bars.confBands_fine/m)*mm,'r:');
-					end
-				end
-				close(wh);
-			end
 			p(i1,i2,1).hold('off')
 			p(i1,i2,2).select();
 			plotraster(data.raw{i});
@@ -2814,15 +2867,15 @@ switch data.numvars
 			end
 			a=a+1;
 		end
-		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(mm) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
+		t=[data.runname ' Cell:'  ' [BW:' num2str(binwidth) 'ms Trials:' num2str(starttrial) '-' num2str(endtrial) '] max = ' num2str(mm) ' time = ' num2str(mint) '-' num2str(maxt) 'ms'];
 		if data.numvars==3
 			t=[t '\newline Z VALUES ' data.ztitle '=' num2str(data.zvalues)];
 		end
 		if isa(data.pR,'plxReader')
 			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
-		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
-		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
+		p.xlabel([data.xtitle ' (' num2str(data.xvalues) ')']);
+		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalues)) ')']);
 		p.title(t);
 		p.de.margin = 0;
 		p.margin = [15 15 5 15];

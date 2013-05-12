@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 28-Apr-2013 21:23:00
+% Last Modified by GUIDE v2.5 10-May-2013 12:14:15
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -919,4 +919,15 @@ if length(cellmap) == 6
 	end
 else
 	warndlg('You must enter 6 numerical values that map cell1-6 to plexon units!')
+end
+
+
+% --- Executes on button press in SplxReport.
+function SplxReport_Callback(hObject, eventdata, handles)
+% hObject    handle to SplxReport (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global data
+if isa(data.pR,'plxReader')
+	report behaviour;
 end

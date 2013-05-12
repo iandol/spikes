@@ -13,9 +13,9 @@ classdef fanoPlotter < handle
 		resultV
 		maxTime
 		shiftTime = 25
-		boxWidth = 100
+			boxWidth = 100
 		alignTime = 200
-		matchReps = 10
+		matchReps = 2
 		binSpacing = 0.25
 		includeVarMinusMean = 1
 		plotRawF = 0
