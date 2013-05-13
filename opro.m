@@ -712,9 +712,15 @@ case 'Measure'
 		maxt=o.maxt;
 		for i=1:o.cell1.xrange*o.cell1.yrange
 			subplot(o.cell1.yrange,o.cell1.xrange,i)
-			[ff,cv,af,time]=fanogram(o.cell1.raw{i},window,shift,wrapped);
-			[ff2,cv2,af2,time2]=fanogram(o.cell2.raw{i},window,shift,wrapped);
-			
+			[ff,cv,af,time,position]=fanogram(o.cell1.raw{i},window,shift,wrapped);
+			[ff2,cv2,af2,time2,position]=fanogram(o.cell2.raw{i},window,shift,wrapped);
+			if position == 3
+				tpos = 'end';
+			elseif position == 2
+				tpos = 'middle';
+			else
+				tpos = 'start';
+			end
 			plot(time,ff,'k-',time2,ff2,'r-');
 			hold on;
 			plot(time,cv,'k--',time2,cv2,'r--');
@@ -744,7 +750,7 @@ case 'Measure'
 			legend('Control FF', 'Test FF','Control CV','Test CV','Control Allan Factor','Test Allan Factor','PSTH1','PSTH2');
 			title([o.cell1names{i} ' | ' o.cell2names{i}])
 			xlabel('Time (ms)');
-			ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)]);
+			ylabel(['FF / C_V / AF - window:' num2str(window) ' shift: ' num2str(shift) ' position: ' tpos]);
 			set(gcf,'Name','Fanogram for Control and Test Cells')
 		end
 		try

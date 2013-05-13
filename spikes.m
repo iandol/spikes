@@ -28,7 +28,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv = [];
 		data = [];
 		rlist = [];
-		sv.version = 2.01;
+		sv.version = 2.02;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -3787,7 +3787,14 @@ window=str2double(get(gh('SISIWindow'),'String'));
 shift=str2double(get(gh('SISIShift'),'String'));
 maxt=str2num(get(gh('SMaxEdit'),'String'));
 
-[ff,cv,af,time]=fanogram(data.raw{sv.yval, sv.xval, sv.zval},window,shift,data.wrapped);
+[ff,cv,af,time,position]=fanogram(data.raw{sv.yval, sv.xval, sv.zval},window,shift,data.wrapped);
+if position == 3
+	tpos = 'end';
+elseif position == 2
+	tpos = 'middle';
+else
+	tpos = 'start';
+end
 
 plot(time,ff,'k-');
 hold on;
@@ -3802,7 +3809,7 @@ axis([window maxt -inf inf]);
 legend('fano factor','CV','Allan Factor');
 MakeTitle('raster');
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize);
-sv.ylabelhandle=ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift)],'FontSize',sv.labelsize);
+sv.ylabelhandle=ylabel(['FF / C_V/ AF - window:' num2str(window) ' shift: ' num2str(shift) ' position: ' tpos],'FontSize',sv.labelsize);
 sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 
