@@ -999,7 +999,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				fileindex=find(data.meta.matrix(:,sv.HeldVariable+1)==sv.HeldValue); %index the files needed...
 				
 				index=data.meta.matrix(:,2:4); %the list of variable values for each file
-				
+				tr = 1:(data.xrange*data.yrange*data.zrange);
+				tr = [tr(mod(tr,2)>0);tr(mod(tr,2)==0)];
 				for i=1:data.xrange*data.yrange*data.zrange
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
 					drawnow;
@@ -1008,7 +1009,6 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					filenamet = regexprep(filenamet,'\s+',' ');
 					if strcmpi(data.filetype,'plx');
 						[yi,xi,zi] = ind2sub(size(data.raw),i);
-						tr = [1 3 5 7 2 4 6 8];
 					else
 						xi=index(i,1);
 						yi=index(i,2);
