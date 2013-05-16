@@ -721,7 +721,7 @@ case 'Measure'
 			else
 				tpos = 'start';
 			end
-			plot(time,ff,'k-',time2,ff2,'r-');
+			plot(time,ff,'k-',time2,ff2,'r-','LineWidth',2);
 			hold on;
 			plot(time,cv,'k--',time2,cv2,'r--');
 			plot(time,af,'k-.',time2,af2,'r-.');
@@ -790,6 +790,9 @@ case 'Spontaneous'
 	Normalise=get(gh('NormaliseMenu'),'Value');
 	starttrial=get(gh('StartTrialMenu'),'Value');
 	endtrial=get(gh('EndTrialMenu'),'Value');
+	
+	if xhold > o.cell1.xrange; xhold = o.cell1.xindex(1); end
+	if yhold > o.cell1.yrange; yhold = o.cell1.yindex(1); end
 	
 	raw1 = o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)};
 	raw2 = o.cell2.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)};
@@ -2805,7 +2808,7 @@ switch data.numvars
 	case 1
 		
 	otherwise
-		p = panel(o.allhandle,'defer');
+		p = panel(o.allhandle);
 		s = size(data.psth);
 		xrange=s(2);
 		yrange=s(1);
@@ -2892,7 +2895,7 @@ switch data.numvars
 		%[ax,h3]=suplabel(t ,'t');
 		%set(h1,'FontSize',12)
 		% because we 'defer'red, we have to refresh.
-		p.refresh();
+		%p.refresh();
 		
 end
 set(gcf,'Renderer','painters','ResizeFcn',[]);

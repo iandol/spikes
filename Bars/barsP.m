@@ -225,7 +225,7 @@ summary.params(3,4) = length(models(maxIndex).knots);
 summary.models = models;
 
 % how long did that take?
-toc
+fprintf('BARS calculations took: %g seconds\n', toc);
 
 end
 

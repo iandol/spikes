@@ -575,11 +575,15 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				data.areaplot=0;
 				
 				filename = [basefilename '.1'];
-				data.names=filename;
+				if strcmpi(data.filetype,'plx');
+				
+				else
+					data.names=filename;
+				end
 				switch data.filetype
 					case 'plx'
-						data.names = ['plxvariable ' num2str(1)];
 						x=data.pR.exportToRawSpikes(1,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+						data.names{1} = ['IN:1>' x.name];
 					case 'doc'
 						x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 					otherwise
@@ -709,14 +713,18 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				for i=firstnumber:lastnumber
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
-					filename = [basefilename '.' int2str(i)];
-					filenamet = [filename ' ' num2str(data.meta.matrix(i,end))]; %add variable value to name
-					filenamet = regexprep(filenamet,'\s+',' ');
-					data.names{i}=filenamet;
+					if strcmpi(data.filetype,'plx');
+				
+					else
+						filename = [basefilename '.' int2str(i)];
+						filenamet = [filename ' ' num2str(data.meta.matrix(i,end))]; %add variable value to name
+						filenamet = regexprep(filenamet,'\s+',' ');
+						data.names{i}=filenamet;
+					end
 					switch data.filetype
 						case 'plx'
-							data.names{i} = ['plxvariable ' num2str(i)];
 							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+							data.names{i} = ['IN:' num2str(i) '>' x.name];
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 						otherwise
@@ -850,18 +858,21 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				data.textload=0;
 				data.areaplot=0;
 				
-				% 		h=waitbar(0,'Processing: binning data and finding bursts...');
 				for i=firstnumber:lastnumber
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
-					filename = strcat(basefilename,'.',int2str(i));
-					filenamet = [filename ' ' num2str(data.meta.matrix(i,end-1:end))];
-					filenamet = regexprep(filenamet,'\s+',' ');
-					data.names{i}=filenamet;
+					if strcmpi(data.filetype,'plx');
+				
+					else
+						filename = strcat(basefilename,'.',int2str(i));
+						filenamet = [filename ' ' num2str(data.meta.matrix(i,end-1:end))];
+						filenamet = regexprep(filenamet,'\s+',' ');
+						data.names{i}=filenamet;
+					end
 					switch data.filetype
 						case 'plx'
-							data.names{i} = ['plxvariable ' num2str(i)];
 							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
+							data.names{i} = ['#' num2str(i) '>' x.name];
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 						otherwise
@@ -1018,7 +1029,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					switch data.filetype
 						case 'plx'
 							x=data.pR.exportToRawSpikes(tr(i),sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
-							data.names{yi,xi,zi} = ['PLXIN:' num2str(i) '>' x.name];
+							data.names{yi,xi,zi} = ['IN:' num2str(i) '>' x.name];
 						case 'doc'
 							x=lsd(filename,sv.firstunit,sv.StartTrial,sv.EndTrial);
 						otherwise
@@ -4079,7 +4090,7 @@ global data sv;
 data.areaplot=0;
 sv.allhandle=figure;
 set(gcf,'Tag','allplotfig');
-figpos(3,[1000 1000]);
+figpos(1,[1200 1200]); delete(get(gcf,'Children'))
 set(gcf,'Color',[1 1 1]);
 
 mint=str2num(get(gh('SMinEdit'),'String'));   %this selects what to plot
@@ -4102,7 +4113,7 @@ switch data.numvars
 			return;
 		end
 	case 1
-		p=panel(sv.allhandle,'defer');
+		p=panel(sv.allhandle);
 		if get(gh('PSTHEdit'),'String')=='0'
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=1:data.xrange
@@ -4120,7 +4131,6 @@ switch data.numvars
 		
 		p.pack(data.xrange,1);
 		for i=1:data.xrange
-			p(i,1).select();
 			p(i,1).pack(2,1);
 			p(i,1,1,1).select();
 			time = data.time{data.xindex(i)}(mini:maxi);
@@ -4153,7 +4163,7 @@ switch data.numvars
 			p(i,1,1,1).hold('off')
 			p(i,1,2,1).select();
 			plotraster(data.raw{i});
-			axis([time(mini)*1000 time(maxi)*1000 -inf inf]);
+			axis([time(mini)/1000 time(maxi)/1000 -inf inf]);
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
 		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
@@ -4168,13 +4178,17 @@ switch data.numvars
 		p.fontsize = 12;
 		p.de.fontsize = 10;
 		% because we 'defer'red, we have to refresh.
-		p.refresh();
+		%p.refresh();
 	otherwise
-		p=panel(sv.allhandle,'defer');
+		p=panel(sv.allhandle);
 		s = size(data.psth);
 		xrange=s(2);
 		yrange=s(1);
-		zrange=s(3);
+		if length(s)>2
+			zrange=s(3);
+		else
+			zrange=1;
+		end
 		
 		starti=1;
 		endi=xrange*yrange*zrange;
@@ -4230,6 +4244,7 @@ switch data.numvars
 				doBARS(data.time{i}, data.psth{i}, trials);
 				if ~isempty(data.bars)
 					if isfield(data.bars,'mean')
+						p(i1,i2,1).select();
 						plot(data.bars.time_fine,(data.bars.mode_fine/m)*mm,'r-','LineWidth',1);
 						plot(data.bars.time_fine,(data.bars.confBands_fine/m)*mm,'r:');
 					end
@@ -4270,7 +4285,7 @@ switch data.numvars
 		%[ax,h3]=suplabel(t ,'t');
 		%set(h1,'FontSize',12)
 		% because we 'defer'red, we have to refresh.
-		p.refresh();
+		%p.refresh();
 		
 end
 set(gcf,'Renderer','painters','ResizeFcn',[]);
