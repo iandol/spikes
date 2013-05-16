@@ -1000,7 +1000,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				
 				index=data.meta.matrix(:,2:4); %the list of variable values for each file
 				tr = 1:(data.xrange*data.yrange*data.zrange);
-				tr = [tr(mod(tr,2)>0);tr(mod(tr,2)==0)];
+				tr = [tr(mod(tr,2)>0), tr(mod(tr,2)==0)];
 				for i=1:data.xrange*data.yrange*data.zrange
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
 					drawnow;
