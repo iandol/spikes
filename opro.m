@@ -637,8 +637,14 @@ case 'Measure'
 		m=max([o.peak o.peak2]);
 		for i=1:o.cell1.xrange*o.cell1.yrange
 			subplot(o.cell1.yrange,o.cell1.xrange,i);
-			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-','LineWidth',1.5);
 			hold on
+			if isfield(o,'bars1') && ~isempty(o.bars1{i})
+				plot(o.bars1{i}.time_fine, o.bars1{i}.mean_fine,'ko-',o.bars1{i}.time_fine, o.bars1{i}.confBands_fine,'k--','Color',[0.4 0.4 0.4],'LineWidth',1);
+			end
+			if isfield(o,'bars2') && ~isempty(o.bars2{i})
+				plot(o.bars2{i}.time_fine, o.bars2{i}.mean_fine,'ro-',o.bars2{i}.time_fine, o.bars2{i}.confBands_fine,'r--','Color',[1 0.4 0.4],'LineWidth',1);
+			end
+			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-','LineWidth',1.5);
 			if isfield(o,'spontaneous1') && o.spontaneous1 > -1
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1 o.spontaneous1],'Color',[0 0 0]);
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2 o.spontaneous2],'Color',[1 0 0]);
@@ -646,12 +652,6 @@ case 'Measure'
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(1) o.spontaneous2ci(1)],'Color',[1 0 0],'LineStyle','--');
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(2) o.spontaneous1ci(2)],'Color',[0 0 0],'LineStyle','--');
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(2) o.spontaneous2ci(2)],'Color',[1 0 0],'LineStyle','--');
-			end
-			if isfield(o,'bars1') && ~isempty(o.bars1{i})
-				plot(o.bars1{i}.time_fine, o.bars1{i}.mean_fine,'ko-',o.bars1{i}.time_fine, o.bars1{i}.confBands_fine,'k--','LineWidth',1);
-			end
-			if isfield(o,'bars2') && ~isempty(o.bars2{i})
-				plot(o.bars2{i}.time_fine, o.bars2{i}.mean_fine,'ro-',o.bars2{i}.time_fine, o.bars2{i}.confBands_fine,'r--','LineWidth',1);
 			end
 			hold off
 			title([o.cell1names{i} ' \newline ' o.cell2names{i}])
