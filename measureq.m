@@ -4,6 +4,7 @@ function [mint,maxt]=measureq(time,psth,binwidth,psth2)
 % for further analysis, this one is simpler than measure.
 
 h=figure;
+figpos(1,[1200 1200]);
 t=0;
 
 set(gcf,'Name','Please Select the Area of PSTH for Analysis:','NumberTitle','off')

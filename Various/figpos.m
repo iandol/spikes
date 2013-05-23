@@ -63,4 +63,3 @@ otherwise %center it
 	set(gcf,'Position',[x y size(1) size(2)]);
 end
 set(gcf,'Units',oldunits);
-ticks out

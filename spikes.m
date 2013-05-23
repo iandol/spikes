@@ -28,7 +28,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv = [];
 		data = [];
 		rlist = [];
-		sv.version = 2.02;
+		sv.version = 2.05;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -61,7 +61,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				javax.swing.UIManager.setLookAndFeel(oldlook);
 			end
 		end
-		figpos(2);	%position the figure
+		figpos(1);	%position the figure
 		set(sv.uihandle,'Name', [sv.title ' | Started at ' datestr(now)]);
 		colormap(jet(256)); %this gives us a much higher resolution colormap
 		%-------The following sv structure sets up the GUI interface structure--
@@ -4106,6 +4106,7 @@ end
 mini = find( data.time{1} == mint );
 maxi = find( data.time{1} == maxt );
 
+tic
 switch data.numvars
 	case 0
 		if ~strcmp(sv.auto,'report')
@@ -4288,6 +4289,7 @@ switch data.numvars
 		%p.refresh();
 		
 end
+fprintf('--->SPIKES: Plot All processing took: %g seconds\n',toc);
 set(gcf,'Renderer','painters','ResizeFcn',[]);
 
 %----------------------------------END----------------------------------------

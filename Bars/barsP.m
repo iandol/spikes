@@ -68,7 +68,7 @@ if m.fit_info == 0
     k = length(m.knots_interior);
     knot_set = m.knots_interior;
     
-    if strcmpi(bp.prior_id,'UNIFORM') || strcmpi(bp.prior_id,'USER')
+    if strcmp(bp.prior_id,'UNIFORM') || strcmp(bp.prior_id,'USER')
         kmin = bp.iparams(1);
     else
         kmin = 1;
@@ -225,7 +225,7 @@ summary.params(3,4) = length(models(maxIndex).knots);
 summary.models = models;
 
 % how long did that take?
-fprintf('BARS calculations took: %g seconds\n', toc);
+toc
 
 end
 
@@ -646,11 +646,11 @@ function [birth death] = getRJProbs(bp)
     % builds the knot prior
     i = 1:(MAXKNOTS-1);
             
-    if strcmpi(bp.prior_id,'POISSON')
+    if strcmp(bp.prior_id,'POISSON')
         pratio = bp.dparams(1) ./ (i+1);
-    elseif strcmpi(bp.prior_id,'UNIFORM')
+    elseif strcmp(bp.prior_id,'UNIFORM')
         pratio = (i >= bp.iparams(1)) & (i < bp.iparams(2));
-    elseif strcmpi(bp.prior_id,'USER')
+    elseif strcmp(bp.prior_id,'USER')
         pratio = i*0;
         pratio(bp.iparams(1):bp.iparams(2)-1) = bp.dparams(i+1)./bp.dparams(i);
     else

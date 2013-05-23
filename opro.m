@@ -29,7 +29,8 @@ case 'Initialize'
 	set(0,'DefaultAxesTickDir','out');
 	set(0,'DefaultAxesTickDirMode','manual');
 	h=opro_UI; %this is the GUI figure
-	set(h,'Name', 'Orban-Pro Spike Statistics V1.80');
+	figpos(1)
+	set(h,'Name', 'Orban-Pro Spike Statistics V1.91');
 	set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance';'M: Fano T-test';'M: Fano Wilcoxon';'M: Fano Paired Wilcoxon';'M: Fano Spearman';'---------';'Column: Spontaneous';'---------';'I: Paired T-test';'I: Paired Sign Test';'I: Wilcoxon Rank Sum';'I: Wilcoxon Paired Test';'I: Spearman Correlation';'I: Pearsons Correlation';'I: 1-Way Anova';'I: Kolmogorov-Smirnof Distribution Test'});
 	set(gh('NormaliseMenu'),'String',{'none';'% of Max';'% of 3 Bin Max';'Z-Score'});
 	set(gh('OPPlotMenu'),'String',{'p-value';'Hypothesis Test';'r correlation';'r2 correlation';'1-r correlation'});
@@ -50,6 +51,7 @@ case 'Load'
 	ax2=o.ax2pos;
 	ax3=o.ax3pos;
 	o=[];
+	o.doBARS = false;
 	o.ax1pos=ax1;
 	o.ax2pos=ax2;
 	o.ax3pos=ax3;
@@ -164,6 +166,8 @@ case 'Load'
 	%-----------------------------------------------------------------------------------------
 case 'Reparse'
 	%-----------------------------------------------------------------------------------------
+	o.doBARS = true;
+	
 	starttrial=get(gh('StartTrialMenu'),'Value');
 	endtrial=get(gh('EndTrialMenu'),'Value');
 	binwidth=str2num(get(gh('BinWidthEdit'),'String'));
@@ -333,7 +337,7 @@ case 'Normalise'
 	%-----------------------------------------------------------------------------------------
 case 'Measure'
 	%-----------------------------------------------------------------------------------------
-	
+
 	set(gh('StatsText'),'String','');
 	if isempty(o)
 		errordlg('Sorry, you have not loaded any data yet!')
@@ -559,13 +563,6 @@ case 'Measure'
 	%now rerun to normalise and generate matrix	
 	for i=1:o.cell1.xrange
 		for j=1:o.cell1.yrange		
-% 			if get(gh('SpontaneousBox'),'Value')==1
-% 				if o.position1(j,i)<1
-% 					o.cell1spike{j,i}=[];
-% 				elseif o.position2(j,i)<1
-% 					o.cell2spike{j,i}=[];
-% 				end
-% 			end
 			switch(get(gh('OPMeasureMenu'),'Value'))
 				case 1 %raw spikes						
 					o.cell1mat(j,i)=length(o.cell1spike{j,i}) / length(o.cell1sums{j,i});
@@ -578,6 +575,16 @@ case 'Measure'
 					else
 						o.cell1mat(j,i)=mean(o.cell1spike{j,i});
 						o.cell2mat(j,i)=mean(o.cell2spike{j,i});
+					end
+					if o.doBARS == true
+						time = o.cell1time{j,i};
+						psth = o.cell1psth{j,i};
+						trials = length(o.cell1sums{j,i});
+						o.bars1{j,i} = doBARS(time,psth,trials);
+						time = o.cell2time{j,i};
+						psth = o.cell2psth{j,i};
+						trials = length(o.cell2sums{j,i});
+						o.bars2{j,i} = doBARS(time,psth,trials);
 					end
 					set(gh('StatsText'),'String','Plotting the mean response, possibly normalised');
 				case 3 %isi
@@ -630,17 +637,23 @@ case 'Measure'
 		m=max([o.peak o.peak2]);
 		for i=1:o.cell1.xrange*o.cell1.yrange
 			subplot(o.cell1.yrange,o.cell1.xrange,i);
-			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-');
+			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-','LineWidth',1.5);
+			hold on
 			if isfield(o,'spontaneous1') && o.spontaneous1 > -1
-				hold on
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1 o.spontaneous1],'Color',[0 0 0]);
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2 o.spontaneous2],'Color',[1 0 0]);
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(1) o.spontaneous1ci(1)],'Color',[0 0 0],'LineStyle','--');
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(1) o.spontaneous2ci(1)],'Color',[1 0 0],'LineStyle','--');
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(2) o.spontaneous1ci(2)],'Color',[0 0 0],'LineStyle','--');
 				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(2) o.spontaneous2ci(2)],'Color',[1 0 0],'LineStyle','--');
-				hold off
 			end
+			if isfield(o,'bars1') && ~isempty(o.bars1{i})
+				plot(o.bars1{i}.time_fine, o.bars1{i}.mean_fine,'ko-',o.bars1{i}.time_fine, o.bars1{i}.confBands_fine,'k--','LineWidth',1);
+			end
+			if isfield(o,'bars2') && ~isempty(o.bars2{i})
+				plot(o.bars2{i}.time_fine, o.bars2{i}.mean_fine,'ro-',o.bars2{i}.time_fine, o.bars2{i}.confBands_fine,'r--','LineWidth',1);
+			end
+			hold off
 			title([o.cell1names{i} ' \newline ' o.cell2names{i}])
 			xlabel('Time(s)')
 			ylabel('Firing Rate (Hz)')
@@ -2853,6 +2866,12 @@ switch data.numvars
 			p(i1,i2,1).hold('on')
 			h(2)=bar(time, bpsth, 1, 'r');
 			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
+			if isfield(o,'bars1') && ~isempty(o.bars1{i})
+				plot(o.bars1{i}.time_fine, o.bars1{i}.mean_fine,'k.-','LineWidth',1);
+			end
+			if isfield(o,'bars2') && ~isempty(o.bars2{i})
+				plot(o.bars2{i}.time_fine, o.bars2{i}.mean_fine,'r.-','LineWidth',1);
+			end
 			if i <= yrange
 				p(i1,i2,1).ylabel('Firing Rate (Hz)');
 				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'XGrid','on','YGrid','on');
@@ -2890,12 +2909,29 @@ switch data.numvars
 		p.margin = [15 15 5 15];
 		p.fontsize = 12;
 		p.de.fontsize = 10;
-		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
-		%[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
-		%[ax,h3]=suplabel(t ,'t');
-		%set(h1,'FontSize',12)
-		% because we 'defer'red, we have to refresh.
-		%p.refresh();
-		
 end
 set(gcf,'Renderer','painters','ResizeFcn',[]);
+
+function bars = doBARS(time,psth,trials)
+try
+		bars = [];
+		bp = defaultParams();
+		wh = waitbar(0.3,'Calculating BARS...');
+		bars = barsP(psth,[time(1) time(end)],trials,bp);
+		close(wh);
+		bars.bp = bp;
+		bars.psth = psth;
+		bars.time = time;
+
+		t1=bars.time(1);
+		t2=bars.time(end);
+
+		bars.time_fine = linspace(t1,t2,length(bars.mean_fine));
+
+		bars.trials = trials;
+catch ME
+	disp(ME);
+	for i = 1:length(ME.stack)
+		disp(ME.stack(i));
+	end
+end
