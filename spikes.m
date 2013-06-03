@@ -316,7 +316,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 						'*.*','All Files'},...
 						'Select File Type to Load:');
 					if isequal(fn,0)||isequal(pn,0);set(gh('LoadText'),'String','No Data Loaded');helpdlg('No File Selected or Found!');error('File was not selected by user / not found.');return;end
-					[p,basefilename,e]=fileparts([pn fn]);
+					[p,basefilename,e]=fileparts([pn fn]); sv.dataloadpath=pn;
 				end
 				%we have a file so we reset our data and axes
 				if exist('data','var') && isfield(data,'zs')
