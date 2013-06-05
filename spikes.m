@@ -591,6 +591,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 						x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 				end
 				x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+				x.idx = 1;
 				data.raw{1}=x;
 				if ~isempty(x.error); data.error=x.error; end
 				
@@ -732,6 +733,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 					end
 					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+					x.idx = i;
 					data.raw{i}=x;
 					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
 					
@@ -880,6 +882,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 					end
 					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+					x.idx = i;
 					data.raw{i}=x;
 					if ~isempty(x.error); data.error=cat(1,data.error,x.error); end
 					
@@ -1037,6 +1040,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							x=lsd2(filename,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 					end
 					x=burst(x,silence_before_burst,first_isi,subsequent_isi,number_burst);
+					x.idx = i;
 					data.raw{yi,xi,zi}=x;
 					%lets make sure our modulation selection is valid
 					if isempty(sv.StartMod) || sv.StartMod<1 || sv.StartMod>sv.EndMod
@@ -1647,6 +1651,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				%                 o=String{Value};
 				%                 t=[ data.runname '[' o ':' m '-' n ']'];
 				%             end
+				
 				MakeTitle('vector');
 				sv.titlehandle=title(['\fontname{Helvetica}\fontsize{12}' data.matrixtitle]);
 				set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');

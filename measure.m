@@ -23,6 +23,7 @@ if ~exist('psthtype','var')
 end
 
 h=figure;
+figpos(1,[1200 1200]);
 t=0;
 
 time=data.time{yhold,xhold,zhold};
