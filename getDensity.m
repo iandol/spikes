@@ -1,4 +1,4 @@
-classdef getDensity < handle
+	classdef getDensity < handle
 	%GETDENSITY computes bootstrapped density estimates and full stats for two
 	%groups. You can pass a set of cases to the function and it will compute
 	%statistics automagically for all cases as well. There are numerous
@@ -86,6 +86,8 @@ classdef getDensity < handle
 		scatterBoxType = 'bootstrap'
 		%> for multiple columns only run a subset; empty runs all.
 		index = []
+		%> normalise (Z-score) values to plot on scatter?
+		normaliseScatter = false;
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -417,9 +419,15 @@ classdef getDensity < handle
 							xcolout = xcol;
 							ycolout = ycol;
 					end
-					
-					mn = min(min(xcol),min(ycol));
-					mx = max(max(xcol),max(ycol));
+					if obj.normaliseScatter == true
+						xcolout = zscore(xcolout);
+						ycolout = zscore(ycolout);
+						mn = min(min(zscore(xcol)),min(zscore(ycol)));
+						mx = max(max(zscore(xcol)),max(zscore(ycol)));
+					else
+						mn = min(min(xcol),min(ycol));
+						mx = max(max(xcol),max(ycol));
+					end
 					if obj.scaleaxes == true
 						axrange = [(mn - (mn/20)) (mx + (mx/20)) (mn - (mn/20)) (mx + (mx/20))];
 					else
@@ -434,6 +442,7 @@ classdef getDensity < handle
 						colours = [0 0 0];
 						t = '';
 					end
+					
 					hold on
 					if ~isempty(casesLocal)
 						gscatter(xcolout,ycolout,casesLocal,'krbgmyc','o');
@@ -466,8 +475,13 @@ classdef getDensity < handle
 					if obj.scaleaxes == true
 						set(gca,'XTick',get(gca,'YTick'),'XTickLabel',get(gca,'YTickLabel'));
 					end
-					pn(py,px).xlabel(obj.legendtxt{1})
-					pn(py,px).ylabel(obj.legendtxt{2})
+					if obj.normaliseScatter == true
+						pn(py,px).xlabel(['ZScore ' obj.legendtxt{1}])
+						pn(py,px).ylabel(['ZScore ' obj.legendtxt{2}])
+					else
+						pn(py,px).xlabel(obj.legendtxt{1})
+						pn(py,px).ylabel(obj.legendtxt{2})
+					end
 					pn(py,px).title(['Prson:' sprintf('%0.2g',r) '(p=' sprintf('%0.4g',p) ') | Spman:' sprintf('%0.2g',r2) '(p=' sprintf('%0.4g',p2) ') ' t]);
 					hold off
 					grid on

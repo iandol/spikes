@@ -330,15 +330,16 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				else
 					pR=[];
 				end
-				data=struct;
+				data = struct();
 				data.zipload = false;
-				data.zs=zs;
-				data.pR=pR;
+				data.zs = zs;
+				data.pR = pR;
 				cla;  reset(gca);  set(gca,'Tag','SpikeFigMainAxes');	%this resets the axis
 				set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
 				automeasure=0;
 				
 				if regexpi(e, '\.plx')
+					cd(pn);
 					set(gh('LoadText'),'String','Parsing PLX Files, please wait...')
 					data.wrapped=2; %force off wrapping;
 					sv.Wrapped=2;
@@ -574,7 +575,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				data.fftinfnnpoints=[];				%to store infinity and Not-A-Number values for fft ratios
 				data.textload=0;
 				data.areaplot=0;
-				
+				data.tr = [1];
 				filename = [basefilename '.1'];
 				if strcmpi(data.filetype,'plx');
 				
@@ -710,7 +711,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				data.fftinfnnpoints=[];				%to store infinity and Not-A-Number values for fft ratios
 				data.textload=0;
 				data.areaplot=0;
-				
+				data.tr = [];
 				%h=waitbar(0,'Processing: binning data and finding bursts...');
 				for i=firstnumber:lastnumber
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
@@ -725,6 +726,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					end
 					switch data.filetype
 						case 'plx'
+							data.tr = [data.tr i];
 							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 							data.names{i} = ['IN:' num2str(i) '>' x.name];
 						case 'doc'
@@ -860,7 +862,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				data.measured=0;		   					%so rowland knows if someone has
 				data.textload=0;
 				data.areaplot=0;
-				
+				data.tr = [];
 				for i=firstnumber:lastnumber
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(lastnumber)]);
 					drawnow;
@@ -874,6 +876,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					end
 					switch data.filetype
 						case 'plx'
+							data.tr = [data.tr i];
 							x=data.pR.exportToRawSpikes(i,sv.firstunit,sv.StartTrial,sv.EndTrial,data.trialtime,data.modtime,cuttime);
 							data.names{i} = ['#' num2str(i) '>' x.name];
 						case 'doc'
@@ -1016,6 +1019,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				index=data.meta.matrix(:,2:4); %the list of variable values for each file
 				tr = 1:(data.xrange*data.yrange*data.zrange);
 				tr = [tr(mod(tr,2)>0), tr(mod(tr,2)==0)];
+				data.tr = tr;
 				for i=1:data.xrange*data.yrange*data.zrange
 					set(gh('LoadText'),'String',['Loading - ' num2str(i) ' of ' num2str(data.xrange*data.yrange*data.zrange)]);
 					drawnow;
@@ -2917,6 +2921,39 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		data.areaplot=0;
 		ChoosePlot;
 		
+		%-----------------------------------------------------------------------------------------
+	case 'SaccadeTimes'
+		%-----------------------------------------------------------------------------------------
+		if strcmpi(data.filetype,'plx') && isa(data.pR,'plxReader')
+			eA = data.pR.eA;
+			if isempty(eA.vars)
+				error('No eye variable data present!')
+			end
+			mint = sv.mint;
+			maxt = sv.maxt;
+			
+			g = getDensity;
+			g.normaliseScatter = true;
+			g.legendtxt = {'Spikes', 'SaccadeTimes'};
+			
+			for i = 1:length(eA.vars)
+				raw = data.raw{i};
+				eyeraw = eA.vars(data.tr(i));
+				
+				[~,x] = finderror(raw,'SE',mint,maxt,data.wrapped,0);
+				y = eyeraw.sT';
+				y = y(1:length(x));
+				name = [raw.name(1:6) '_Eyevar_' eyeraw.name]; 
+				name = regexprep(name,'\#','');
+				name = regexprep(name,'\|','');
+				name = regexprep(name,' ','_');
+				g.columnlabels = {name};
+				g.x = x;
+				g.y = y;
+				run(g);
+			end
+			
+		end
 		%------------------------------------------Load Text---------------------------------
 	case 'Load Text'
 		%-----------------------------------------------------------------------------------------
