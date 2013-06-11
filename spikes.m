@@ -2926,6 +2926,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 		if strcmpi(data.filetype,'plx') && isa(data.pR,'plxReader')
 			eA = data.pR.eA;
+			rtLimits = eA.rtLimits;
 			if isempty(eA.vars)
 				error('No eye variable data present!')
 			end
@@ -2939,9 +2940,18 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			for i = 1:length(eA.vars)
 				raw = data.raw{i};
 				eyeraw = eA.vars(data.tr(i));
+				eyeraw.raw = raw;
 				
 				[~,x] = finderror(raw,'SE',mint,maxt,data.wrapped,0);
+				eyeraw.spikes = x;
 				y = eyeraw.sT';
+				
+				if ~isempty(rtLimits)
+					idx = find(y > rtLimits(1) & y < rtLimits(2));
+					y = y(idx);
+					x = x(idx);
+				end
+				
 				y = y(1:length(x));
 				name = [raw.name(1:6) '_Eyevar_' eyeraw.name]; 
 				name = regexprep(name,'\#','');
@@ -2951,6 +2961,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				g.x = x;
 				g.y = y;
 				run(g);
+				eyeraw.x=x;
+				eyeraw.y=y;
+				eyeraw.rtLimits = rtLimits;
+				assignin('base',['eyeraw' num2str(i)], eyeraw);
 			end
 			
 		end
