@@ -2953,7 +2953,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				end
 				
 				y = y(1:length(x));
-				name = [raw.name(1:6) '_Eyevar_' eyeraw.name]; 
+				name = [raw.name(1:6) '_EyeVar' eyeraw.name]; 
 				name = regexprep(name,'\#','');
 				name = regexprep(name,'\|','');
 				name = regexprep(name,' ','_');
