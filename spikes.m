@@ -2935,6 +2935,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			maxt = sv.maxt;
 			
 			g = getDensity;
+			g.verbose = false;
 			g.normaliseScatter = true;
 			g.legendtxt = {'Spikes', 'SaccadeTimes'};
 			
@@ -2948,7 +2949,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				eyeraw.spikes = x;
 				y = eyeraw.sT';
 				
-				if length(x) > length(y)
+				if length(y) > length(x)
 					y = y(1:length(x));
 				end
 				
@@ -2966,11 +2967,14 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					eyeraw.yhigh = y(highidx);
 					eyeraw.xlow = x(lowidx);
 					eyeraw.xhigh = x(highidx);
+					eyeraw.xlow_mean = mean(eyeraw.xlow);
+					eyeraw.xhigh_mean = mean(eyeraw.xhigh);
 					try
 						eyeraw.highlow_p = ranksum(eyeraw.xlow,eyeraw.xhigh);
 					catch
 						eyeraw.highlow_p = 1;
 					end
+					fprintf('VARIABLE %g HIGH/LOW RT P = %g\n',i, eyeraw.highlow_p);
 				end
 				
 				y = y(1:length(x));
