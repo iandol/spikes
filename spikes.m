@@ -2985,7 +2985,12 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				g.columnlabels = {name};
 				g.x = x;
 				g.y = y;
-				run(g);
+				if isempty(y) || isempty(x)
+					eyeraw.error = 'SORRY No saccades to analyse for this variable!';
+					fprintf('\n%s\n',eyeraw.error)
+				else
+					run(g);
+				end
 				eyeraw.x=x;
 				eyeraw.y=y;
 				eyeraw.rtLimits = rtLimits;
