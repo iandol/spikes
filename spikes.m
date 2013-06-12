@@ -2927,6 +2927,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		if strcmpi(data.filetype,'plx') && isa(data.pR,'plxReader')
 			eA = data.pR.eA;
 			rtLimits = eA.rtLimits;
+			rtDivision = eA.rtDivision;
 			if isempty(eA.vars)
 				error('No eye variable data present!')
 			end
@@ -2951,6 +2952,16 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					y = y(idx);
 					x = x(idx);
 				end
+				
+				lowidx = find(y <= rtDivision);
+				highidx = find(y > rtDivision);
+				
+				eyeraw.ylow = y(lowidx);
+				eyeraw.yhigh = y(highidx);
+				eyeraw.xlow = x(lowidx);
+				eyeraw.xhigh = x(highidx);
+				
+				eyeraw.highlow_p = ranksum(xlow,xhigh);
 				
 				y = y(1:length(x));
 				name = [raw.name(1:6) '_EyeVar' eyeraw.name]; 
