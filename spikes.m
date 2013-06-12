@@ -2944,8 +2944,13 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				eyeraw.raw = raw;
 				
 				[~,x] = finderror(raw,'SE',mint,maxt,data.wrapped,0);
+				
 				eyeraw.spikes = x;
 				y = eyeraw.sT';
+				
+				if length(x) > length(y)
+					y = y(1:length(x));
+				end
 				
 				if ~isempty(rtLimits)
 					idx = find(y > rtLimits(1) & y < rtLimits(2));
@@ -2953,15 +2958,20 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					x = x(idx);
 				end
 				
-				lowidx = find(y <= rtDivision);
-				highidx = find(y > rtDivision);
-				
-				eyeraw.ylow = y(lowidx);
-				eyeraw.yhigh = y(highidx);
-				eyeraw.xlow = x(lowidx);
-				eyeraw.xhigh = x(highidx);
-				
-				eyeraw.highlow_p = ranksum(xlow,xhigh);
+				if ~isempty(rtDivision)
+					lowidx = find(y <= rtDivision);
+					highidx = find(y > rtDivision);
+
+					eyeraw.ylow = y(lowidx);
+					eyeraw.yhigh = y(highidx);
+					eyeraw.xlow = x(lowidx);
+					eyeraw.xhigh = x(highidx);
+					try
+						eyeraw.highlow_p = ranksum(eyeraw.xlow,eyeraw.xhigh);
+					catch
+						eyeraw.highlow_p = 1;
+					end
+				end
 				
 				y = y(1:length(x));
 				name = [raw.name(1:6) '_EyeVar' eyeraw.name]; 
