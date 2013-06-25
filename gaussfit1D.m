@@ -13,7 +13,7 @@ switch(action)
 case 'Initialize' 
     
     gdat=[];
-    gaussfig1d
+    gaussfig1D
     
     gdat.c1.mat=o.cell1.matrix;
     gdat.c2.mat=o.cell2.matrix;

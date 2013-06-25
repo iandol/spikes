@@ -2994,7 +2994,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				eyeraw.x=x;
 				eyeraw.y=y;
 				eyeraw.rtLimits = rtLimits;
-				assignin('base',['eyeraw' num2str(i)], eyeraw);
+				assignin('base',['eyeraw' num2str(data.tr(i))], eyeraw);
 			end
 			
 		end

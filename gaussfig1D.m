@@ -1,4 +1,4 @@
-function varargout = gaussfig1d(varargin)
+function varargout = gaussfig1D(varargin)
 % GAUSSFIG Application M-file for gaussfig.fig
 %    FIG = GAUSSFIG launch gaussfig GUI.
 %    GAUSSFIG('callback_name', ...) invoke the named callback.
