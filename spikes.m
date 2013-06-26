@@ -4325,7 +4325,7 @@ switch data.numvars
 				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
 			end
 			axis([data.time{i}(mini) data.time{i}(maxi) 0 mm]);
-			text(data.time{i}(mini), (mm-mm/20), data.names{i},'FontSize',12,'Color',[0.7 0.7 0.7]);
+			text(data.time{i}(mini), (mm-mm/40), data.names{i},'FontSize',12,'FontWeight','bold','Color',[0.4 0.4 0.4]);
 			if sv.plotBARS == 1
 				wh=waitbar(0.3,'Calculating BARS, please wait...');
 				trials = data.raw{i}.numtrials;
