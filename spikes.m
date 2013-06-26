@@ -4245,7 +4245,7 @@ switch data.numvars
 				set(gca,'XTickLabel',[]);
 			end
 			set(gca,'TickLength',[0.01 0.01],'TickDir','in','YTickLabel',[]);
-			text(data.time{1}(mini),(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
+			text(data.time{1}(mini),(m-m/10), data.names{data.xindex(i)},'FontSize',11,'Color',[0.3 0.3 0.3],'FontWeight','bold');
 			ylabel(num2str(data.xvalues(i)));
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
 			p(i,1,1,1).hold('off')
@@ -4325,7 +4325,7 @@ switch data.numvars
 				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
 			end
 			axis([data.time{i}(mini) data.time{i}(maxi) 0 mm]);
-			text(data.time{i}(mini), (mm-mm/40), data.names{i},'FontSize',12,'FontWeight','bold','Color',[0.4 0.4 0.4]);
+			text(data.time{i}(mini), mm-(mm/40), data.names{i},'FontSize',12,'FontWeight','bold','BackgroundColor',[0.3 0.3 0.3],'Color',[1 1 0]);
 			if sv.plotBARS == 1
 				wh=waitbar(0.3,'Calculating BARS, please wait...');
 				trials = data.raw{i}.numtrials;
