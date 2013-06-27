@@ -814,9 +814,9 @@ case 'Spontaneous'
 		t={'Will Measure Spontaneous at the location indicated by the Held X / Y Variable Position';'';'';'You Chose';['X = ' num2str(o.cell1.xvalues(xhold))];['Y = ' num2str(o.cell1.yvalues(yhold))]};
 		[t1,psth]=binit(raw1,binwidth*10,1,inf,starttrial,endtrial,wrapped);
 		[t2,psth2]=binit(raw2,binwidth*10,1,inf,starttrial,endtrial,wrapped);
-		
-		psth = converttotime(psth, binwidth, o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)}.numtrials, o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)}.nummods, wrapped);
-		psth2 = converttotime(psth2, binwidth, o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)}.numtrials, o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)}.nummods, wrapped);
+	
+		psth = converttotime(psth, binwidth, o.cell1.numtrials, o.cell1.nummods, wrapped);
+		psth2 = converttotime(psth2, binwidth, o.cell2.numtrials, o.cell2.nummods, wrapped);
 		
 		[mint,maxt]=measureq(t1,psth,binwidth,psth2,'Spontaneous Measurement Range?:');
 	end

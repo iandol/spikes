@@ -13,12 +13,11 @@ function [out,trials]=converttotime(in,binwidth,trials,mods,wrapped)
 		wrapped = data.wrapped;
 	end
 	
-	in = (in/binwidth)*1000;
+	out = (in/binwidth)*1000;
 	if wrapped==1 %wrapped
 		trials = trials*mods;
-		in=in/trials; %we have to get the values for an individual trial
+		out=out/trials; %we have to get the values for an individual trial
 	else
-		in=in/trials;
+		out=out/trials;
 	end
-	out = in;
 end
