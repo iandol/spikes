@@ -1,13 +1,17 @@
-function [mint,maxt]=measureq(time,psth,binwidth,psth2)
+function [mint,maxt]=measureq(time,psth,binwidth,psth2,name)
 
 % This helper function is called via Spikes to get a time window
 % for further analysis, this one is simpler than measure.
+
+if ~exist('name','var')
+	name='Please Select the Area of PSTH for Analysis:';
+end
 
 h=figure;
 figpos(1,[1200 1200]);
 t=0;
 
-set(gcf,'Name','Please Select the Area of PSTH for Analysis:','NumberTitle','off')
+set(gcf,'Name',name,'NumberTitle','off')
 
 if nargin==3
    bar(time,psth,1,'k');

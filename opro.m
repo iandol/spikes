@@ -201,11 +201,11 @@ case 'Reparse'
 	o.fano1 = [];
 	o.fano2 = [];
 	
-	o.fano1 = fanoPlotter;
-	o.fano2 = fanoPlotter;
+	%o.fano1 = fanoPlotter;
+	%o.fano2 = fanoPlotter;
 	
-	o.fano1.convertSpikesFormat(o.cell1, map{1});
-	o.fano2.convertSpikesFormat(o.cell2, map{2});
+	%o.fano1.convertSpikesFormat(o.cell1, map{1});
+	%o.fano2.convertSpikesFormat(o.cell2, map{2});
 	
 	for i = 1:2
 		c = o.(['cell' num2str(i)]);
@@ -293,10 +293,10 @@ case 'Reparse'
 	opro('Measure')
 	updategui()
 	
-	o.fano1.analyse
-	set(gcf,'Name','FanoM CELL 1')
-	o.fano2.analyse
-	set(gcf,'Name','FanoM CELL 2')
+	%o.fano1.analyse
+	%set(gcf,'Name','FanoM CELL 1')
+	%o.fano2.analyse
+	%set(gcf,'Name','FanoM CELL 2')
 	
 	%-----------------------------------------------------------------------------------------
 case 'Normalise'
@@ -818,7 +818,7 @@ case 'Spontaneous'
 		psth = converttotime(psth, binwidth, o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)}.numtrials, o.cell1.raw{o.cell1.yindex(yhold),o.cell1.xindex(xhold)}.nummods, wrapped);
 		psth2 = converttotime(psth2, binwidth, o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)}.numtrials, o.cell2.raw{o.cell2.yindex(yhold),o.cell2.xindex(xhold)}.nummods, wrapped);
 		
-		[mint,maxt]=measureq(t1,psth,binwidth,psth2);
+		[mint,maxt]=measureq(t1,psth,binwidth,psth2,'Spontaneous Measurement Range?:');
 	end
 	
 	if (sp1==-1 || sp2==-1) %only if nothing input
