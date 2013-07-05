@@ -30,7 +30,7 @@ case 'Initialize'
 	set(0,'DefaultAxesTickDirMode','manual');
 	h=opro_UI; %this is the GUI figure
 	figpos(1)
-	set(h,'Name', 'Orban-Pro Spike Statistics V1.91');
+	set(h,'Name', 'Orban-Pro Spike Statistics V1.96');
 	set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance';'M: Fano T-test';'M: Fano Wilcoxon';'M: Fano Paired Wilcoxon';'M: Fano Spearman';'---------';'Column: Spontaneous';'---------';'I: Paired T-test';'I: Paired Sign Test';'I: Wilcoxon Rank Sum';'I: Wilcoxon Paired Test';'I: Spearman Correlation';'I: Pearsons Correlation';'I: 1-Way Anova';'I: Kolmogorov-Smirnof Distribution Test'});
 	set(gh('NormaliseMenu'),'String',{'none';'% of Max';'% of 3 Bin Max';'Z-Score'});
 	set(gh('OPPlotMenu'),'String',{'p-value';'Hypothesis Test';'r correlation';'r2 correlation';'1-r correlation'});
@@ -2471,7 +2471,7 @@ case 'OrbanizeIt'
 							p=1;
 						end	
 					case 'isi'
-						[c1,c2]=doboot(boottype,nboot,alpha,o.cell1sums{i},o.cell2sums{i})
+						[c1,c2]=doboot(boottype,nboot,alpha,o.cell1sums{i},o.cell2sums{i});
 						if (c1(2)<c2(1) || c2(2)<c1(1))
 							h=1;
 							p=0.04;
@@ -2480,7 +2480,7 @@ case 'OrbanizeIt'
 							p=1;
 						end	
 					case 'isih'
-						[c1,c2]=doboot(boottype,nboot,alpha,o.cell1spike{i},o.cell2spike{i})
+						[c1,c2]=doboot(boottype,nboot,alpha,o.cell1spike{i},o.cell2spike{i});
 						if (c1(2)<c2(1) || c2(2)<c1(1))
 							h=1;
 							p=0.04;
