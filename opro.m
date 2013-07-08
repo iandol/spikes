@@ -29,8 +29,7 @@ case 'Initialize'
 	set(0,'DefaultAxesTickDir','out');
 	set(0,'DefaultAxesTickDirMode','manual');
 	h=opro_UI; %this is the GUI figure
-	figpos(1)
-	set(h,'Name', 'Orban-Pro Spike Statistics V1.96');
+	set(h,'Name', 'Orban Pro Spike Statistics V1.98');
 	set(gh('OPStatsMenu'),'String',{'1D Gaussian';'2D Gaussian';'Vector';'---------';'M: Dot Product';'M: Spearman Correlation';'M: Pearsons Correlation';'M: 1-Way Anova';'M: Paired T-test';'M: Kolmogorov-Smirnof Distribution Test';'M: Ansari-Bradley Variance';'M: Fano T-test';'M: Fano Wilcoxon';'M: Fano Paired Wilcoxon';'M: Fano Spearman';'---------';'Column: Spontaneous';'---------';'I: Paired T-test';'I: Paired Sign Test';'I: Wilcoxon Rank Sum';'I: Wilcoxon Paired Test';'I: Spearman Correlation';'I: Pearsons Correlation';'I: 1-Way Anova';'I: Kolmogorov-Smirnof Distribution Test'});
 	set(gh('NormaliseMenu'),'String',{'none';'% of Max';'% of 3 Bin Max';'Z-Score'});
 	set(gh('OPPlotMenu'),'String',{'p-value';'Hypothesis Test';'r correlation';'r2 correlation';'1-r correlation'});
@@ -2735,8 +2734,10 @@ imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1.matrix);
 set(gca,'YDir','normal')
 %colormap(hot);
 set(gca,'Tag','Cell1Axis');	
-colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
-set(gh('Cell1Axis'),'Position',o.ax1pos);
+colorbar('peer',gh('Cell1Axis'),'FontSize',7);
+if ~isempty(o.ax1pos) & length(o.ax1pos)==4
+	set(gh('Cell1Axis'),'Position',o.ax1pos);
+end
 if length(o.cell1.names) < 3
 	title(o.cell1.names,'FontSize',10)
 end
@@ -2756,8 +2757,10 @@ imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
 set(gca,'YDir','normal')
 %colormap(hot);
 set(gca,'Tag','Cell2Axis');
-colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
-set(gh('Cell2Axis'),'Position',o.ax2pos);
+colorbar('peer',gh('Cell2Axis'),'FontSize',7);
+if ~isempty(o.ax2pos) & length(o.ax2pos)==4
+	set(gh('Cell2Axis'),'Position',o.ax2pos);
+end
 if length(o.cell2.names) < 3
 	title(o.cell2.names,'FontSize',10)
 end
@@ -2773,7 +2776,9 @@ end
 axes(gh('OutputAxis'));
 plot(0,0);
 set(gca,'Tag','OutputAxis');
-set(gh('OutputAxis'),'Position',o.ax3pos);	
+if ~isempty(o.ax3pos) & length(o.ax3pos)==4
+	set(gh('OutputAxis'),'Position',o.ax3pos);	
+end
 % 	if strcmp(o.filetype,'mat')
 % 		%helpdlg('Both cells have been loaded, select your analysis routine, and measure the PSTH for the statistics');
 % 	else
