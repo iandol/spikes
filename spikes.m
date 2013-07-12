@@ -307,8 +307,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					sv.reload='no';
 				else %we need the user to specify a file
 					if isfield(sv,'dataloadpath') && exist(sv.dataloadpath,'dir');cd(sv.dataloadpath);end
-					[fn,pn]=uigetfile({'*.plx;*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.plx *.zip *.smr *.txt *.doc)'; ...
-						'*.plx','Plexon Data (PLX)';...
+					[fn,pn]=uigetfile({'*.plx;*.pl2;*.zip;*.smr;*.txt;*.doc','All Spikes Filetypes (*.plx *.pl2 *.zip *.smr *.txt *.doc)'; ...
+						'*.plx;*.pl2','Plexon Data (PLX)';...
 						'*.zip','VS RAW DATA File (ZIP)';...
 						'*.smr','VS RAW DATA File (SMR)';...
 						'*.txt','VSX Output File (TXT)'; ...
@@ -338,7 +338,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('SpikeMenu'),'Value',1); %resets the spike selector menu to all spikes
 				automeasure=0;
 				
-				if regexpi(e, '\.plx')
+				if regexpi(e, '\.pl(x|2)')
 					cd(pn);
 					set(gh('LoadText'),'String','Parsing PLX Files, please wait...')
 					data.wrapped=2; %force off wrapping;
@@ -444,7 +444,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		t=find(data.sourcepath==filesep);
 		if ~isempty(regexpi(data.sourcepath,'(smr|zip)'));
 			data.runname=[data.sourcepath((t(end-1))+1:end-4) ' | '];
-		elseif ~isempty(regexpi(data.sourcepath,'(plx)'));
+		elseif ~isempty(regexpi(data.sourcepath,'pl(x|2)'));
 			data.runname=[data.sourcepath((t(end)+1):end-4) ' | '];
 		else
 			t=find(data.sourcepath==filesep);
