@@ -2921,6 +2921,7 @@ function bars = doBARS(time,psth,trials)
 try
 		bars = [];
 		bp = defaultParams();
+		bp.use_logspline = false;
 		wh = waitbar(0.3,'Calculating BARS...');
 		bars = barsP(psth,[time(1) time(end)],trials,bp);
 		close(wh);
