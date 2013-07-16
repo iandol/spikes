@@ -51,70 +51,123 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function load(obj,varargin)
-			reset(obj);
-			
-		end
-		
-		% ===================================================================
-		%> @brief 
-		%>
-		%> @param
-		%> @return
-		% ===================================================================
-		function save(obj,varargin)
-			[file,path] = uiputfile('*.mat','Save Meta Analysis:');
-			obj.oldDir = pwd;
-			cd(path);
-			fgmet = obj;
-			save(file,fgmet);
-			clear fgmet;
-			cd(obj.oldPath);
-		end
-		
-		% ===================================================================
-		%> @brief 
-		%>
-		%> @param
-		%> @return
-		% ===================================================================
 		function add(obj,varargin)
-			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose OPro source File');
-			if ~file
+			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose OPro source File','Multiselect','on');
+			if ~exist('file','var')
 				errordlg('No File Specified', 'Meta-Analysis Error')
 			end
-			tic
+	
 			cd(path);
-			load(file);
-			
-			idx = obj.nCells+1;
-			
-			for i = 1:2
-				obj.cells{idx,i}.name = o.(['cell' num2str(i) 'names']){1};
-				obj.cells{idx,i}.time = o.(['cell' num2str(i) 'time']){1};
-				obj.cells{idx,i}.psth = o.(['cell' num2str(i) 'psth']){1};
-				obj.cells{idx,i}.mean_fine = o.(['bars' num2str(i)]){1}.mean_fine;
-				obj.cells{idx,i}.time_fine = o.(['bars' num2str(i)]){1}.time_fine;
+			if ischar(file)
+				file = {file};
 			end
 			
-			obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
-			obj.maxt = [obj.maxt obj.cells{idx,1}.time(end)];
-			obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1)))];
+			tic
+			for ll = 1:length(file)
 			
-			t = [obj.cells{idx,1}.name '>>>' obj.cells{idx,2}.name];
-			t = regexprep(t,'[\|\s][\d\-\.]+','');
-			t = [file ':' t];
-			obj.list{idx} = t;
+				load(file{ll});
 			
-			set(obj.handles.list,'String',obj.list);
+				idx = obj.nCells+1;
+
+				for i = 1:2
+					obj.cells{idx,i}.name = o.(['cell' num2str(i) 'names']){1};
+					obj.cells{idx,i}.time = o.(['cell' num2str(i) 'time']){1};
+					obj.cells{idx,i}.psth = o.(['cell' num2str(i) 'psth']){1};
+					obj.cells{idx,i}.mean_fine = o.(['bars' num2str(i)]){1}.mean_fine;
+					obj.cells{idx,i}.time_fine = o.(['bars' num2str(i)]){1}.time_fine;
+				end
+
+				obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
+				obj.maxt = [obj.maxt obj.cells{idx,1}.time(end)];
+				obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1)))];
+
+				t = [obj.cells{idx,1}.name '>>>' obj.cells{idx,2}.name];
+				t = regexprep(t,'[\|\s][\d\-\.]+','');
+				t = [file{ll} ':' t];
+				obj.list{idx} = t;
+
+				set(obj.handles.list,'String',obj.list);
+
+				set(obj.handles.list,'Value',obj.nCells);
+
+				replot(obj);
+
+				clear o
+			
+			end
 			
 			fprintf('Cell loading took %.5g seconds\n',toc)
 			
-			set(obj.handles.list,'Value',obj.nCells)
+		end
+		
+		
+		% ===================================================================
+		%> @brief 
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function replot(obj,varargin)
+			if obj.nCells > 0
+				
+				
+				sel = get(obj.handles.list,'Value');
+				axes(obj.handles.axis1);
+				cla
+				plot(obj.cells{sel,1}.time,obj.cells{sel,1}.psth,'k-o');
+				hold on
+				plot(obj.cells{sel,2}.time,obj.cells{sel,2}.psth,'r-o');
+				hold off
+				title('Selected Cell')
+				xlabel('Time (ms)')
+				ylabel('Firing Rate (Hz)')
+
+				[psth1,psth2,time]=computeAverage(obj);
+				p1out = mean(psth1);
+				p2out = mean(psth2);
+				p1err = stderr(p1out,'SE',true);
+				p2err = stderr(p2out,'SE',true);
+				axes(obj.handles.axis2);
+				cla
+				areabar(time,p1out,p1err,[0.7 0.7 0.7],'k-o','MarkerFaceColor',[0 0 0]);
+				hold on
+				areabar(time,p2out,p2err,[1 0.7 0.7],'r-o','MarkerFaceColor',[1 0 0]);
+				title('Population PSTH')
+				xlabel('Time (ms)')
+				ylabel('Firing Rate (normalised)')
 			
-			replot(obj);
+			end
 			
-			clear o
+		end
+		
+		% ===================================================================
+		%> @brief 
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function load(obj,varargin)
+			
+			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose MetaAnalysis');
+			if ~ischar(file)
+				errordlg('No File Specified', 'Meta-Analysis Error');
+			end
+			
+			cd(path);
+			load(file);
+			if exist('fgmet','var') && isa(fgmet,'FGMeta')
+				reset(obj);
+				obj.cells = fgmet.cells;
+				obj.list = fgmet.list;
+				obj.mint = fgmet.mint;
+				obj.maxt = fgmet.maxt;
+				obj.deltat = fgmet.deltat;
+				set(obj.handles.list,'String',obj.list);
+				set(obj.handles.list,'Value',obj.nCells);
+				replot(obj);
+			end
+			
+			clear fgmet
 			
 		end
 		
@@ -142,37 +195,27 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function replot(obj,varargin)
-			if obj.nCells > 0
-				
-				sel = get(obj.handles.list,'Value');
-				axes(obj.handles.axis1);
-				cla
-				plot(obj.cells{sel,1}.time,obj.cells{sel,1}.psth,'k-o');
-				hold on
-				plot(obj.cells{sel,2}.time,obj.cells{sel,2}.psth,'r-o');
-				hold off
-				title('Selected Cell')
-				xlabel('Time (ms)')
-				ylabel('Firing Rate (Hz)')
-
-				
-				[psth1,psth2,time]=computeAverage(obj);
-				p1out = mean(psth1);
-				p2out = mean(psth2);
-				p1err = stderr(p1out,'SE',true);
-				p2err = stderr(p2out,'SE',true);
-				axes(obj.handles.axis2);
-				cla
-				areabar(time,p1out,p1err)
-				hold on
-				areabar(time,p2out,p2err,[1 0.7 0.7],'r-o','MarkerFaceColor',[1 0 0])
-				title('Population PSTH')
-				xlabel('Time (ms)')
-				ylabel('Firing Rate (normalised)')
+		function remove(obj,varargin)
 			
+		end
+		
+		% ===================================================================
+		%> @brief 
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function save(obj,varargin)
+			[file,path] = uiputfile('*.mat','Save Meta Analysis:');
+			if ~ischar(file)
+				errordlg('No file selected...')
 			end
-			
+			obj.oldDir = pwd;
+			cd(path);
+			fgmet = obj;
+			save(file,'fgmet');
+			clear fgmet;
+			cd(obj.oldDir);
 		end
 		
 		% ===================================================================
@@ -182,7 +225,10 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function spawn(obj,varargin)
-			
+			h = figure;
+			figpos(1,[1000 800]);
+			set(h,'Color',[1 1 1]);
+			hh = copyobj(obj.handles.axis2,h);
 		end
 		
 		% ===================================================================
@@ -315,8 +361,10 @@ classdef FGMeta < handle
 
 			handles.controls = uiextras.VBox('Parent', handles.hbox,'Padding',0,'Spacing',0,'BackgroundColor',bgcolor);
 			handles.controls1 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',0,'BackgroundColor',bgcolor);
+			handles.controls1.RowSizes = [-1 -1];
 			handles.controls2 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',0,'BackgroundColor',bgcolor);
 			handles.controls3 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',0,'BackgroundColor',bgcolor);
+			handles.controls3.RowSizes = [-1 -1];
 			handles.loadbutton = uicontrol('Style','pushbutton',...
 				'Parent',handles.controls1,...
 				'Tag','FGloadbutton',...
@@ -337,6 +385,21 @@ classdef FGMeta < handle
 				'Tag','FGspawnbutton',...
 				'Callback',@obj.spawn,...
 				'String','Spawn');
+			handles.removebutton = uicontrol('Style','pushbutton',...
+				'Parent',handles.controls1,...
+				'Tag','FGremovebutton',...
+				'Callback',@obj.remove,...
+				'String','Remove');
+			handles.replotbutton = uicontrol('Style','pushbutton',...
+				'Parent',handles.controls1,...
+				'Tag','FGreplotbutton',...
+				'Callback',@obj.replot,...
+				'String','Replot');
+			handles.resetbutton = uicontrol('Style','pushbutton',...
+				'Parent',handles.controls1,...
+				'Tag','FGreplotbutton',...
+				'Callback',@obj.reset,...
+				'String','Reset');
 			handles.list = uicontrol('Style','listbox',...
 				'Parent',handles.controls2,...
 				'Tag','FGlistbox',...
@@ -350,7 +413,7 @@ classdef FGMeta < handle
 				'String','Independent Norm?');
 
 			set(handles.hbox,'Sizes', [-2 -1]);
-			set(handles.controls,'Sizes', [30 -10 -1]);
+			set(handles.controls,'Sizes', [50 -10 -1]);
 
 			obj.handles = handles;
 			obj.openUI = true;
