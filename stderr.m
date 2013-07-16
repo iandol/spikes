@@ -18,14 +18,21 @@ if size(type,1)>1
 	type=reshape(type,1,size(type,1));
 end
 
+if size(data,1) > 1 && size(data,2) > 1
+	nvals = size(data,1);
+else
+	nvals = length(data);
+end
+
 switch(type)
    
 case 'SE'
    err=nanstd(data);
-   error=sqrt(err.^2/length(data));  
+   error=sqrt(err.^2/nvals);  
 case '2SE'
    err=nanstd(data);
-   error=sqrt((err.^2/length(data)))*2;
+   error=sqrt(err.^2/nvals);
+   error = error*2;
 case 'SD'
    error=nanstd(data);
 case '2SD'

@@ -1,4 +1,4 @@
-function [ci,meanval,bstat]  = bootci(nboot,bootfun,varargin)
+function [ci,meanval,bstat]  = bootciold(nboot,bootfun,varargin)
 %BOOTCI Bootstrap Confidence Interval
 %   CI = BOOTCI(NBOOT,BOOTFUN,...) computes the 95 percent BCa bootstrap
 %   confidence interval of the statistic defined by the function BOOTFUN.
