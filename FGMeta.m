@@ -9,6 +9,7 @@ classdef FGMeta < handle
 		list@cell
 		mint@double
 		maxt@double
+		deltat@double
 		version@double = 1.01
 		mtime@double
 		mpsth@double
@@ -96,17 +97,9 @@ classdef FGMeta < handle
 				obj.cells{idx,i}.time_fine = o.(['bars' num2str(i)]){1}.time_fine;
 			end
 			
-			lst = {'psth';'mean_fine'};
-			for i = 1:length(lst)
-				max1 = max(obj.cells{idx,1}.(lst{i}));
-				max2 = max(obj.cells{idx,2}.(lst{i}));
-				maxx = max([max1 max2]);
-
-				obj.cells{idx,1}.(lst{i}) = obj.cells{idx,1}.(lst{i}) / maxx;
-				obj.cells{idx,2}.(lst{i}) = obj.cells{idx,2}.(lst{i}) / maxx;
-			end
 			obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
 			obj.maxt = [obj.maxt obj.cells{idx,1}.time(end)];
+			obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1)))];
 			
 			t = [obj.cells{idx,1}.name '>>>' obj.cells{idx,2}.name];
 			t = regexprep(t,'[\|\s][\d\-\.]+','');
@@ -115,11 +108,13 @@ classdef FGMeta < handle
 			
 			set(obj.handles.list,'String',obj.list);
 			
-			fprintf('Cell loading took %.2g seconds\n',toc)
+			fprintf('Cell loading took %.5g seconds\n',toc)
 			
 			set(obj.handles.list,'Value',obj.nCells)
 			
 			replot(obj);
+			
+			clear o
 			
 		end
 		
@@ -148,21 +143,35 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function replot(obj,varargin)
-			sel = get(obj.handles.list,'Value');
-			obj.handles.axistabs.SelectedChild=1;
-			axes(obj.handles.axis1);
-			cla
-			plot(obj.cells{sel,1}.time,obj.cells{sel,1}.psth,'k-o');
-			hold on
-			plot(obj.cells{sel,2}.time,obj.cells{sel,2}.psth,'r-o');
-			hold off
-			title('Selected Cell')
-			xlabel('Time (ms)')
-			ylabel('Firing Rate')
+			if obj.nCells > 0
+				
+				sel = get(obj.handles.list,'Value');
+				axes(obj.handles.axis1);
+				cla
+				plot(obj.cells{sel,1}.time,obj.cells{sel,1}.psth,'k-o');
+				hold on
+				plot(obj.cells{sel,2}.time,obj.cells{sel,2}.psth,'r-o');
+				hold off
+				title('Selected Cell')
+				xlabel('Time (ms)')
+				ylabel('Firing Rate (Hz)')
+
+				
+				[psth1,psth2,time]=computeAverage(obj);
+				p1out = mean(psth1);
+				p2out = mean(psth2);
+				p1err = stderr(p1out,'SE',true);
+				p2err = stderr(p2out,'SE',true);
+				axes(obj.handles.axis2);
+				cla
+				areabar(time,p1out,p1err)
+				hold on
+				areabar(time,p2out,p2err,[1 0.7 0.7],'r-o','MarkerFaceColor',[1 0 0])
+				title('Population PSTH')
+				xlabel('Time (ms)')
+				ylabel('Firing Rate (normalised)')
 			
-			computeAverage(obj);
-			
-			%obj.handles.axistabs.SelectedChild=2;
+			end
 			
 		end
 		
@@ -199,7 +208,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function quit(obj,varargin)
-			reset(obj)
+			reset(obj);
 			closeUI(obj);
 		end
 		
@@ -215,7 +224,50 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function computeAverage(obj)
+		function [psth1,psth2,time]=computeAverage(obj)
+			
+			time = [];
+			psth1 = [];
+			psth2 = [];
+			
+			mint = min(obj.mint);
+			maxt = min(obj.maxt);
+			
+			
+			for idx = 1:obj.nCells
+				time = obj.cells{idx,1}.time;
+				
+				tidx = find(time == maxt);
+				time = time(1:tidx);
+				
+				lst = {'psth'};
+				for i = 1:length(lst)
+					max1 = max(obj.cells{idx,1}.(lst{i}));
+					max2 = max(obj.cells{idx,2}.(lst{i}));
+					if get(obj.handles.normalisecells,'Value') == 0
+						maxx = max([max1 max2]);
+						psth1tmp = obj.cells{idx,1}.(lst{i}) / maxx;
+						psth2tmp = obj.cells{idx,2}.(lst{i}) / maxx;
+					else
+						psth1tmp = obj.cells{idx,1}.(lst{i}) / max1;
+						psth2tmp = obj.cells{idx,2}.(lst{i}) / max2;
+					end
+				end
+				
+				psth1tmp = psth1tmp(1:tidx);
+				psth2tmp = psth2tmp(1:tidx);
+				
+				if isempty(psth1)
+					psth1 = psth1tmp;
+					psth2 = psth2tmp;
+				else
+					psth1 = [psth1;psth1tmp];
+					psth2 = [psth2;psth2tmp];
+				end
+				
+			end
+			
+			time = time - 200;
 			
 		end
 	
@@ -292,6 +344,10 @@ classdef FGMeta < handle
 				'Max',100,...
 				'FontSize',13,...
 				'String',{});
+			handles.normalisecells = uicontrol('Style','checkbox',...
+				'Parent',handles.controls3,...
+				'Tag','FGnormalisecells',...
+				'String','Independent Norm?');
 
 			set(handles.hbox,'Sizes', [-2 -1]);
 			set(handles.controls,'Sizes', [30 -10 -1]);
