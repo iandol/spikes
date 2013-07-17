@@ -821,14 +821,14 @@ switch scell
 		wdiff=w1-w2;%wdiff is the width difference between each trial
 		[h,vp]=ttest(rho,0,alpha); %rho is vector difference between each trial
 		[h,wp]=ttest(wdiff,0,alpha);
-		vci=bootci(bootn,{@mean,rho},'alpha',alpha);
-		wci=bootci(bootn,{@mean,wdiff},'alpha',alpha);
-		rci=bootci(bootn,{@circmean,theta},'alpha',alpha);
+		vci=bootciold(bootn,{@mean,rho},'alpha',alpha);
+		wci=bootciold(bootn,{@mean,wdiff},'alpha',alpha);
+		rci=bootciold(bootn,{@circmean,theta},'alpha',alpha);
 		rci=rad2ang(rci,rectang,rotang);
-		[rthetadiffci,rthetadiff]=bootci(bootn,{@mean,(theta1zero-theta2zero)},'alpha',alpha); %compared to global or 0
+		[rthetadiffci,rthetadiff]=bootciold(bootn,{@mean,(theta1zero-theta2zero)},'alpha',alpha); %compared to global or 0
 		rthetadiffci=rad2ang(rthetadiffci); %we don't correct the angle as it is only the difference that is of interest
 		rthetadiff=rad2ang(rthetadiff); %we don't correct the angle as it is only the difference that is of interest
-		[rrhodiffci,rrhodiff]=bootci(bootn,{@mean,(rho1zero-rho2zero)},'alpha',alpha);%compared to global or 0
+		[rrhodiffci,rrhodiff]=bootciold(bootn,{@mean,(rho1zero-rho2zero)},'alpha',alpha);%compared to global or 0
 		
 		switch bootfun
 			case 1
@@ -836,72 +836,72 @@ switch scell
 				m2=mean(bootstrp(bootn,@mean,w1));
 				mm=mean(bootstrp(bootn,@mean,rho2));
 				mm2=mean(bootstrp(bootn,@mean,w2));
-				ci=bootci(bootn,{@mean,rho1},'alpha',alpha);
-				ci2=bootci(bootn,{@mean,w1},'alpha',alpha);
-				cii=bootci(bootn,{@mean,rho2},'alpha',alpha);
-				cii2=bootci(bootn,{@mean,w2},'alpha',alpha);
+				ci=bootciold(bootn,{@mean,rho1},'alpha',alpha);
+				ci2=bootciold(bootn,{@mean,w1},'alpha',alpha);
+				cii=bootciold(bootn,{@mean,rho2},'alpha',alpha);
+				cii2=bootciold(bootn,{@mean,w2},'alpha',alpha);
 			case 2
 				m=mean(bootstrp(bootn,@geomean,rho1));
 				m2=mean(bootstrp(bootn,@geomean,w1));
 				mm=mean(bootstrp(bootn,@geomean,rho2));
 				mm2=mean(bootstrp(bootn,@geomean,w2));
-				ci=bootci(bootn,{@geomean,rho1},'alpha',alpha);
-				ci2=bootci(bootn,{@geomean,w1},'alpha',alpha);
-				cii=bootci(bootn,{@geomean,rho2},'alpha',alpha);
-				cii2=bootci(bootn,{@geomean,w2},'alpha',alpha);
+				ci=bootciold(bootn,{@geomean,rho1},'alpha',alpha);
+				ci2=bootciold(bootn,{@geomean,w1},'alpha',alpha);
+				cii=bootciold(bootn,{@geomean,rho2},'alpha',alpha);
+				cii2=bootciold(bootn,{@geomean,w2},'alpha',alpha);
 			case 3
 				m=mean(bootstrp(bootn,@trimmean,rho1,5));
 				m2=mean(bootstrp(bootn,@trimmean,w1,5));
-				ci=bootci(bootn,{@trimmean,rho1,5},'alpha',alpha);
-				ci2=bootci(bootn,{@trimmean,w1,5},'alpha',alpha);
+				ci=bootciold(bootn,{@trimmean,rho1,5},'alpha',alpha);
+				ci2=bootciold(bootn,{@trimmean,w1,5},'alpha',alpha);
 				mm=mean(bootstrp(bootn,@trimmean,rho2,5));
 				mm2=mean(bootstrp(bootn,@trimmean,w2,5));
-				cii=bootci(bootn,{@trimmean,rho2,5},'alpha',alpha);
-				cii2=bootci(bootn,{@trimmean,w2,5},'alpha',alpha);
+				cii=bootciold(bootn,{@trimmean,rho2,5},'alpha',alpha);
+				cii2=bootciold(bootn,{@trimmean,w2,5},'alpha',alpha);
 			case 4
 				m=mean(bootstrp(bootn,@trimmean,rho1,10));
 				m2=mean(bootstrp(bootn,{@trimmean,w1,10}));
-				ci=bootci(bootn,{@trimmean,rho1,10},'alpha',alpha);
-				ci2=bootci(bootn,{@trimmean,w1,10},'alpha',alpha);
+				ci=bootciold(bootn,{@trimmean,rho1,10},'alpha',alpha);
+				ci2=bootciold(bootn,{@trimmean,w1,10},'alpha',alpha);
 				mm=mean(bootstrp(bootn,@trimmean,rho2,10));
 				mm2=mean(bootstrp(bootn,{@trimmean,w2,10}));
-				cii=bootci(bootn,{@trimmean,rho2,10},'alpha',alpha);
-				cii2=bootci(bootn,{@trimmean,w2,10},'alpha',alpha);
+				cii=bootciold(bootn,{@trimmean,rho2,10},'alpha',alpha);
+				cii2=bootciold(bootn,{@trimmean,w2,10},'alpha',alpha);
 			case 5
 				m=mean(bootstrp(bootn,{@trimmean,rho,25}));
 				m2=mean(bootstrp(bootn,{@trimmean,w,25}));
-				ci=bootci(bootn,{@trimmean,rho,25},'alpha',alpha);
-				ci2=bootci(bootn,{@trimmean,w,25},'alpha',alpha);
+				ci=bootciold(bootn,{@trimmean,rho,25},'alpha',alpha);
+				ci2=bootciold(bootn,{@trimmean,w,25},'alpha',alpha);
 				mm=mean(bootstrp(bootn,{@trimmean,rho1,25}));
 				mm2=mean(bootstrp(bootn,{@trimmean,w1,25}));
-				cii=bootci(bootn,{@trimmean,rho2,25},'alpha',alpha);
-				cii2=bootci(bootn,{@trimmean,w2,25},'alpha',alpha);
+				cii=bootciold(bootn,{@trimmean,rho2,25},'alpha',alpha);
+				cii2=bootciold(bootn,{@trimmean,w2,25},'alpha',alpha);
 			case 6
 				m=mean(bootstrp(bootn,{@std,rho}));
 				m2=mean(bootstrp(bootn,{@std,w}));
-				ci=bootci(bootn,{@std,rho},'alpha',alpha);
-				ci2=bootci(bootn,{@std,w},'alpha',alpha);
+				ci=bootciold(bootn,{@std,rho},'alpha',alpha);
+				ci2=bootciold(bootn,{@std,w},'alpha',alpha);
 				mm=mean(bootstrp(bootn,{@std,rho1}));
 				mm2=mean(bootstrp(bootn,{@std,w1}));
-				cii=bootci(bootn,{@std,rho2},'alpha',alpha);
-				cii2=bootci(bootn,{@std,w2},'alpha',alpha);
+				cii=bootciold(bootn,{@std,rho2},'alpha',alpha);
+				cii2=bootciold(bootn,{@std,w2},'alpha',alpha);
 		end
 		xcmean=mean(bootstrp(bootn,@mean,xx1));
-		xcci=bootci(bootn,{@mean,xx1},'alpha',alpha);
+		xcci=bootciold(bootn,{@mean,xx1},'alpha',alpha);
 		ycmean=mean(bootstrp(bootn,@mean,yy1));
-		ycci=bootci(bootn,{@mean,yy1},'alpha',alpha);
+		ycci=bootciold(bootn,{@mean,yy1},'alpha',alpha);
 		xdmean=mean(bootstrp(bootn,@mean,xx2));
-		xdci=bootci(bootn,{@mean,xx2},'alpha',alpha);
+		xdci=bootciold(bootn,{@mean,xx2},'alpha',alpha);
 		ydmean=mean(bootstrp(bootn,@mean,yy2));
-		ydci=bootci(bootn,{@mean,yy2},'alpha',alpha);
+		ydci=bootciold(bootn,{@mean,yy2},'alpha',alpha);
 		
 		xdiff=xx2-xx1;
 		ydiff=yy2-yy1;
 		
 		xdiffmean=mean(bootstrp(bootn,@mean,xdiff));
-		xdiffci=bootci(bootn,{@mean,xdiff},'alpha',alpha);
+		xdiffci=bootciold(bootn,{@mean,xdiff},'alpha',alpha);
 		ydiffmean=mean(bootstrp(bootn,@mean,ydiff));
-		ydiffci=bootci(bootn,{@mean,ydiff},'alpha',alpha);
+		ydiffci=bootciold(bootn,{@mean,ydiff},'alpha',alpha);
 		
 % 		tit=['Vp:' num2str(vp) ' Wp:' num2str(wp) ' Vci: ' num2str(vci(1)) ':' num2str(vci(2)) ' Wci: ' num2str(wci(1)) ':' num2str(wci(2)) ' rci: ' num2str(rci(1)) ':' num2str(rci(2))];
 % 		tit=[tit '\newline vector: ' num2str(ci(1)) '|' num2str(m) '|' num2str(ci(2)) ' > ' num2str(cii(1)) '|' num2str(mm) '|' num2str(cii(2))];
@@ -925,33 +925,33 @@ switch scell
 			case 1
 				m=mean(bootstrp(bootn,@mean,rho));
 				m2=mean(bootstrp(bootn,@mean,w));
-				ci=bootci(bootn,{@mean,rho},'alpha',alpha);
-				ci2=bootci(bootn,{@mean,w},'alpha',alpha);
+				ci=bootciold(bootn,{@mean,rho},'alpha',alpha);
+				ci2=bootciold(bootn,{@mean,w},'alpha',alpha);
 			case 2
 				m=mean(bootstrp(bootn,@geomean,rho));
 				m2=mean(bootstrp(bootn,@geomean,w));
-				ci=bootci(bootn,{@geomean,rho},'alpha',alpha);
-				ci2=bootci(bootn,{@geomean,w},'alpha',alpha);
+				ci=bootciold(bootn,{@geomean,rho},'alpha',alpha);
+				ci2=bootciold(bootn,{@geomean,w},'alpha',alpha);
 			case 3
 				m=mean(bootstrp(bootn,@trimmean,rho,5));
 				m2=mean(bootstrp(bootn,@trimmean,w,5));
-				ci=bootci(bootn,{@trimmean,rho,5},'alpha',alpha);
-				ci2=bootci(bootn,{@trimmean,w,5},'alpha',alpha);
+				ci=bootciold(bootn,{@trimmean,rho,5},'alpha',alpha);
+				ci2=bootciold(bootn,{@trimmean,w,5},'alpha',alpha);
 			case 4
 				m=mean(bootstrp(bootn,@trimmean,rho,10));
 				m2=mean(bootstrp(bootn,{@trimmean,w,10}));
-				ci=bootci(bootn,{@trimmean,rho,10},'alpha',alpha);
-				ci2=bootci(bootn,{@trimmean,w,10},'alpha',alpha);
+				ci=bootciold(bootn,{@trimmean,rho,10},'alpha',alpha);
+				ci2=bootciold(bootn,{@trimmean,w,10},'alpha',alpha);
 			case 5
 				m=mean(bootstrp(bootn,{@trimmean,rho,25}));
 				m2=mean(bootstrp(bootn,{@trimmean,w,25}));
-				ci=bootci(bootn,{@trimmean,rho,25},'alpha',alpha);
-				ci2=bootci(bootn,{@trimmean,w,25},'alpha',alpha);
+				ci=bootciold(bootn,{@trimmean,rho,25},'alpha',alpha);
+				ci2=bootciold(bootn,{@trimmean,w,25},'alpha',alpha);
 			case 5
 				m=mean(bootstrp(bootn,{@std,rho}));
 				m2=mean(bootstrp(bootn,{@std,w}));
-				ci=bootci(bootn,{@std,rho},'alpha',alpha);
-				ci2=bootci(bootn,{@std,w},'alpha',alpha);
+				ci=bootciold(bootn,{@std,rho},'alpha',alpha);
+				ci2=bootciold(bootn,{@std,w},'alpha',alpha);
 		end
 		suptitle([bootfuns '\newline vector: ' num2str(ci(1)) '|' num2str(m) '|' num2str(ci(2)) ' \newline width:' num2str(ci2(1)) '|' num2str(m2) '|' num2str(ci2(2))]);
 		gdat.testtrial=0;

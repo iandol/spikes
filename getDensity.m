@@ -563,16 +563,16 @@
 				t=[t 'Lilliefors: ' sprintf('%0.3g', p8) ' / ' sprintf('%0.3g', p9) '\newline'];
 				t=[t 'KSTest: ' sprintf('%0.3g', p10) '\newline'];
 				
-				[xci,xmean,xpop]=bootci(obj.nboot,{obj.fhandle,xcol},'alpha',obj.alpha);
-				[yci,ymean,ypop]=bootci(obj.nboot,{obj.fhandle,ycol},'alpha',obj.alpha);
+				[xci,xmean,xpop]=bootciold(obj.nboot,{obj.fhandle,xcol},'alpha',obj.alpha);
+				[yci,ymean,ypop]=bootciold(obj.nboot,{obj.fhandle,ycol},'alpha',obj.alpha);
 				
 				try
-					[xxci,xxmean,xxpop]=bootci(obj.nboot,{@median,xcol},'alpha',obj.alpha);
-					[yyci,yymean,yypop]=bootci(obj.nboot,{@median,ycol},'alpha',obj.alpha);
+					[xxci,xxmean,xxpop]=bootciold(obj.nboot,{@median,xcol},'alpha',obj.alpha);
+					[yyci,yymean,yypop]=bootciold(obj.nboot,{@median,ycol},'alpha',obj.alpha);
 				end
 				try
-					[xxxci,xxxmean,xxxpop]=bootci(obj.nboot,{@geomean,xcol},'alpha',obj.alpha);
-					[yyyci,yyymean,yyypop]=bootci(obj.nboot,{@geomean,ycol},'alpha',obj.alpha);
+					[xxxci,xxxmean,xxxpop]=bootciold(obj.nboot,{@geomean,xcol},'alpha',obj.alpha);
+					[yyyci,yyymean,yyypop]=bootciold(obj.nboot,{@geomean,ycol},'alpha',obj.alpha);
 				end
 				
 				t=[t 'BootStrap: ' sprintf('%0.3g', xci(1)) ' < ' sprintf('%0.3g', xmean) ' > ' sprintf('%0.3g', xci(2)) ' | ' sprintf('%0.3g', yci(1)) ' < ' sprintf('%0.3g', ymean) ' > ' sprintf('%0.3g', yci(2))];

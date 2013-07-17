@@ -10,7 +10,7 @@
 %         confidence limits are both bias- and acceleration-corrected.
 %         See Efron and Tibshirani (1993).
 %
-%     Syntax: ci = bootci(distrib,{estval},{jackest},{ci_level})
+%     Syntax: ci = bootci2(distrib,{estval},{jackest},{ci_level})
 %
 %           distrib =  [iter x P] matrix of bootstrapped statistics for each of 
 %                        P statistics.

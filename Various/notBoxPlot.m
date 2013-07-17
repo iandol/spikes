@@ -194,7 +194,7 @@ end
 		
 		function ci = bootCI_calc(vect, nboot, fhandle, alpha)
 			mm = fhandle(vect);
-			xci = bootci(nboot,{fhandle,vect},'alpha',alpha);
+			xci = bootciold(nboot,{fhandle,vect},'alpha',alpha);
 			ci = xci;
 			ci = [xci(1) mm xci(2)];
 			ci = diff(ci);

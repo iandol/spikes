@@ -1749,7 +1749,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				modt = 1000 / timet;
 				tr = tr .* modt; %convert to Hz
 
-				ci = bootci(1000,{@mean, tr},'alpha',pval);
+				ci = bootciold(1000,{@mean, tr},'alpha',pval);
 				modx = (max(w) / length(w)) / 2;
 				coly = [rand rand rand];
 				h = line([w(i)-modx w(i)+modx],[ci(1) ci(1)]);
@@ -1866,11 +1866,11 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				pval = 0.05;
 			end
 			
-			ci = bootci(1000,{@mean, tr},'alpha',pval);
+			ci = bootciold(1000,{@mean, tr},'alpha',pval);
 			ci = ci - s;%now remove spontaneous
 			ci = ci ./ m;
 			
-			ci0 = bootci(1000,{@mean, tr0},'alpha',pval);
+			ci0 = bootciold(1000,{@mean, tr0},'alpha',pval);
 			ci0 = ci0 - s;%now remove spontaneous
 			ci0 = ci0 ./ m;
 			
