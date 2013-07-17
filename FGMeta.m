@@ -4,6 +4,7 @@ classdef FGMeta < handle
 		verbose	= true
 		offset@double = 200
 		smoothstep@double = 1
+		gaussstep@double = 20
 	end
 	
 	properties (SetAccess = private, GetAccess = public)
@@ -12,16 +13,18 @@ classdef FGMeta < handle
 		mint@double
 		maxt@double
 		deltat@double
-		version@double = 1.05
-		mtime@double
-		mpsth@double
-		merror@double
+		ptime@double
+		ppsth1@double
+		perror1@double
+		ppsth2@double
+		perror2@double
 	end
 	
 	properties (SetAccess = protected, GetAccess = public, Transient = true)
 		%> handles for the GUI
 		handles@struct
 		openUI@logical = false
+		version@double = 1.11
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -56,6 +59,7 @@ classdef FGMeta < handle
 			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose OPro source File','Multiselect','on');
 			if ~exist('file','var')
 				errordlg('No File Specified', 'Meta-Analysis Error')
+				return
 			end
 	
 			cd(path);
@@ -80,6 +84,7 @@ classdef FGMeta < handle
 					obj.cells{idx,i}.psth = o.(['cell' num2str(i) 'psth']){1};
 					obj.cells{idx,i}.mean_fine = o.(['bars' num2str(i)]){1}.mean_fine;
 					obj.cells{idx,i}.time_fine = o.(['bars' num2str(i)]){1}.time_fine;
+					obj.cells{idx,i}.weight = 1;
 				end
 
 				obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
@@ -92,7 +97,6 @@ classdef FGMeta < handle
 				obj.list{idx} = t;
 
 				set(obj.handles.list,'String',obj.list);
-
 				set(obj.handles.list,'Value',obj.nCells);
 
 				replot(obj);
@@ -117,7 +121,19 @@ classdef FGMeta < handle
 				
 				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
 				obj.smoothstep = str2double(get(obj.handles.smoothstep,'String'));
+				obj.gaussstep = str2double(get(obj.handles.gaussstep,'String'));
 				sel = get(obj.handles.list,'Value');
+				w=[1 1];
+				if isfield(obj.cells{sel,1},'weight')
+					w(1) = obj.cells{sel,1}.weight;
+				end
+				if isfield(obj.cells{sel,2},'weight')
+					w(2) = obj.cells{sel,2}.weight;
+				end
+				if length(w) == 2
+					set(obj.handles.weight,'String',num2str(w));
+				end
+					
 				maxt = obj.maxt(sel) - obj.offset;
 				
 				if get(obj.handles.selectbars,'Value') == 1
@@ -140,6 +156,11 @@ classdef FGMeta < handle
 					psth2 = psth2';
 				end
 				
+				if str2double(get(obj.handles.gaussstep,'String')) > 0
+					psth1 = gausssmooth(time,psth1,obj.gaussstep,false);
+					psth2 = gausssmooth(time,psth2,obj.gaussstep,false);
+				end
+				
 				if get(obj.handles.smooth,'Value') == 1
 					maxtall = max(obj.maxt) - obj.offset;
 					s=get(obj.handles.smoothmethod,'String');
@@ -155,6 +176,11 @@ classdef FGMeta < handle
 					clear F1 F2;
 				end
 				
+				name = '';
+				if get(obj.handles.shownorm,'Value') == 1
+					[psth1,psth2,name] = obj.normalise(time,psth1,psth2);
+				end
+				
 				axes(obj.handles.axis1); cla
 				plot(time,psth1,'ko-','MarkerFaceColor',[0 0 0]);
 				hold on
@@ -162,6 +188,8 @@ classdef FGMeta < handle
 				a=axis;
 				line([maxt maxt],[0 a(4)]);
 				hold off
+				grid on
+				box on
 				title('Selected Cell')
 				xlabel('Time (ms)')
 				ylabel('Firing Rate (Hz)')
@@ -181,8 +209,8 @@ classdef FGMeta < handle
 						p1out = median(psth1);
 						p2out = median(psth2);
 					case 'trimmean'
-						p1out = trimmean(psth1,10);
-						p2out = trimmean(psth2,10);
+						p1out = trimmean(psth1,30);
+						p2out = trimmean(psth2,30);
 					case 'geomean'
 						p1out = geomean(psth1);
 						p2out = geomean(psth2);
@@ -192,9 +220,9 @@ classdef FGMeta < handle
 				end
 				
 				axes(obj.handles.axis2); cla
-				areabar(time,p1out,p1err,[0.7 0.7 0.7],0.35,'k-','MarkerFaceColor',[0 0 0]);
+				areabar(time,p1out,p1err,[0.7 0.7 0.7],0.35,'k.-','MarkerSize',8,'MarkerFaceColor',[0 0 0]);
 				hold on
-				areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r-','MarkerFaceColor',[1 0 0]);
+				areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r.-','MarkerSize',8,'MarkerFaceColor',[1 0 0]);
 				
 				if get(obj.handles.newbars,'Value') == 1
 					bp = defaultParams();
@@ -208,13 +236,13 @@ classdef FGMeta < handle
 				end
 				set(obj.handles.newbars,'Value',0)
 				
-				spontt = find(time<0);
+				spontt = find(time < -20 & time > -50);
 				sp1 = psth1(:,spontt);
 				sp2 = psth2(:,spontt);
 				sp1 = reshape(sp1,1,numel(sp1));
 				sp2 = reshape(sp2,1,numel(sp2));
-				ci1 = bootci(1000,{@mean,sp1},'alpha',0.001,'type','per');
-				ci2 = bootci(1000,{@mean,sp2},'alpha',0.001,'type','per');
+				ci1 = bootci(1000,{@mean,sp1},'alpha',0.01,'type','cper');
+				ci2 = bootci(1000,{@mean,sp2},'alpha',0.01,'type','cper');
 				
 				hold on
 				line([time(1) time(end)],[ci1(1) ci1(1)],'Color',[0 0 0],'LineStyle','--');
@@ -222,12 +250,21 @@ classdef FGMeta < handle
 				line([time(1) time(end)],[ci2(1) ci2(1)],'Color',[1 0 0],'LineStyle','--');
 				line([time(1) time(end)],[ci2(2) ci2(2)],'Color',[1 0 0],'LineStyle','--');
 				
-				title('Population PSTH')
+				title(['Population (' s ') PSTH: ' num2str(obj.nCells) ' cells'])
 				grid on
 				box on
 				axis tight
 				xlabel('Time (ms)')
-				ylabel('Firing Rate (normalised)')
+				name = get(obj.handles.normalisecells,'String');
+				v = get(obj.handles.normalisecells,'Value');
+				name = name{v};
+				ylabel(['Firing Rate Normalised: ' name]);
+				
+				obj.ptime = time;
+				obj.ppsth1 = p1out;
+				obj.ppsth2 = p2out;
+				obj.perror1 = p1err;
+				obj.perror2 = p2err;
 				
 			end
 			
@@ -240,10 +277,10 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function load(obj,varargin)
-			
 			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose MetaAnalysis');
 			if ~ischar(file)
 				errordlg('No File Specified', 'Meta-Analysis Error');
+				return
 			end
 			
 			cd(path);
@@ -291,8 +328,16 @@ classdef FGMeta < handle
 		function remove(obj,varargin)
 			if obj.nCells > 0
 				sel = get(obj.handles.list,'Value');
-				
+				obj.cells(sel,:) = [];
+				obj.list(sel) = [];
+				obj.mint(sel) = [];
+				obj.maxt(sel) = [];
+				if sel > 1
+					set(obj.handles.list,'Value',sel-1);
+				end
+				set(obj.handles.list,'String',obj.list);
 			end
+			replot(obj);
 		end
 		
 		% ===================================================================
@@ -302,9 +347,10 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function save(obj,varargin)
-			[file,path] = uiputfile('*.mat','Save Meta Analysis:');
+				[file,path] = uiputfile('*.mat','Save Meta Analysis:');
 			if ~ischar(file)
 				errordlg('No file selected...')
+				return 
 			end
 			obj.oldDir = pwd;
 			cd(path);
@@ -340,6 +386,40 @@ classdef FGMeta < handle
 				return
 			elseif value == 1 && iscell(obj.list) && isempty(obj.list{1})
 				value = 0;
+			end
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function editweight(obj,varargin)
+			if obj.nCells > 0
+				sel = get(obj.handles.list,'Value');
+				w = str2num(get(obj.handles.weight,'String'));
+				if length(w) == 2;
+					obj.cells{sel,1}.weight = w(1);
+					obj.cells{sel,2}.weight = w(2);
+					if min(w) == 0
+						s = obj.list{sel};
+						s = ['**' s];
+						obj.list{sel} = s;
+						set(obj.handles.list,'String',obj.list);
+					elseif min(w) < 1
+						s = obj.list{sel};
+						s = ['*' s];
+						obj.list{sel} = s;
+						set(obj.handles.list,'String',obj.list);
+					else
+						s = obj.list{sel};
+						s = regexprep(s,'\*','');
+						obj.list{sel} = s;
+						set(obj.handles.list,'String',obj.list);
+					end
+				end
+				replot(obj);
 			end
 		end
 		
@@ -387,6 +467,19 @@ classdef FGMeta < handle
 					time = obj.cells{idx,1}.time-obj.offset;
 				end
 				
+				if isfield(obj.cells{idx,1},'weight')
+					w1 = obj.cells{idx,1}.weight;
+					if w1 < 0 || w1 > 1; w1 = 1; end
+				else
+					w1 = 1;
+				end
+				if isfield(obj.cells{idx,2},'weight')
+					w2 = obj.cells{idx,2}.weight;
+					if w2 < 0 || w2 > 1; w2 = 1; end
+				else
+					w2 = 1;
+				end
+				
 				%make sure our psth is column format
 				if size(psth1tmp,1) > size(psth1tmp,2)
 					psth1tmp = psth1tmp';
@@ -395,6 +488,11 @@ classdef FGMeta < handle
 					psth2tmp = psth2tmp';
 				end
 				
+				if obj.gaussstep > 0
+					psth1tmp = gausssmooth(time,psth1tmp,obj.gaussstep,false);
+					psth2tmp = gausssmooth(time,psth2tmp,obj.gaussstep,false);
+				end
+								
 				tidx = find(time >= maxt);
 				tidx = tidx(1);
 				time = time(1:tidx);
@@ -408,7 +506,7 @@ classdef FGMeta < handle
 					s=s{v};
 					F1 = griddedInterpolant(time,psth1tmp,s);
 					F2 = griddedInterpolant(time,psth2tmp,s);
-					time = min(time):obj.smoothstep:maxt;
+					time = min(time):obj.smoothstep:maxtall;
 					psth1tmp=F1(time);
 					psth2tmp=F2(time);
 					psth1tmp(psth1tmp < 0) = 0;
@@ -418,14 +516,15 @@ classdef FGMeta < handle
 				
 				max1 = max(psth1tmp);
 				max2 = max(psth2tmp);
-				if get(obj.handles.normalisecells,'Value') == 0
-					maxx = max([max1 max2]);
-					psth1tmp = psth1tmp / maxx;
-					psth2tmp = psth2tmp / maxx;
-				else
-					psth1tmp = psth1tmp / max1;
-					psth2tmp = psth2tmp / max2;
-				end
+				min1 = min(psth1tmp);
+				min2 = min(psth2tmp);
+				maxx = max([max1 max2]);
+				minn = min([min1 min2]);
+				
+				[psth1tmp,psth2tmp] = obj.normalise(time,psth1tmp,psth2tmp);
+				
+				psth1tmp = psth1tmp * w1;
+				psth2tmp = psth2tmp * w2;
 				
 				if isempty(psth1)
 					psth1 = psth1tmp;
@@ -457,7 +556,7 @@ classdef FGMeta < handle
 					'MenuBar', 'none', ...
 					'CloseRequestFcn', @obj.quit,...
 					'NumberTitle', 'off');
-				figpos(1,[1000 600])
+				figpos(1,[1200 700])
 			end
 
 			bgcolor = [0.85 0.85 0.85];
@@ -485,7 +584,7 @@ classdef FGMeta < handle
 			handles.controls1 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',5,'BackgroundColor',bgcolor);
 			handles.controls1.RowSizes = [-1 -1];
 			handles.controls2 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',0,'BackgroundColor',bgcolor);
-			handles.controls3 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',0,'BackgroundColor',bgcolor);
+			handles.controls3 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',2,'BackgroundColor',bgcolor);
 			handles.controls3.RowSizes = [-1 -1 -1];
 			
 			handles.loadbutton = uicontrol('Style','pushbutton',...
@@ -523,6 +622,12 @@ classdef FGMeta < handle
 				'Tag','FGreplotbutton',...
 				'Callback',@obj.reset,...
 				'String','Reset');
+			handles.weight = uicontrol('Style','edit',...
+				'Parent',handles.controls1,...
+				'Tag','FGweight',...
+				'Tooltip','Cell Weight',...
+				'Callback',@obj.editweight,...
+				'String','1 1');
 			
 			handles.list = uicontrol('Style','listbox',...
 				'Parent',handles.controls2,...
@@ -533,14 +638,9 @@ classdef FGMeta < handle
 				'FontSize',13,...
 				'String',{''});
 			
-			handles.normalisecells = uicontrol('Style','checkbox',...
-				'Parent',handles.controls3,...
-				'Tag','FGnormalisecells',...
-				'Callback',@obj.replot,...
-				'String','Independent Norm?');
 			handles.selectbars = uicontrol('Style','checkbox',...
 				'Parent',handles.controls3,...
-				'Tag','FGnormalisecells',...
+				'Tag','FGselectbars',...
 				'Callback',@obj.replot,...
 				'String','Show OPro BARS?');
 			handles.newbars = uicontrol('Style','checkbox',...
@@ -553,28 +653,94 @@ classdef FGMeta < handle
 				'Tag','FGsmoothcells',...
 				'Callback',@obj.replot,...
 				'String','Resmooth?');
-			handles.smoothmethod = uicontrol('Style','popupmenu',...
+			handles.shownorm = uicontrol('Style','checkbox',...
 				'Parent',handles.controls3,...
-				'Tag','FGsmoothmethod',...
+				'Tag','FGshownorm',...
 				'Callback',@obj.replot,...
-				'String',{'pchip','linear','nearest','spline','cubic'});
+				'String','Show Normalisation?');
 			handles.smoothstep = uicontrol('Style','edit',...
 				'Parent',handles.controls3,...
 				'Tag','FGsmoothstep',...
 				'Tooltip','Smoothing step in ms',...
 				'Callback',@obj.replot,...
 				'String','1');
+			handles.gaussstep = uicontrol('Style','edit',...
+				'Parent',handles.controls3,...
+				'Tag','FGgaussstep',...
+				'Tooltip','Gaussian Smoothing step in ms',...
+				'Callback',@obj.replot,...
+				'String','0');
+			handles.normalisecells = uicontrol('Style','popupmenu',...
+				'Parent',handles.controls3,...
+				'Tag','FGnormalisecells',...
+				'Callback',@obj.replot,...
+				'String',{'Max-only','Max-only (ind)','Min-Max','Min-Max (ind)','Max-Spontaneous','ZScore','None'});
+			handles.smoothmethod = uicontrol('Style','popupmenu',...
+				'Parent',handles.controls3,...
+				'Tag','FGsmoothmethod',...
+				'Callback',@obj.replot,...
+				'String',{'pchip','linear','nearest','spline','cubic'});
 			handles.meanmethod = uicontrol('Style','popupmenu',...
 				'Parent',handles.controls3,...
 				'Tag','FGmeanmethod',...
 				'Callback',@obj.replot,...
 				'String',{'mean','median','trimmean','geomean','harmmean'});
 
-			set(handles.hbox,'Sizes', [-2 -1]);
-			set(handles.controls,'Sizes', [40 -1 60]);
+			set(handles.hbox,'Sizes', [-1.5 -1]);
+			set(handles.controls,'Sizes', [55 -1 70]);
 
 			obj.handles = handles;
 			obj.openUI = true;
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function [psth1,psth2,name] = normalise(obj,time,psth1,psth2)
+			name = get(obj.handles.normalisecells,'String');
+			v = get(obj.handles.normalisecells,'Value');
+			name = name{v};
+			max1 = max(psth1);
+			max2 = max(psth2);
+			min1 = min(psth1);
+			min2 = min(psth2);
+			maxx = max([max1 max2]);
+			minn = min([min1 min2]);
+			switch v
+				case 1 %shared max
+					psth1 = psth1 / maxx;
+					psth2 = psth2 / maxx;
+				case 2 %indep max
+					psth1 = psth1 / max1;
+					psth2 = psth2 / max2;
+				case 3 %minmax
+					psth1 = psth1 - minn;
+					psth2 = psth2 - minn;
+					psth1 = psth1 / (maxx-minn);
+					psth2 = psth2 / (maxx-minn);
+				case 4 %minmax ind
+					psth1 = psth1 - min1;
+					psth2 = psth2 - min2;
+					psth1 = psth1 / (max1-min1);
+					psth2 = psth2 / (max2-min2);
+				case 5 %max-spontaneous
+					tidx = find(time < 0);
+					sp1 = mean(psth1(tidx));
+					sp2 = mean(psth2(tidx));
+					sp = mean([sp1 sp2]);
+					psth1 = psth1 - sp;
+					psth2 = psth2 - sp;
+					psth1 = psth1 / (maxx-sp);
+					psth2 = psth2 / (maxx-sp);
+				case 6 %zscore
+					psth1 = zscore(psth1);
+					psth2 = zscore(psth2);
+				otherwise
+					%fprintf('No normalisation!\n');
+			end
 		end
 		
 		% ===================================================================

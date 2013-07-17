@@ -868,8 +868,8 @@ case 'Spontaneous'
 					psth2=zscore(psth2);
 				end
 				
-				o.spontaneous1ci = bootci(1000,@mean,sm);
-				o.spontaneous2ci = bootci(1000,@mean,sm2);
+				o.spontaneous1ci = bootciold(1000,@mean,sm);
+				o.spontaneous2ci = bootciold(1000,@mean,sm2);
 				o.g = [];
 				o.g = getDensity('x',sm,'y',sm2,'autorun',true,'columnlabels',{'Spontaneous'},'legendtxt',{'Control','Test'});
 				
@@ -2652,35 +2652,35 @@ end
 function [ci1,ci2]=doboot(boottype,nboot,alpha,data1,data2)
 switch boottype
 	case 1
-		ci1=bootci(nboot,{@mean,data1},'alpha',alpha);
-		ci2=bootci(nboot,{@mean,data2},'alpha',alpha);
+		ci1=bootciold(nboot,{@mean,data1},'alpha',alpha);
+		ci2=bootciold(nboot,{@mean,data2},'alpha',alpha);
 	case 2
-		ci1=bootci(nboot,{@median,data1},'alpha',alpha);
-		ci2=bootci(nboot,{@median,data2},'alpha',alpha);
+		ci1=bootciold(nboot,{@median,data1},'alpha',alpha);
+		ci2=bootciold(nboot,{@median,data2},'alpha',alpha);
 	case 3
-		ci1=bootci(nboot,{@geomean,data1},'alpha',alpha);
-		ci2=bootci(nboot,{@geomean,data2},'alpha',alpha);
+		ci1=bootciold(nboot,{@geomean,data1},'alpha',alpha);
+		ci2=bootciold(nboot,{@geomean,data2},'alpha',alpha);
 	case 4
-		ci1=bootci(nboot,{@trimmean,data1,5},'alpha',alpha);
-		ci2=bootci(nboot,{@trimmean,data2,5},'alpha',alpha);
+		ci1=bootciold(nboot,{@trimmean,data1,5},'alpha',alpha);
+		ci2=bootciold(nboot,{@trimmean,data2,5},'alpha',alpha);
 	case 5
-		ci1=bootci(nboot,{@trimmean,data1,10},'alpha',alpha);
-		ci2=bootci(nboot,{@trimmean,data2,10},'alpha',alpha);
+		ci1=bootciold(nboot,{@trimmean,data1,10},'alpha',alpha);
+		ci2=bootciold(nboot,{@trimmean,data2,10},'alpha',alpha);
 	case 6
-		ci1=bootci(nboot,{@std,data1},'alpha',alpha);
-		ci2=bootci(nboot,{@std,data2},'alpha',alpha);
+		ci1=bootciold(nboot,{@std,data1},'alpha',alpha);
+		ci2=bootciold(nboot,{@std,data2},'alpha',alpha);
 	case 7
-		ci1=bootci(nboot,{@var,data1},'alpha',alpha);
-		ci2=bootci(nboot,{@var,data2},'alpha',alpha);
+		ci1=bootciold(nboot,{@var,data1},'alpha',alpha);
+		ci2=bootciold(nboot,{@var,data2},'alpha',alpha);
 	case 8
-		ci1=bootci(nboot,{@stderr,data1,'F',1},'alpha',alpha);
-		ci2=bootci(nboot,{@stderr,data2,'F',1},'alpha',alpha);
+		ci1=bootciold(nboot,{@stderr,data1,'F',1},'alpha',alpha);
+		ci2=bootciold(nboot,{@stderr,data2,'F',1},'alpha',alpha);
 	case 8
-		ci1=bootci(nboot,{@stderr,data1,'C',1},'alpha',alpha);
-		ci2=bootci(nboot,{@stderr,data2,'C',1},'alpha',alpha);
+		ci1=bootciold(nboot,{@stderr,data1,'C',1},'alpha',alpha);
+		ci2=bootciold(nboot,{@stderr,data2,'C',1},'alpha',alpha);
 	case 8
-		ci1=bootci(nboot,{@stderr,data1,'A',1},'alpha',alpha);
-		ci2=bootci(nboot,{@stderr,data2,'A',1},'alpha',alpha);
+		ci1=bootciold(nboot,{@stderr,data1,'A',1},'alpha',alpha);
+		ci2=bootciold(nboot,{@stderr,data2,'A',1},'alpha',alpha);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
