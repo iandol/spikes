@@ -122,6 +122,7 @@ classdef FGMeta < handle
 				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
 				obj.smoothstep = str2double(get(obj.handles.smoothstep,'String'));
 				obj.gaussstep = str2double(get(obj.handles.gaussstep,'String'));
+				obj.offset = str2double(get(obj.handles.offset,'String'));
 				sel = get(obj.handles.list,'Value');
 				w=[1 1];
 				if isfield(obj.cells{sel,1},'weight')
@@ -404,17 +405,19 @@ classdef FGMeta < handle
 					obj.cells{sel,2}.weight = w(2);
 					if min(w) == 0
 						s = obj.list{sel};
+						s = regexprep(s,'^\*+','');
 						s = ['**' s];
 						obj.list{sel} = s;
 						set(obj.handles.list,'String',obj.list);
 					elseif min(w) < 1
 						s = obj.list{sel};
+						s = regexprep(s,'^\*+','');
 						s = ['*' s];
 						obj.list{sel} = s;
 						set(obj.handles.list,'String',obj.list);
 					else
 						s = obj.list{sel};
-						s = regexprep(s,'\*','');
+						s = regexprep(s,'^\*+','');
 						obj.list{sel} = s;
 						set(obj.handles.list,'String',obj.list);
 					end
@@ -514,17 +517,12 @@ classdef FGMeta < handle
 					clear F1 F2;
 				end
 				
-				max1 = max(psth1tmp);
-				max2 = max(psth2tmp);
-				min1 = min(psth1tmp);
-				min2 = min(psth2tmp);
-				maxx = max([max1 max2]);
-				minn = min([min1 min2]);
-				
 				[psth1tmp,psth2tmp] = obj.normalise(time,psth1tmp,psth2tmp);
 				
-				psth1tmp = psth1tmp * w1;
-				psth2tmp = psth2tmp * w2;
+				if get(obj.handles.useweights,'Value') == 1
+					psth1tmp = psth1tmp * w1;
+					psth2tmp = psth2tmp * w2;
+				end
 				
 				if isempty(psth1)
 					psth1 = psth1tmp;
@@ -562,7 +560,7 @@ classdef FGMeta < handle
 			bgcolor = [0.85 0.85 0.85];
 			bgcoloredit = [0.87 0.87 0.87];
 
-			handles.parent = parent;
+			handles.parent = parent; %#ok<*PROP>
 			handles.root = uiextras.BoxPanel('Parent',parent,...
 				'Title',['Figure Ground Meta Analysis V' num2str(obj.version)],...
 				'FontName','Helvetica',...
@@ -658,6 +656,13 @@ classdef FGMeta < handle
 				'Tag','FGshownorm',...
 				'Callback',@obj.replot,...
 				'String','Show Normalisation?');
+			handles.useweights = uicontrol('Style','checkbox',...
+				'Parent',handles.controls3,...
+				'Tag','FGuseweights',...
+				'Value',1,...
+				'Callback',@obj.replot,...
+				'String','Use Weights?');
+			uiextras.Empty('Parent',handles.controls3,'BackgroundColor',bgcolor)
 			handles.smoothstep = uicontrol('Style','edit',...
 				'Parent',handles.controls3,...
 				'Tag','FGsmoothstep',...
@@ -670,6 +675,12 @@ classdef FGMeta < handle
 				'Tooltip','Gaussian Smoothing step in ms',...
 				'Callback',@obj.replot,...
 				'String','0');
+			handles.offset = uicontrol('Style','edit',...
+				'Parent',handles.controls3,...
+				'Tag','FGoffset',...
+				'Tooltip','Time offset (ms)',...
+				'Callback',@obj.replot,...
+				'String','200');
 			handles.normalisecells = uicontrol('Style','popupmenu',...
 				'Parent',handles.controls3,...
 				'Tag','FGnormalisecells',...
@@ -750,7 +761,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function closeUI(obj)
-			try; delete(obj.handles.parent); end
+			try; delete(obj.handles.parent); end %#ok<TRYNC>
 			obj.handles = struct();
 			obj.openUI = false;
 		end

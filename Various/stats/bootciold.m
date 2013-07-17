@@ -1,6 +1,6 @@
 function [ci,meanval,bstat]  = bootciold(nboot,bootfun,varargin)
 %BOOTCI Bootstrap Confidence Interval
-%   CI = BOOTCI(NBOOT,BOOTFUN,...) computes the 95 percent BCa bootstrap
+%   CI = BOOTCIOLD(NBOOT,BOOTFUN,...) computes the 95 percent BCa bootstrap
 %   confidence interval of the statistic defined by the function BOOTFUN.
 %   NBOOT is a positive integer indicating the number of bootstrap data
 %   samples used in the computation. BOOTFUN is a function handle specified
@@ -12,12 +12,12 @@ function [ci,meanval,bstat]  = bootciold(nboot,bootfun,varargin)
 %   unchanged. CI is a vector containing the lower and upper bounds of the
 %   confidence interval.
 %
-%   CI = BOOTCI(NBOOT,{BOOTFUN,...},'alpha',ALPHA) computes the
+%   CI = BOOTCIOLD(NBOOT,{BOOTFUN,...},'alpha',ALPHA) computes the
 %   100*(1-ALPHA) percent BCa bootstrap confidence interval of the
 %   statistic defined by the function BOOTFUN. ALPHA is a scalar between 0
 %   and 1. The default value of ALPHA is 0.05.
 %
-%   CI = BOOTCI(NBOOT,{BOOTFUN,...},...,'type',TYPE) computes the bootstrap
+%   CI = BOOTCIOLD(NBOOT,{BOOTFUN,...},...,'type',TYPE) computes the bootstrap
 %   confidence interval of the statistic defined by the function BOOTFUN.
 %   TYPE is the confidence interval type, specifying different methods of
 %   computing the confidence interval. TYPE is a string chosen from
@@ -31,14 +31,14 @@ function [ci,meanval,bstat]  = bootciold(nboot,bootfun,varargin)
 %       'stud' or 'student':              studentized confidence interval.
 %   The default value of TYPE is 'bca'.
 %
-%   CI = BOOTCI(NBOOT,{BOOTFUN,...},...,'type','stud','nbootstd',NBOOTSTD)
+%   CI = BOOTCIOLD(NBOOT,{BOOTFUN,...},...,'type','stud','nbootstd',NBOOTSTD)
 %   computes the studentized bootstrap confidence interval of the statistic
 %   defined by the function BOOTFUN. The standard error of the bootstrap
 %   statistics is estimated using bootstrap with NBOOTSTD bootstrap data
 %   samples. NBOOTSTD is a positive integer value. The default value of
 %   NBOOTSTD is 100.
 %
-%   CI = BOOTCI(NBOOT,{BOOTFUN,...},...,'type','stud','stderr',STDERR)
+%   CI = BOOTCIOLD(NBOOT,{BOOTFUN,...},...,'type','stud','stderr',STDERR)
 %   computes the studentized bootstrap confidence interval of statistics
 %   defined by the function BOOTFUN. The standard error of the bootstrap
 %   statistics is evaluated by the function STDERR. STDERR is a function
@@ -52,8 +52,8 @@ function [ci,meanval,bstat]  = bootciold(nboot,bootfun,varargin)
 %          y = normrnd(1,1,30,1);                  % simulated process data
 %          LSL = -3;  USL = 3;                     % process specifications
 %          capable = @(x) (USL-LSL)./(6* std(x));  % process capability
-%          bootci(2000,capable, y)                 % Bca confidence interval
-%          bootci(2000,{capable, y},'type','stud') % studentized confidence interval
+%          BOOTCIOLD(2000,capable, y)                 % Bca confidence interval
+%          BOOTCIOLD(2000,{capable, y},'type','stud') % studentized confidence interval
 %
 %   See also: BOOTSTRP, JACKKNIFE.
 
