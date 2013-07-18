@@ -76,7 +76,6 @@ classdef FGMeta < handle
 			tic
 			l = length(file);
 			for ll = 1:length(file)
-				set(obj.handles.root,'Title',sprintf('Loading %g of %g Cells...',ll,l));
 				load(file{ll});
 				
 				if ~exist('o','var')
@@ -107,6 +106,7 @@ classdef FGMeta < handle
 				set(obj.handles.list,'Value',obj.nCells);
 
 				replot(obj);
+				set(obj.handles.root,'Title',sprintf('Loading %g of %g Cells...',ll,l));
 				clear o
 			
 			end
@@ -129,6 +129,7 @@ classdef FGMeta < handle
 				obj.smoothstep = str2double(get(obj.handles.smoothstep,'String'));
 				obj.gaussstep = str2double(get(obj.handles.gaussstep,'String'));
 				obj.offset = str2double(get(obj.handles.offset,'String'));
+				obj.symmetricgaussian = logical(get(obj.handles.symmetricgaussian,'Value'));
 				sel = get(obj.handles.list,'Value');
 				w=[1 1];
 				if isfield(obj.cells{sel,1},'weight')
@@ -139,6 +140,11 @@ classdef FGMeta < handle
 				end
 				if length(w) == 2
 					set(obj.handles.weight,'String',num2str(w));
+				end
+				if isfield(obj.cells{sel,1},'max')
+					set(obj.handles.max,'String',num2str(obj.cells{sel,1}.max));
+				else
+					set(obj.handles.max,'String','0');
 				end
 					
 				maxt = obj.maxt(sel) - obj.offset;
@@ -174,7 +180,14 @@ classdef FGMeta < handle
 				
 				name = '';
 				if get(obj.handles.shownorm,'Value') == 1
-					[psth1,psth2,name] = obj.normalise(time,psth1,psth2);
+					%do we have a max override?
+					if isfield(obj.cells{sel,1},'max') 
+						gmax = obj.cells{sel,1}.max;
+						if gmax == 0;gmax = []; end
+					else
+						gmax = [];
+					end
+					[psth1,psth2,name] = obj.normalise(time,psth1,psth2,gmax);
 				end
 				
 				axes(obj.handles.axis1); cla
@@ -305,24 +318,6 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function reset(obj,varargin)
-			set(obj.handles.list,'Value',1);
-			set(obj.handles.list,'String',{''});
-			obj.handles.axistabs.SelectedChild=1;
-			axes(obj.handles.axis1);
-			cla
-			axes(obj.handles.axis2);
-			cla
-			obj.cells = cell(1);
-			obj.list = cell(1);
-		end
-		
-		% ===================================================================
-		%> @brief 
-		%>
-		%> @param
-		%> @return
-		% ===================================================================
 		function remove(obj,varargin)
 			if obj.nCells > 0
 				sel = get(obj.handles.list,'Value');
@@ -387,6 +382,23 @@ classdef FGMeta < handle
 			end
 		end
 		
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function quit(obj,varargin)
+			reset(obj);
+			closeUI(obj);
+		end
+		
+	end%-------------------------END PUBLIC METHODS--------------------------------%
+	
+	%=======================================================================
+	methods (Hidden = true) %------------------Hidden METHODS
+	%=======================================================================
 		% ===================================================================
 		%> @brief
 		%>
@@ -429,12 +441,38 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function quit(obj,varargin)
-			reset(obj);
-			closeUI(obj);
+		function editmax(obj,varargin)
+			if obj.nCells > 0
+				sel = get(obj.handles.list,'Value');
+				m = str2num(get(obj.handles.max,'String'));
+				if m >= 0
+					obj.cells{sel,1}.max = m;
+					obj.cells{sel,2}.max = m;
+				end
+				replot(obj);
+			end
 		end
 		
-	end%-------------------------END PUBLIC METHODS--------------------------------%
+		% ===================================================================
+		%> @brief 
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function reset(obj,varargin)
+			set(obj.handles.list,'Value',1);
+			set(obj.handles.list,'String',{''});
+			obj.handles.axistabs.SelectedChild=1;
+			axes(obj.handles.axis1);
+			cla
+			axes(obj.handles.axis2);
+			cla
+			obj.cells = cell(1);
+			obj.list = cell(1);
+			set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
+		end
+		
+	end%-------------------------END HIDDEN METHODS--------------------------------%
 	
 	%=======================================================================
 	methods (Access = private) %------------------PRIVATE METHODS
@@ -503,7 +541,14 @@ classdef FGMeta < handle
 					[psth1tmp, psth2tmp] = obj.smoothdata(time,psth1tmp,psth2tmp);
 				end
 				
-				[psth1tmp,psth2tmp] = obj.normalise(time,psth1tmp,psth2tmp);
+				%do we have a max override?
+				if isfield(obj.cells{idx,1},'max')
+					gmax = obj.cells{idx,1}.max;
+					if gmax == 0;gmax = []; end
+				else
+					gmax = [];
+				end
+				[psth1tmp,psth2tmp] = obj.normalise(time,psth1tmp,psth2tmp,gmax);
 				
 				if get(obj.handles.useweights,'Value') == 1
 					psth1tmp = psth1tmp * w1;
@@ -528,7 +573,10 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function [psth1,psth2,name] = normalise(obj,time,psth1,psth2)
+		function [psth1,psth2,name] = normalise(obj,time,psth1,psth2,gmax)
+			if ~exist('gmax','var')
+				gmax = [];
+			end
 			name = get(obj.handles.normalisecells,'String');
 			v = get(obj.handles.normalisecells,'Value');
 			name = name{v};
@@ -538,6 +586,9 @@ classdef FGMeta < handle
 			min2 = min(psth2);
 			maxx = max([max1 max2]);
 			minn = min([min1 min2]);
+			if ~isempty(gmax) && gmax > 0
+				maxx = gmax;
+			end
 			switch v
 				case 1 %shared max
 					psth1 = psth1 / maxx;
@@ -600,7 +651,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function closeUI(obj)
-			try; delete(obj.handles.parent); end %#ok<TRYNC>
+			try delete(obj.handles.parent); end %#ok<TRYNC>
 			obj.handles = struct();
 			obj.openUI = false;
 		end
@@ -679,16 +730,22 @@ classdef FGMeta < handle
 				'Tag','FGremovebutton',...
 				'Callback',@obj.remove,...
 				'String','Remove');
-			handles.replotbutton = uicontrol('Style','pushbutton',...
-				'Parent',handles.controls1,...
-				'Tag','FGreplotbutton',...
-				'Callback',@obj.replot,...
-				'String','Replot');
 			handles.resetbutton = uicontrol('Style','pushbutton',...
 				'Parent',handles.controls1,...
 				'Tag','FGreplotbutton',...
 				'Callback',@obj.reset,...
 				'String','Reset');
+% 			handles.replotbutton = uicontrol('Style','pushbutton',...
+% 				'Parent',handles.controls1,...
+% 				'Tag','FGreplotbutton',...
+% 				'Callback',@obj.replot,...
+% 				'String','Replot');
+			handles.max = uicontrol('Style','edit',...
+				'Parent',handles.controls1,...
+				'Tag','FGweight',...
+				'Tooltip','Cell Max Override',...
+				'Callback',@obj.editmax,...
+				'String','0');
 			handles.weight = uicontrol('Style','edit',...
 				'Parent',handles.controls1,...
 				'Tag','FGweight',...
@@ -731,7 +788,13 @@ classdef FGMeta < handle
 				'Value',1,...
 				'Callback',@obj.replot,...
 				'String','Use Weights?');
-			uiextras.Empty('Parent',handles.controls3,'BackgroundColor',bgcolor)
+			handles.symmetricgaussian = uicontrol('Style','checkbox',...
+				'Parent',handles.controls3,...
+				'Tag','symmetricgaussian',...
+				'Value',1,...
+				'Callback',@obj.replot,...
+				'String','Symmetric Gaussian?');
+			%uiextras.Empty('Parent',handles.controls3,'BackgroundColor',bgcolor)
 			handles.smoothstep = uicontrol('Style','edit',...
 				'Parent',handles.controls3,...
 				'Tag','FGsmoothstep',...
