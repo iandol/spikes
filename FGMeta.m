@@ -5,6 +5,9 @@ classdef FGMeta < handle
 		offset@double = 200
 		smoothstep@double = 1
 		gaussstep@double = 20
+		trimpercent@double = 10
+		bp@struct
+		symmetricgaussian = false
 	end
 	
 	properties (SetAccess = private, GetAccess = public)
@@ -47,6 +50,9 @@ classdef FGMeta < handle
 		% ===================================================================
 		function obj=FGMeta(varargin)
 			makeUI(obj);
+			obj.bp = defaultParams();
+			obj.bp.use_logspline = false;
+			obj.bp.burn_iter = 100;
 		end
 		
 		% ===================================================================
@@ -68,8 +74,9 @@ classdef FGMeta < handle
 			end
 			
 			tic
+			l = length(file);
 			for ll = 1:length(file)
-			
+				set(obj.handles.root,'Title',sprintf('Loading %g of %g Cells...',ll,l));
 				load(file{ll});
 				
 				if ~exist('o','var')
@@ -89,7 +96,7 @@ classdef FGMeta < handle
 
 				obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
 				obj.maxt = [obj.maxt obj.cells{idx,1}.time(end)];
-				obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1)))];
+				obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1:10)))];
 
 				t = [obj.cells{idx,1}.name '>>>' obj.cells{idx,2}.name];
 				t = regexprep(t,'[\|\s][\d\-\.]+','');
@@ -100,7 +107,6 @@ classdef FGMeta < handle
 				set(obj.handles.list,'Value',obj.nCells);
 
 				replot(obj);
-
 				clear o
 			
 			end
@@ -158,23 +164,12 @@ classdef FGMeta < handle
 				end
 				
 				if str2double(get(obj.handles.gaussstep,'String')) > 0
-					psth1 = gausssmooth(time,psth1,obj.gaussstep,false);
-					psth2 = gausssmooth(time,psth2,obj.gaussstep,false);
+					psth1 = gausssmooth(time,psth1,obj.gaussstep,obj.symmetricgaussian);
+					psth2 = gausssmooth(time,psth2,obj.gaussstep,obj.symmetricgaussian);
 				end
 				
 				if get(obj.handles.smooth,'Value') == 1
-					maxtall = max(obj.maxt) - obj.offset;
-					s=get(obj.handles.smoothmethod,'String');
-					v=get(obj.handles.smoothmethod,'Value');
-					s=s{v};
-					F1 = griddedInterpolant(time,psth1,s);
-					F2 = griddedInterpolant(time,psth2,s);
-					time = min(time):obj.smoothstep:maxtall;
-					psth1=F1(time);
-					psth2=F2(time);
-					psth1(psth1 < 0) = 0;
-					psth2(psth2 < 0) = 0;
-					clear F1 F2;
+					[psth, psth2] = obj.smoothdata(time,psth1,psth2);
 				end
 				
 				name = '';
@@ -191,7 +186,7 @@ classdef FGMeta < handle
 				hold off
 				grid on
 				box on
-				title('Selected Cell')
+					title(sprintf('Selected Cell: %s',obj.list{sel}));
 				xlabel('Time (ms)')
 				ylabel('Firing Rate (Hz)')
 
@@ -202,22 +197,27 @@ classdef FGMeta < handle
 				s = get(obj.handles.meanmethod,'String');
 				v = get(obj.handles.meanmethod,'Value');
 				s = s{v};
-				switch s
-					case 'mean'
-						p1out = mean(psth1);
-						p2out = mean(psth2);
-					case 'median'
-						p1out = median(psth1);
-						p2out = median(psth2);
-					case 'trimmean'
-						p1out = trimmean(psth1,30);
-						p2out = trimmean(psth2,30);
-					case 'geomean'
-						p1out = geomean(psth1);
-						p2out = geomean(psth2);
-					case 'harmmean'
-						p1out = harmmean(psth1);
-						p2out = harmmean(psth2);
+				try
+					switch s
+						case 'mean'
+							p1out = nanmean(psth1);
+							p2out = nanmean(psth2);
+						case 'median'
+							p1out = nanmedian(psth1);
+							p2out = nanmedian(psth2);
+						case 'trimmean'
+							p1out = trimmean(psth1,obj.trimpercent);
+							p2out = trimmean(psth2,obj.trimpercent);
+						case 'geomean'
+							p1out = geomean(psth1);
+							p2out = geomean(psth2);
+						case 'harmmean'
+							p1out = harmmean(psth1);
+							p2out = harmmean(psth2);
+					end
+				catch
+					p1out = nanmean(psth1);
+					p2out = nanmean(psth2);
 				end
 				
 				axes(obj.handles.axis2); cla
@@ -226,11 +226,8 @@ classdef FGMeta < handle
 				areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r.-','MarkerSize',8,'MarkerFaceColor',[1 0 0]);
 				
 				if get(obj.handles.newbars,'Value') == 1
-					bp = defaultParams();
-					bp.use_logspline = false;
-					bp.burn_iter = 100;
-					bars1 = barsP(p1out,[time(1)+obj.offset time(end)+obj.offset],10,bp);
-					bars2 = barsP(p2out,[time(1)+obj.offset time(end)+obj.offset],10,bp);
+					bars1 = barsP(p1out,[time(1)+obj.offset time(end)+obj.offset],obj.bp.trials,obj.bp);
+					bars2 = barsP(p2out,[time(1)+obj.offset time(end)+obj.offset],10,obj.bp);
 					hold on
 					plot(time,bars1.mean,'k-.',time,bars1.mode,'k:')
 					plot(time,bars2.mean,'r-.',time,bars2.mode,'r:')
@@ -492,8 +489,8 @@ classdef FGMeta < handle
 				end
 				
 				if obj.gaussstep > 0
-					psth1tmp = gausssmooth(time,psth1tmp,obj.gaussstep,false);
-					psth2tmp = gausssmooth(time,psth2tmp,obj.gaussstep,false);
+					psth1tmp = gausssmooth(time,psth1tmp,obj.gaussstep,obj.symmetricgaussian);
+					psth2tmp = gausssmooth(time,psth2tmp,obj.gaussstep,obj.symmetricgaussian);
 				end
 								
 				tidx = find(time >= maxt);
@@ -503,18 +500,7 @@ classdef FGMeta < handle
 				psth2tmp = psth2tmp(1:tidx);
 				
 				if get(obj.handles.smooth,'Value') == 1
-					maxtall = max(obj.maxt) - obj.offset;
-					s=get(obj.handles.smoothmethod,'String');
-					v=get(obj.handles.smoothmethod,'Value');
-					s=s{v};
-					F1 = griddedInterpolant(time,psth1tmp,s);
-					F2 = griddedInterpolant(time,psth2tmp,s);
-					time = min(time):obj.smoothstep:maxtall;
-					psth1tmp=F1(time);
-					psth2tmp=F2(time);
-					psth1tmp(psth1tmp < 0) = 0;
-					psth2tmp(psth2tmp < 0) = 0;
-					clear F1 F2;
+					[psth1tmp, psth2tmp] = obj.smoothdata(time,psth1tmp,psth2tmp);
 				end
 				
 				[psth1tmp,psth2tmp] = obj.normalise(time,psth1tmp,psth2tmp);
@@ -535,7 +521,90 @@ classdef FGMeta < handle
 			end
 			
 		end
-	
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function [psth1,psth2,name] = normalise(obj,time,psth1,psth2)
+			name = get(obj.handles.normalisecells,'String');
+			v = get(obj.handles.normalisecells,'Value');
+			name = name{v};
+			max1 = max(psth1);
+			max2 = max(psth2);
+			min1 = min(psth1);
+			min2 = min(psth2);
+			maxx = max([max1 max2]);
+			minn = min([min1 min2]);
+			switch v
+				case 1 %shared max
+					psth1 = psth1 / maxx;
+					psth2 = psth2 / maxx;
+				case 2 %indep max
+					psth1 = psth1 / max1;
+					psth2 = psth2 / max2;
+				case 3 %minmax
+					psth1 = psth1 - minn;
+					psth2 = psth2 - minn;
+					psth1 = psth1 / (maxx-minn);
+					psth2 = psth2 / (maxx-minn);
+				case 4 %minmax ind
+					psth1 = psth1 - min1;
+					psth2 = psth2 - min2;
+					psth1 = psth1 / (max1-min1);
+					psth2 = psth2 / (max2-min2);
+				case 5 %max-spontaneous
+					tidx = find(time < 0);
+					sp1 = mean(psth1(tidx));
+					sp2 = mean(psth2(tidx));
+					sp = mean([sp1 sp2]);
+					psth1 = psth1 - sp;
+					psth2 = psth2 - sp;
+					psth1 = psth1 / (maxx-sp);
+					psth2 = psth2 / (maxx-sp);
+				case 6 %zscore
+					psth1 = zscore(psth1);
+					psth2 = zscore(psth2);
+				otherwise
+					%fprintf('No normalisation!\n');
+			end
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function [psth1,psth2] = smoothdata(obj,time,psth1,psth2)
+			maxtall = max(obj.maxt) - obj.offset;
+			s=get(obj.handles.smoothmethod,'String');
+			v=get(obj.handles.smoothmethod,'Value');
+			s=s{v};
+			F1 = griddedInterpolant(time,psth1,s);
+			F2 = griddedInterpolant(time,psth2,s);
+			time = min(time):obj.smoothstep:maxtall;
+			psth1=F1(time);
+			psth2=F2(time);
+			psth1(psth1 < 0) = 0;
+			psth2(psth2 < 0) = 0;
+			clear F1 F2;
+		end
+		
+		% ===================================================================
+		%> @brief 
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function closeUI(obj)
+			try; delete(obj.handles.parent); end %#ok<TRYNC>
+			obj.handles = struct();
+			obj.openUI = false;
+		end
+		
 		% ===================================================================
 		%> @brief
 		%>
@@ -703,68 +772,5 @@ classdef FGMeta < handle
 			obj.handles = handles;
 			obj.openUI = true;
 		end
-		
-		% ===================================================================
-		%> @brief
-		%>
-		%> @param
-		%> @return
-		% ===================================================================
-		function [psth1,psth2,name] = normalise(obj,time,psth1,psth2)
-			name = get(obj.handles.normalisecells,'String');
-			v = get(obj.handles.normalisecells,'Value');
-			name = name{v};
-			max1 = max(psth1);
-			max2 = max(psth2);
-			min1 = min(psth1);
-			min2 = min(psth2);
-			maxx = max([max1 max2]);
-			minn = min([min1 min2]);
-			switch v
-				case 1 %shared max
-					psth1 = psth1 / maxx;
-					psth2 = psth2 / maxx;
-				case 2 %indep max
-					psth1 = psth1 / max1;
-					psth2 = psth2 / max2;
-				case 3 %minmax
-					psth1 = psth1 - minn;
-					psth2 = psth2 - minn;
-					psth1 = psth1 / (maxx-minn);
-					psth2 = psth2 / (maxx-minn);
-				case 4 %minmax ind
-					psth1 = psth1 - min1;
-					psth2 = psth2 - min2;
-					psth1 = psth1 / (max1-min1);
-					psth2 = psth2 / (max2-min2);
-				case 5 %max-spontaneous
-					tidx = find(time < 0);
-					sp1 = mean(psth1(tidx));
-					sp2 = mean(psth2(tidx));
-					sp = mean([sp1 sp2]);
-					psth1 = psth1 - sp;
-					psth2 = psth2 - sp;
-					psth1 = psth1 / (maxx-sp);
-					psth2 = psth2 / (maxx-sp);
-				case 6 %zscore
-					psth1 = zscore(psth1);
-					psth2 = zscore(psth2);
-				otherwise
-					%fprintf('No normalisation!\n');
-			end
-		end
-		
-		% ===================================================================
-		%> @brief 
-		%>
-		%> @param
-		%> @return
-		% ===================================================================
-		function closeUI(obj)
-			try; delete(obj.handles.parent); end %#ok<TRYNC>
-			obj.handles = struct();
-			obj.openUI = false;
-		end
-		
 	end	
 end
