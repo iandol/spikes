@@ -1,4 +1,4 @@
-function jackstat = jackknife(jackfun,varargin)
+function jackstat = jackknifeold(jackfun,varargin)
 %JACKKNIFE Jackknife statistics.
 %   JACKSTAT = JACKKNIFE(JACKFUN,...) draws jackknife data samples,
 %   computes statistics on each sample using the function JACKFUN, and
@@ -102,4 +102,4 @@ else
       tmp = feval(jackfun,db{:});
       jackstat(jackiter,:) = (tmp(:))';
    end
-end
+end

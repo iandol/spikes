@@ -16,6 +16,9 @@ classdef FGMeta < handle
 		mint@double
 		maxt@double
 		deltat@double
+	end
+	
+	properties (Hidden = true, SetAccess = private, GetAccess = public)
 		ptime@double
 		ppsth1@double
 		perror1@double
@@ -90,6 +93,9 @@ classdef FGMeta < handle
 					obj.cells{idx,i}.psth = o.(['cell' num2str(i) 'psth']){1};
 					obj.cells{idx,i}.mean_fine = o.(['bars' num2str(i)]){1}.mean_fine;
 					obj.cells{idx,i}.time_fine = o.(['bars' num2str(i)]){1}.time_fine;
+					obj.cells{idx,i}.spontaneous = o.(['spontaneous' num2str(i)]);
+					obj.cells{idx,i}.spontaneousci = o.(['spontaneous' num2str(i) 'ci']);
+					obj.cells{idx,i}.spontaneouserror = o.(['spontaneous' num2str(i) 'error']);
 					obj.cells{idx,i}.weight = 1;
 				end
 
@@ -175,13 +181,13 @@ classdef FGMeta < handle
 				end
 				
 				if get(obj.handles.smooth,'Value') == 1
-					[psth, psth2] = obj.smoothdata(time,psth1,psth2);
+					[psth1, psth2] = obj.smoothdata(time,psth1,psth2);
 				end
 				
 				name = '';
 				if get(obj.handles.shownorm,'Value') == 1
 					%do we have a max override?
-					if isfield(obj.cells{sel,1},'max') 
+					if isfield(obj.cells{sel,1},'max')
 						gmax = obj.cells{sel,1}.max;
 						if gmax == 0;gmax = []; end
 					else
@@ -199,11 +205,16 @@ classdef FGMeta < handle
 				hold off
 				grid on
 				box on
-					title(sprintf('Selected Cell: %s',obj.list{sel}));
+				title(sprintf('Selected Cell: %s',obj.list{sel}));
 				xlabel('Time (ms)')
 				ylabel('Firing Rate (Hz)')
 
+				%----------------POPULATION-------------------------------
 				[psth1,psth2,time]=computeAverage(obj);
+				nn = find(isnan(nanmean(psth1)));
+				time(nn) = [];
+				psth1(:,nn) = [];
+				psth2(:,nn) = [];
 				[~,p1err] = stderr(psth1,'SE');
 				[~,p2err] = stderr(psth2,'SE');
 				
@@ -340,7 +351,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function save(obj,varargin)
-				[file,path] = uiputfile('*.mat','Save Meta Analysis:');
+			[file,path] = uiputfile('*.mat','Save Meta Analysis:');
 			if ~ischar(file)
 				errordlg('No file selected...')
 				return 
@@ -469,6 +480,9 @@ classdef FGMeta < handle
 			cla
 			obj.cells = cell(1);
 			obj.list = cell(1);
+			obj.mint = [];
+			obj.maxt = [];
+			obj.deltat = [];
 			set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
 		end
 		
@@ -491,7 +505,7 @@ classdef FGMeta < handle
 			psth2 = [];
 			
 			mint = min(obj.mint)-obj.offset;
-			maxt = min(obj.maxt)-obj.offset;
+			maxt = max(obj.maxt)-obj.offset;
 			
 			for idx = 1:obj.nCells
 				
@@ -530,12 +544,22 @@ classdef FGMeta < handle
 					psth1tmp = gausssmooth(time,psth1tmp,obj.gaussstep,obj.symmetricgaussian);
 					psth2tmp = gausssmooth(time,psth2tmp,obj.gaussstep,obj.symmetricgaussian);
 				end
-								
-				tidx = find(time >= maxt);
-				tidx = tidx(1);
-				time = time(1:tidx);
-				psth1tmp = psth1tmp(1:tidx);
-				psth2tmp = psth2tmp(1:tidx);
+							
+				if max(time) < maxt
+					dt = max(obj.deltat);
+					if isempty(dt); dt = 10; end
+					tt = max(time)+dt:dt:maxt;
+					time = [time tt];
+					pp = 1:length(tt);
+					pp(:) = NaN;
+					psth1tmp = [psth1tmp pp];
+					psth2tmp = [psth2tmp pp];
+				end
+				%tidx = find(time >= maxt);
+				%tidx = tidx(1);
+				%time = time(1:tidx);
+				%psth1tmp = psth1tmp(1:tidx);
+				%psth2tmp = psth2tmp(1:tidx);
 				
 				if get(obj.handles.smooth,'Value') == 1
 					[psth1tmp, psth2tmp] = obj.smoothdata(time,psth1tmp,psth2tmp);
