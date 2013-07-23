@@ -18,19 +18,22 @@ classdef FGMeta < handle
 		deltat@double
 	end
 	
-	properties (Hidden = true, SetAccess = private, GetAccess = public)
+	properties (Hidden = false, SetAccess = private, GetAccess = public)
 		ptime@double
 		ppsth1@double
+		ppout1@double
 		perror1@double
 		ppsth2@double
+		ppout2@double
 		perror2@double
+		stash@struct
 	end
 	
 	properties (SetAccess = protected, GetAccess = public, Transient = true)
 		%> handles for the GUI
 		handles@struct
 		openUI@logical = false
-		version@double = 1.11
+		version@double = 1.15
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -215,8 +218,13 @@ classdef FGMeta < handle
 				time(nn) = [];
 				psth1(:,nn) = [];
 				psth2(:,nn) = [];
+				
 				[~,p1err] = stderr(psth1,'SE');
 				[~,p2err] = stderr(psth2,'SE');
+				
+				for ii = 1:length(time)
+					[p(ii), h(ii)] = ranksum(psth1(:,ii),psth2(:,ii),'alpha',0.01,'tail','left');
+				end
 				
 				s = get(obj.handles.meanmethod,'String');
 				v = get(obj.handles.meanmethod,'Value');
@@ -238,17 +246,32 @@ classdef FGMeta < handle
 						case 'harmmean'
 							p1out = harmmean(psth1);
 							p2out = harmmean(psth2);
+						case 'bootstrapmean'
+							[p1out,p1err] = stderr(psth1,'CIMEAN');
+							[p2out,p2err] = stderr(psth2,'CIMEAN');
+							p1err(isnan(p1err))=0;
+							p2err(isnan(p2err))=0;
+						case 'bootstrapmedian'
+							[p1out,p1err] = stderr(psth1,'CIMEDIAN');
+							[p2out,p2err] = stderr(psth2,'CIMEDIAN');
+							p1err(isnan(p1err))=0;
+							p2err(isnan(p2err))=0;
 					end
 				catch
 					p1out = nanmean(psth1);
 					p2out = nanmean(psth2);
 				end
 				
+				mm=max([max(p1out) max(p2out)]);
+				mi=max([max(p1out) max(p2out)]);
+				h = h * mm;
+				
 				axes(obj.handles.axis2); cla
 				areabar(time,p1out,p1err,[0.7 0.7 0.7],0.35,'k.-','MarkerSize',8,'MarkerFaceColor',[0 0 0]);
 				hold on
 				areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r.-','MarkerSize',8,'MarkerFaceColor',[1 0 0]);
-				
+				hold on
+				plot(time,h,'k*');
 				if get(obj.handles.newbars,'Value') == 1
 					bars1 = barsP(p1out,[time(1)+obj.offset time(end)+obj.offset],obj.bp.trials,obj.bp);
 					bars2 = barsP(p2out,[time(1)+obj.offset time(end)+obj.offset],10,obj.bp);
@@ -263,8 +286,8 @@ classdef FGMeta < handle
 				sp2 = psth2(:,spontt);
 				sp1 = reshape(sp1,1,numel(sp1));
 				sp2 = reshape(sp2,1,numel(sp2));
-				ci1 = bootci(1000,{@mean,sp1},'alpha',0.01,'type','cper');
-				ci2 = bootci(1000,{@mean,sp2},'alpha',0.01,'type','cper');
+				ci1 = bootci(1000,{@nanmean,sp1},'alpha',0.01);
+				ci2 = bootci(1000,{@nanmean,sp2},'alpha',0.01);
 				
 				hold on
 				line([time(1) time(end)],[ci1(1) ci1(1)],'Color',[0 0 0],'LineStyle','--');
@@ -283,8 +306,10 @@ classdef FGMeta < handle
 				ylabel(['Firing Rate Normalised: ' name]);
 				
 				obj.ptime = time;
-				obj.ppsth1 = p1out;
-				obj.ppsth2 = p2out;
+				obj.ppsth1 = psth1;
+				obj.ppout1 = p1out;
+				obj.ppsth2 = psth2;
+				obj.ppout2 = p2out;
 				obj.perror1 = p1err;
 				obj.perror2 = p2err;
 				
@@ -403,6 +428,88 @@ classdef FGMeta < handle
 		function quit(obj,varargin)
 			reset(obj);
 			closeUI(obj);
+		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function stashdata(obj)
+			obj.stash.time = obj.ptime;
+			obj.stash.psth1 = obj.ppsth1;
+			obj.stash.ppout1 = obj.ppout1;
+			obj.stash.psth2 = obj.ppsth2;
+			obj.stash.ppout2 = obj.ppout2;
+		end
+		
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function comparestash(obj)
+			time1 = obj.ptime;
+			psth1 = obj.ppsth2;
+			time2 = obj.stash.time;
+			psth2 = obj.stash.psth2;
+			
+			[~,p1err] = stderr(psth1,'SE');
+			[~,p2err] = stderr(psth2,'SE');
+
+			for ii = 1:length(time)
+				[p(ii), h(ii)] = ranksum(psth1(:,ii),psth2(:,ii),'alpha',0.01,'tail','left');
+			end
+
+			s = get(obj.handles.meanmethod,'String');
+			v = get(obj.handles.meanmethod,'Value');
+			s = s{v};
+			try
+				switch s
+					case 'mean'
+						p1out = nanmean(psth1);
+						p2out = nanmean(psth2);
+					case 'median'
+						p1out = nanmedian(psth1);
+						p2out = nanmedian(psth2);
+					case 'trimmean'
+						p1out = trimmean(psth1,obj.trimpercent);
+						p2out = trimmean(psth2,obj.trimpercent);
+					case 'geomean'
+						p1out = geomean(psth1);
+						p2out = geomean(psth2);
+					case 'harmmean'
+						p1out = harmmean(psth1);
+						p2out = harmmean(psth2);
+					case 'bootstrapmean'
+						[p1out,p1err] = stderr(psth1,'CIMEAN');
+						[p2out,p2err] = stderr(psth2,'CIMEAN');
+						p1err(isnan(p1err))=0;
+						p2err(isnan(p2err))=0;
+					case 'bootstrapmedian'
+						[p1out,p1err] = stderr(psth1,'CIMEDIAN');
+						[p2out,p2err] = stderr(psth2,'CIMEDIAN');
+						p1err(isnan(p1err))=0;
+						p2err(isnan(p2err))=0;
+				end
+			catch
+				p1out = nanmean(psth1);
+				p2out = nanmean(psth2);
+			end
+
+			mm=max([max(p1out) max(p2out)]);
+			mi=max([max(p1out) max(p2out)]);
+			h = h * mm;
+
+			axes(obj.handles.axis2); cla
+			areabar(time,p1out,p1err,[0.7 0.7 0.7],0.35,'k.-','MarkerSize',8,'MarkerFaceColor',[0 0 0]);
+			hold on
+			areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r.-','MarkerSize',8,'MarkerFaceColor',[1 0 0]);
+			hold on
+			plot(time,h,'k*');
 		end
 		
 	end%-------------------------END PUBLIC METHODS--------------------------------%
@@ -851,7 +958,7 @@ classdef FGMeta < handle
 				'Parent',handles.controls3,...
 				'Tag','FGmeanmethod',...
 				'Callback',@obj.replot,...
-				'String',{'mean','median','trimmean','geomean','harmmean'});
+				'String',{'mean','median','trimmean','geomean','harmmean','bootstrapmean','bootstrapmedian'});
 
 			set(handles.hbox,'Sizes', [-1.5 -1]);
 			set(handles.controls,'Sizes', [55 -1 70]);

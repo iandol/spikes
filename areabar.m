@@ -8,8 +8,8 @@ function handles = areabar(xvalues,ydata,error,c1,alpha,varargin)
 %     where c1 is the colour of the shaded options and plotoptions are
 %     passed to the line plot
 
-if min(size(xvalues)) > 1 || min(size(ydata)) > 1 || min(size(error)) > 1
-   errordlg('Sorry, you can only plot vector data.')
+if min(size(xvalues)) > 1 || min(size(ydata)) > 1 || min(size(error)) > 2
+   warning('Sorry, you can only plot vector data.')
    error('Areabar error');
 end
 
@@ -46,9 +46,15 @@ if e(1) < e(2)             %need to organise to row
 end
 
 x=length(xvalues);
-err=zeros(x+x,1);
-err(1:x,1)=ydata+error;
-err(x+1:x+x,1)=flipud(ydata-error);
+if size(error,2) == 2
+	err=zeros(x+x,1);
+	err(1:x,1)=error(:,1);
+	err(x+1:x+x,1)=flipud(error(:,2));
+else
+	err=zeros(x+x,1);
+	err(1:x,1)=ydata+error;
+	err(x+1:x+x,1)=flipud(ydata-error);
+end
 areax=zeros(x+x,1);
 areax(1:x,1)=xvalues;
 areax(x+1:x+x,1)=flipud(xvalues);
