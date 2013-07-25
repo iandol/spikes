@@ -437,7 +437,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function stashdata(obj)
-			obj.stash.time = obj.ptime;
+			obj.stash(1).time = obj.ptime;
 			obj.stash.psth1 = obj.ppsth1;
 			obj.stash.ppout1 = obj.ppout1;
 			obj.stash.psth2 = obj.ppsth2;
@@ -457,10 +457,16 @@ classdef FGMeta < handle
 			time2 = obj.stash.time;
 			psth2 = obj.stash.psth2;
 			
+			mn = min([length(time1) length(time2)]);
+			time1=time1(1:mn);
+			time2=time2(1:mn);
+			psth1=psth1(:,1:mn);
+			psth2=psth2(:,1:mn);
+			
 			[~,p1err] = stderr(psth1,'SE');
 			[~,p2err] = stderr(psth2,'SE');
 
-			for ii = 1:length(time)
+			for ii = 1:length(time1)
 				[p(ii), h(ii)] = ranksum(psth1(:,ii),psth2(:,ii),'alpha',0.01,'tail','left');
 			end
 
@@ -504,12 +510,13 @@ classdef FGMeta < handle
 			mi=max([max(p1out) max(p2out)]);
 			h = h * mm;
 
-			axes(obj.handles.axis2); cla
-			areabar(time,p1out,p1err,[0.7 0.7 0.7],0.35,'k.-','MarkerSize',8,'MarkerFaceColor',[0 0 0]);
+			figure;
+			figpos(1,[1000 1000]);
+			areabar(time1,p1out,p1err,[0.7 0.7 0.7],0.35,'k.-','MarkerSize',8,'MarkerFaceColor',[0 0 0]);
 			hold on
-			areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r.-','MarkerSize',8,'MarkerFaceColor',[1 0 0]);
+			areabar(time2,p2out,p2err,[1 0.7 0.7],0.35,'r.-','MarkerSize',8,'MarkerFaceColor',[1 0 0]);
 			hold on
-			plot(time,h,'k*');
+			plot(time1,h,'k*');
 		end
 		
 	end%-------------------------END PUBLIC METHODS--------------------------------%
