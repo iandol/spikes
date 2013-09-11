@@ -3,7 +3,7 @@ function varargout = gaussfit1D_UI(varargin)
 %    FIG = GAUSSFIG launch gaussfig GUI.
 %    GAUSSFIG('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 06-Sep-2013 18:11:35
+% Last Modified by GUIDE v2.5 11-Sep-2013 18:53:50
 
 if nargin == 0  % LAUNCH GUI
 
@@ -429,3 +429,11 @@ function D14Edit2_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of D14Edit2 as text
 %        str2double(get(hObject,'String')) returns contents of D14Edit2 as a double
 gaussfit1D('D1Plot');
+
+
+% --- Executes on button press in GF1Spawn.
+function GF1Spawn_Callback(hObject, eventdata, handles)
+% hObject    handle to GF1Spawn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+gaussfit1D('Spawn');

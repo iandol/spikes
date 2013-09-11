@@ -117,6 +117,33 @@ case 'Initialize'
     drawgauss(2);
     drawgauss(3);
     drawgauss(4);
+	
+	gdat.axn = {'GF1HAxis','GF1VAxis','GF1D1Axis','GF1D2Axis'};
+	gdat.currentplot = gdat.axn{1};
+	
+	%============================================================
+case 'Spawn'
+	%============================================================
+	f=figure('name','GaussFit 1D Spawn');
+	set(f,'Color',[1 1 1]);
+	figpos(1,[1000 1000])
+	
+	h = copyobj(gh(gdat.currentplot),f);
+	set(h,'OuterPosition',[0 0 1 1],'FontSize',16);
+	title(['PLOT: ' gdat.currentplot])
+
+% 	p=panel(f);
+% 	p.margin = 5;
+% 	p.pack(2,2);
+% 	for i=1:4
+% 		[ii,jj]=ind2sub([2 2],i);
+% 		u2 = uipanel('Units','normalized','Position',[0 0 1 1],'BackgroundColor',[1 1 1]);
+% 		p(ii,jj).select(u2);
+% 		p(ii,jj).margin = 0;
+% 		h = copyobj(gh(gdat.axn{i}),u2);
+% 		set(h,'OuterPosition',[0 0 1 1])
+% 	end
+	
     
     %============================================================
 case 'HPlot'
@@ -174,6 +201,9 @@ end
 function drawgauss(s)
 
 global gdat
+
+axn = {'GF1HAxis','GF1VAxis','GF1D1Axis','GF1D2Axis'};
+gdat.currentplot = axn{s};
 
 switch s
 case 1 %horizontal
@@ -267,13 +297,13 @@ case 1 %horizontal
         x2g=gdat.xh;
         y2g=gdat.c2hgauss;
     end
-    axes(gh('HAxis'));    
+    axes(gh('GF1HAxis'));    
     cla
     hold on
     plot(x1,y1,'ko',x1g,y1g,'k-');
     plot(x2,y2,'ro',x2g,y2g,'r-');    
     hold off
-    set(gca,'Tag','HAxis');
+    set(gca,'Tag','GF1HAxis');
     g1=num2str(goodness(y1,y1g,'m'));
     g2=num2str(goodness(y2,y2g,'m'));
     g5=num2str(goodness(y1,y1g,'mfe'));
@@ -374,13 +404,13 @@ case 2 %vertical
         x2g=gdat.xv;
         y2g=gdat.c2vgauss;
     end
-    axes(gh('VAxis')); 
+    axes(gh('GF1VAxis')); 
     cla
     hold on
     plot(x1,y1,'ko',x1g,y1g,'k-');
     plot(x2,y2,'ro',x2g,y2g,'r-');    
     hold off
-    set(gca,'Tag','VAxis');
+    set(gca,'Tag','GF1VAxis');
 %     g1=goodness(y1,y1g);
 %     g2=goodness(y2,y2g);
 %     set(gh('VText'),'String',['Control Fit: ' num2str(g1) '%     Drug Fit: ' num2str(g2) '%']);
@@ -485,13 +515,13 @@ case 3	%diagonal 1
         x2g=gdat.xd1;
         y2g=gdat.c2d1gauss;
     end
-    axes(gh('D1Axis')); 
+    axes(gh('GF1D1Axis')); 
     cla
     hold on
     plot(x1,y1,'ko',x1g,y1g,'k-');
     plot(x2,y2,'ro',x2g,y2g,'r-');    
     hold off
-    set(gca,'Tag','D1Axis');
+    set(gca,'Tag','GF1D1Axis');
     g1=num2str(goodness(y1,y1g,'m'));
     g2=num2str(goodness(y2,y2g,'m'));
     g5=num2str(goodness(y1,y1g,'mfe'));
@@ -593,13 +623,13 @@ case 4 %diagonal 2
         y2g=gdat.c2d2gauss;
     end
     
-    axes(gh('D2Axis')); 
+    axes(gh('GF1D2Axis')); 
     cla
     hold on
     plot(x1,y1,'ko',x1g,y1g,'k-');
     plot(x2,y2,'ro',x2g,y2g,'r-');    
     hold off
-    set(gca,'Tag','D2Axis');
+    set(gca,'Tag','GF1D2Axis');
     g1=num2str(goodness(y1,y1g,'m'));
     g2=num2str(goodness(y2,y2g,'m'));
     g5=num2str(goodness(y1,y1g,'mfe'));
