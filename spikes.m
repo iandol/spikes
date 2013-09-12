@@ -353,7 +353,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							data.pR.cellmap = sv.cellmap;
 							data.pR.parse;
 						else
-							[data.pR.matfile, ~] = uigetfile('*.mat','Load Behaviour MAT File');
+							[data.pR.matfile, data.pR.matdir] = uigetfile('*.mat','Load Behaviour MAT File');
 							[data.pR.edffile, ~] = uigetfile('*.edf','Load EDF File');
 							data.pR.file = fn;
 							data.pR.dir = pn;
