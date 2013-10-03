@@ -3,11 +3,11 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 10-May-2013 12:14:15
+% Last Modified by GUIDE v2.5 01-Oct-2013 15:11:05
 
 if nargin == 0  % LAUNCH GUI
 	
-	fig = openfig(mfilename,'reuse');
+	fig = openfig(mfilename,'new',varargin{:});
 	
 	% Generate a structure of handles to pass to callbacks, and store it. 
 	handles = guihandles(fig);
@@ -857,17 +857,6 @@ function SPDogSpont_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of SPDogSpont as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function SPDogSpont_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SPDogSpont (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in SLoadRAWButton.
@@ -922,9 +911,9 @@ else
 end
 
 
-% --- Executes on button press in SplxReport.
-function SplxReport_Callback(hObject, eventdata, handles)
-% hObject    handle to SplxReport (see GCBO)
+% --- Executes on button press in SPLXReport.
+function SPLXReport_Callback(hObject, eventdata, handles)
+% hObject    handle to SPLXReport (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global data
