@@ -2979,24 +2979,26 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					fprintf('VARIABLE %g HIGH/LOW RT P = %g\n',i, eyeraw.highlow_p);
 				end
 				
-				y = y(1:length(x));
-				name = [raw.name(1:6) '_EyeVar' eyeraw.name]; 
-				name = regexprep(name,'\#','');
-				name = regexprep(name,'\|','');
-				name = regexprep(name,' ','_');
-				g.columnlabels = {name};
-				g.x = x;
-				g.y = y;
 				if isempty(y) || isempty(x)
 					eyeraw.error = 'SORRY No saccades to analyse for this variable!';
+					helpdlg(eyeraw.error);
 					fprintf('\n%s\n',eyeraw.error)
+					return
 				else
+					y = y(1:length(x));
+					name = [raw.name(1:6) '_EyeVar' eyeraw.name]; 
+					name = regexprep(name,'\#','');
+					name = regexprep(name,'\|','');
+					name = regexprep(name,' ','_');
+					g.columnlabels = {name};
+					g.x = x;
+					g.y = y;
 					run(g);
+					eyeraw.x=x;
+					eyeraw.y=y;
+					eyeraw.rtLimits = rtLimits;
+					assignin('base',['eyeraw' num2str(data.tr(i))], eyeraw);
 				end
-				eyeraw.x=x;
-				eyeraw.y=y;
-				eyeraw.rtLimits = rtLimits;
-				assignin('base',['eyeraw' num2str(data.tr(i))], eyeraw);
 			end
 			
 		end
