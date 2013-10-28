@@ -18,6 +18,8 @@ end
 
 path(path,'..');
 
+cd(fileparts(which(mfilename)));
+
 if(~exist('dataset','var'))
   dataset = input('Enter dataset label (\"drift\", \"synth\", or \"taste\"): ','s');
 end
@@ -29,7 +31,7 @@ opts.parallel = 1;
 opts.possible_words = 'unique';
 
 oldp=pwd;
-cd('../data/')
+cd('../data')
   
 if (strcmp(dataset,'drift'))
   opts.shift_cost = [0 2.^(-2:9)];

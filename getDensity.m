@@ -197,7 +197,10 @@
 				
 				h=figure;
 				outs.(fieldn).h = h;
-				set(h,'Color',[1 1 1])
+				set(h,'Color',[1 1 1]);
+				if exist('figpos'); figpos(1,[1200 1200]); end
+				t = [obj.columnlabels{:}];
+				set(h,'name',t);
 				
 				pn = panel(h);
 				if obj.isDataEqualLength == false

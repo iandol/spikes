@@ -12,7 +12,7 @@ opts.parallel = 1;
 opts.entropy_estimation_method = {'plugin','tpmc','jack'};
 %opts.tpmc_possible_words_strategy = 0;
 opts.shift_cost = [0 2.^(-2:10)];
-margins = 0.05;
+%margins = 0.05;
 
 X=makemetric(data,sv);
 
@@ -33,13 +33,25 @@ clear info_plugin info_tpmc info_jack info_unshuf info_unjk;
 clear temp_info_shuf temp_info_jk;
 
 h=figure;
-figpos(1,[],2);
-set(gcf,'name','Metric Space Analysis');
+set(h,'Color',[1 1 1]);
+figpos(1,[1200 1200]);
+set(h,'name','Metric Space Analysis');
+p = panel(h);
+p.margintop = 15;
+p.fontsize = 12;
+p.pack(2,2);
 
-subplot_tight(2,2,1,margins,'Parent',h);
+% h=figure;
+% figpos(1,[],2);
+
+
+%subplot_tight(2,2,1,margins,'Parent',h);
 %set(gca,'FontName','georgia','FontSize',11);
+p(1,1).select();
 staraster(X,[opts.start_time opts.end_time]);
-title('Raster plot');
+p(1,1).title('Raster plot');
+grid on
+box on
 
 %%% Simple analysis
 drawnow;
@@ -55,21 +67,26 @@ end
 drawnow
 waitbar(0.4,hwait,'Plotting matrix and Information');
 
-subplot_tight(2,2,2,margins,'Parent',h);
+%subplot_tight(2,2,2,margins,'Parent',h);
+p(1,2).select();
+p(1,2).hold('on')
 %set(gca,'FontName','georgia','FontSize',11);
 [max_info,max_info_idx]=max(info_plugin);
 imagesc(out(max_info_idx).d);
-xlabel('Spike train index');
-ylabel('Spike train index');
-title('Distance matrix at maximum information');
+p(1,2).xlabel('Spike train index');
+p(1,2).ylabel('Spike train index');
+p(1,2).title('Distance matrix at maximum information');
 
-subplot_tight(2,2,3,margins,'Parent',h);
+%subplot_tight(2,2,3,margins,'Parent',h);
 %set(gca,'FontName','georgia','FontSize',11);
+p(2,1).select();
+p(2,1).hold('on')
 plot(1:length(opts.shift_cost),info_plugin);
-hold on;
 plot(1:length(opts.shift_cost),info_tpmc,'--');
 plot(1:length(opts.shift_cost),info_jack,'-.');
-hold off;
+p(2,1).hold('off')
+grid on
+box on
 set(gca,'xtick',1:length(opts.shift_cost));
 set(gca,'xticklabel',opts.shift_cost);
 set(gca,'xlim',[1 length(opts.shift_cost)]);
@@ -106,8 +123,8 @@ P_total = size(jk,1);
 temp_info_jk = zeros(P_total,length(opts.shift_cost));
 for q_idx=1:length(opts.shift_cost)
   info_unjk(q_idx)= out_unjk(q_idx).table.information.value;
-  for p=1:P_total
-    temp_info_jk(p,q_idx) = jk(p,q_idx).table.information.value;
+  for pp=1:P_total
+    temp_info_jk(pp,q_idx) = jk(pp,q_idx).table.information.value;
   end
 end
 info_jk_std = std(temp_info_jk,[],1);
@@ -115,8 +132,9 @@ info_jk_sem = sqrt((P_total-1)*var(temp_info_jk,1,1));
 
 %%% Plot results
 
-subplot_tight(2,2,4,margins,'Parent',h);
+%subplot_tight(2,2,4,margins,'Parent',h);
 %set(gca,'FontName','georgia','FontSize',11);
+p(2,2).select();
 errorbar(1:length(opts.shift_cost),info_unjk,info_jk_sem);
 hold on;
 errorbar(1:length(opts.shift_cost),info_shuf,2*info_shuf_std,'r');
