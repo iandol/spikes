@@ -8,7 +8,7 @@ opts.clustering_exponent = -2;
 opts.unoccupied_bins_strategy = 0;
 opts.metric_family = family;
 opts.parallel = 1;
-%opts.possible_words = 'unique';
+opts.possible_words = 'unique';
 opts.entropy_estimation_method = {'plugin','tpmc','jack'};
 %opts.tpmc_possible_words_strategy = 0;
 opts.shift_cost = [0 2.^(-2:10)];
@@ -73,6 +73,9 @@ p(1,2).hold('on')
 %set(gca,'FontName','georgia','FontSize',11);
 [max_info,max_info_idx]=max(info_plugin);
 imagesc(out(max_info_idx).d);
+axis tight
+grid on
+box on
 p(1,2).xlabel('Spike train index');
 p(1,2).ylabel('Spike train index');
 p(1,2).title('Distance matrix at maximum information');
