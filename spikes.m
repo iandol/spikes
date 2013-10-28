@@ -360,7 +360,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							data.pR.parse;
 						end
 					end
-					if regexpi(data.pR.rE.tS.name,'two-figure-ground');
+					if isfield(data.pR.rE.tS,'name') && ~isempty(regexpi(data.pR.rE.tS.name,'two-figure-ground'));
 						inputdlg({'Enter First Variable Position:','Enter Second Variable Position:'},...
 							'Two Figure Trial Correction:',[1 20],{'1','1'});
 					end
