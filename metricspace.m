@@ -145,9 +145,9 @@ info_jk_sem = sqrt((P_total-1)*var(temp_info_jk,1,1));
 %subplot_tight(2,2,4,margins,'Parent',h);
 %set(gca,'FontName','georgia','FontSize',11);
 p(2,2).select();
-errorbar(1:length(opts.shift_cost),info_unjk,info_jk_sem);
+areabar(1:length(opts.shift_cost),info_unjk,info_jk_sem,[.7 .7 .7],0.5,'k-o');
 hold on;
-errorbar(1:length(opts.shift_cost),info_shuf,2*info_shuf_std,'r');
+areabar(1:length(opts.shift_cost),info_shuf,2*info_shuf_std,[.7 .5 .5],0.5,'k-o');
 hold off;
 set(gca,'xtick',1:length(opts.shift_cost));
 set(gca,'xticklabel',opts.shift_cost);
@@ -164,7 +164,7 @@ else
 	family='\fontname{georgia}\fontsize{12}D^{interval}';
 end
 
-suptitle([family '\rightarrow' data.matrixtitle]);
+p(1,1).title([family '\rightarrow' data.matrixtitle]);
 close(hwait);
 
 mout.X=X;

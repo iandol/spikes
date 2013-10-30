@@ -6,7 +6,7 @@ function out=makemetric(data,sv,mintrial,maxtrial)
 % select them easily. It will also wrap or not the data depending on Spikes
 % settings
 isOpro = false;
-timeModifier = 1e4; %vs traditionally used 0.1ms timebase
+timeModifier = 1e-4; %vs traditionally used 0.1ms timebase
 %check if were getting an opro structure or a spikes one. If it is opro we
 %are going to be loading the reparsed structure (i.e. figure vs ground with variables collated into two groups)
 %which means that we have to create a pseudo data structure
@@ -49,7 +49,7 @@ out.N=int32(1);
 out.sites.label = {data.matrixtitle};
 out.sites.recording_tag = {'episodic'}; %Can be either continuous or episodic
 out.sites.time_scale = 1; %The scale factor required to convert the time mesurements in seconds
-out.sites.time_resolution = 1e-4; %The temporal resolution of the recording (prior to scaling by time_scale)
+out.sites.time_resolution = timeModifier; %The temporal resolution of the recording (prior to scaling by time_scale)
 out.sites.si_unit = 'none'; %The pluralized international system of units (SI) base or derived unit of the sampled data
 out.sites.si_prefix = 1; %The international system of units (SI) prefix (a power of ten)
 
