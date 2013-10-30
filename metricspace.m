@@ -6,6 +6,9 @@ pos=get(hwait,'Position');
 set(hwait,'Position',[0 0 pos(3) pos(4)]);
 opts.clustering_exponent = -2;
 opts.unoccupied_bins_strategy = 0;
+if ~exist('family','var')
+	family = 0; %spike family IIRC? 1=Interval
+end
 opts.metric_family = family;
 opts.parallel = 1;
 opts.possible_words = 'unique';
@@ -13,6 +16,11 @@ opts.entropy_estimation_method = {'plugin','tpmc','jack'};
 %opts.tpmc_possible_words_strategy = 0;
 opts.shift_cost = [0 2.^(-2:10)];
 %margins = 0.05;
+
+if isfield(data, 'cell1raws') && ~isfield(data,'zipload')
+	sv = [];
+	data.matrixtitle = data.cell1.matrixtitle;
+end
 
 X=makemetric(data,sv);
 
@@ -43,7 +51,6 @@ p.pack(2,2);
 
 % h=figure;
 % figpos(1,[],2);
-
 
 %subplot_tight(2,2,1,margins,'Parent',h);
 %set(gca,'FontName','georgia','FontSize',11);

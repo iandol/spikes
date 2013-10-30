@@ -208,6 +208,7 @@ case 'Reparse'
 	
 	for i = 1:2
 		c = o.(['cell' num2str(i)]);
+		c.numvars = 0;
 		vars = sort( map{i} );
 		raw = c.raw{vars(1)};
 		if get(gh('OPAllTrials'), 'Value') < 1
@@ -252,6 +253,11 @@ case 'Reparse'
 		c.yvalues = [5];
 		c.yvalueso = c.yvalues;
 		c.yindex = c.yrange;
+		c.zrange = 1;
+		c.ztitle = 'Meta3';
+		c.zvalues = [5];
+		c.zvalueso = c.zvalues;
+		c.zindex = c.zrange;
 
 		[time,psth,rawspikes,sums]=binit(raw,binwidth*10, raw.startmod, raw.endmod, raw.starttrial, raw.endtrial, 0);
 		[time2,bpsth]=binitb(raw,binwidth*10, raw.startmod, raw.endmod, raw.starttrial, raw.endtrial, 0);
