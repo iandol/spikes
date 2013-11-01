@@ -18,7 +18,7 @@ opts.shift_cost = [0 2.^(-2:10)];
 %margins = 0.05;
 
 if isfield(data, 'cell1raws') && ~isfield(data,'zipload')
-	sv = [];
+	if ~exist('sv','var');	sv = []; end
 	data.matrixtitle = data.cell1.matrixtitle;
 end
 
@@ -191,7 +191,9 @@ idx=max(idx);
 if isempty(idx) %nothing significantly over shuffle
 	idx=1;
 end
-vals=[x(1,1) x(2,1) x(3,1) x(1,idx) x(2,idx) x(3,idx) x(1,midx) x(2,midx) x(3,midx)]
+vals=[x(1,1) x(2,1) x(3,1) x(1,idx) x(2,idx) x(3,idx) x(1,midx) x(2,midx) x(3,midx)];
+assignin('base','vals',vals);
+assignin('base','mout',mout);
 clipboard('Copy',sprintf('%.3g\t',vals));
 	
 

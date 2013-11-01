@@ -175,7 +175,7 @@ case 'Reparse'
 	options.Interpreter='tex';
 	prompt = {'Choose Cell 1 variables to merge (ground):','Choose Cell 2 variables to merge (figure):','Sigma'};
 	dlg_title = 'REPARSE DATA VARIABLES';
-	num_lines = [1 100];
+	num_lines = [1 120];
 	if isfield(o,'map')
 		def = {num2str(o.map{1}), num2str(o.map{2}), '0'};
 	else
