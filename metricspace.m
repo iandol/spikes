@@ -1,4 +1,4 @@
-function mout=metricspace(data,sv,family)
+function [mout, vals]=metricspace(data,sv,family)
 global X
 
 hwait=waitbar(0,'Metric Space data loading');

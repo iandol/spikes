@@ -48,7 +48,7 @@ else
 end
 
 function plot_raster(X,range,n)
-
+shuffledraw = false;
 %%% Now make the plot
 idx=1;
 cla;
@@ -58,10 +58,18 @@ num_colors = size(colororder,1);
 for m=1:X.M
   cur_color = colororder(mod(m-1,num_colors)+1,:);
   cur_start = idx;
-  for p = 1:X.categories(m).P 
-    list = X.sites(n).time_scale*X.categories(m).trials(p,n).list; 
-    h = plot(list,idx*ones(size(list)),'.','Color',cur_color,'MarkerSize',9);
-    idx=idx+1;
+  p = 1:X.categories(m).P;
+  shufp = Shuffle(p);
+  for p = 1:X.categories(m).P;
+	  if shuffledraw == false;
+		  list = X.sites(n).time_scale*X.categories(m).trials(p,n).list; 
+		  h = plot(list,idx*ones(size(list)),'.','Color',cur_color,'MarkerSize',9);
+		  idx=idx+1;
+	  else
+		  list = X.sites(n).time_scale*X.categories(m).trials(shufp(p),n).list; 
+		  h = plot(list,idx*ones(size(list)),'.','Color',cur_color,'MarkerSize',9);
+		  idx=idx+1;
+	  end
   end
   cur_end = idx;
   h = text(((range(2)-range(1))/4)+range(1),(cur_start+cur_end)/2,X.categories(m).label);

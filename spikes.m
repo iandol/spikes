@@ -2989,7 +2989,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					fprintf('\n%s\n',eyeraw.error)
 					return
 				else
-					y = y(1:length(x));
+					if length(y) > length(x)
+						y = y(1:length(x));
+					end
 					name = [raw.name(1:6) '_EyeVar' eyeraw.name]; 
 					name = regexprep(name,'\#','');
 					name = regexprep(name,'\|','');
@@ -3049,9 +3051,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				if isfield(sv,'matsavepath')
 					paths.matsavepath=sv.matsavepath;
 				end
-					if isfield(sv,'matloadpath')
+				if isfield(sv,'matloadpath')
 					paths.matloadpath=sv.matloadpath;
-					end
+				end
 				
 				if isfield(sv,'dataloadpath')
 					paths.dataloadpath=sv.dataloadpath;
@@ -3119,7 +3121,6 @@ if nargin==0
 end
 
 [a,b]=view;
-
 
 if strcmp (get(gcf,'Tag'),'SpikeFig') %stops errors coming from mmpolar plots
 	set(gca,'NextPlot','replacechildren');

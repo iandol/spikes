@@ -1,4 +1,4 @@
-function burststats(sdata)
+function bstats=burststats(sdata)
 
 % This function calculates basic burst statistics from raw spike trains
 % the sdata is in a cell matrix of lsd files (basically data.raw from 
@@ -157,7 +157,7 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
    set(0,'CurrentFigure',scatterh);
    subplot(size(sdata,2),size(sdata,1),y(i));
    isiplot(bstats.info{i}.isibefore,bstats.info{i}.isiafter,bstats.raw{i}(1).spike(end)/10,1);
-   title(['Ratio = ' num2str(bstats.info{i}.ratio)],'FontSize',6);
+   title(['Ratio = ' num2str(bstats.info{i}.ratio)],'FontSize',12);
    xlabel('');
    ylabel('');
    set(gca,'FontSize',3);
@@ -169,7 +169,7 @@ for i=1:size(sdata,1)*size(sdata,2)   %for each spike train
    subplot(size(sdata,2),size(sdata,1),y(i));
    isiplot(bstats.info{i}.isibefore,bstats.info{i}.isiafter,bstats.raw{i}(1).spike(end)/10,0, ...
            bstats.info{i}.bisibefore,bstats.info{i}.bisiafter);
-   title(['Ratio = ' num2str(bstats.info{i}.ratio)],'FontSize',6);
+   title(['Ratio = ' num2str(bstats.info{i}.ratio)],'FontSize',12);
    xlabel('');
    ylabel('');
    set(gca,'FontSize',3);
@@ -254,7 +254,9 @@ yy=linspace(min(data.yvalues),max(data.yvalues),(length(data.yvalues)*5));
 [xx,yy]=meshgrid(xx,yy);
 [xo,yo]=meshgrid(data.xvalues,data.yvalues);
 
-if data.numvars==1
+if strcmpi(data.xtitle,'Meta1')
+	%metaanal so we skip these plots
+elseif data.numvars<2
 	figure;
 	figpos(0,[800 800]);
 	plot(data.xvalues,bstats.ratio,'ko-')

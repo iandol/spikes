@@ -628,157 +628,15 @@ case 'Measure'
 % 	end
 		
 	updategui();
+	extraplots();
 	
-	%---Now we are going to plot out both spike trains for visual comparison.
-	
-	if get(gh('OPShowPlots'),'Value')==1 %plot histograms
-		set(gh('StatsText'),'String','Please wait, plotting additional info for each matrix point...');
-		figure;
-		figpos(1,[1000 1000])
-		set(gcf,'Name','PSTH/ISI Plots for Control (black) and Test (Red) Receptive Fields','NumberTitle','off');
-		x=1:(o.cell1.yrange*o.cell1.xrange);
-		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
-		y=y'; %order it so we can load our data to look like the surface plots
-		m=max([o.peak o.peak2]);
-		for i=1:o.cell1.xrange*o.cell1.yrange
-			subplot(o.cell1.yrange,o.cell1.xrange,i);
-			hold on
-			if isfield(o,'bars1') && ~isempty(o.bars1{i})
-				plot(o.bars1{i}.time_fine, o.bars1{i}.mean_fine,'ko-',o.bars1{i}.time_fine, o.bars1{i}.confBands_fine,'k--','Color',[0.4 0.4 0.4],'LineWidth',1);
-			end
-			if isfield(o,'bars2') && ~isempty(o.bars2{i})
-				plot(o.bars2{i}.time_fine, o.bars2{i}.mean_fine,'ro-',o.bars2{i}.time_fine, o.bars2{i}.confBands_fine,'r--','Color',[1 0.4 0.4],'LineWidth',1);
-			end
-			plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-','LineWidth',1.5);
-			if isfield(o,'spontaneous1') && o.spontaneous1 > -1
-				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1 o.spontaneous1],'Color',[0 0 0]);
-				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2 o.spontaneous2],'Color',[1 0 0]);
-				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(1) o.spontaneous1ci(1)],'Color',[0 0 0],'LineStyle','--');
-				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(1) o.spontaneous2ci(1)],'Color',[1 0 0],'LineStyle','--');
-				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(2) o.spontaneous1ci(2)],'Color',[0 0 0],'LineStyle','--');
-				line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(2) o.spontaneous2ci(2)],'Color',[1 0 0],'LineStyle','--');
-			end
-			hold off
-			title([o.cell1names{i} ' \newline ' o.cell2names{i}])
-			xlabel('Time(s)')
-			ylabel('Firing Rate (Hz)')
-			%set(gca,'FontSize',5);
-			axis tight;
-			if strcmp(o.spiketype,'psth') && (Normalise==2 || Normalise==3)
-				axis([-inf inf 0 1]);
-			elseif strcmp(o.spiketype,'psth') && Normalise==1
-				axis([-inf inf 0 m]);
-			end
-			v = axis;
-			t{1} = sprintf('Cell 1 Burst Ratio = %g', o.cell1bratio{i});
-			t{2} = sprintf('Cell 2 Burst Ratio = %g', o.cell2bratio{i});
-			t{3} = sprintf('Cell 1 Mean = %g', o.cell1mat(i));
-			t{4} = sprintf('Cell 2 Mean = %g', o.cell2mat(i));
-			text(o.cell1time{i}(1),v(4)-(v(4)/10),t,'FontSize',12);
-		end
-		figure;
-		figpos(1,[1000 1000])
-		set(gcf,'Name','CDF Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
-		x=1:(o.cell1.yrange*o.cell1.xrange);
-		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
-		y=y'; %order it so we can load our data to look like the surface plots
-		for i=1:o.cell1.xrange*o.cell1.yrange
-			subplot(o.cell1.yrange,o.cell1.xrange,i)
-			if ~isempty(o.cell1raw{y(i)})
-				hh=cdfplot(o.cell1raw{y(i)});
-				set(hh,'Color',[0 0 0]);
-			end
-			if ~isempty(o.cell2raw{y(i)})
-				hold on
-				hh=cdfplot(o.cell2spike{y(i)});
-				set(hh,'Color',[1 0 0]);				
-				hold off
-			end
-			%grid off
-			title([o.cell1names{i} ' | ' o.cell2names{i}])
-			xlabel('');
-			ylabel('');
-			%set(gca,'FontSize',4);			
-		end
-		figure;
-		figpos(1,[1000 1000])
-		set(gcf,'Name','Spikes (y) per Trial (x) Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
-		x=1:(o.cell1.yrange*o.cell1.xrange);
-		y=reshape(x,o.cell1.yrange,o.cell1.xrange);
-		y=y'; %order it so we can load our data to look like the surface plots
-		for i=1:o.cell1.xrange*o.cell1.yrange
-			subplot(o.cell1.yrange,o.cell1.xrange,i)
-			if ~isempty(o.cell1sums{y(i)})
-				plot(o.cell1sums{y(i)},'k-');
-			end
-			if ~isempty(o.cell2sums{y(i)})
-				hold on
-				plot(o.cell2sums{y(i)},'r-');			
-				hold off
-			end
-			grid off
-			axis tight
-			title([o.cell1names{i} ' | ' o.cell2names{i}])
-			%set(gca,'FontSize',4.5);
-		end
-		%jointfig(h,o.cell1.yrange,o.cell1.xrange)
-		
-		figure
-		figpos(1,[1000 1000])
-		window=str2num(get(gh('OPWindow'),'String'));
-		shift=str2num(get(gh('OPShift'),'String'));
-		maxt=o.maxt;
-		for i=1:o.cell1.xrange*o.cell1.yrange
-			subplot(o.cell1.yrange,o.cell1.xrange,i)
-			[ff,cv,af,time,position]=fanogram(o.cell1.raw{i},window,shift,wrapped);
-			[ff2,cv2,af2,time2,position]=fanogram(o.cell2.raw{i},window,shift,wrapped);
-			if position == 3
-				tpos = 'end';
-			elseif position == 2
-				tpos = 'middle';
-			else
-				tpos = 'start';
-			end
-			plot(time,ff,'k-',time2,ff2,'r-','LineWidth',2);
-			hold on;
-			plot(time,cv,'k--',time2,cv2,'r--');
-			plot(time,af,'k-.',time2,af2,'r-.');
-			
-			p = o.cell1psth{i};
-			p2 = o.cell2psth{i};
-			
-			m1 = max(p);
-			m2 = max(p2);
-			
-			m = max([m1 m2]);
-			
-			t = o.cell1time{i};
-			t2 = o.cell2time{i};
-			p = (p / m) * max(ff);
-			p2 = (p2 / m) * max(ff);
-			
-			plot(t,p,'ko-',t2,p2,'ro-');
-			
-			hold off;
-			axis tight;
-			if maxt > max(time)-window
-				maxt = max(time)-window;
-			end
-			axis([window maxt -inf inf]);
-			legend('Control FF', 'Test FF','Control CV','Test CV','Control Allan Factor','Test Allan Factor','PSTH1','PSTH2');
-			title([o.cell1names{i} ' | ' o.cell2names{i}])
-			xlabel('Time (ms)');
-			ylabel(['FF / C_V / AF - window:' num2str(window) ' shift: ' num2str(shift) ' position: ' tpos]);
-			set(gcf,'Name','Fanogram for Control and Test Cells')
-		end
-		try
-			opro('PlotAll');
-		catch
-			fprintf('Raw plots failed...\n')
-		end
-	end	
 	set(gh('StatsText'),'String','Data has been measured.');
 	
+	
+	%-----------------------------------------------------------------------------------------
+case {'extraplots','ExtraPlots'}
+	%-----------------------------------------------------------------------------------------
+	extraplots();
 	
 	%-----------------------------------------------------------------------------------------
 case 'Spontaneous'
@@ -2794,6 +2652,180 @@ if get(gh('OPAutoMeasure'),'Value')==1
 	opro('Measure');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function extraplots()
+global o
+
+%---Now we are going to plot out both spike trains for visual comparison.
+if (isfield(o,'extraplots') && o.extraplots == 2)
+	plotFano();
+elseif (isfield(o,'extraplots') && o.extraplots > 0) || get(gh('OPShowPlots'),'Value')==1 %plot histograms
+	set(gh('StatsText'),'String','Please wait, plotting additional info for each matrix point...');
+	figure;
+	figpos(1,[1000 1000])
+	set(gcf,'Name','PSTH/ISI Plots for Control (black) and Test (Red) Receptive Fields','NumberTitle','off');
+	x=1:(o.cell1.yrange*o.cell1.xrange);
+	y=reshape(x,o.cell1.yrange,o.cell1.xrange);
+	y=y'; %order it so we can load our data to look like the surface plots
+	m=max([o.peak o.peak2]);
+	for i=1:o.cell1.xrange*o.cell1.yrange
+		subplot(o.cell1.yrange,o.cell1.xrange,i);
+		hold on
+		if isfield(o,'bars1') && ~isempty(o.bars1{i})
+			plot(o.bars1{i}.time_fine, o.bars1{i}.mean_fine,'ko-',o.bars1{i}.time_fine, o.bars1{i}.confBands_fine,'k--','Color',[0.4 0.4 0.4],'LineWidth',1);
+		end
+		if isfield(o,'bars2') && ~isempty(o.bars2{i})
+			plot(o.bars2{i}.time_fine, o.bars2{i}.mean_fine,'ro-',o.bars2{i}.time_fine, o.bars2{i}.confBands_fine,'r--','Color',[1 0.4 0.4],'LineWidth',1);
+		end
+		plot(o.cell1time{i},o.cell1psth{i},'k-',o.cell2time{i},o.cell2psth{i},'r-','LineWidth',1.5);
+		if isfield(o,'spontaneous1') && o.spontaneous1 > -1
+			line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1 o.spontaneous1],'Color',[0 0 0]);
+			line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2 o.spontaneous2],'Color',[1 0 0]);
+			line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(1) o.spontaneous1ci(1)],'Color',[0 0 0],'LineStyle','--');
+			line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(1) o.spontaneous2ci(1)],'Color',[1 0 0],'LineStyle','--');
+			line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous1ci(2) o.spontaneous1ci(2)],'Color',[0 0 0],'LineStyle','--');
+			line([o.cell1time{i}(1) o.cell1time{i}(end)],[o.spontaneous2ci(2) o.spontaneous2ci(2)],'Color',[1 0 0],'LineStyle','--');
+		end
+		hold off
+		title([o.cell1names{i} ' \newline ' o.cell2names{i}])
+		xlabel('Time(s)')
+		ylabel('Firing Rate (Hz)')
+		%set(gca,'FontSize',5);
+		axis tight;
+		if strcmp(o.spiketype,'psth') && (exist('Normalise','var') && (Normalise==2 || Normalise==3))
+			axis([-inf inf 0 1]);
+		elseif strcmp(o.spiketype,'psth') && (exist('Normalise','var') && Normalise==1)
+			if isfield(o,'peak')
+				axis([-inf inf 0 o.peak]);				
+			end
+		elseif (isfield(o,'extraplots') && o.extraplots == true)
+			if isfield(o,'peak')
+				axis([-inf inf 0 o.peak]);				
+			end
+		end
+		
+		v = axis;
+		t{1} = sprintf('Cell 1 Burst Ratio = %g', o.cell1bratio{i});
+		t{2} = sprintf('Cell 2 Burst Ratio = %g', o.cell2bratio{i});
+		t{3} = sprintf('Cell 1 Mean = %g', o.cell1mat(i));
+		t{4} = sprintf('Cell 2 Mean = %g', o.cell2mat(i));
+		text(o.cell1time{i}(1),v(4)-(v(4)/10),t,'FontSize',12);
+	end
+	figure;
+	figpos(1,[1000 1000])
+	set(gcf,'Name','CDF Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
+	x=1:(o.cell1.yrange*o.cell1.xrange);
+	y=reshape(x,o.cell1.yrange,o.cell1.xrange);
+	y=y'; %order it so we can load our data to look like the surface plots
+	for i=1:o.cell1.xrange*o.cell1.yrange
+		subplot(o.cell1.yrange,o.cell1.xrange,i)
+		if ~isempty(o.cell1raw{y(i)})
+			hh=cdfplot(o.cell1raw{y(i)});
+			set(hh,'Color',[0 0 0]);
+		end
+		if ~isempty(o.cell2raw{y(i)})
+			hold on
+			hh=cdfplot(o.cell2spike{y(i)});
+			set(hh,'Color',[1 0 0]);				
+			hold off
+		end
+		%grid off
+		title([o.cell1names{i} ' | ' o.cell2names{i}])
+		xlabel('');
+		ylabel('');
+		%set(gca,'FontSize',4);			
+	end
+	figure;
+	figpos(1,[1000 1000])
+	set(gcf,'Name','Spikes (y) per Trial (x) Plots for Control (Black) and Test (Red) Receptive Fields','NumberTitle','off')
+	x=1:(o.cell1.yrange*o.cell1.xrange);
+	y=reshape(x,o.cell1.yrange,o.cell1.xrange);
+	y=y'; %order it so we can load our data to look like the surface plots
+	for i=1:o.cell1.xrange*o.cell1.yrange
+		subplot(o.cell1.yrange,o.cell1.xrange,i)
+		if ~isempty(o.cell1sums{y(i)})
+			plot(o.cell1sums{y(i)},'k-');
+		end
+		if ~isempty(o.cell2sums{y(i)})
+			hold on
+			plot(o.cell2sums{y(i)},'r-');			
+			hold off
+		end
+		grid off
+		axis tight
+		title([o.cell1names{i} ' | ' o.cell2names{i}])
+		%set(gca,'FontSize',4.5);
+	end
+	%jointfig(h,o.cell1.yrange,o.cell1.xrange)
+
+	plotFano();
+	
+	try
+		opro('PlotAll');
+	catch
+		fprintf('Raw plots failed...\n')
+	end
+end	
+
+
+function h = plotFano()
+global o
+if ~exist('wrapped','var')
+	wrapped = 0;
+end
+h = figure;
+figpos(1,[1000 1000])
+if isempty(get(gh('OPWindow'),'String'));
+	window = 50;
+	shift = 25;
+else
+	window=str2num(get(gh('OPWindow'),'String'));
+	shift=str2num(get(gh('OPShift'),'String'));
+end
+maxt=o.maxt;
+for i=1:o.cell1.xrange*o.cell1.yrange
+	subplot(o.cell1.yrange,o.cell1.xrange,i)
+	[ff,cv,af,time,position]=fanogram(o.cell1.raw{i},window,shift,wrapped);
+	[ff2,cv2,af2,time2,position]=fanogram(o.cell2.raw{i},window,shift,wrapped);
+	if position == 3
+		tpos = 'end';
+	elseif position == 2
+		tpos = 'middle';
+	else
+		tpos = 'start';
+	end
+	plot(time,ff,'k-',time2,ff2,'r-','LineWidth',2);
+	hold on;
+	plot(time,cv,'k--',time2,cv2,'r--');
+	plot(time,af,'k-.',time2,af2,'r-.');
+
+	p = o.cell1psth{i};
+	p2 = o.cell2psth{i};
+
+	m1 = max(p);
+	m2 = max(p2);
+
+	m = max([m1 m2]);
+
+	t = o.cell1time{i};
+	t2 = o.cell2time{i};
+	p = (p / m) * max(ff);
+	p2 = (p2 / m) * max(ff);
+
+	plot(t,p,'ko-',t2,p2,'ro-');
+
+	hold off;
+	axis tight;
+	if maxt > max(time)-window
+		maxt = max(time)-window;
+	end
+	axis([window maxt -inf inf]);
+	legend('Control FF', 'Test FF','Control CV','Test CV','Control Allan Factor','Test Allan Factor','PSTH1','PSTH2');
+	title([o.cell1names{i} ' | ' o.cell2names{i}])
+	xlabel('Time (ms)');
+	ylabel(['FF / C_V / AF - window:' num2str(window) ' shift: ' num2str(shift) ' position: ' tpos]);
+	set(gcf,'Name','Fanogram for Control and Test Cells')
+end
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 %-----------------------------------------------------------------------------

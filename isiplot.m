@@ -8,7 +8,7 @@ if size(isia)~=size(isib)
    error('Input error')
 end
 
-if ~isempty(str2num(get(gh('silence'),'String')));
+if ~isempty(get(gh('silence'),'String'))
    before = str2num(get(gh('silence'),'String'));
    a      = str2num(get(gh('firstisi'),'String'));
    b      = str2num(get(gh('subsisi'),'String'));
@@ -16,8 +16,8 @@ if ~isempty(str2num(get(gh('silence'),'String')));
    zero = 0.5;
 else
    before = 100;
-   a      = 5;
-   b      = 5;
+   a      = 4;
+   b      = 4;
    subs = max(a,b);
    zero = 0.5;
 end
