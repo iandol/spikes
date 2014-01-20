@@ -37,17 +37,17 @@ switch(action)
 		set(gh('InfoText'),'String','Welcome to the DOG Model Fitter. Choose ''Import'' to load data from Spikes, or ''Load Data'' to load a previous model file.');
 		try
 			if matlabpool('size') == 0
-				tic;matlabpool
-				fprintf('matlabpool took: %g seconds to initialize\n',toc)
+				tic;parpool
+				fprintf('parallel pool took: %g seconds to initialize\n',toc)
 				fd.weOpen = true;
 				doparallel = true;
 			else
-				fprintf('matlabpool seems open...\n');
+				fprintf('parallel pool seems open...\n');
 				fd.weOpen = false;
 				doparallel = true;
 			end
 		catch
-			fprintf('matlabpool couldn''t open...\n');
+			fprintf('parallel pool couldn''t open...\n');
 			fd.weOpen = false;
 			doparallel = false;
 		end
