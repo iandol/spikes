@@ -13,6 +13,12 @@ if min(size(xvalues)) > 1 || min(size(ydata)) > 1 || min(size(error)) > 2
    error('Areabar error');
 end
 
+if strcmpi(get(gca,'NextPlot'),'add')
+	NextPlot = 'add';
+else
+	NextPlot = 'replacechildren';
+end
+
 if nargin <4 || isempty(c1)
 	c1=[0.7 0.7 0.7];
 end
@@ -62,7 +68,7 @@ axis auto
 handles.fill = fill(areax,err,c1,'EdgeColor','none','FaceAlpha',alpha);
 set(gca,'NextPlot','add');
 handles.plot = plot(xvalues,ydata,varargin{:});
-set(gca,'NextPlot','replacechildren');
+set(gca,'NextPlot',NextPlot);
 %set(gca,'PlotBoxAspectRatioMode','manual');
 uistack(handles.plot,'top')
 set(gca,'Layer','top');
