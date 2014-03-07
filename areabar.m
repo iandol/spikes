@@ -37,6 +37,11 @@ if nargin < 6 && isempty(varargin)
 	varargin{3} = [0 0 0];
 end
 
+idx=find(isnan(ydata));
+ydata(idx)=[];
+xvalues(idx)=[];
+error(idx)=[];
+
 x=size(xvalues);
 y=size(ydata);
 e=size(error);
