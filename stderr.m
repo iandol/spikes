@@ -6,8 +6,6 @@
 
 function [avg,error] = stderr(data,type,onlyerror)
 
-avg=nanmean(data);
-
 if nargin<3
 	onlyerror=0;
 end
@@ -24,6 +22,8 @@ if size(data,1) > 1 && size(data,2) > 1
 else
 	nvals = length(data);
 end
+
+avg=nanmean(data);
 
 switch(type)
 	

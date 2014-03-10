@@ -69,12 +69,13 @@ areax(x+1:x+x,1)=flipud(xvalues);
 axis auto
 if max(c1) > 1; c1 = c1 / max(c1); end
 handles.fill = fill(areax,err,c1,'EdgeColor','none','FaceAlpha',alpha);
+handles.axis = (gca);
 set(gca,'NextPlot','add');
 handles.plot = plot(xvalues,ydata,varargin{:});
 set(get(get(handles.plot,'Annotation'),'LegendInformation'),'IconDisplayStyle','off'); % Exclude line from legend
 set(gca,'NextPlot',NextPlot);
 %set(gca,'PlotBoxAspectRatioMode','manual');
 uistack(handles.plot,'top')
-set(gca,'Layer','top');
+set(gca,'Layer','bottom');
 if alpha == 1; set(gcf,'Renderer','painters'); end
 box on;
