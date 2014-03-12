@@ -19,7 +19,7 @@ else
 	NextPlot = 'replacechildren';
 end
 
-if nargin <4 || isempty(c1)
+if nargin <4 || isempty(c1) || ischar(c1)
 	c1=[0.5 0.5 0.5];
 end
 
