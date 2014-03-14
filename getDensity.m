@@ -82,8 +82,6 @@
 		densityFunction = 'pdf'
 		%> density bounds; 'unbounded', 'positiive' or 2-element vector for lower and upper
 		densityBounds = 'unbounded'
-		%> should scatterbox use 95% SEM or bootstrap?
-		scatterBoxType = 'bootstrap'
 		%> for multiple columns only run a subset; empty runs all.
 		index = []
 		%> normalise (Z-score) values to plot on scatter?
@@ -344,12 +342,6 @@
 				py = 1;
 				pn(py,px).select()
 				
-				if strcmpi(obj.scatterBoxType,'bootstrap')
-					options = {{obj.nboot,obj.fhandle,obj.alpha}};
-				else
-					options = [];
-				end
-				
 				if obj.isDataEqualLength && exist('notBoxPlot','file')
 					% 					if ~isempty(uniquecases) && ~isempty(casesLocal)
 					% 						for jj = 1:length(uniquecases)
@@ -361,15 +353,15 @@
 					% 					else
 					% 						notBoxPlot([xcol ycol],[1 1]);
 					% 					end
-					notBoxPlot([xcol ycol],[1 2],[],[],[],options);
+					notBoxPlot([xcol ycol],[1 2]);
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 					pn(py,px).ylabel(obj.columnlabels{idx});
 					
 				elseif obj.isDataEqualLength==false && exist('notBoxPlot','file')
 					
-					notBoxPlot(xcol,1,[],[],[],options);
+					notBoxPlot(xcol,1);
 					hold on
-					notBoxPlot(ycol,2,[],[],[],options);
+					notBoxPlot(ycol,2);
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 					pn(py,px).ylabel(obj.columnlabels{idx});
 					
@@ -694,6 +686,8 @@
 				
 				fprintf('\n---> getDensity Computation time took: %.2g seconds\n',toc);
 				
+				obj.pn = pn;
+				
 				if obj.singleplots == true
 					obj.doSinglePlots(pn);
 				end
@@ -962,6 +956,98 @@
 				ret = true;
 			end
 		end
+		
+		% ===================================================================
+		%> @brief
+		%>
+		%> @param obj this instance object
+		% ===================================================================
+		function doSinglePlots(obj,pn)
+			if ~exist('pn','var');pn = obj.pn;end
+			wid = 1000;
+			hei = 800;
+			minp = 0.01;
+			maxp = 0.925;
+			if obj.isDataEqualLength;
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,1).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,2).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','zbuffer');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,3).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h=figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,1).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h=figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,2).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h=figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,3).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+			else
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,1).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,2).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','zbuffer');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(1,3).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,1).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,2).axis,h);
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+			end
+		end
 	end
 	
 	%=======================================================================
@@ -1150,97 +1236,6 @@
 					end
 				otherwise
 					
-			end
-		end
-		
-		% ===================================================================
-		%> @brief
-		%>
-		%> @param obj this instance object
-		% ===================================================================
-		function doSinglePlots(obj,pn)
-			wid = 1000;
-			hei = 800;
-			minp = 0.01;
-			maxp = 0.925;
-			if obj.isDataEqualLength;
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,2).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','zbuffer');
-				
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,3).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h=figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h=figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,2).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h=figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,3).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-			else
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,2).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','zbuffer');
-				
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,3).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,1).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,2).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
 			end
 		end
 		
