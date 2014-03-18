@@ -39,7 +39,7 @@ switch(type)
 		avg = nanmean(raw);
 	case 'CIMEDIAN'
 		[error, raw] = bootci(1000,{@nanmedian,data},'alpha',0.01);
-		avg = nanmean(raw);
+		avg = nanmedian(raw);
 	case 'SD'
 		error=nanstd(data);
 	case '2SD'
@@ -66,6 +66,7 @@ switch(type)
 		else
 			error=nanvar(diff(data))/(2*nanmean(data));
 		end
+		
 end
 
 if onlyerror==1
