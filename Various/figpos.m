@@ -19,9 +19,12 @@ if mult ~=1
 	size = size .* mult;
 end
 
+oldsunits = get(0,'Units');
+set(0,'Units','pixels');
 scr=get(0,'ScreenSize');
 width=scr(3);
 height=scr(4);
+set(0,'Units',oldsunits);
 
 if size(1) > width;	size(1) = width;	end
 if size(2) > height;	size(2) = height;	end

@@ -32,9 +32,9 @@ if nargin < 5 || isempty(alpha) || ischar(alpha)
 end
 
 if nargin < 6 && isempty(varargin)
-	varargin{1} = 'k-o';
-	varargin{2} = 'MarkerFaceColor';
-	varargin{3} = [0 0 0];
+	%varargin{1} = 'k-o';
+	%varargin{2} = 'MarkerFaceColor';
+	%varargin{3} = [0 0 0];
 end
 
 idx=find(isnan(ydata));
