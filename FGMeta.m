@@ -84,22 +84,35 @@ classdef FGMeta < handle
 			for ll = 1:length(file)
 				load(file{ll});
 				
-				if ~exist('o','var')
-					errordlg('This file wasn''t an OPro MAT file...')
-				end
-			
-				idx = obj.nCells+1;
-
-				for i = 1:2
-					obj.cells{idx,i}.name = o.(['cell' num2str(i) 'names']){1};
-					obj.cells{idx,i}.time = o.(['cell' num2str(i) 'time']){1};
-					obj.cells{idx,i}.psth = o.(['cell' num2str(i) 'psth']){1};
-					obj.cells{idx,i}.mean_fine = o.(['bars' num2str(i)]){1}.mean_fine;
-					obj.cells{idx,i}.time_fine = o.(['bars' num2str(i)]){1}.time_fine;
-					obj.cells{idx,i}.spontaneous = o.(['spontaneous' num2str(i)]);
-					obj.cells{idx,i}.spontaneousci = o.(['spontaneous' num2str(i) 'ci']);
-					obj.cells{idx,i}.spontaneouserror = o.(['spontaneous' num2str(i) 'error']);
-					obj.cells{idx,i}.weight = 1;
+				if exist('spike','var') && isa(spike,'spikeAnalysis')
+					idx = obj.nCells+1;
+					spike.doPlots = false;
+					spike.density();
+					spike.PSTH();
+					for i = 1:2
+						obj.cells{idx,i}.name = spike.selectedTrials{i}.name;
+						obj.cells{idx,i}.time = spike.results.psth{i}.time;
+						obj.cells{idx,i}.psth = spike.results.psth{i}.avg;
+						obj.cells{idx,i}.mean_fine = spike.results.sd{i}.avg;
+						obj.cells{idx,i}.time_fine = spike.results.sd{i}.time;
+						obj.cells{idx,i}.weight = 1;
+					end
+				elseif exist('o','var')
+					idx = obj.nCells+1;
+					for i = 1:2
+						obj.cells{idx,i}.name = o.(['cell' num2str(i) 'names']){1};
+						obj.cells{idx,i}.time = o.(['cell' num2str(i) 'time']){1};
+						obj.cells{idx,i}.psth = o.(['cell' num2str(i) 'psth']){1};
+						obj.cells{idx,i}.mean_fine = o.(['bars' num2str(i)]){1}.mean_fine;
+						obj.cells{idx,i}.time_fine = o.(['bars' num2str(i)]){1}.time_fine;
+						obj.cells{idx,i}.spontaneous = o.(['spontaneous' num2str(i)]);
+						obj.cells{idx,i}.spontaneousci = o.(['spontaneous' num2str(i) 'ci']);
+						obj.cells{idx,i}.spontaneouserror = o.(['spontaneous' num2str(i) 'error']);
+						obj.cells{idx,i}.weight = 1;
+					end
+				else
+					warndlg('This file wasn''t an spikeAnalysis or OPro MAT file...')
+					return
 				end
 
 				obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
