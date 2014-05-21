@@ -225,12 +225,13 @@ classdef FGMeta < handle
 				end
 				
 				if str2double(get(obj.handles.gaussstep,'String')) > 0
-					psth1 = gausssmooth(time,psth1,obj.gaussstep,obj.symmetricgaussian);
-					psth2 = gausssmooth(time,psth2,obj.gaussstep,obj.symmetricgaussian);
+					if obj.useMilliseconds == false;	gs = obj.gaussstep ./ 1e3; else gs = obj.gaussstep; end
+					psth1 = gausssmooth(time,psth1,gs,obj.symmetricgaussian);
+					psth2 = gausssmooth(time,psth2,gs,obj.symmetricgaussian);
 				end
 				
 				if get(obj.handles.smooth,'Value') == 1
-					[psth1, psth2] = obj.smoothdata(time,psth1,psth2);
+					[time, psth1, psth2] = obj.smoothdata(time,psth1,psth2);
 				end
 				
 				name = '';
@@ -316,7 +317,11 @@ classdef FGMeta < handle
 				end
 				
 				mm=max([max(p1out) max(p2out)]);
-				h = h * mm; %h is for plotting sig points
+				if exist('h','var')
+					h = h * mm; %h is for plotting sig points
+				else
+					h = nan(size(time));
+				end
 				
 				axes(obj.handles.axis2); cla
 				set(obj.handles.axis2,'Color',[1 1 1]);
@@ -727,8 +732,9 @@ classdef FGMeta < handle
 				end
 				
 				if obj.gaussstep > 0
-					psth1tmp = gausssmooth(time,psth1tmp,obj.gaussstep,obj.symmetricgaussian);
-					psth2tmp = gausssmooth(time,psth2tmp,obj.gaussstep,obj.symmetricgaussian);
+					if obj.useMilliseconds == false;	gs = obj.gaussstep ./ 1e3; else gs = obj.gaussstep; end
+					psth1tmp = gausssmooth(time,psth1tmp,gs,obj.symmetricgaussian);
+					psth2tmp = gausssmooth(time,psth2tmp,gs,obj.symmetricgaussian);
 				end
 							
 				if max(time) < maxt
@@ -748,7 +754,7 @@ classdef FGMeta < handle
 				%psth2tmp = psth2tmp(1:tidx);
 				
 				if get(obj.handles.smooth,'Value') == 1
-					[psth1tmp, psth2tmp] = obj.smoothdata(time,psth1tmp,psth2tmp);
+					[time, psth1tmp, psth2tmp] = obj.smoothdata(time,psth1tmp,psth2tmp);
 				end
 				
 				%do we have a max override?
@@ -843,14 +849,19 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function [psth1,psth2] = smoothdata(obj,time,psth1,psth2)
+		function [time,psth1,psth2] = smoothdata(obj,time,psth1,psth2)
+			if obj.useMilliseconds
+				sstep = obj.smoothstep;
+			else
+				sstep = obj.smoothstep./1e3;
+			end
 			maxtall = max(obj.maxt) - obj.offset;
 			s=get(obj.handles.smoothmethod,'String');
 			v=get(obj.handles.smoothmethod,'Value');
 			s=s{v};
 			F1 = griddedInterpolant(time,psth1,s);
 			F2 = griddedInterpolant(time,psth2,s);
-			time = min(time):obj.smoothstep:maxtall;
+			time = min(time):sstep:maxtall;
 			psth1=F1(time);
 			psth2=F2(time);
 			psth1(psth1 < 0) = 0;
