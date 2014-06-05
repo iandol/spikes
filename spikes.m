@@ -204,7 +204,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				if isfield(data,'pR'); pR = data.pR; end
 				data=struct;
 				data.zs=zs;
-				if exist('pR','var'); data.pR = pR;	else; data.pR=[]; end
+				if exist('pR','var'); data.pR = pR;	else data.pR=[]; end
 				data.meta=meta;
 				data.info=info;
 				data.filetype=t;
@@ -360,10 +360,10 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 							data.pR.parse;
 						end
 					end
-					if isfield(data.pR.rE.tS,'name') && ~isempty(regexpi(data.pR.rE.tS.name,'two-figure-ground'));
-						inputdlg({'Enter First Variable Position:','Enter Second Variable Position:'},...
-							'Two Figure Trial Correction:',[1 20],{'1','1'});
-					end
+% 					if isfield(data.pR.rE.tS,'name') && ~isempty(regexpi(data.pR.rE.tS.name,'two-figure-ground'));
+% 						inputdlg({'Enter First Variable Position:','Enter Second Variable Position:'},...
+% 							'Two Figure Trial Correction:',[1 20],{'1','1'});
+% 					end
 					data.zipload=false;
 					data.filetype='plx';
 					data.sourcepath = [pn fn];
@@ -491,9 +491,11 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			data.modtime=data.meta.modtime;
 			tempfreq = [];
 			for jj = 1:length(data.info)
-				rx=regexp(data.info{jj},'Stim1:.+Drift.+Period:.+\((?<freq>\d.\d).+\)','names');
-				if ~isempty(rx)
-					tempfreq = [tempfreq str2num(rx.freq)];
+				if size(data.info{jj},1) == 1
+					rx=regexp(data.info{jj},'Stim1:.+Drift.+Period:.+\((?<freq>\d.\d).+\)','names');
+					if ~isempty(rx)
+						tempfreq = [tempfreq str2num(rx.freq)];
+					end
 				end
 			end
 			if isempty(tempfreq)
