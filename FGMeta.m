@@ -663,18 +663,22 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function reset(obj,varargin)
-			set(obj.handles.list,'Value',1);
-			set(obj.handles.list,'String',{''});
-			obj.handles.axistabs.SelectedChild=2; 
-			axes(obj.handles.axis2);cla
-			obj.handles.axistabs.SelectedChild=1; 
-			axes(obj.handles.axis1); cla
 			obj.cells = cell(1);
 			obj.list = cell(1);
 			obj.mint = [];
 			obj.maxt = [];
 			obj.deltat = [];
-			set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
+			if isfield(obj.handles,'list')
+				set(obj.handles.list,'Value',1);
+				set(obj.handles.list,'String',{''});
+			end
+			if isfield(obj.handles,'axis1')
+				obj.handles.axistabs.Selection=2; 
+				axes(obj.handles.axis2);cla
+				obj.handles.axistabs.Selection=1; 
+				axes(obj.handles.axis1); cla
+				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
+			end
 		end
 		
 	end%-------------------------END HIDDEN METHODS--------------------------------%
@@ -888,7 +892,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function makeUI(obj)
-			if ~isempty(obj.handles) && isfield(obj.handles,'root') && isa(obj.handles.root,'uiextras.BoxPanel')
+			if ~isempty(obj.handles) && isfield(obj.handles,'root') && isa(obj.handles.root,'uix.BoxPanel')
 				fprintf('---> UI already open!\n');
 				return
 			end
@@ -901,12 +905,13 @@ classdef FGMeta < handle
 					'NumberTitle', 'off');
 				figpos(1,[1200 700])
 			end
+			obj.handles(1).parent = parent;
 
 			bgcolor = [0.85 0.85 0.85];
 			bgcoloredit = [0.87 0.87 0.87];
 
-			handles.parent = parent; %#ok<*PROP>
-			handles.root = uiextras.BoxPanel('Parent',parent,...
+			handles.parent = obj.handles.parent; %#ok<*PROP>
+			handles.root = uix.BoxPanel('Parent',parent,...
 				'Title',['Figure Ground Meta Analysis V' num2str(obj.version)],...
 				'FontName','Helvetica',...
 				'FontSize',12,...
@@ -915,20 +920,20 @@ classdef FGMeta < handle
 				'TitleColor',[0.8 0.78 0.76],...
 				'BackgroundColor',bgcolor);
 
-			handles.hbox = uiextras.HBoxFlex('Parent', handles.root,'Padding',0,'Spacing',0,'BackgroundColor',bgcolor);
-			handles.axistabs = uiextras.TabPanel('Parent', handles.hbox,'Padding',0,'BackgroundColor',bgcolor,'TabSize',100);
-			handles.axisall = uiextras.Panel('Parent', handles.axistabs,'Padding',0,'BackgroundColor',bgcolor);
-			handles.axisind = uiextras.Panel('Parent', handles.axistabs,'Padding',0,'BackgroundColor',bgcolor);
-			handles.axistabs.TabNames = {'Individual Plot','Population Plot'};
+			handles.hbox = uix.HBoxFlex('Parent', handles.root,'Padding',0,'Spacing',0,'BackgroundColor',bgcolor);
+			handles.axistabs = uix.TabPanel('Parent', handles.hbox,'Padding',0,'BackgroundColor',bgcolor,'TabWidth',100);
+			handles.axisall = uix.Panel('Parent', handles.axistabs,'Padding',0,'BackgroundColor',bgcolor);
+			handles.axisind = uix.Panel('Parent', handles.axistabs,'Padding',0,'BackgroundColor',bgcolor);
+			handles.axistabs.TabTitles = {'Individual Plot','Population Plot'};
 			handles.axis1= axes('Parent',handles.axisall,'Tag','FGMetaAxis','Box','on');
 			handles.axis2= axes('Parent',handles.axisind,'Tag','FGMetaAxis','Box','on');
 
-			handles.controls = uiextras.VBox('Parent', handles.hbox,'Padding',0,'Spacing',0,'BackgroundColor',bgcolor);
-			handles.controls1 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',5,'BackgroundColor',bgcolor);
-			handles.controls1.RowSizes = [-1 -1];
-			handles.controls2 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',0,'BackgroundColor',bgcolor);
-			handles.controls3 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',2,'BackgroundColor',bgcolor);
-			handles.controls3.RowSizes = [-1 -1 -1];
+			handles.controls = uix.VBox('Parent', handles.hbox,'Padding',0,'Spacing',0,'BackgroundColor',bgcolor);
+			handles.controls1 = uix.Grid('Parent', handles.controls,'Padding',5,'Spacing',5,...
+				'BackgroundColor',bgcolor);
+			handles.controls2 = uix.Grid('Parent', handles.controls,'Padding',5,'Spacing',0,'BackgroundColor',bgcolor);
+			handles.controls3 = uix.Grid('Parent', handles.controls,'Padding',5,'Spacing',2,...
+				'BackgroundColor',bgcolor);
 			
 			handles.loadbutton = uicontrol('Style','pushbutton',...
 				'Parent',handles.controls1,...
@@ -1019,7 +1024,7 @@ classdef FGMeta < handle
 				'Value',1,...
 				'Callback',@obj.replot,...
 				'String','Symmetric Gaussian?');
-			%uiextras.Empty('Parent',handles.controls3,'BackgroundColor',bgcolor)
+			%uix.Empty('Parent',handles.controls3,'BackgroundColor',bgcolor)
 			handles.smoothstep = uicontrol('Style','edit',...
 				'Parent',handles.controls3,...
 				'Tag','FGsmoothstep',...
@@ -1054,8 +1059,8 @@ classdef FGMeta < handle
 				'Callback',@obj.replot,...
 				'String',{'mean','median','trimmean','geomean','harmmean','bootstrapmean','bootstrapmedian'});
 
-			set(handles.hbox,'Sizes', [-1.5 -1]);
-			set(handles.controls,'Sizes', [55 -1 70]);
+			set(handles.hbox,'Widths', [-1.5 -1]);
+			set(handles.controls,'Heights', [55 -1 70]);
 
 			obj.handles = handles;
 			obj.openUI = true;
