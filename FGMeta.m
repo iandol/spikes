@@ -103,7 +103,7 @@ classdef FGMeta < handle
 					spike.doPlots = false;
 					spike.density();
 					spike.PSTH();
-					for i = 1:2
+					for i = 1:spike.nSelection
 						obj.cells{idx,i}.name = [spike.results.psth{i}.label{1} '_' spike.selectedTrials{i}.name];
 						obj.cells{idx,i}.time = spike.results.psth{i}.time;
 						obj.cells{idx,i}.psth = spike.results.psth{i}.avg;
@@ -113,9 +113,11 @@ classdef FGMeta < handle
 							obj.cells{idx,i}.time = obj.cells{idx,i}.time.*1e3;
 							obj.cells{idx,i}.time_fine = obj.cells{idx,i}.time_fine .* 1e3;
 						end
+						obj.cells{idx,i}.maxT = spike.measureRange(2);
 						obj.cells{idx,i}.weight = 1;
 						obj.cells{idx,i}.type = 'spikeAnalysis';
 					end
+					clear spike
 				elseif exist('o','var')
 					if obj.nCells==0
 						obj.offset = 200;
@@ -906,7 +908,7 @@ classdef FGMeta < handle
 				figpos(1,[1200 700])
 			end
 			obj.handles(1).parent = parent;
-			fs = 10;
+			fs = 9;
 			if ismac
 				[s,c]=system('system_profiler SPDisplaysDataType');
 				if s == 0; if ~isempty(regexpi(c,'Retina LCD')); fs = 7; end; end
@@ -934,8 +936,8 @@ classdef FGMeta < handle
 			handles.axisind = uiextras.Panel('Parent', handles.axistabs,'Padding',0,...
 				'BackgroundColor',bgcolor);
 			handles.axistabs.TabNames = {'Individual Plot','Population Plot'};
-			handles.axis1= axes('Parent',handles.axisall,'Tag','FGMetaAxis','Box','on');
-			handles.axis2= axes('Parent',handles.axisind,'Tag','FGMetaAxis','Box','on');
+			handles.axis1= axes('Parent',handles.axisall,'Tag','FGMetaAxis','Box','on','FontSize',fs);
+			handles.axis2= axes('Parent',handles.axisind,'Tag','FGMetaAxis','Box','on','FontSize',fs);
 
 			handles.controls = uiextras.VBox('Parent', handles.hbox,'Padding',0,'Spacing',0,'BackgroundColor',bgcolor);
 			handles.controls1 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',5,...
@@ -1008,7 +1010,6 @@ classdef FGMeta < handle
 				'Callback',@obj.replot,...
 				'Min',1,...
 				'Max',1,...
-				'FontSize',13,...
 				'String',{''});
 			
 			handles.selectbars = uicontrol('Style','checkbox',...
