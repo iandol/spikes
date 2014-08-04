@@ -13,18 +13,20 @@ classdef FGMeta < handle
 		plotRange@double = [-0.2 0.3]
 		%> ± time window for baseline estimation/removal
 		baselineWindow@double = [-0.2 0]
+		%> cell data
+		cells@cell
 	end
 	
 	properties (SetAccess = private, GetAccess = public)
 		isSpikeAnalysis = false
-		cells@cell
 		list@cell
 		mint@double
 		maxt@double
 		deltat@double
+		groups@double = [1 2]
 	end
 	
-	properties (Hidden = false, SetAccess = private, GetAccess = public)
+	properties (Hidden = true, SetAccess = private, GetAccess = public)
 		ptime@double
 		ppsth1@double
 		ppout1@double
@@ -39,7 +41,7 @@ classdef FGMeta < handle
 		%> handles for the GUI
 		handles@struct
 		openUI@logical = false
-		version@double = 1.3
+		version@double = 1.4
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
@@ -75,7 +77,7 @@ classdef FGMeta < handle
 		% ===================================================================
 		function add(obj,varargin)
 			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose OPro/spikeAnalysis source File','Multiselect','on');
-			if ~exist('file','var')
+			if ~exist('file','var') || ~ischar(file)
 				warning('No File Specified', 'Meta-Analysis Error')
 				return
 			end
@@ -96,19 +98,24 @@ classdef FGMeta < handle
 						set(obj.handles.offset,'String','0');
 						obj.useMilliseconds = false;
 						obj.isSpikeAnalysis = true;
-						obj.plotRange = [-0.2 0.3];
 					end
 					idx = obj.nCells+1;
+					spike.optimiseSize();
 					spike.select();
 					spike.doPlots = false;
 					spike.density();
 					spike.PSTH();
+					obj.stash(1).raw{idx} = spike;
 					for i = 1:spike.nSelection
+						obj.cells{idx,i}.filename = file;
+						obj.cells{idx,i}.path = path;
 						obj.cells{idx,i}.name = [spike.results.psth{i}.label{1} '_' spike.selectedTrials{i}.name];
 						obj.cells{idx,i}.time = spike.results.psth{i}.time;
 						obj.cells{idx,i}.psth = spike.results.psth{i}.avg;
+						obj.cells{idx,i}.err = spike.var2SE(spike.results.psth{i}.var,spike.results.psth{i}.dof);
 						obj.cells{idx,i}.mean_fine = spike.results.sd{i}.avg;
 						obj.cells{idx,i}.time_fine = spike.results.sd{i}.time;
+						obj.cells{idx,i}.err_fine = spike.results.sd{i}.stderr;
 						if obj.useMilliseconds == true
 							obj.cells{idx,i}.time = obj.cells{idx,i}.time.*1e3;
 							obj.cells{idx,i}.time_fine = obj.cells{idx,i}.time_fine .* 1e3;
@@ -117,6 +124,9 @@ classdef FGMeta < handle
 						obj.cells{idx,i}.weight = 1;
 						obj.cells{idx,i}.type = 'spikeAnalysis';
 					end
+					obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
+					obj.maxt = [obj.maxt obj.cells{idx,1}.maxT];
+					obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1:10)))];
 					clear spike
 				elseif exist('o','var')
 					if obj.nCells==0
@@ -141,6 +151,10 @@ classdef FGMeta < handle
 						obj.cells{idx,i}.weight = 1;
 						obj.cells{idx,i}.type = 'oPro';
 					end
+					obj.mint = [obj.mint obj.cells{idx,1}.time(1)];
+					obj.maxt = [obj.maxt obj.cells{idx,1}.time(end)];
+					obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1:10)))];
+					clear o
 				else
 					warndlg('This file wasn''t an spikeAnalysis or OPro MAT file...')
 					return
@@ -150,13 +164,13 @@ classdef FGMeta < handle
 				obj.maxt = [obj.maxt obj.cells{idx,1}.time(end)];
 				obj.deltat = [obj.deltat max(diff(obj.cells{idx,1}.time(1:10)))];
 
-				t = [obj.cells{idx,1}.name '>>>' obj.cells{idx,2}.name];
-				if strcmpi(obj.cells{idx,1}.type,'oPro')
-					t = regexprep(t,'[\|\s][\d\-\.]+','');
+				if strcmpi(obj.cells{1}.type,'spikeAnalysis')
+					t = [file{ll}];
 				else
-					
+					t = [obj.cells{idx,1}.name '>>>' obj.cells{idx,2}.name];
+					t = regexprep(t,'[\|\s][\d\-\.]+','');
+					t = [file{ll} ':' t];
 				end
-				t = [file{ll} ':' t];
 				obj.list{idx} = t;
 
 				set(obj.handles.list,'String',obj.list);
@@ -164,14 +178,12 @@ classdef FGMeta < handle
 
 				replot(obj);
 				set(obj.handles.root,'Title',sprintf('Loading %g of %g Cells...',ll,l));
-				clear o
 			
 			end
 			
 			fprintf('Cell loading took %.5g seconds\n',toc)
 			
 		end
-		
 		
 		% ===================================================================
 		%> @brief 
@@ -186,14 +198,16 @@ classdef FGMeta < handle
 				obj.smoothstep = str2double(get(obj.handles.smoothstep,'String'));
 				obj.gaussstep = str2double(get(obj.handles.gaussstep,'String'));
 				obj.offset = str2double(get(obj.handles.offset,'String'));
+				obj.groups = str2num(get(obj.handles.groupselect,'String'));
 				obj.symmetricgaussian = logical(get(obj.handles.symmetricgaussian,'Value'));
 				sel = get(obj.handles.list,'Value');
+				grp = obj.groups;
 				w=[1 1];
-				if isfield(obj.cells{sel,1},'weight')
-					w(1) = obj.cells{sel,1}.weight;
+				if isfield(obj.cells{sel,grp(1)},'weight')
+					w(1) = obj.cells{sel,grp(1)}.weight;
 				end
-				if isfield(obj.cells{sel,2},'weight')
-					w(2) = obj.cells{sel,2}.weight;
+				if isfield(obj.cells{sel,grp(2)},'weight')
+					w(2) = obj.cells{sel,grp(2)}.weight;
 				end
 				if length(w) == 2
 					set(obj.handles.weight,'String',num2str(w));
@@ -203,20 +217,34 @@ classdef FGMeta < handle
 				else
 					set(obj.handles.max,'String','0');
 				end
-					
-				maxt = obj.maxt(sel) - obj.offset;
 				
+				if strcmpi(obj.cells{1}.type,'spikeAnalysis')
+					maxt = obj.cells{sel,grp(1)}.maxT - obj.offset;
+				else
+					maxt = obj.maxt(sel) - obj.offset;
+				end
+				err1 = []; err2 = [];
 				if get(obj.handles.selectbars,'Value') == 1
-					time = obj.cells{sel,1}.time_fine - obj.offset;
-					psth1 = obj.cells{sel,1}.mean_fine;
-					psth2 = obj.cells{sel,2}.mean_fine;
+					time = obj.cells{sel,grp(1)}.time_fine - obj.offset;
+					psth1 = obj.cells{sel,grp(1)}.mean_fine;
+					psth2 = obj.cells{sel,grp(2)}.mean_fine;
+					if isfield(obj.cells{sel,1},'err_fine')
+						err1 = obj.cells{sel,grp(1)}.err_fine;
+						err2 = obj.cells{sel,grp(2)}.err_fine;
+					end
 					psth1(psth1 > 500) = 500;
 					psth2(psth2 > 500) = 500;
 				else
-					time = obj.cells{sel,1}.time - obj.offset;
-					psth1 = obj.cells{sel,1}.psth;
+					time = obj.cells{sel,grp(1)}.time - obj.offset;
+					psth1 = obj.cells{sel,grp(1)}.psth;
 					psth2 = obj.cells{sel,2}.psth;
+					if isfield(obj.cells{sel,1},'err')
+						err1 = obj.cells{sel,grp(1)}.err;
+						err2 = obj.cells{sel,grp(2)}.err;
+					end
 				end
+				name1 = obj.cells{sel,grp(1)}.name;
+				name2 = obj.cells{sel,grp(2)}.name;
 				
 				%make sure our psth is column format
 				if size(psth1,1) > size(psth1,2)
@@ -248,27 +276,40 @@ classdef FGMeta < handle
 					[psth1,psth2,name] = obj.normalise(time,psth1,psth2,gmax);
 				end
 				
-				axes(obj.handles.axis1); cla
-				set(obj.handles.axis2,'Color',[1 1 1]);
-				plot(time,psth1,'ko-','MarkerFaceColor',[0 0 0]);
+				delete(obj.handles.ind.Children);
+				obj.handles.axisind = axes('Parent',obj.handles.ind);
 				hold on
-				plot(time,psth2,'ro-','MarkerFaceColor',[1 0 0]);
+				if ~isempty(err1)
+					areabar(time, psth1, err1, [0.5 0.5 0.5], 0.2, 'k-','Color',[0 0 0],'LineWidth',1);
+					areabar(time, psth2, err2, [0.7 0.5 0.5], 0.2, 'r-','Color',[1 0 0],'LineWidth',1);
+					legend({name1,name2});
+				else
+					plot(time,psth1,'ko-','MarkerFaceColor',[0 0 0]);
+					plot(time,psth2,'ro-','MarkerFaceColor',[1 0 0]);
+				end
 				a=axis;
 				line([maxt maxt],[0 a(4)]);
 				hold off
 				grid on
 				box on
 				xlim(obj.plotRange);
-				title(sprintf('Selected Cell: %s',obj.list{sel}));
+				title(sprintf('Selected Cell: %s %s %s',obj.list{sel},name1,name2));
 				xlabel('Time')
 				ylabel('Firing Rate (s/s)')
 
 				%----------------POPULATION-------------------------------
+				if obj.handles.axistabs.Selection == 1
+					return;
+				end
+				clear psth1 psth2 time
 				[psth1,psth2,time]=computeAverage(obj);
-				nn = find(isnan(nanmean(psth1)));
-				time(nn) = [];
-				psth1(:,nn) = [];
-				psth2(:,nn) = [];
+				if size(time,1) > 1; time = time(1,:); end
+				if ~strcmpi(obj.cells{1}.type,'spikeAnalysis')
+					nn = find(isnan(nanmean(psth1)));
+					time(nn) = [];
+					psth1(:,nn) = [];
+					psth2(:,nn) = [];
+				end
 				
 				[~,p1err] = stderr(psth1,'SE');
 				[~,p2err] = stderr(psth2,'SE');
@@ -325,37 +366,45 @@ classdef FGMeta < handle
 					h = nan(size(time));
 				end
 				
-				axes(obj.handles.axis2); cla
-				set(obj.handles.axis2,'Color',[1 1 1]);
+				delete(obj.handles.all.Children);
+				obj.handles.axisall = axes('Parent',obj.handles.all);
 				hold on
 				
 				if obj.useMilliseconds == true
 					spontt = find(time < -20 & time > -50);
 				else
-					spontt = find(time < 0 & time > -0.2);
+					spontt = find(time < obj.baselineWindow(2) & time > obj.baselineWindow(1));
 				end
-				sp1 = psth1(:,spontt);
-				sp2 = psth2(:,spontt);
-				sp1 = reshape(sp1,1,numel(sp1));
-				sp2 = reshape(sp2,1,numel(sp2));
-				
+				sp1 = p1out(:,spontt); sp2 = p2out(:,spontt);
+				sp1 = sp1(:); sp2 = sp2(:);
+				sp1(isnan(sp1)) = []; sp2(isnan(sp2)) = [];
+				[sp1mean,sp1std,sp1ci] = normfit(sp1,0.001);
+				[sp2mean,sp2std,sp2ci] = normfit(sp2,0.001);
 				try
-					ci1 = bootci(1000,{@nanmean,sp1},'alpha',0.01);
-					ci2 = bootci(1000,{@nanmean,sp2},'alpha',0.01);				
+					if strcmpi(obj.cells{1}.type,'spikeAnalysis')
+						ci1(1) = sp1mean-(sp1std*2); ci1(2) = sp1mean+(sp1std*2.33);
+						ci2(1) = sp2mean-(sp2std*2); ci2(2) = sp2mean+(sp2std*2.33);
+						%ci1 = sp1ci;
+						%ci2 = sp2ci;
+					else
+						ci1 = bootci(1000,{@nanmean,sp1(:)},'alpha',0.01);
+						ci2 = bootci(1000,{@nanmean,sp2(:)},'alpha',0.01);
+					end
 					xp = [time(1) time(end) time(end) time(1)];
 					yp = [ci1(1) ci1(1) ci1(2) ci1(2)];
-					me1 = patch(xp,yp,[0.7 0.7 0.7],'FaceAlpha',0.1,'EdgeColor','none');
+					me1 = patch(xp,yp,[0.7 0.7 0.7],'FaceAlpha',0.2,'EdgeColor','none');
 					set(get(get(me1,'Annotation'),'LegendInformation'),'IconDisplayStyle','off'); % Exclude line from legend
 					yp = [ci2(1) ci2(1) ci2(2) ci2(2)];
-					me2 = patch(xp,yp,[0.8 0.7 0.7],'FaceAlpha',0.1,'EdgeColor','none');
+					me2 = patch(xp,yp,[1 0.5 0.5],'FaceAlpha',0.2,'EdgeColor','none');
 					set(get(get(me2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off'); % Exclude line from legend
 				end
-				areabar(time,p1out,p1err,[0.7 0.7 0.7],0.35,'k.-','MarkerSize',8,'MarkerFaceColor',[0 0 0]);
+				
+				areabar(time,p1out,p1err,[0.7 0.7 0.7],0.35,'k-');
 				hold on
-				areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r.-','MarkerSize',8,'MarkerFaceColor',[1 0 0]);
+				areabar(time,p2out,p2err,[1 0.7 0.7],0.35,'r-');
 				hold on
-				h(h==0)=NaN;
-				plot(time,h,'kx');
+				h(h==0) = NaN;
+				if ~any(isnan(h)); plot(time,h,'kx'); end
 				if get(obj.handles.newbars,'Value') == 1
 					bars1 = barsP(p1out,[time(1)+obj.offset time(end)+obj.offset],obj.bp.trials,obj.bp);
 					bars2 = barsP(p2out,[time(1)+obj.offset time(end)+obj.offset],10,obj.bp);
@@ -394,38 +443,29 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function load(obj,varargin)
-			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose MetaAnalysis');
-			if ~ischar(file)
-				errordlg('No File Specified', 'Meta-Analysis Error');
-				return
-			end
-			
-			cd(path);
-			load(file);
-			if exist('fgmet','var') && isa(fgmet,'FGMeta')
-				reset(obj);
-				obj.cells = fgmet.cells;
-				obj.list = fgmet.list;
-				obj.mint = fgmet.mint;
-				obj.maxt = fgmet.maxt;
-				obj.offset = fgmet.offset;
-				set(obj.handles.offset,'String',num2str(obj.offset));
-				if obj.maxt > 100
-					obj.useMilliseconds = true;
-					obj.plotRange = [0-obj.offset max(obj.maxt)];
-				else
-					obj.useMilliseconds = false;
-					obj.plotRange = [-0.2 0.2];
+		function reparse(obj,varargin)
+			if obj.nCells > 0
+				sel = get(obj.handles.list,'Value');
+				spike = obj.stash.raw{sel};
+				spike.select();
+				spike.doPlots = false;
+				spike.density();
+				spike.PSTH();
+				for i = 1:spike.nSelection
+					obj.cells{sel,i}.time = spike.results.psth{i}.time;
+					obj.cells{sel,i}.psth = spike.results.psth{i}.avg;
+					obj.cells{sel,i}.err = spike.var2SE(spike.results.psth{i}.var,spike.results.psth{i}.dof);
+					obj.cells{sel,i}.mean_fine = spike.results.sd{i}.avg;
+					obj.cells{sel,i}.time_fine = spike.results.sd{i}.time;
+					obj.cells{sel,i}.err_fine = spike.results.sd{i}.stderr;
+					if obj.useMilliseconds == true
+						obj.cells{sel,i}.time = obj.cells{idx,i}.time.*1e3;
+						obj.cells{sel,i}.time_fine = obj.cells{idx,i}.time_fine .* 1e3;
+					end
+					obj.cells{sel,i}.maxT = spike.measureRange(2);
 				end
-				obj.deltat = fgmet.deltat;
-				set(obj.handles.list,'String',obj.list);
-				set(obj.handles.list,'Value',obj.nCells);
 				replot(obj);
 			end
-			
-			clear fgmet
-			
 		end
 		
 		% ===================================================================
@@ -470,6 +510,46 @@ classdef FGMeta < handle
 		end
 		
 		% ===================================================================
+		%> @brief 
+		%>
+		%> @param
+		%> @return
+		% ===================================================================
+		function load(obj,varargin)
+			[file,path]=uigetfile('*.mat','Meta-Analysis:Choose MetaAnalysis');
+			if ~ischar(file)
+				errordlg('No File Specified', 'Meta-Analysis Error');
+				return
+			end
+			
+			cd(path);
+			load(file);
+			if exist('fgmet','var') && isa(fgmet,'FGMeta')
+				reset(obj);
+				obj.cells = fgmet.cells;
+				obj.list = fgmet.list;
+				obj.mint = fgmet.mint;
+				obj.maxt = fgmet.maxt;
+				obj.offset = fgmet.offset;
+				set(obj.handles.offset,'String',num2str(obj.offset));
+				if obj.maxt > 100
+					obj.useMilliseconds = true;
+					obj.plotRange = [0-obj.offset max(obj.maxt)];
+				else
+					obj.useMilliseconds = false;
+					obj.plotRange = [-0.2 0.3];
+				end
+				obj.deltat = fgmet.deltat;
+				set(obj.handles.list,'String',obj.list);
+				set(obj.handles.list,'Value',obj.nCells);
+				replot(obj);
+			end
+			
+			clear fgmet
+			
+		end
+		
+		% ===================================================================
 		%> @brief
 		%>
 		%> @param
@@ -479,7 +559,11 @@ classdef FGMeta < handle
 			h = figure;
 			figpos(1,[1000 800]);
 			set(h,'Color',[1 1 1]);
-			hh = copyobj(obj.handles.axis2,h);
+			if obj.handles.axistabs.Selection == 1
+				hh = copyobj(obj.handles.axisind,h);
+			else
+				hh = copyobj(obj.handles.axisall,h);
+			end
 		end
 		
 		% ===================================================================
@@ -674,11 +758,10 @@ classdef FGMeta < handle
 				set(obj.handles.list,'Value',1);
 				set(obj.handles.list,'String',{''});
 			end
-			if isfield(obj.handles,'axis1')
-				obj.handles.axistabs.SelectedChild=2; 
-				axes(obj.handles.axis2);cla
-				obj.handles.axistabs.SelectedChild=1; 
-				axes(obj.handles.axis1); cla
+			if isfield(obj.handles,'ind')
+				delete(obj.handles.ind.Children)
+				delete(obj.handles.all.Children) 
+				obj.handles.axistabs.Selection=1;
 				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
 			end
 		end
@@ -695,35 +778,39 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function [psth1,psth2,time]=computeAverage(obj)
+		function [psth1, psth2, time]=computeAverage(obj)
 			
 			time = [];
 			psth1 = [];
 			psth2 = [];
+			grp = obj.groups;
 			
 			mint = min(obj.mint)-obj.offset;
 			maxt = max(obj.maxt)-obj.offset;
 			
 			for idx = 1:obj.nCells
-				
+				thisT=[];
+				if isfield(obj.cells{idx,grp(1)},'maxT')
+					thisT = obj.cells{idx,grp(1)}.maxT;
+				end
 				if get(obj.handles.selectbars,'Value') > 0
-					psth1tmp = obj.cells{idx,1}.mean_fine;
-					psth2tmp = obj.cells{idx,2}.mean_fine;
-					time = obj.cells{idx,1}.time_fine-obj.offset;
+					psth1tmp = obj.cells{idx,grp(1)}.mean_fine;
+					psth2tmp = obj.cells{idx,grp(2)}.mean_fine;
+					timetmp = obj.cells{idx,grp(1)}.time_fine-obj.offset;
 				else
-					psth1tmp = obj.cells{idx,1}.psth;
-					psth2tmp = obj.cells{idx,2}.psth;
-					time = obj.cells{idx,1}.time-obj.offset;
+					psth1tmp = obj.cells{idx,grp(1)}.psth;
+					psth2tmp = obj.cells{idx,grp(2)}.psth;
+					timetmp = obj.cells{idx,grp(1)}.time-obj.offset;
 				end
 				
-				if isfield(obj.cells{idx,1},'weight')
-					w1 = obj.cells{idx,1}.weight;
+				if isfield(obj.cells{idx,grp(1)},'weight')
+					w1 = obj.cells{idx,grp(1)}.weight;
 					if w1 < 0 || w1 > 1; w1 = 1; end
 				else
 					w1 = 1;
 				end
-				if isfield(obj.cells{idx,2},'weight')
-					w2 = obj.cells{idx,2}.weight;
+				if isfield(obj.cells{idx,grp(2)},'weight')
+					w2 = obj.cells{idx,grp(2)}.weight;
 					if w2 < 0 || w2 > 1; w2 = 1; end
 				else
 					w2 = 1;
@@ -742,25 +829,27 @@ classdef FGMeta < handle
 					psth1tmp = gausssmooth(time,psth1tmp,gs,obj.symmetricgaussian);
 					psth2tmp = gausssmooth(time,psth2tmp,gs,obj.symmetricgaussian);
 				end
-							
-				if max(time) < maxt
-					dt = max(obj.deltat);
-					if isempty(dt); dt = 10; end
-					tt = max(time)+dt:dt:maxt;
-					time = [time tt];
-					
-					pp = nan(size(tt));
-					psth1tmp = [psth1tmp pp];
-					psth2tmp = [psth2tmp pp];
+
+				if strcmpi(obj.cells{1}.type,'spikeAnalysis')
+					timenan = timetmp;
+					timenan(timenan > thisT) = NaN;
+					psth1tmp(isnan(timenan)) = NaN;
+					psth2tmp(isnan(timenan)) = NaN;
+				else
+					if max(timetmp) < maxt
+						dt = max(obj.deltat);
+						if isempty(dt); dt = 10; end
+						tt = max(timetmp)+dt:dt:maxt;
+						timetmp = [timetmp tt];
+
+						pp = nan(size(tt));
+						psth1tmp = [psth1tmp pp];
+						psth2tmp = [psth2tmp pp];
+					end
 				end
-				%tidx = find(time >= maxt);
-				%tidx = tidx(1);
-				%time = time(1:tidx);
-				%psth1tmp = psth1tmp(1:tidx);
-				%psth2tmp = psth2tmp(1:tidx);
 				
 				if get(obj.handles.smooth,'Value') == 1
-					[time, psth1tmp, psth2tmp] = obj.smoothdata(time,psth1tmp,psth2tmp);
+					[timetmp, psth1tmp, psth2tmp] = obj.smoothdata(timetmp,psth1tmp,psth2tmp);
 				end
 				
 				%do we have a max override?
@@ -770,7 +859,7 @@ classdef FGMeta < handle
 				else
 					gmax = [];
 				end
-				[psth1tmp,psth2tmp] = obj.normalise(time,psth1tmp,psth2tmp,gmax);
+				[psth1tmp,psth2tmp] = obj.normalise(timetmp,psth1tmp,psth2tmp,gmax);
 				
 				if get(obj.handles.useweights,'Value') == 1
 					psth1tmp = psth1tmp * w1;
@@ -780,9 +869,11 @@ classdef FGMeta < handle
 				if isempty(psth1)
 					psth1 = psth1tmp;
 					psth2 = psth2tmp;
+					time = timetmp;
 				else
 					psth1 = [psth1;psth1tmp];
 					psth2 = [psth2;psth2tmp];
+					time = [time;timetmp];
 				end
 				
 			end
@@ -814,7 +905,7 @@ classdef FGMeta < handle
 			if obj.useMilliseconds == true
 				spontt = find(time < 0 & time > -200);
 			else
-				spontt = find(time < 0 & time > -0.2);
+				spontt = find(time < obj.baselineWindow(2) & time > obj.baselineWindow(1));
 			end
 			sp1 = nanmean(psth1(spontt));
 			sp2 = nanmean(psth2(spontt));
@@ -841,7 +932,14 @@ classdef FGMeta < handle
 					psth2 = psth2 - sp;
 					psth1 = psth1 / (maxx-sp);
 					psth2 = psth2 / (maxx-sp);
-				case 6 %zscore
+				case 6 %max-spontaneous
+					if isnan(sp1);sp1=0;end
+					if isnan(sp2);sp2=0;end
+					psth1 = psth1 - sp1;
+					psth2 = psth2 - sp1;
+					psth1 = psth1 / (max1-sp);
+					psth2 = psth2 / (max2-sp);
+				case 7 %zscore
 					psth1 = zscore(psth1);
 					psth2 = zscore(psth2);
 				otherwise
@@ -898,7 +996,6 @@ classdef FGMeta < handle
 				fprintf('---> UI already open!\n');
 				return
 			end
-
 			if ~exist('parent','var')
 				parent = figure('Tag','FGMeta',...
 					'Name', ['Figure Ground Meta Analysis V' num2str(obj.version)], ...
@@ -908,10 +1005,21 @@ classdef FGMeta < handle
 				figpos(1,[1200 700])
 			end
 			obj.handles(1).parent = parent;
-			fs = 9;
+			%make context menu
+			hcmenu = uicontextmenu;
+			uimenu(hcmenu,'Label','Reparse (select)','Callback',@obj.reparse,'Accelerator','e');
+			uimenu(hcmenu,'Label','Remove (select)','Callback',@obj.remove,'Accelerator','r');
+			uimenu(hcmenu,'Label','Plot (select)','Callback',@obj.replot,'Accelerator','p','Separator','on');
+			uimenu(hcmenu,'Label','Reset (all)','Callback',@obj.reset);
+			fs = 10;
 			if ismac
-				[s,c]=system('system_profiler SPDisplaysDataType');
-				if s == 0; if ~isempty(regexpi(c,'Retina LCD')); fs = 7; end; end
+				[s,c]=system('system_profiler SPDisplaysDataType'); v = version('-java');
+				if s == 0; 
+					if ~isempty(regexpi(c,'Retina LCD')) && ~isempty(regexpi(v,'Java 1.8'))
+						fs = 7; 
+					end 
+				end
+				clear s c v
 			end	
 
 			bgcolor = [0.85 0.85 0.85];
@@ -930,15 +1038,16 @@ classdef FGMeta < handle
 			handles.hbox = uiextras.HBoxFlex('Parent', handles.root,'Padding',0,...
 				'Spacing', 5, 'BackgroundColor', bgcolor, 'ShowMarkings','on');
 			handles.axistabs = uiextras.TabPanel('Parent', handles.hbox,'Padding',0,...
-				'BackgroundColor',bgcolor,'TabSize',100);
-			handles.axisall = uiextras.Panel('Parent', handles.axistabs,'Padding',0,...
-				'BackgroundColor',bgcolor);
+				'BackgroundColor',bgcolor,'TabSize',120);
 			handles.axisind = uiextras.Panel('Parent', handles.axistabs,'Padding',0,...
-				'BackgroundColor',bgcolor);
-			handles.axistabs.TabNames = {'Individual Plot','Population Plot'};
-			handles.axis1= axes('Parent',handles.axisall,'Tag','FGMetaAxis','Box','on','FontSize',fs);
-			handles.axis2= axes('Parent',handles.axisind,'Tag','FGMetaAxis','Box','on','FontSize',fs);
-
+				'BackgroundColor',bgcolor,'FontSize',fs);
+			handles.axisall = uiextras.Panel('Parent', handles.axistabs,'Padding',0,...
+				'BackgroundColor',bgcolor,'FontSize',fs);
+			handles.axistabs.TabNames = {'Individual','Population'};
+			handles.ind = uipanel('Parent',handles.axisind,'units', 'normalized',...
+				'position', [0 0 1 1],'FontSize',fs);
+			handles.all = uipanel('Parent',handles.axisall,'units', 'normalized',...
+				'position', [0 0 1 1],'FontSize',fs);
 			handles.controls = uiextras.VBox('Parent', handles.hbox,'Padding',0,'Spacing',0,'BackgroundColor',bgcolor);
 			handles.controls1 = uiextras.Grid('Parent', handles.controls,'Padding',5,'Spacing',5,...
 				'BackgroundColor',bgcolor);
@@ -1010,6 +1119,7 @@ classdef FGMeta < handle
 				'Callback',@obj.replot,...
 				'Min',1,...
 				'Max',1,...
+				'uicontextmenu',hcmenu,...
 				'String',{''});
 			
 			handles.selectbars = uicontrol('Style','checkbox',...
@@ -1078,12 +1188,19 @@ classdef FGMeta < handle
 				'Tooltip','Time offset (ms)',...
 				'Callback',@obj.replot,...
 				'String','200');
+			handles.groupselect = uicontrol('Style','edit',...
+				'Parent',handles.controls3,...
+				'Tag','FGgroupselect',...
+				'FontSize', fs,...
+				'Tooltip','Select Groups',...
+				'Callback',@obj.replot,...
+				'String','1 2');
 			handles.normalisecells = uicontrol('Style','popupmenu',...
 				'Parent',handles.controls3,...
 				'Tag','FGnormalisecells',...
 				'FontSize', fs,...
 				'Callback',@obj.replot,...
-				'String',{'Max-only','Max-only (ind)','Min-Max','Min-Max (ind)','Max-Spontaneous','ZScore','None'});
+				'String',{'Max-only','Max-only (Ind)','Min-Max','Min-Max (Ind)','Max-Spontaneous','Max-Spontaneous (Ind)','ZScore','None'});
 			handles.smoothmethod = uicontrol('Style','popupmenu',...
 				'Parent',handles.controls3,...
 				'Tag','FGsmoothmethod',...
