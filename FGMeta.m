@@ -45,7 +45,8 @@ classdef FGMeta < handle
 	end
 	
 	properties (Dependent = true, SetAccess = private, GetAccess = public)
-		nCells
+		%> number of loaded units
+		nSites
 	end
 	
 	properties (SetAccess = private, GetAccess = private)
@@ -93,16 +94,16 @@ classdef FGMeta < handle
 				load(file{ll});
 				if exist('spike','var') && isa(spike,'spikeAnalysis')
 					set(obj.handles.root,'Title',sprintf('Loading %g of %g Units...',ll,l));
-					if obj.nCells==0
+					if obj.nSites==0 
 						obj.offset = 0;
 						set(obj.handles.offset,'String','0');
 						obj.useMilliseconds = false;
 						obj.isSpikeAnalysis = true;
 					end
-					idx = obj.nCells+1;
+					idx = obj.nSites+1;
 					spike.optimiseSize();
-					spike.select();
 					spike.doPlots = false;
+					spike.select();
 					spike.density();
 					spike.PSTH();
 					obj.stash(1).raw{idx} = spike;
@@ -130,13 +131,13 @@ classdef FGMeta < handle
 					clear spike
 				elseif exist('o','var')
 					if obj.isSpikeAnalysis; error('You are trying to load opro file into spikeAnalysis data set'); end
-					if obj.nCells==0
+					if obj.nSites==0
 						obj.offset = 200;
 						set(obj.handles.offset,'String','200');
 						obj.useMilliseconds = true;
 						obj.isSpikeAnalysis = false;
 					end
-					idx = obj.nCells+1;
+					idx = obj.nSites+1;
 					for i = 1:2
 						obj.cells{idx,i}.name = o.(['cell' num2str(i) 'names']){1};
 						obj.cells{idx,i}.time = o.(['cell' num2str(i) 'time']){1};
@@ -171,7 +172,7 @@ classdef FGMeta < handle
 				obj.list{idx} = t;
 
 				set(obj.handles.list,'String',obj.list);
-				set(obj.handles.list,'Value',obj.nCells);
+				set(obj.handles.list,'Value',obj.nSites);
 			
 			end
 			fprintf('Cell loading took %.5g seconds\n',toc(addtic))
@@ -185,7 +186,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function replot(obj,varargin)
-			if obj.nCells > 0
+			if obj.nSites > 0
 				set(obj.handles.root,'Title','Replotting...');
 				drawnow;
 				obj.smoothstep = str2double(get(obj.handles.smoothstep,'String'));
@@ -407,7 +408,7 @@ classdef FGMeta < handle
 					end
 					set(obj.handles.newbars,'Value',0)
 
-					title(['Population (' s ') PSTH: ' num2str(obj.nCells) ' cells'])
+					title(['Population (' s ') PSTH: ' num2str(obj.nSites) ' cells'])
 					grid on
 					box on
 					axis tight
@@ -426,7 +427,7 @@ classdef FGMeta < handle
 					obj.perror1 = p1err;
 					obj.perror2 = p2err;
 				end
-				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
+				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nSites)]);
 			end
 		end
 		
@@ -437,7 +438,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function reparse(obj,varargin)
-			if obj.nCells > 0
+			if obj.nSites > 0
 				sel = get(obj.handles.list,'Value');
 				spike = obj.stash.raw{sel};
 				spike.select();
@@ -468,7 +469,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function remove(obj,varargin)
-			if obj.nCells > 0
+			if obj.nSites > 0
 				sel = get(obj.handles.list,'Value');
 				obj.cells(sel,:) = [];
 				obj.list(sel) = [];
@@ -489,7 +490,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function save(obj,varargin)
-			if obj.nCells > 0
+			if obj.nSites > 0
 				set(obj.handles.root,'Title','Saving...');
 				drawnow;
 				[file,path] = uiputfile('*.mat','Save Meta Analysis:');
@@ -540,7 +541,7 @@ classdef FGMeta < handle
 				end
 				obj.deltat = fgmet.deltat;
 				set(obj.handles.list,'String',obj.list);
-				set(obj.handles.list,'Value',obj.nCells);
+				set(obj.handles.list,'Value',obj.nSites);
 				replot(obj);
 				clear fgmet
 			else
@@ -583,7 +584,7 @@ classdef FGMeta < handle
 		%> @param
 		%> @return
 		% ===================================================================
-		function value = get.nCells(obj)
+		function value = get.nSites(obj)
 			value = length(obj.list);
 			if isempty(value)
 				value = 0;
@@ -605,7 +606,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function editweight(obj,varargin)
-			if obj.nCells > 0
+			if obj.nSites > 0
 				try
 					grps = size(obj.cells(1,:),2);
 				catch
@@ -646,7 +647,7 @@ classdef FGMeta < handle
 		%> @return
 		% ===================================================================
 		function editmax(obj,varargin)
-			if obj.nCells > 0
+			if obj.nSites > 0
 				sel = get(obj.handles.list,'Value');
 				m = str2num(get(obj.handles.max,'String'));
 				if m >= 0
@@ -680,7 +681,7 @@ classdef FGMeta < handle
 				delete(obj.handles.ind.Children)
 				delete(obj.handles.all.Children) 
 				obj.handles.axistabs.Selection=1;
-				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nCells)]);
+				set(obj.handles.root,'Title',['Number of Cells Loaded: ' num2str(obj.nSites)]);
 			end
 		end
 		
@@ -795,7 +796,7 @@ classdef FGMeta < handle
 			mint = min(obj.mint)-obj.offset;
 			maxt = max(obj.maxt)-obj.offset;
 			
-			for idx = 1:obj.nCells
+			for idx = 1:obj.nSites
 				thisT=[];
 				if isfield(obj.cells{idx,grp(1)},'maxT')
 					thisT = obj.cells{idx,grp(1)}.maxT;
