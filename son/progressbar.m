@@ -240,8 +240,8 @@ catch
                 xline = [100 0 0 100 100];
                 yline = [0 0 1 1 1];
 
-                p = patch(xpatch,ypatch,[0 0 0.5],'EdgeColor',[0 0 1],'EraseMode','none');
-                l = line(xline,yline,'EraseMode','none');
+                p = patch(xpatch,ypatch,[0 0 0.5],'EdgeColor',[0 0 1]);
+                l = line(xline,yline);
                 set(l,'Color',[0 0 0.7]);
 
                 set(f,'HandleVisibility','callback','visible', visValue);

@@ -47,32 +47,32 @@ I=pars(1,5);
 
 figNumber = figure(1);
 clf;
-set(figNumber,'NumberTitle','off','doublebuffer','on',...
+set(figNumber,'NumberTitle','off',...
         'Name','Simple Model by Izhikevich (2003)',...
         'Units','normalized','toolbar','figure',...
         'Position',[0.05 0.1 0.9 0.8]);
 h1=subplot(4,2,1);
 set(h1,'Position',[0.05 0.75 0.27 0.2])
-vtrace=line('color','k','LineStyle','-','erase','background','xdata',[],'ydata',[],'zdata',[]);
+vtrace=line('color','k','LineStyle','-','xdata',[],'ydata',[],'zdata',[]);
 axis([0 100 -100 30])
 title('membrane potential, v')
 xlabel('time (ms)');
 
 h2=subplot(4,2,3);
 set(h2,'Position',[0.05 0.5 0.27 0.15])
-utrace=line('color','k','LineStyle','-','erase','background','xdata',[],'ydata',[],'zdata',[]);
+utrace=line('color','k','LineStyle','-','xdata',[],'ydata',[],'zdata',[]);
 axis([0 100 -40 60])
 title('recovery variable, u')
 xlabel('time (ms)')
 
 h3=subplot(2,2,2);
 set(h3,'Position',[0.4 0.5 0.55 0.45])
-head = line('color','r','Marker','.','markersize',20,'erase','xor','xdata',[],'ydata',[],'zdata',[]);
-tail=line('color','k','LineStyle','-','erase','xor','xdata',[],'ydata',[],'zdata',[]);
-vnull=line('color','b','LineStyle','-','erase','xor','xdata',[],'ydata',[],'zdata',[]);
-unull=line('color','b','LineStyle','-','erase','xor','xdata',[],'ydata',[],'zdata',[]);
-cnull=line('color','g','LineStyle',':','erase','xor','xdata',[],'ydata',[],'zdata',[]);
-thresh=line('color','r','LineStyle','-','erase','xor','xdata',[],'ydata',[],'zdata',[]);
+head = line('color','r','Marker','.','markersize',20,'xdata',[],'ydata',[],'zdata',[]);
+tail=line('color','k','LineStyle','-','xdata',[],'ydata',[],'zdata',[]);
+vnull=line('color','b','LineStyle','-','xdata',[],'ydata',[],'zdata',[]);
+unull=line('color','b','LineStyle','-','xdata',[],'ydata',[],'zdata',[]);
+cnull=line('color','g','LineStyle',':','xdata',[],'ydata',[],'zdata',[]);
+thresh=line('color','r','LineStyle','-','xdata',[],'ydata',[],'zdata',[]);
 axis([-100 0 -60 40]);
 title('phase portrait')
 xlabel('v');ylabel('u');

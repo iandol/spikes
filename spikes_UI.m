@@ -454,10 +454,10 @@ case 'Auto Renderer'
 	set(gcf,'RendererMode','auto');
 case 'Painters Renderer'
 	set(gcf,'RendererMode','manual');
-	set(gcf,'Renderer','painters');
+	%set(gcf,'Renderer','painters');
 case 'ZBuffer Renderer'
 	set(gcf,'RendererMode','manual');
-	set(gcf,'Renderer','zbuffer');
+	%set(gcf,'Renderer','zbuffer');
 case'OpenGL Renderer'
 	set(gcf,'RendererMode','manual');
 	set(gcf,'Renderer','OpenGL');

@@ -18,6 +18,8 @@
 	% showoriginalscatter - show unjittered data too?
 	
 	properties
+		%> comments to add to this data comparison
+		comments = {''}
 		%> our first data group, plotted along the abscissa
 		x = []
 		%> our second data group, plotted along the ordinate
@@ -215,14 +217,19 @@
 					pn(2).pack('h',[1/3 1/3 -1])
 				end
 				
-				if max(isnan(xcol)) == 1 %remove any nans
-					xcol = xcol(isnan(xcol)==[]);
+				if any(isnan(xcol)) %remove any nans
+					xcol(isnan(xcol))=[];
 				end
-				if max(isnan(ycol)) == 1
-					ycol = ycol(isnan(ycol)==0);
+				if any(isnan(ycol))
+					ycol(isnan(ycol))=[];
 				end
 				
 				[xcol,ycol,casesLocal,xouttext,youttext] = obj.removeOutliers(xcol,ycol,casesLocal,xouttext,youttext);
+				
+				isDataEqualLength = false;
+				if length(xcol) == length(ycol)
+					isDataEqualLength = true;
+				end
 				
 				xmean=nanmean(xcol);
 				xmedian=nanmedian(xcol);
@@ -306,14 +313,14 @@
 				px = 2;
 				py = 1;
 				pn(py,px).select()
-				if obj.isDataEqualLength && exist('distributionPlot','file')
+				if isDataEqualLength && exist('distributionPlot','file')
 					hold on
 					distributionPlot({xcol,ycol},0.3);
-				elseif obj.isDataEqualLength==false && exist('distributionPlot','file')
+				elseif isDataEqualLength==false && exist('distributionPlot','file')
 					hold on
 					distributionPlot({xcol,ycol},0.3);
 				end
-				if obj.isDataEqualLength
+				if isDataEqualLength
 					boxplot([xcol ycol],'positions',[1 2],'notch',1,'whisker',1,...
 						'labels',obj.legendtxt,'colors','k',...
 						'boxstyle','outline','medianstyle','line',...
@@ -342,7 +349,7 @@
 				py = 1;
 				pn(py,px).select()
 				
-				if obj.isDataEqualLength && exist('notBoxPlot','file')
+				if isDataEqualLength && exist('notBoxPlot','file')
 					% 					if ~isempty(uniquecases) && ~isempty(casesLocal)
 					% 						for jj = 1:length(uniquecases)
 					% 							caseidx = ismember(casesLocal,uniquecases{jj});
@@ -357,7 +364,7 @@
 					set(gca,'XTick', [1 2],'XTickLabel', obj.legendtxt)
 					pn(py,px).ylabel(obj.columnlabels{idx});
 					
-				elseif obj.isDataEqualLength==false && exist('notBoxPlot','file')
+				elseif isDataEqualLength==false && exist('notBoxPlot','file')
 					
 					notBoxPlot(xcol,1);
 					hold on
@@ -377,7 +384,7 @@
 				%==========================================DO SCATTER
 				xcolout = xcol;
 				ycolout = ycol;
-				if ystd > 0 && obj.isDataEqualLength
+				if ystd > 0 && isDataEqualLength
 					px = 1;
 					py = 2;
 					pn(py,px).select()
@@ -495,7 +502,7 @@
 						[h,p1]=ttest2(xcol,ycol,obj.alpha);
 					end
 					[p2,h]=ranksum(xcol,ycol,'alpha',obj.alpha);
-					if obj.isDataEqualLength
+					if isDataEqualLength
 						[h,p3]=ttest(xcol,ycol,obj.alpha);
 						[p4,h]=signrank(xcol,ycol,'alpha',obj.alpha);
 						[p5,h]=signtest(xcol,ycol,'alpha',obj.alpha);
@@ -584,7 +591,7 @@
 					'function', obj.densityFunction, 'support', obj.densityBounds);
 				
 				%==========================================DO CDF
-				if obj.isDataEqualLength
+				if isDataEqualLength
 					px = 2;
 					py = 2;
 				else
@@ -617,7 +624,7 @@
 				pn(py,px).xlabel(obj.columnlabels{idx});
 				
 				%==========================================Do DENSITY
-				if obj.isDataEqualLength
+				if isDataEqualLength
 					px = 3;
 					py = 2;
 				else
@@ -675,14 +682,18 @@
 				outs.(fieldn).xmean = xmean;
 				outs.(fieldn).xmedian = xmedian;
 				outs.(fieldn).xstd = xstd;
+				outs.(fieldn).xse = xstderr;
+				outs.(fieldn).xci = xci;
 				outs.(fieldn).ymean = ymean;
 				outs.(fieldn).ymedian = ymedian;
 				outs.(fieldn).ystd = ystd;
+				outs.(fieldn).yse = ystderr;
+				outs.(fieldn).yci = yci;
 				outs.(fieldn).xcolout = xcolout;
 				outs.(fieldn).ycolout = ycolout;
 				outs.(fieldn).text = t;
 				
-				set(gcf,'Renderer','zbuffer');
+				%set(gcf,'Renderer','zbuffer');
 				
 				fprintf('\n---> getDensity Computation time took: %.2g seconds\n',toc);
 				
@@ -692,7 +703,7 @@
 					obj.doSinglePlots(pn);
 				end
 				
-				if obj.isDataEqualLength && ~isempty(uniquecases) && ~isempty(casesLocal)
+				if isDataEqualLength && ~isempty(uniquecases) && ~isempty(casesLocal)
 					for jj = 1:length(uniquecases)
 						caseidx = ismember(casesLocal,uniquecases{jj});
 						xtmp = xcol(caseidx);
@@ -877,12 +888,39 @@
 		%> @param obj this instance object
 		% ===================================================================
 		function set.x(obj,value)
-			if size(value,1)==1
-				value=value';
+			if isstruct(value) && length(value) == 1
+				f = fieldnames(value);
+				firstLength = [];
+				x = [];
+				names = {};
+				for i = 1:length(f)
+					col = value.(f{i});
+					if isnumeric(col) && isvector(col)
+						if ~iscolumn(col)
+							col = col';
+						end
+						if isempty(firstLength)
+							firstLength = length(col);
+						end
+						if length(col) == firstLength
+							x(:,end+1) = col;
+							names{end+1} = f{i};
+						end
+					end
+				end
+				if ~isempty(x)
+					obj.x = x;
+					obj.columnlabels = names;
+				end
+			elseif isnumeric(value)
+				if ~iscolumn(value)
+					value=value';
+				end
+				value(isnan(value)) = []; %purge nans
+				obj.x = value;
+			else
+				warning('x input data isn''t valid, must be a vector or a structure of vectors')
 			end
-			
-			obj.x = value;
-			
 			notify(obj,'checkData');
 		end
 		
@@ -892,11 +930,37 @@
 		%> @param obj this instance object
 		% ===================================================================
 		function set.y(obj,value)
-			if size(value,1)==1
-				value=value';
+			if isstruct(value) && length(value) == 1
+				f = fieldnames(value);
+				firstLength = [];
+				x = [];
+				names = {};
+				for i = 1:length(f)
+					col = value.(f{i});
+					if isnumeric(col) && isvector(col)
+						if ~iscolumn(col)
+							col = col';
+						end
+						if isempty(firstLength)
+							firstLength = length(col);
+						end
+						if length(col) == firstLength
+							x(:,end+1) = col;
+							names{end+1} = f{i};
+						end
+					end
+				end
+				if ~isempty(x)
+					obj.y = x;
+					obj.columnlabels = names;
+				end
+			elseif isnumeric(value)
+				if ~iscolumn(value)
+					value=value';
+				end
+				value(isnan(value)) = []; %purge nans
+				obj.y = value;
 			end
-			
-			obj.y = value;
 			
 			notify(obj,'checkData');
 		end
@@ -972,77 +1036,77 @@
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,1).axis,h);
+				p = copyobj(pn(1,1).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,2).axis,h);
+				p = copyobj(pn(1,2).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','zbuffer');
+				%set(gcf,'Renderer','zbuffer');
 				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,3).axis,h);
+				p = copyobj(pn(1,3).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 				
 				h=figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,1).axis,h);
+				p = copyobj(pn(2,1).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 				
 				h=figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,2).axis,h);
+				p = copyobj(pn(2,2).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 				
 				h=figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,3).axis,h);
+				p = copyobj(pn(2,3).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 			else
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,1).axis,h);
+				p = copyobj(pn(1,1).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,2).axis,h);
+				p = copyobj(pn(1,2).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','zbuffer');
+				%set(gcf,'Renderer','zbuffer');
 				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(1,3).axis,h);
-				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
-				set(gcf,'Renderer','painters');
-				
-				h = figure;
-				figpos(1,[wid hei]);
-				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,1).axis,h);
+				p = copyobj(pn(1,3).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 				
 				h = figure;
 				figpos(1,[wid hei]);
 				set(h,'Color',[0.9 0.9 0.9])
-				p = copyobj(pn(2,2).axis,h);
+				p = copyobj(pn(2,1).axis,h, 'legacy');
+				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
+				set(gcf,'Renderer','painters');
+				
+				h = figure;
+				figpos(1,[wid hei]);
+				set(h,'Color',[0.9 0.9 0.9])
+				p = copyobj(pn(2,2).axis,h, 'legacy');
 				set(p,'Units','Normalized','OuterPosition',[minp minp maxp maxp]);
 				set(gcf,'Renderer','painters');
 				
@@ -1060,7 +1124,7 @@
 		%> @param obj this instance object
 		% ===================================================================
 		function doCheckData(obj, src, evnt)
-			obj.salutation([evnt.EventName ' event'],'Event is running...');
+			obj.salutation([evnt.EventName ' event'],'Event is running...',true);
 			if isempty(obj.y)
 				obj.y = zeros(size(obj.x));
 			end
@@ -1262,8 +1326,9 @@
 		%> @param in the calling function
 		%> @param message the message that needs printing to command window
 		% ===================================================================
-		function salutation(obj,in,message)
-			if obj.verbose==true
+		function salutation(obj,in,message,force)
+			if ~exist('force','var'); force = false; end
+			if obj.verbose==true || force == true
 				if ~exist('in','var')
 					in = 'undefined';
 				end

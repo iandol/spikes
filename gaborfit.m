@@ -234,7 +234,7 @@ case 'Spawn'
     hnew=figure;
     set(gcf,'Position',[100 100 900 700]);
     set(gcf,'Units','Characters');
-    c=copyobj(h,hnew);
+    c=copyobj(h,hnew, 'legacy');
     set(c,'Tag',' ');
     set(c,'UserData','');
     suplabel([gabdat.title sprintf('\n') gabdat.current2]);

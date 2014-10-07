@@ -1146,7 +1146,7 @@ classdef (Sealed = true) panel < handle
 				end
 				
 				% check it's a line
-				if ~isequal(get(h, 'type'), 'line')
+				if ~isgraphics(h,'line')
 					continue
 				end
 				
@@ -3222,7 +3222,7 @@ classdef (Sealed = true) panel < handle
 					fix = p.m_fixdash{i};
 					
 					% final check
-					if ~ishandle(fix.h) || ~isequal(get(fix.h, 'type'), 'line')
+					if ~ishandle(fix.h) || ~isgraphics(fix.h,'line')
 						continue
 					end
 					
@@ -4475,7 +4475,7 @@ restore.ydata = ydata;
 
 % create another, separate, line to overlay on the original
 % line and render the fixed-up dashes.
-restore.h_supp = copyobj(h_line, h_axis);
+restore.h_supp = copyobj(h_line, h_axis, 'legacy');
 
 % if the original line has markers, we'll have to create yet
 % another separate line instance to represent them, because
@@ -4483,7 +4483,7 @@ restore.h_supp = copyobj(h_line, h_axis);
 % currently attempt to get the z-order right for these
 % new lines.
 if ~isequal(marker, 'none')
-	restore.h_mark = copyobj(h_line, h_axis);
+	restore.h_mark = copyobj(h_line, h_axis, 'legacy');
 	set(restore.h_mark, 'linestyle', 'none');
 	set(restore.h_supp, 'marker', 'none');
 else
@@ -4673,7 +4673,7 @@ end
 
 function h = getParentFigure(h)
 
-if strcmp(get(h, 'type'), 'figure')
+if isgraphics(h,'figure')
 	return
 else
 	h = getParentFigure(get(h, 'parent'));
@@ -5017,7 +5017,7 @@ end
 
 function b = isaxis(h)
 
-b = ishandle(h) && strcmp(get(h, 'type'), 'axes');
+b = isgraphics(h,'axes')  ;
 
 end
 

@@ -391,7 +391,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 				set(gca,'XTick',rfd.cell1.xvalues);
 				set(gca,'YTick',rfd.cell1.yvalues);
 				set(gca,'YDir','normal');
-				rfd.ax1cbar=colorbar('peer',gca,'FontSize',6);
+				rfd.ax1cbar=colorbar('FontSize',6);
 				pos=get(rfd.ax1cbar,'Position');
 				set(rfd.ax1cbar,'Position',[0.2 pos(2) 0.01 0.269]);
 		end
@@ -427,7 +427,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 				set(gca,'XTick',rfd.cell1.xvalues);
 				set(gca,'YTick',rfd.cell1.yvalues);
 				set(gca,'YDir','normal');
-				rfd.ax2cbar=colorbar('peer',gca,'FontSize',6);
+				rfd.ax2cbar=colorbar('FontSize',6);
 				pos=get(rfd.ax2cbar,'Position');
 				set(rfd.ax2cbar,'Position',[0.2 pos(2) 0.01 0.269]);
 		end
@@ -465,7 +465,7 @@ switch(action)    %As we use the GUI this switch allows us to respond to the use
 					set(gca,'YTick',rfd.cell1.yvalues);
 					set(gca,'YDir','normal');
 					set(gca,'Tag','RFDCell3Axis');
-					rfd.ax3cbar=colorbar('peer',gca,'FontSize',6);
+					rfd.ax3cbar=colorbar('FontSize',6);
 					pos=get(rfd.ax3cbar,'Position');
 					set(rfd.ax3cbar,'Position',[0.2 pos(2) 0.01 0.269]);
 					set(gh('RFDCell3Axis'),'Position',rfd.ax3pos);

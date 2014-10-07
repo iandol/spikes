@@ -9,7 +9,7 @@ function  spikeTimes=modulatedPoisson
 %close all           % closes all figures
 
 dt = .001;          % time step (sec)
-T = 0.5;              % epoch length (sec)
+T = 2;              % epoch length (sec)
 f = 2;              % modulation frequency (Hz)
 minRate = 0;       % min firing rate  (Hz, i.e., spikes/sec)
 maxRate = 80;       % max firing rate (Hz, i.e., spikes/sec)

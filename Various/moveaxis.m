@@ -40,7 +40,7 @@ elseif arg==1,
     mn=1e20;
     mi=1;
     for i=1:n,
-        if strcmp(get(Kids(i),'type'),'axes') & ...
+        if isgraphics(Kids( i ),'axes') & ...
            strcmp(get(Kids(i),'tag'),'legend')
             units=get(Kids(i),'units');
             set(Kids(i),'units','pixels')
@@ -70,7 +70,7 @@ elseif arg==1,
     set(gcf,'windowbuttonupfcn','moveaxis(3)');
 elseif arg==2,
     pos=get(get(gcf,'currentobject'),'position');
-    set(get(gcf,'currentobject'),'units','pixels','drawmode','fast',...
+    set(get(gcf,'currentobject'),'units','pixels','SortMethod','childorder',...
     'position',[get(gcf,'currentpoint')+DELTA pos(3:4)]);
 elseif arg==3,
    

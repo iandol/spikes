@@ -128,7 +128,7 @@ case 'Spawn'
 	set(f,'Color',[1 1 1]);
 	figpos(1,[1000 1000])
 	
-	h = copyobj(gh(gdat.currentplot),f);
+	h = copyobj(gh(gdat.currentplot),f, 'legacy');
 	set(h,'OuterPosition',[0 0 1 1],'FontSize',16);
 	title(['PLOT: ' gdat.currentplot])
 

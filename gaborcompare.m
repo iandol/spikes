@@ -184,7 +184,7 @@ case 'Spawn'
 	whitebg(hnew);
 	set(gcf,'Units','Characters');
 	set(gcf,'Position',pos);
-	c=copyobj(h,hnew);
+	c=copyobj(h,hnew, 'legacy');
 	set(c,'Tag',' ');
 	set(c,'UserData','');
 	colormap(map);
@@ -214,7 +214,7 @@ case 'Spawn Gaussian'
 	end
 	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-	c=copyobj(h,hnew);
+	c=copyobj(h,hnew, 'legacy');
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
 	set(c,'Tag','');
@@ -234,7 +234,7 @@ case 'Spawn Output'
 	whitebg(hnew,[1 1 1]);
 	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-	c=copyobj(h,hnew);
+	c=copyobj(h,hnew, 'legacy');
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
 	set(c,'Tag','');

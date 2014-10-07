@@ -104,7 +104,7 @@ end;
 %  Copy all the elements of the parent axis to the child axis
 %
 for h = get(p,'children')',
-    hcopy = copyobj( h );
+    hcopy = copyobj( h, 'legacy' );
     set( hcopy, 'Parent', gca );
 end;
 

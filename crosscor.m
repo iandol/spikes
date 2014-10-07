@@ -1749,7 +1749,7 @@ else
 	h=gca;
 	cf=figure;
 	set(gcf,'Renderer','zbuffer');
-	copyobj(h,cf)
+	copyobj(h,cf, 'legacy')
 	set(gca,'Position',[109 39 370 358])
 	pause(0.5); 
 	set(gcf,'Color',[1 1 1]);

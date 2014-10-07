@@ -324,14 +324,14 @@ case 'Normalise'
 		if o.cell1.yvalues(1) < o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 		colormap(hot);
 		set(gca,'Tag','Cell1Axis');
-		colorbar('peer',gh('Cell1Axis'),'FontSize',7);	
+		colorbar('FontSize',7);	
 		axes(gh('Cell2Axis'));
 		imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
 		if o.cell2.xvalues(1) > o.cell2.xvalues(end);set(gca,'XDir','reverse');end
 		if o.cell2.yvalues(1) < o.cell2.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 		colormap(hot);
 		set(gca,'Tag','Cell2Axis');
-		colorbar('peer',gh('Cell2Axis'),'FontSize',7);	
+		colorbar('FontSize',7);	
 		axes(gh('OutputAxis'));
 		plot(0,0);
 		set(gca,'Tag','OutputAxis');
@@ -1747,7 +1747,7 @@ case 'OrbanizeIt'
 			set(gh('StatsText'),'String',['';'';'';'Individual 1-way Anova performed for each matrix location, plotting the p-value probability']);
 			colormap(hot);
 			set(gca,'Tag','OutputAxis');
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
 			if o.cell1.xvalues(1) > o.cell1.xvalues(end);set(gca,'XDir','reverse');end
@@ -1755,7 +1755,7 @@ case 'OrbanizeIt'
 			set(gh('StatsText'),'String',['';'';'';'Individual 1-way Anova performed for each matrix location, plotting the Hypthesis Result']);
 		colormap(hot);
 		set(gca,'Tag','OutputAxis');
-		colorbar('peer',gh('OutputAxis'),'FontSize',7);
+		colorbar('FontSize',7);
 		else
 			h=errordlg('You can only plot p-values or Hypothesis Test, switching to p-values')
 			pause(1)
@@ -1766,7 +1766,7 @@ case 'OrbanizeIt'
 			set(gh('StatsText'),'String',['';'';'';'Individual 1-way Anova performed for each matrix location, plotting the p-value probability']);
 			colormap(hot);
 			set(gca,'Tag','OutputAxis');
-		colorbar('peer',gh('OutputAxis'),'FontSize',7);
+		colorbar('FontSize',7);
 		end
 		
 		%-----------------------------------------------------------------------------------------
@@ -1826,7 +1826,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			%colormap([1 1 1;0.5 0.5 0.5;0 0 0]);
 			set(gh('StatsText'),'String',['';'';'';'Significance (p-value) of Spearman Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
@@ -1835,7 +1835,7 @@ case 'OrbanizeIt'
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'Hypothesis Result (1=yes) of whether to reject the null hypothesis (no correlation) for individual spatial locations']);
 			caxis([0 1]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==3
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.rmatrix);
@@ -1843,7 +1843,7 @@ case 'OrbanizeIt'
 			if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'r Correlation Coefficient (-1 to 1) of Spearman Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==4
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.r2matrix);
@@ -1851,7 +1851,7 @@ case 'OrbanizeIt'
 			if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'r squared Correlation Coefficient (0 to 1) of Spearman Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==5
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.rimatrix);
@@ -1859,7 +1859,7 @@ case 'OrbanizeIt'
 			if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'1-r squared Correlation Coefficient (0 to 1) of Spearman Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end
 		
@@ -1922,7 +1922,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			%colormap([1 1 1;0.5 0.5 0.5;0 0 0]);
 			set(gh('StatsText'),'String',['';'';'';'Significance (p-value) of Pearson Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
@@ -1931,7 +1931,7 @@ case 'OrbanizeIt'
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'Hypothesis Result (1=yes) of whether to reject the null hypothesis (no correlation) for individual spatial locations']);
 			caxis([0 1]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==3
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.rmatrix);
@@ -1939,7 +1939,7 @@ case 'OrbanizeIt'
 			if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'r Correlation Coefficient (-1 to 1) of Pearson Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==4
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.r2matrix);
@@ -1947,7 +1947,7 @@ case 'OrbanizeIt'
 			if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'r squared Correlation Coefficient (0 to 1) of Pearson Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==5
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.rimatrix);
@@ -1955,7 +1955,7 @@ case 'OrbanizeIt'
 			if o.cell1.yvalues(1) > o.cell1.yvalues(end);set(gca,'YDir','normal');set(gca,'Units','Pixels');end
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['';'';'';'1-r squared Correlation Coefficient (0 to 1) of Pearson Correlation for individual spatial locations']);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end
 		
@@ -1998,14 +1998,14 @@ case 'OrbanizeIt'
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			caxis([0.001 0.05]);
 			set(gh('StatsText'),'String',['Wilcoxon Matched Pairs Test performed on the PSTH for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['Wilcoxon Matched Pairs Test performed on the PSTH for each matrix location, plotting the Null-Test Hypothesis Result. A value of 1 signifies that we can reject the null hypothesis that the two samples come fromthe same distribution. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		else
 			h=errordlg('You can only plot p-values or Hypothesis Test, switching to p-values.')
@@ -2016,7 +2016,7 @@ case 'OrbanizeIt'
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			caxis([0.001 0.05]);
 			set(gh('StatsText'),'String',['Wilcoxon Matched Pairs Test performed on the PSTH for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end
 		
@@ -2063,14 +2063,14 @@ case 'OrbanizeIt'
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			caxis([0.001 0.05]);
 			set(gh('StatsText'),'String',['Wilcoxon Rank Sum performed on the PSTH for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			set(gca,'Tag','OutputAxis');
 			set(gh('StatsText'),'String',['Wilcoxon Rank Sum performed on the PSTH for each matrix location, plotting the Null-Test Hypothesis Result. A value of 1 signifies that we can reject the null hypothesis that the two samples come fromthe same distribution. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		else
 			h=errordlg('You can only plot p-values or Hypothesis Test, switching to p-values')
@@ -2081,7 +2081,7 @@ case 'OrbanizeIt'
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			caxis([0.001 0.05]);
 			set(gh('StatsText'),'String',['Wilcoxon Rank Sum performed on the PSTH for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end
 		%-----------------------------------------------------------------------------------------
@@ -2126,7 +2126,7 @@ case 'OrbanizeIt'
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['Student T Test performed on the PSTH for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
@@ -2134,7 +2134,7 @@ case 'OrbanizeIt'
 			set(gca,'YDir','normal');set(gca,'Units','Pixels');
 			caxis(gh('OutputAxis'),[0 1]);
 			set(gh('StatsText'),'String',['Student T Test performed on the PSTH for each matrix location, plotting the Null-Test Hypothesis Result. A value of 1 signifies that we can reject the null hypothesis that the two samples come fromthe same distribution. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		else
 			h=errordlg('You can only plot p-values or Hypothesis Test, switching to p-values');
@@ -2145,7 +2145,7 @@ case 'OrbanizeIt'
 			set(gca,'Tag','OutputAxis');
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['Student T Test performed on the PSTH for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end		
 		
@@ -2188,7 +2188,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['';'';'';'Paired Sign Test performed on the PSTH for each matrix location, plotting the p-value probability']);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
@@ -2197,7 +2197,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0 1]);
 			set(gh('StatsText'),'String',['';'';'';'Paired Sign Test performed on the PSTH for each matrix location, plotting the Null-Test Hypothesis Result. A value of 1 signifies that we can reject the null hypothesis that the two samples come fromthe same distribution']);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		else
 			h=errordlg('You can only plot p-values or Hypothesis Test, switching to p-values')
@@ -2209,7 +2209,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['';'';'';'Paired Sign Test performed on the PSTH for each matrix location, plotting the p-value probability']);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end
 		
@@ -2275,7 +2275,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['';'';'';'Kolmogorov-Smirnov Distribution Test performed on the PSTH for each matrix location, plotting the p-value probability']);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
@@ -2284,7 +2284,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0 1]);
 			set(gh('StatsText'),'String',['';'';'';'Kolmogorov-Smirnov Distribution Test performed on the PSTH for each matrix location, plotting the Null-Test Hypothesis Result. 1 signifies that we can reject the null hypothesis that the two samples come fromthe same distribution']);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		else
 			errordlg('You can only plot p-values or Hypothesis Test, switching to p-values')
@@ -2294,7 +2294,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['';'';'';'Kolmogorov-Smirnov Distribution Test performed on the PSTH for each matrix location, plotting the p-value probability']);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end
 		
@@ -2371,7 +2371,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['BootStrap performed on the Spikes for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		elseif plottype==2
 			imagesc(o.cell1.xvalues,o.cell1.yvalues,o.hmatrix);
@@ -2380,7 +2380,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0 1]);
 			set(gh('StatsText'),'String',['Bootstrap performed on the PSTH for each matrix location, plotting the Null-Test Hypothesis Result. 1 signifies that we can reject the null hypothesis that the two samples come fromthe same distribution. n = ' num2str(o.n)]);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		else
 			errordlg('You can only plot p-values or Hypothesis Test, switching to p-values')
@@ -2390,7 +2390,7 @@ case 'OrbanizeIt'
 			caxis(gh('OutputAxis'),[0.001 0.05]);
 			set(gh('StatsText'),'String',['Bootstrap performed on the PSTH for each matrix location, plotting the p-value probability. n = ' num2str(o.n)]);
 			colormap(hot);
-			colorbar('peer',gh('OutputAxis'),'FontSize',7);
+			colorbar('FontSize',7);
 			set(gh('OutputAxis'),'Position',o.ax3pos);	
 		end
 		
@@ -2446,7 +2446,7 @@ case 'Spawn'
 	axes(gh('OutputAxis'));
 	h=gca;
 	childfigure=figure;
-	copyobj(h,childfigure)
+	copyobj(h,childfigure, 'legacy')
 	set(gca,'Units','Normalized');
 	set(gca,'Position',[0.1300    0.1100    0.6626    0.8150]);
 	colorbar
@@ -2598,7 +2598,7 @@ imagesc(o.cell1.xvalues,o.cell1.yvalues,o.cell1.matrix);
 set(gca,'YDir','normal')
 %colormap(hot);
 set(gca,'Tag','Cell1Axis');	
-colorbar('peer',gh('Cell1Axis'),'FontSize',7);
+colorbar('FontSize',7);
 if ~isempty(o.ax1pos) & length(o.ax1pos)==4
 	set(gh('Cell1Axis'),'Position',o.ax1pos);
 end
@@ -2621,7 +2621,7 @@ imagesc(o.cell2.xvalues,o.cell2.yvalues,o.cell2.matrix);
 set(gca,'YDir','normal')
 %colormap(hot);
 set(gca,'Tag','Cell2Axis');
-colorbar('peer',gh('Cell2Axis'),'FontSize',7);
+colorbar('FontSize',7);
 if ~isempty(o.ax2pos) & length(o.ax2pos)==4
 	set(gh('Cell2Axis'),'Position',o.ax2pos);
 end

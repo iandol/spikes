@@ -144,7 +144,7 @@ if strcmp(action, 'init');
     DATA.yindex = 1;
     i = max(size(sibs));
     while i >= 1
-        if strcmp(get(sibs(i),'Type'),'line')
+        if isgraphics(sibs( i ),'line')
             
             % OK, found a line among the axis children.
             linesfound = linesfound + 1;
@@ -205,8 +205,8 @@ if strcmp(action, 'init');
     XHR_HANDLES.xline = line(x_rng,[y_rng(1) y_rng(1)]);
     XHR_HANDLES.yline = line(x_rng,[y_rng(1) y_rng(1)]);
     
-    set(XHR_HANDLES.xline,'Color','r','EraseMode','xor');
-    set(XHR_HANDLES.yline,'Color','r','EraseMode','xor');
+    set(XHR_HANDLES.xline,'Color','r');
+    set(XHR_HANDLES.yline,'Color','r');
     
     % Save GUI handles
     XHR_HANDLES.interp = interp;

@@ -619,7 +619,7 @@ switch(action)
 		h=figure;
 		set(gcf,'Position',[200 200 800 500]);
 		set(gcf,'Units','Characters');
-		c=copyobj(findobj('UserData','SpawnAxes'),h);
+		c=copyobj(findobj('UserData','SpawnAxes'),h, 'legacy');
 		set(c,'Tag',' ');
 		set(c,'UserData','');
 		axes(c(end))

@@ -353,7 +353,7 @@ function SpawnPlot(handle)
 cmap=get(gcf,'ColorMap');
 [a,b]=view;     
 childfigure=figure;
-copyobj(handle,childfigure)
+copyobj(handle,childfigure, 'legacy')
 set(gca,'Position',[30 30 350 250]);
 set(gca,'Units','Normalized');
 colormap(cmap);

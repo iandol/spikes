@@ -464,7 +464,7 @@ function SpawnPlot(plothandle)
 %To plot current info on new object
 a=axis;
 childfigure=figure;
-copyobj(plothandle,childfigure)
+copyobj(plothandle,childfigure, 'legacy')
 set(gca,'Position',[44.25 43.5 341.25 253.5])
 set(gca,'Units','Normalized');
 axis(a);

@@ -77,7 +77,7 @@ Go(1,:) = inf; Go(n+2,:) = inf;
 Go(:,1) = inf; Go(:,n+2) = inf;
 Hfigure = figure('Name','GoLife','NumberTitle','off','MenuBar','figure',...
                  'Pointer','custom','PointerShapeHotSpot',[8 8],...
-                 'Renderer','zbuffer','DeleteFcn','golife bye!');
+                 'DeleteFcn','golife bye!');
 colormap([1 1 1; 1 0 0; 0 0 1; 0 0 0])
 SetPointer
 Himage = image(Go+1,'ButtonDownFcn','golife(inf)');

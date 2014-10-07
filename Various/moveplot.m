@@ -93,7 +93,7 @@ else  % i.e. self-invoked
             k.axesdata=get(gca,'userdata');
             k.doublebuffer=get(gcf,'doublebuffer');
             set(h,'userdata',k);
-            set(gcf,'windowbuttonmotionfcn',['moveplot(get(gca,''userdata''),''' opt ''',2)'],'doublebuffer','on');
+            set(gcf,'windowbuttonmotionfcn',['moveplot(get(gca,''userdata''),''' opt ''',2)']);
             set(gca,'userdata',h);
             set(gcf,'windowbuttonupfcn',['moveplot(get(gca,''userdata''),''' opt ''',3)']);
 %         end    
@@ -141,7 +141,7 @@ else  % i.e. self-invoked
     case 3 % button up - we're done
         k=get(h,'userdata');
         set(gca,'userdata',k.axesdata); % restore axes data to its previous value
-        set(gcf,'windowbuttonmotionfcn','','windowbuttonupfcn','','doublebuffer',k.doublebuffer)
+        set(gcf,'windowbuttonmotionfcn','','windowbuttonupfcn','')
     end
 end
 

@@ -102,7 +102,7 @@ try
     end
 catch
 end
-errorbarprop = [];
+errorbarprop = gobjects(0);
 for barnumber=1:1:length(H)
     h = H(barnumber);
     set(h,'FaceColor',FaceColor(barnumber,:),'EdgeColor',EdgeColor,'linewidth',1);

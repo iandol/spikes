@@ -144,7 +144,7 @@ case 'SpawnGaussLeft'
 	hnew=figure;
 	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-	c=copyobj(h,hnew);
+	c=copyobj(h,hnew, 'legacy');
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
 	set(c,'Tag','');
@@ -160,7 +160,7 @@ case 'SpawnGaussRight'
 	hnew=figure;
 	set(gcf,'Units','Normalized');
 	set(gcf,'Position',[0.1 0.1 0.7 0.7]);
-	c=copyobj(h,hnew);
+	c=copyobj(h,hnew, 'legacy');
 	set(c,'Units','Normalized');
 	set(c,'Position',[0.1 0.1 0.8 0.8]);
 	set(c,'Tag','');

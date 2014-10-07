@@ -490,7 +490,7 @@ switch action
 		end
 		
 	case('printset')
-		print -dsetup;
+		printdlg;
 		
 		
 	case('printfig')

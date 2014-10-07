@@ -564,26 +564,26 @@ for i=1:size(x,2) %iterate through columns
 	if inopts.singleplots == true
 		if suba == 2;
 			h = figure;
-			p = copyobj(pn(1,1).axis,h);
+			p = copyobj(pn(1,1).axis,h, 'legacy');
 			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
 			h = figure;
-			p = copyobj(pn(1,2).axis,h);
+			p = copyobj(pn(1,2).axis,h, 'legacy');
 			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
 			h = figure;
-			p = copyobj(pn(2,1).axis,h);
+			p = copyobj(pn(2,1).axis,h, 'legacy');
 			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
 			h=figure;
-			p = copyobj(pn(2,2).axis,h);
+			p = copyobj(pn(2,2).axis,h, 'legacy');
 			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
 		elseif suba == 3;
 			h = figure;
-			p = copyobj(pn(1,1).axis,h);
+			p = copyobj(pn(1,1).axis,h, 'legacy');
 			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
 			h = figure;
-			p = copyobj(pn(2,1).axis,h);
+			p = copyobj(pn(2,1).axis,h, 'legacy');
 			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
 			h = figure;
-			p = copyobj(pn(3,1).axis,h);
+			p = copyobj(pn(3,1).axis,h, 'legacy');
 			set(p,'Units','Normalized','OuterPosition',[0.01 0.01 0.9 0.9]);
 		end
 	end

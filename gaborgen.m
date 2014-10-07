@@ -437,7 +437,7 @@ axes(gh('gabgenaxis'));
 c=colormap;
 h=gca;
 childfigure=figure;   
-copyobj(h,childfigure)
+copyobj(h,childfigure, 'legacy')
 figpos(1,[600 400]);
 set(gca,'Units','Normalized');
 set(gca,'Position',[0.1300    0.1100    0.6626    0.8150]); 

@@ -286,7 +286,7 @@ case 'Spawn Axis1'
    axes(findobj('Tag','RFAxis'));
    h=gca;
    cf=figure;
-   copyobj(h,cf);   
+   copyobj(h,cf, 'legacy');   
    colormap(rbmap)
    set(gca,'Tag','spawn1')
    
@@ -311,7 +311,7 @@ case 'Spawn Axis2'
    axes(findobj('Tag','HWAxis'));
    h=gca;
    cf=figure;
-   copyobj(h,cf);
+   copyobj(h,cf, 'legacy');
    set(gca,'Tag','spawn2')
       
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   

@@ -337,7 +337,7 @@ Hlabels=get(HAxes,{'Xlabel','YLabel','Title'});
 set([Hlabels{:}],'Visible','on') % make labels and title visible
 
 % Plot the Data                                               Plot the Data
-D.HLines=zeros(D.NumLines,1);      % storage for lineseries handles
+D.HLines=gobjects(D.NumLines,1);      % storage for lineseries handles
 set([HFig,HAxes],'NextPlot','add') % hold on
 for k=1:D.NumLines                 % plot the normalized data
    tdata=D.TData{k};
@@ -1077,7 +1077,7 @@ if nargin==3 % new plot
       'EdgeColor',P.BorderColor,...
       'FaceColor',P.BackgroundColor,...
       'HandleVisibility','off',...
-      'HitTest','off');
+      'PickableParts','none');
 else % old plot, update data
    set(D.HAPatch,'XData',xdata,'YData',ydata)
 end
@@ -1106,7 +1106,7 @@ if nargin<4 % new grid
       'LineWidth',P.RGridLineWidth,...
       'Color',P.RGridColor,...
       'HandleVisibility','off',...
-      'HitTest','off');
+      'PickableParts','none');
 else
    set(D.HRGrid,'Xdata',xdata,'YData',ydata)
 end
@@ -1125,7 +1125,7 @@ if nargin==3 % new plot
       'LineWidth',2*P.RGridLineWidth,...
       'Color',P.BorderColor,...
       'HandleVisibility','off',...
-      'HitTest','off');
+      'PickableParts','none');
 else % old plot, update data
    set(D.HRTick,'XData',xdata,'YData',ydata)
 end
@@ -1154,7 +1154,7 @@ if nargin<4 % new grid
       'LineWidth',P.TGridLineWidth,...
       'Color',P.TGridColor,...
       'HandleVisibility','off',...
-      'HitTest','off');
+      'PickableParts','none');
 else
    set(D.HTGrid,'Xdata',xdata,'YData',ydata)
 end
@@ -1174,7 +1174,7 @@ if nargin==3 % new plot
       'Color',P.BorderColor,...
       'Clipping','off',...
       'HandleVisibility','off',...
-      'HitTest','off');
+      'PickableParts','none');
 else % old plot, update data
    set(D.HTTick,'XData',xdata,'YData',ydata)
 end
@@ -1185,7 +1185,7 @@ if nargin==4 % delete old labels and create new ones
    delete(D.HTTickLabel)
 end
 P.TTickLabel=cell(D.TTickLabelN,1);
-D.HTTickLabel=zeros(D.TTickLabelN,1);
+D.HTTickLabel=gobjects(D.TTickLabelN,1);
 for k=1:D.TTickLabelN % label ticks at theta axis limits
    xdata=(1+P.TTickOffset)*cos(D.TTickValue(k));
    ydata=(1+P.TTickOffset)*sin(D.TTickValue(k));
@@ -1223,7 +1223,7 @@ for k=1:D.TTickLabelN % label ticks at theta axis limits
       'VerticalAlignment','middle',...
       'Clipping','off',...
       'HandleVisibility','off',...
-      'HitTest','off');
+      'PickableParts','none');
 end
 %--------------------------------------------------------------------------
 function [P,D]=local_placeRTickLabel(HAxes,P,D,S)%#ok local_placeRTickLabel
@@ -1236,7 +1236,7 @@ P.RTickLabel=cell(D.RTickLabelN,1);
 if nargin==4 % delete old labels and create new ones
    delete(D.HRTickLabel)
 end
-D.HRTickLabel=zeros(D.RTickLabelN,1);
+D.HRTickLabel=gobjects(D.RTickLabelN,1);
 for k=1:D.RTickLabelN
    xdata=(P.RTickOffset+D.RTickRadius(k))*cos(D.RTickAngle);
    ydata=(P.RTickOffset+D.RTickRadius(k))*sin(D.RTickAngle);
@@ -1254,7 +1254,7 @@ for k=1:D.RTickLabelN
       'VerticalAlignment',P.RTickLabelValign,...
       'Clipping','off',...
       'HandleVisibility','off',...
-      'HitTest','off');
+      'PickableParts','none');
 end
 %--------------------------------------------------------------------------
 function out=local_getDefaults
