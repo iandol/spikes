@@ -182,6 +182,8 @@
 				tic
 				xcol=obj.x(:,idx);
 				ycol=obj.y(:,idx);
+				c1 = [0.2 0.2 0.2];
+				c2 = [0.8 0.2 0.2];
 				casesLocal = obj.cases;
 				uniquecases = obj.uniquecases;
 				
@@ -240,70 +242,64 @@
 				xstderr=obj.stderr(xcol,'SE',1);
 				ystderr=obj.stderr(ycol,'SE',1);
 				
-				
 				%==========================================DO HISTOGRAM
-				dmin=min([xcol;ycol]); %get the min
-				dmax=max([xcol;ycol]); %get the max
-				histax=floor(dmin):(ceil(dmax)-floor(dmin))/obj.nBins:ceil(dmax);
-				if obj.centreBins == true
-					[xn,bins]=hist(xcol,histax);
-					yn=hist(ycol,histax);
-				else
-					%[xn,bins]=hist(xcol,histax);
-					%yn=hist(ycol,histax);
-					[~,bins]=hist(xcol,histax);
-					xn=histc(xcol,histax);
-					[yn]=histc(ycol,histax);
-					xn = xn';
-					yn = yn';
-				end
-				
 				px = 1;
 				py = 1;
 				pn(py,px).select();
 				
 				if ystd > 0
-					h=bar([bins',bins'],[xn',yn'],obj.barwidth,obj.bartype);
-					set(h(1),'FaceColor',[0 0 0],'EdgeColor','none');
-					set(h(2),'FaceColor',[0.7 0 0],'EdgeColor','none');
+					outs.(fieldn).histo1 = histogram(xcol);
+					outs.(fieldn).histo1.FaceColor = c1;
+					xn = outs.(fieldn).histo1.Values;
+					hbinsx = outs.(fieldn).histo1.BinEdges;
+					hold on
+					outs.(fieldn).histo2 = histogram(ycol);
+					outs.(fieldn).histo2.FaceColor = c2;
+					yn = outs.(fieldn).histo2.Values;
+					hbinsy = outs.(fieldn).histo2.BinEdges;
 				else
-					h=bar([hbins'],[xn'],obj.barwidth,obj.bartype);
-					set(h(1),'FaceColor',[0 0 0],'EdgeColor','none');
+					outs.(fieldn).histo1 = histogram(xcol);
+					outs.(fieldn).histo1.FaceColor = c1;
+					xn = outs.(fieldn).histo1.Values;
+					hbinsx = outs.(fieldn).histo1.BinEdges;
 				end
 				
 				axis tight;
 				ticks out
 				lim=ylim;
-				text(xmean,lim(2),'\downarrow','Color',[0 0 0],'HorizontalAlignment','center',...
+				text(xmean,lim(2),'\downarrow','Color',c1,'HorizontalAlignment','center',...
 					'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
-				text(xmedian,lim(2),'\nabla','Color',[0 0 0],'HorizontalAlignment','center',...
+				text(xmedian,lim(2),'\nabla','Color',c1,'HorizontalAlignment','center',...
 					'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
 				if ystd > 0
-					text(ymean,lim(2),'\downarrow','Color',[0.8 0 0],'HorizontalAlignment','center',...
+					text(ymean,lim(2),'\downarrow','Color',c2,'HorizontalAlignment','center',...
 						'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
-					text(ymedian,lim(2),'\nabla','Color',[0.8 0 0],'HorizontalAlignment','center',...
+					text(ymedian,lim(2),'\nabla','Color',c2,'HorizontalAlignment','center',...
 						'VerticalAlignment','bottom','FontSize',15,'FontWeight','bold');
 				end
 				if obj.dogauss == true
 					hold on
 					if length(find(xn>0))>1
 						try
-							f1=fit(hbins',xn','gauss1');
+							f1=fit(hbinsx',xn','gauss1');
 							plot(f1,'k');
 						catch
+							disp('Couldn''t fit gaussian to histogram 1')
 						end
 					end
 					if ystd > 0 && length(find(yn>0))>1
 						try
-							f2=fit(hbins',yn','gauss1');
+							f2=fit(hbinsy',yn','gauss1');
 							plot(f2,'r');
 						catch
+							disp('Couldn''t fit gaussian to histogram 2')
 						end
 					end
 					legend off
 					hold off
 				end
 				
+				grid on
 				pn(py,px).xlabel(obj.columnlabels{idx});
 				pn(py,px).ylabel('Number of cells');
 				pn(py,px).title('Histogram and Gaussian Fits');
@@ -343,6 +339,8 @@
 				pn(py,px).title('Box / Density Plots')
 				hold off
 				box on
+				grid on
+				yl1 = ylim; %we check this against the next plot below
 				
 				%==========================================DO SCATBOX PLOTS
 				px = 3;
@@ -373,15 +371,23 @@
 					pn(py,px).ylabel(obj.columnlabels{idx});
 					
 				end
-				
 				xlim([0 3]);
 				pn(py,px).title('ScatterBox Plots')
 				hold off
 				ticks out
 				box on
+				grid on
+				yl2 = ylim;
 				
+				%==========================================EQUALISE Y AXIS
+				ym1 = min([yl1(1) yl2(1)]);
+				ym2 = max([yl1(2) yl2(2)]);
+				pn(1,2).select()
+				ylim([ym1 ym2]);
+				pn(1,3).select()
+				ylim([ym1 ym2]);
 				
-				%==========================================DO SCATTER
+				%==========================================DO Correlation SCATTER
 				xcolout = xcol;
 				ycolout = ycol;
 				if ystd > 0 && isDataEqualLength
@@ -491,6 +497,8 @@
 					box on
 					set(gca,'Layer','top');
 				end
+				
+
 				
 				%============================Lets measure statistics
 				t=['Mn/Mdn: ' sprintf('%0.3g', xmean) '\pm' sprintf('%0.3g', xstderr) '/' sprintf('%0.3g', xmedian) ' | ' sprintf('%0.3g', ymean) '\pm' sprintf('%0.3g', ystderr) ' / ' sprintf('%0.3g', ymedian)];
@@ -641,6 +649,7 @@
 				axis tight
 				title(['BootStrap Density Plots; using: ' func2str(obj.fhandle)]);
 				box on
+				grid on
 				ticks out
 				set(gca,'Layer','top');
 				
