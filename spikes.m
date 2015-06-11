@@ -4064,7 +4064,7 @@ switch data.numvars
 			return;
 		end
 	case 1
-		p=panel(sv.psthhandle,'defer');
+		p=panel(sv.psthhandle);
 		if get(gh('PSTHEdit'),'String')=='0'
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=1:data.xrange
@@ -4092,7 +4092,7 @@ switch data.numvars
 			if i<data.xrange
 				set(gca,'XTickLabel',[]);
 			end
-			set(gca,'TickLength',[0.01 0.01],'TickDir','in','YTickLabel',[]);
+			set(gca,'Visible','off');%'TickLength',[0.01 0.01],'TickDir','in','YTickLabel',[]);
 			text(data.time{1}(mini),(m-m/10), data.names{data.xindex(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			ylabel(num2str(data.xvalues(i)));
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
@@ -4110,9 +4110,10 @@ switch data.numvars
 		p.fontsize = 12;
 		p.de.fontsize = 10;
 		% because we 'defer'red, we have to refresh.
-		p.refresh();
+		%p.refresh();
 	otherwise
-		p=panel(sv.psthhandle,'defer');
+		fprintf('\n--->>>  Please wait\n...\n');
+		ptic=tic;
 		xrange=length(data.xvalueso); %we'll ignore the subselection
 		yrange=length(data.yvalueso);
 		zrange=length(data.zvalueso);
@@ -4130,8 +4131,9 @@ switch data.numvars
 			endi=xrange*yrange;
 		end
 		
+		%this will find the max value out of all the PSTH's and scale by this
 		if strcmp(get(gh('PSTHEdit'),'String'),'0')
-			m=1; %this will find the max value out of all the PSTH's and scale by this
+			m=1; 
 			for i=starti:endi
 				maxm=max(data.psth{i});
 				if m < maxm
@@ -4144,28 +4146,27 @@ switch data.numvars
 			m=str2double(get(gh('PSTHEdit'),'String'));
 			set(gh('PSTHText'),'String',num2str(m));
 		end
-		%the problem is that our data is in rows, but subplot indexes in columns
-		%so we have to create an index that converts between the 2 as
-		%i want the data to look that same as it is loaded into the matrices
+		
 		x = starti:endi;
 		xx = x - (xrange*yrange*(sv.zval-1));
 		y = reshape(x,data.yrange,data.xrange);
 		yy = reshape(xx,data.yrange,data.xrange);
-		%y=fliplr(y'); %order it so we can load our data to look like the surface plots
-		%subaxis(data.yrange,data.xrange,1,'S',0,'M',0.09,'P',0)
 		a=1;
+		p=panel(sv.psthhandle,'defer','no-manage-font'); %we HAVE to defer or else bar gets slower on each loop
 		p.pack(data.yrange,data.xrange);
+		p.margin = [15 15 5 15];
+		p.de.margin = 0;
+		p.fontsize = 12;
+		p.de.fontsize = 10;
 		for i=1:length(x)
 			[i1,i2] = ind2sub([data.yrange,data.xrange],xx(i));
 			p(i1,i2).select();
-			h(1)=bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),1,'k');
-			p(i1,i2).hold('on')
-			h(2)=bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),1,'r');
-			p(i1,i2).hold('off')
-			set(h,'BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off')
-			set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
+			p(i1,i2).hold('on'); %hold on
+			bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),'k','BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off');
+			bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),'r','BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off');
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-			text(data.time{1}(mini),(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
+			set(gca,'TickLength',[0 0],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on','box','on');
+			%text(data.time{1}(mini),(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			a=a+1;
 		end
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
@@ -4175,22 +4176,17 @@ switch data.numvars
 		if isa(data.pR,'plxReader')
 			t=[ t '\newlinePLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
+		fprintf('--->>> Now repositioning all axes takes more time since 2014b+, please wait...\n')
 		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
 		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
 		p.title(t);
 		p.de.margin = 0;
-		p.margin = [15 15 5 15];
-		p.fontsize = 12;
-		p.de.fontsize = 10;
-		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalueso) ')'],'x');
-		%[ax,h2]=suplabel([data.ytitle ' (' num2str(data.yvalueso) ')'],'y');
-		%[ax,h3]=suplabel(t ,'t');
-		%set(h1,'FontSize',12)
-		% because we 'defer'red, we have to refresh.
+% 		profile clear;profile on
 		p.refresh();
-		
+% 		profile off;profile report
+		fprintf('--->>> All PSTHs plot elapsed time was: %g secs\n',toc(ptic));
 end
-set(gcf,'Renderer','painters','ResizeFcn',[]);
+%set(gcf,'Renderer','painters','ResizeFcn',[]);
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
