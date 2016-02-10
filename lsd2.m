@@ -112,14 +112,15 @@ end
 a=1;
 
 for i=starttrial:endtrial %run through each trial
-    sd.trial(a).basetime=sd.raw(trials(i),2);
-    cmods=mods(mods>trials(i) & mods<trials(i+1)); %this finds the mod markers between each trial
-    sd.trial(a).modtimes=sd.raw(cmods,2)-sd.trial(a).basetime; %the relative modulation times
-    lmods=[cmods; trials(i+1)]; %the last mod marker is actually the total trial time
+	sd.trial(a).basetime=sd.raw(trials(i),2);
+	cmods=mods(mods>trials(i) & mods<trials(i+1)); %this finds the mod markers between each trial
+	sd.trial(a).modtimes=sd.raw(cmods,2)-sd.trial(a).basetime; %the relative modulation times
+	lmods=[cmods; trials(i+1)]; %the last mod marker is actually the total trial time
 	n = cell(1,sd.nummods);
-    for j=1:sd.nummods
-        x=find(sd.raw(lmods(j)+1:lmods(j+1)-1,1)==cellnumber+10)+lmods(j); %this finds the lines for the specified cell for the specific modulation
-        n{j}=sd.raw(x,2)-sd.trial(a).basetime; %assigns it as a cell matrix with time relative to trial start  
+	w = n;
+	for j=1:sd.nummods
+		x=find(sd.raw(lmods(j)+1:lmods(j+1)-1,1)==cellnumber+10)+lmods(j); %this finds the lines for the specified cell for the specific modulation
+		n{j}=sd.raw(x,2)-sd.trial(a).basetime; %assigns it as a cell matrix with time relative to trial start
 		if j==1 && cuttime(1)>0
 			if length(cuttime) == 1
 				n{j}=n{j}(n{j}>cuttime);
@@ -128,11 +129,13 @@ for i=starttrial:endtrial %run through each trial
 				c2=n{j}(n{j}>cuttime(2));
 				n{j}=[c1;c2];
 			end
-		end			
-    end
-    sd.trial(a).mod=n; 
-    a=a+1;
-end   
+		end
+		w{j} = n{j} - sd.trial(a).modtimes(j);
+	end
+	sd.trial(a).mod=n;
+	sd.trial(a).modW=w;
+	a=a+1;
+end
 
 sd.maxtime=trialtime;
 

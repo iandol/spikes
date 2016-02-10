@@ -2,7 +2,7 @@ function spikes(action)
 
 %**********************************************************************************
 % This Program will allow generation of PSTH and other spike
-% measurements for up to 3 variables.
+% measurements for up to 3 variables. uDieNToR
 %**********************************************************************************
 
 %-----------------------------------Global Variable Definitions----------------------------
@@ -26,7 +26,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv = [];
 		data = [];
 		rlist = [];
-		sv.version = 2.05;
+		sv.version = 2.1;
 		sv.mversion = str2double(regexp(version,'(?<ver>^\d\.\d\d)','match','once'));
 		sv.title = ['SPIKES: V' sprintf('%.4f',sv.version)];
 		if ismac
@@ -61,54 +61,55 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		end
 		figpos(1);	%position the figure
 		set(sv.uihandle,'Name', [sv.title ' | Started at ' datestr(now)]);
-		colormap(jet(256)); %this gives us a much higher resolution colormap
+		colormap(parula(256)); %this gives us a much higher resolution colormap
 		%-------The following sv structure sets up the GUI interface structure--
-		sv.BinWidth = 10;
-		sv.StartMod = 1;
-		sv.EndMod = Inf;
-		sv.StartTrial = 1;
-		sv.EndTrial = Inf;
-		sv.Wrapped = 1;
-		sv.AnalysisMethod = 1;
-		sv.firstunit = 1;
-		sv.loop = 0;
-		sv.HeldVariable = 3;
-		sv.HeldValue=1;
-		sv.PropAxis=1;
-		sv.PlotType='Raw Data';
-		sv.ShadingType='interp';
-		sv.Lighting='phong';
-		sv.SmoothType='none';
-		sv.SmoothValue=5;
-		sv.CMap='jet';
-		sv.LightAdd='none';
-		sv.reload='no';
-		sv.loadtype='';
-		sv.loaded='no';
-		sv.ErrorMode='Standard Error';
-		sv.ticks='out';
-		sv.layer='top';
-		sv.box='on';
-		sv.auto='no';
-		sv.startOffset = -0.2;
-		sv.cellmap = [1 2 3 4 5 6];
-		sv.xval=1;
-		sv.yval=1;
-		sv.zval=1;
-		sv.xlock=0;
-		sv.ylock=0;
-		sv.zlock=0;
-		sv.xholdold=0;
-		sv.yholdold=0;
-		sv.zholdold=0;
-		sv.labelsize = 10;
-		sv.autosave = 0;
-		sv.MeasureButton = 0;
-		sv.plotBARS = 0;
-		sv.bars.prior_id = 'POISSON';
-		sv.bars.dparams=4;
-		sv.bars.burn_iter=200;
-		sv.bars.k = 3;
+		sv.BinWidth				= 10;
+		sv.StartMod				= 1;
+		sv.EndMod				= Inf;
+		sv.StartTrial			= 1;
+		sv.EndTrial				= Inf;
+		sv.Wrapped				= 1;
+		sv.AnalysisMethod		= 1;
+		sv.firstunit			= 1;
+		sv.loop					= 0;
+		sv.HeldVariable		= 3;
+		sv.HeldValue			= 1;
+		sv.PropAxis				= 1;
+		sv.PlotType				= 'Raw Data';
+		sv.ShadingType			= 'interp';
+		sv.Lighting				= 'phong';
+		sv.SmoothType			= 'none';
+		sv.SmoothValue			= 5;
+		sv.CMap					= 'jet';
+		sv.LightAdd				= 'none';
+		sv.reload				= 'no';
+		sv.loadtype				='';
+		sv.loaded				='no';
+		sv.ErrorMode			='Standard Error';
+		sv.ticks					='out';
+		sv.layer					='top';
+		sv.box					='on';
+		sv.auto					='no';
+		sv.startOffset			= -0.2;
+		sv.cellmap				= [1 2 3 4 5 6];
+		sv.xval					=1;
+		sv.yval					=1;
+		sv.zval					=1;
+		sv.xlock					=0;
+		sv.ylock					=0;
+		sv.zlock					=0;
+		sv.xholdold				=0;
+		sv.yholdold				=0;
+		sv.zholdold				=0;
+		sv.labelsize			= 10;
+		sv.autosave				= 0;
+		sv.MeasureButton		= 0;
+		%-----------------------------------------------------------------------
+		sv.plotBARS				= 0;
+		sv.bars.prior_id		= 'POISSON';
+		sv.bars.dparams		=4;
+		sv.bars.burn_iter		=200;
+		sv.bars.k				= 3;
 		sv.bars.nf = 500; %The number of evenly spaced points for the grid along which fitted values will be obtained.
 		sv.bars.use_logspline = 1; %"true" or "false" to indicate whether Logspline is used for the initial knots. If Logspline is not used, evenly spaced knots are used. Default value = true.
 		sv.bars.beta_iter = 3; %Number of iterations for the independence chain on beta for a particular set of knots. It only runs a chain if the initial beta variate is suspect. In this case, the independence chain is run starting from the mle and only the last variate is used. If no beta candidates were accepted, no beta is used although the knot set is not rejected.
@@ -118,8 +119,15 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.bars.threshold = -10; %Threshhold for determining whether the initial beta variate is suspect. It is suspect if the log acceptance probability is less than the threshhold.
 		sv.bars.usezero = 1;
 		%-----------------------------------------------------------------------
+		sv.density.winfunc		= 'gauss'; %fieldtrip spike density window
+		sv.density.timwin			= [-0.015 0.015]; %fieldtrip spike density window size
+		sv.density.outputunit	= 'rate';
+		sv.density.keeptrials	= 'no';
+		sv.density.errorbars		= 'se';
+		%-----------------------------------------------------------------------
 		sv.mint=0;
 		sv.maxt=inf;
+		sv.PSTHScale = 0;
 		sv.measureButton = false;
 		automeasure=0; 			%used by temporal movie creator
 		
@@ -141,7 +149,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			end
 		end
 		
-		set(gh('CMapMenu'),'String',{'jet';'jet2';'hot';'rbmap';'gray';'gray1';'gray2';'hsv';'prism';'colorcube';'bone';'copper';'pink';'summer';'winter';'autumn';'spring'});
+		set(gh('CMapMenu'),'String',{'parula';'jet';'jet2';'hot';'rbmap';'gray';'gray1';'gray2';'hsv';'prism';'colorcube';'bone';'copper';'pink';'summer';'winter';'autumn';'spring'});
 		set(gh('ErrorMenu'),'String',{'Standard Error';'Standard Deviation';'Fano Factor';'Coefficient of Variation';'2 StdDevs';'3 StdDevs';'2 StdErrs';'Variance'});
 		set(gh('ErrorMenu'),'Value',1);
 		set(gh('AxisMenu'),'String',{'auto';'on';'off';'normal';'tight';'vis3d';'equal';'square';'image';'------------';'Axis Above Data';'Axis Below Data';'Ticks Facing In';'Ticks Facing Out';'Axis Box On';'Axis Box Off';'Flip X and Y';'Y Axis Normal';'Y Axis Reverse';'------------';'Auto Renderer';'Painters Renderer';'ZBuffer Renderer';'OpenGL Renderer'});
@@ -150,7 +158,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		set(gh('SPlotMenu'),'String',{'ISI';'Intervalogram';'Raster';'PSTH';'Fanogram';'Curve';'Surface'});
 		set(gh('SPlotMenu'),'Value',7);
 		set(gh('STypeMenu'),'String',{'Raw Data';'Mesh';'CheckerBoard';'CheckerBoard+Contour';'Surface';'Lighted Surface';'Surface+Contour';'Contour';'Filled Contour';'Waterfall';'Rectangle Plot'});
-		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'BARS';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Bootstrap curve';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Analysis';'Area Analysis';'2D Curves';'Save for MetaAnal';'Plateau Analysis';'Tuning Curves';'Temporal Movie'});
+		set(gh('AnalMenu'),'String',{'========';'Plot All PSTHs';'Plot Single PSTH';'Plot All ISIs';'Plot Fano';'Polar Diagonals';'Metric Space';'Metric Space (Interval)';'Binless';'Direct Method';'BARS';'Half-Width';'Difference of Gaussian';'Surround Suppression';'Bootstrap curve';'Gabor Fit';'Gaussian Fit 1D';'Gaussian Fit 2D';'Burst Ratio';'Temporal Analysis';'Area Analysis';'2D Curves';'Save for MetaAnal';'Plateau Analysis';'Tuning Curves';'Temporal Movie';'Plot Density'});
 		set(gcf,'DefaultLineLineWidth',1);
 		set(gcf,'DefaultAxesLineWidth',1);
 		set(gcf,'DefaultAxesFontName','Helvetica');
@@ -1217,9 +1225,17 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			warndlg(cat(1,data.error,{' ';'If trials were removed for one variable, please re-run removing the last trial manually for all the data; this happens because VSX fails to tag some spikes properly.'}));
 		end
 		
-		%-----------------------Set Spike Type to Measure------------------------------------
+		
+	%-----------------------Set Spike Type to Measure------------------------------------
+	case 'Plot Density'
+	%-----------------------Set Spike Type to Measure------------------------------------
+		data.ft = convertToFieldTrip();
+		plotDensity();
+		
+		
+	%-----------------------Set Spike Type to Measure------------------------------------
 	case 'SpikeSet'
-		%---------------------------------------------------------------------------------------------
+	%------------------------------------------------------------------------------------
 		
 		switch get(gh('SpikeMenu'),'Value');
 			case 1 %all spikes
@@ -1923,7 +1939,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			clipboard('Copy',s);
 		end
 		
-		%----------------------------Half-width at half-height calculation---------------
+		%----------------------------Copy title to clipboard----------------------
 	case 'Copy Title'
 		%-------------------------------------------------------------------------
 		tit=data.matrixtitle;
@@ -2828,55 +2844,55 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 	case 'BARS'
 		%-----------------------------------------------------------------------------------------
-% 		try
-% 			data.bars = [];
-% 			data.bars.latency = [];
-% 			x=get(gh('SPXBox'),'Value');
-% 			y=get(gh('SPYBox'),'Value');
-% 			z=sv.zval;
-% 			
-% 			[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
-% 
-% 			datatype=get(gh('DataBox'),'Value');
-% 			if datatype == 2
-% 				psth = bpsth;
-% 			elseif datatype == 3
-% 				psth = tpsth;
-% 			end
-% 
-% 			m=max(psth);
-% 			[m,trials]=converttotime(m);
-% 
-% 			if max(psth)>0;psth=(psth/max(psth))*m;end
-% 			
-% 			psth(psth < 1) = 0;
-% 
-% 			bp = defaultParams;
-% 
-% 			v=get(gh('SPBARSpriorid'),'Value');
-% 			s=get(gh('SPBARSpriorid'),'String');
-% 			bp.prior_id = s{v};
-% 			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
-% 			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
-% 			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
-% 			
-% 			spdata.bars = barsP(psth,[time(1) time(end)],trials,bp);
-% 			spdata.bars.psth = psth;
-% 			spdata.bars.time = time;
-% 			
-% 			t1=spdata.bars.time(1);
-% 			t2=spdata.bars.time(end);
-% 			
-% 			spdata.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
-% 
-% 			spdata.bars.x = x;
-% 			spdata.bars.bp = bp;
-% 			set(gh('SPPanel'),'Title',oldtext);
-% 		catch ME
-% 			spdata.bars = [];
-% 			set(gh('SPPanel'),'Title',oldtext);
-% 			rethrow(ME)
-% 		end
+		try
+			data.bars = [];
+			data.bars.latency = [];
+			x=get(gh('SPXBox'),'Value');
+			y=get(gh('SPYBox'),'Value');
+			z=sv.zval;
+			
+			[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
+
+			datatype=get(gh('DataBox'),'Value');
+			if datatype == 2
+				psth = bpsth;
+			elseif datatype == 3
+				psth = tpsth;
+			end
+
+			m=max(psth);
+			[m,trials]=converttotime(m);
+
+			if max(psth)>0;psth=(psth/max(psth))*m;end
+			
+			psth(psth < 1) = 0;
+
+			bp = defaultParams;
+
+			v=get(gh('SPBARSpriorid'),'Value');
+			s=get(gh('SPBARSpriorid'),'String');
+			bp.prior_id = s{v};
+			bp.dparams=str2num(get(gh('SPBARSdparams'),'String'));
+			bp.burn_iter=str2num(get(gh('SPBARSburniter'),'String'));
+			bp.conf_level=str2num(get(gh('SPBARSconflevel'),'String'));
+			
+			spdata.bars = barsP(psth,[time(1) time(end)],trials,bp);
+			spdata.bars.psth = psth;
+			spdata.bars.time = time;
+			
+			t1=spdata.bars.time(1);
+			t2=spdata.bars.time(end);
+			
+			spdata.bars.time_fine = linspace(t1,t2,length(spdata.bars.mean_fine));
+
+			spdata.bars.x = x;
+			spdata.bars.bp = bp;
+			set(gh('SPPanel'),'Title',oldtext);
+		catch ME
+			spdata.bars = [];
+			set(gh('SPPanel'),'Title',oldtext);
+			rethrow(ME)
+		end
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Plot Fano'
@@ -4041,7 +4057,7 @@ global data sv;
 data.areaplot=0;
 sv.psthhandle=figure;
 set(gcf,'Tag','psthplotfig');
-figpos(1,[850 750]);
+figpos(1,[1000 1000]);
 set(gcf,'Color',[1 1 1]);
 
 mint=get(gh('SMinEdit'),'String');   %this selects what to plot
@@ -4165,7 +4181,7 @@ switch data.numvars
 			bar(data.time{y(i)}(mini:maxi),data.psth{y(i)}(mini:maxi),'k','BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off');
 			bar(data.time{(i)}(mini:maxi),data.bpsth{y(i)}(mini:maxi),'r','BarWidth', 1,'EdgeColor','none', 'ShowBaseLine', 'off');
 			axis([data.time{1}(mini) data.time{1}(maxi) 0 m]);
-			set(gca,'TickLength',[0 0],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on','box','on');
+			set(gca,'TickLength',[0 0],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','off','YGrid','off','box','on');
 			%text(data.time{1}(mini),(m-m/10), data.names{y(i)},'FontSize',10,'Color',[0.7 0.7 0.7]);
 			a=a+1;
 		end
@@ -4867,7 +4883,7 @@ x=axis;
 cmap=get(gcf,'ColorMap');
 [a,b]=view;
 sv.spawnhandle=figure;
-figpos(1,[780 680]);
+figpos(1,[1000 1000]);
 set(gcf,'Tag','Spawnfig');
 set(gca,'Tag','Spawnfigaxis');
 set(gcf,'Color',[1 1 1]);
@@ -5327,3 +5343,170 @@ switch sv.AnalysisMethod
 		ylabel('Firing Rate (Hz)');
 end
 title([data.matrixtitle 'DIAGONAL -- CircMean=' num2str(rad2ang(mu)) '  AxialMean=' num2str(rad2ang(mu2)) '  pR=' num2str(pval) ' pV=' num2str(pval2) ]);
+
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+%Convert to Fieldtrip format
+%
+function spike = convertToFieldTrip()
+
+global data sv;
+
+tft = tic;
+spike.label						= {data.runname};
+spike.nUnits					= 1; 
+bCell								= cell(1,1);
+spike.timestamp				= bCell;
+spike.waveform					= bCell;
+spike.time						= bCell;
+spike.trial						= bCell;
+spike.unit						= bCell;
+spike.stimulus					= cell(data.xrange*data.yrange*data.zrange,1);
+spike.stimulusNames			= spike.stimulus;
+spike.hdr						= [];
+spike.hdr.FileHeader.Frequency = 10e3;
+spike.hdr.FileHeader.Beg	= 0;
+spike.hdr.FileHeader.End	= Inf;
+spike.dimord					= '{chan}_lead_time_spike';
+spike.trialtime				= [];
+spike.sampleinfo				= [];
+spike.cfg						= struct;
+spike.cfg.dataset				= data.filename;
+spike.cfg.headerformat		= 'plexon_plx_v2';
+spike.cfg.dataformat			= spike.cfg.headerformat;
+spike.cfg.eventformat		= spike.cfg.headerformat;
+spike.cfg.trl					= [];
+fs									= spike.hdr.FileHeader.Frequency;
+nTrials							= 1;
+spike.unit{1}					= data.cell;
+for j = 1:(data.xrange*data.yrange*data.zrange) %cycle through each stimulus
+	if data.wrapped == 1
+		sList = [data.raw{j}.trial(:).modW]; %spikes relative to modulation start
+		trialTime = data.modtime;
+	else
+		sList = [data.raw{j}.trial(:).mod]; %spikes relative to trial start
+		trialTime = data.trialtime;
+	end
+	spike.stimulusNames{j} = data.names{j};
+	tLoop = length(sList);
+	for k = 1:tLoop
+		s										= sList{k}';
+		spike.trial{1}						= [spike.trial{1} ones(1,length(s))*nTrials];
+		spike.timestamp{1}				= [spike.timestamp{1} s];
+		spike.time{1}						= [spike.time{1} s/fs];
+		spike.stimulus{j}					= [spike.stimulus{j} nTrials];
+		spike.trialtime(nTrials,:)		= [0 trialTime/fs];
+		spike.trialnames{nTrials}		= data.names{j};
+		spike.sampleinfo(nTrials,:)	= [0 trialTime];
+		spike.cfg.trl(nTrials,:)		= [spike.trialtime(nTrials,:) 0 j 1];
+		nTrials = nTrials + 1;
+	end
+end
+fprintf('<strong>:#:</strong> Converting spikes to fieldtrip format took <strong>%g ms</strong>\n',round(toc(tft)*1000));
+
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+%Plot spike density function
+%
+function plotDensity()
+
+global data sv
+ft_defaults;
+data.ft.sd = [];
+ft = data.ft;
+sd = cell(length(ft.stimulus),1);
+cfg					= [];
+cfg.spikechannel	= ft.label{1};
+cfg.keeptrials		= 'no';
+cfg.vartriallen	= 'no';
+cfg.winfunc			= sv.density.winfunc;
+cfg.timwin			= sv.density.timwin;
+cfg.outputunit		= sv.density.outputunit;
+cfg.latency			= [sv.mint*1e-3 sv.maxt*1e-3];
+dMax					= 1;
+for j = 1:length(ft.stimulus)
+	cfg.trials			= ft.stimulus{j};
+	sd{j}					= ft_spikedensity(cfg, ft);
+	sd{j}.name			= ft.stimulusNames{j};
+	dMax					= max([max(sd{j}.avg) dMax]);
+	sd{j}.stderr		= sqrt(sd{j}.var ./ sd{j}.dof);
+	tCrit					= tinv( 0.975, sd{j}.dof );
+	et						= tCrit.*sqrt( sd{j}.var ./ sd{j}.dof ); 
+	sd{j}.stdterr		= et;
+	
+	cfgr					= [];
+	cfgr.trials			= cfg.trials;
+	cfgr.spikechannel	= cfg.spikechannel;
+	cfgr.latency		= cfg.latency;
+	cfgr.keeptrials		= 'yes';
+	cfgr.outputunit		= cfg.outputunit;
+	sd{j}.rate				= ft_spike_rate(cfgr, ft);
+	sd{j}.rate.SE			= sqrt(sd{j}.rate.var ./ sd{j}.rate.dof);
+	sd{j}.rate.CI			= bootci(1000, {@mean, sd{j}.rate.trial},'alpha',0.05);
+	sd{j}.rate.alpha		= 0.05;
+	
+end
+
+xrange=length(data.xvalueso); %we'll ignore the subselection
+yrange=length(data.yvalueso);
+zrange=length(data.zvalueso);
+
+if data.numvars==3 %we need to correct the index for the third variable
+	if sv.zval==1
+		starti=1;
+		endi=xrange*yrange;
+	else
+		starti=(xrange*yrange*(sv.zval-1))+1;
+		endi=xrange*yrange*sv.zval;
+	end
+else
+	starti=1;
+	endi=xrange*yrange;
+end
+
+x = starti:endi;
+xx = x - (xrange*yrange*(sv.zval-1));
+y = reshape(x,data.yrange,data.xrange);
+yy = reshape(xx,data.yrange,data.xrange);
+if sv.PSTHScale > 0
+	ylimit=[0 sv.PSTHScale];
+else
+	ylimit=[0 ceil(dMax+10)];
+end
+
+h=figure;set(h,'Color',[1 1 1],'Name',[data.runname 'Cell: ' data.cell]);
+if length(sd) <4; figpos(1,[1000 1500]); else figpos(1,[1000 1000]); end
+p=panel(h);
+p.margin = [15 15 5 15];
+p.de.margin = 0;
+p.fontsize = 14;
+p.de.fontsize = 9;
+p.pack(data.yrange,data.xrange)
+
+for i=1:length(x)
+	[i1,i2] = ind2sub([data.yrange,data.xrange],xx(i));
+	p(i1,i2).select();
+	if strcmp(sv.density.errorbars,'se')
+		e = sd{i}.stderr;
+	else
+		e = sd{i}.stdterr;
+	end
+	areabar(sd{i}.time, sd{i}.avg, e, [0.5 0.5 0.5], 0.3, 'k-','Color',[0 0 0],'MarkerFaceColor',[0 0 0],'LineWidth',1.5);
+	ylim(ylimit)
+	xlim([sv.mint*1e-3 sv.maxt*1e-3])
+	set(gca,'TickLength',[0 0],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','off','YGrid','off','box','on');
+end
+tim = num2str([sv.mint*1e-3 sv.maxt*1e-3]);
+tim=regexprep(tim,'\s+',' ');
+ylimit = num2str(ylimit);
+ylimit=regexprep(ylimit,'\s+',' ');
+t = [ft.label{1} 'Cell: ' num2str(data.cell) '   Time (s): ' tim '   Y-Limits: ' ylimit];
+p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
+p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
+p.title(t);
+p.de.margin = 0;
+data.ft.sd = sd;

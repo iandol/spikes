@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 01-Oct-2013 15:11:05
+% Last Modified by GUIDE v2.5 11-Feb-2016 00:10:44
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -920,3 +920,34 @@ global data
 if isa(data.pR,'plxReader')
 	report behaviour;
 end
+
+
+
+function firstisi_Callback(hObject, eventdata, handles)
+% hObject    handle to firstisi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of firstisi as text
+%        str2double(get(hObject,'String')) returns contents of firstisi as a double
+
+
+
+function PSTHEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to PSTHEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of PSTHEdit as text
+%        str2double(get(hObject,'String')) returns contents of PSTHEdit as a double
+global sv
+s = get(hObject,'String');
+sv.PSTHScale = str2num(s);
+
+
+% --- Executes on button press in sDensityPlot.
+function sDensityPlot_Callback(hObject, eventdata, handles)
+% hObject    handle to sDensityPlot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Plot Density');

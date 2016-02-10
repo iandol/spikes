@@ -23,7 +23,7 @@ if ~exist('psthtype','var')
 end
 
 h=figure;
-figpos(1,[1200 1200]);
+figpos(1,[1000 1000]);
 t=0;
 
 time=data.time{yhold,xhold,zhold};
@@ -59,17 +59,17 @@ switch data.numvars
 		t='There are no independent variables';
 end
 title(t);
-set(gca,'FontSize',9);
+set(gca,'FontSize',12);
 axis tight;
 xlabel('Time (ms)');
 ylabel(['Spikes / Bin ' ' (' num2str(data.binwidth) 'ms Binwidth)']);
-[x,y]=ginput(2);
+[xc,~]=ginput(2);
 
-if x(1)<=0; x(1)=0.0001; end
-if x(2)>max(time);x(2)=max(time)+0.0001;end
+if xc(1)<=0; xc(1)=0.0001; end
+if xc(2)>max(time);xc(2)=max(time)+0.0001;end
 
-mint=time(ceil(x(1)/data.binwidth));
-maxt=time(ceil(x(2)/data.binwidth));
+mint=time(ceil(xc(1)/data.binwidth));
+maxt=time(ceil(xc(2)/data.binwidth));
 
 pause(0.1);
 close(h);
