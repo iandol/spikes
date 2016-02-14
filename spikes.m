@@ -124,6 +124,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.density.outputunit	= 'rate';
 		sv.density.keeptrials	= 'no';
 		sv.density.errorbars		= 'se';
+		sv.density.fsample		= 250; %sample rate for the smoothing
+		sv.density.latency		= 0; %time to plot, 0 means use spikes values
 		%-----------------------------------------------------------------------
 		sv.mint=0;
 		sv.maxt=inf;
@@ -1187,8 +1189,8 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
 			end
 		elseif strcmp(sv.auto,'report')
-			mint=sv.mintime;
-			maxt=sv.maxtime;
+			mint=sv.mint;
+			maxt=sv.maxt;
 		end
 		set(gca,'Tag','SpikeFigMainAxes');
 		spikes('Measure');
@@ -1266,6 +1268,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				errordlg('Spike Selection Error');
 				error('spike selection error in spikeset');
 		end
+		spikes('Measure')
 		
 		%---------------------Taking measurements from a reference PSTH-------------------
 	case 'Measure'
@@ -2104,19 +2107,57 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		%-----------------------------------------------------------------------------------------
 	case 'Burst Ratio'
 		%-----------------------------------------------------------------------------------------
-		
-		if data.measured~=1 || isempty(data.bmatrix)
+		global offsetBurstCentre %we use this to offset our 3x3 square in Y and X if it is not central
+		if isempty(offsetBurstCentre);offsetBurstCentre=[0 0];end
+		if data.measured~=1 || ~isfield(data,'bmatrix')
 			errordlg('You need to first measure all the spikes, then remeasure using the bursts, then tonic before using this analysis')
-			error('Burst Ratio Error')
+			return
 		end
 		
-		ratio=data.bmatrix./data.matrix;
-		a=find(ratio==inf | ratio==-inf);
+		%ratio = data.bmatrix./(data.matrixll-data.bmatrix); %tonic spikes
+		ratio = data.bmatrix./data.matrixall; 
+		a = ratio==inf | ratio==-inf;
 		ratio(a)=0;
 		ratio(isnan(ratio))=0;
-		figure
+		centreRatio = [];
+		xval = data.xvalues; yval = data.yvalues;
+		
+		h=figure;set(h,'Color',[1 1 1],'Name',[data.runname 'Cell: ' data.cell]);
+		figpos(1,[1000 1000]);
+		
+		if data.numvars==2 %we want to use the central 9 points if possible
+			if data.xrange == data.yrange
+				switch data.xrange
+					case {5,6}
+						rY = (2:4)+offsetBurstCentre(1);
+						rX = (2:4)+offsetBurstCentre(2);
+						centreRatio = ratio(rY,rX);
+						xval = data.xvalues(rX);yval = data.yvalues(rY);
+					case {7,8}
+						rY = (3:5)+offsetBurstCentre(1);
+						rX = (3:5)+offsetBurstCentre(2);
+						data.names{rY,rX}
+						centreRatio = ratio(rY,rX);
+						xval = data.xvalues(rX);yval = data.yvalues(rY);
+					case {9,10}
+						rY = (4:6)+offsetBurstCentre(1);
+						rX = (4:6)+offsetBurstCentre(2);
+						centreRatio = ratio(rY,rX);
+						xval = data.xvalues(rX);yval = data.yvalues(rY);
+					case {11,12}
+						rY = (5:7)+offsetBurstCentre(1);
+						rX = (5:7)+offsetBurstCentre(2);
+						centreRatio = ratio(rY,rX);
+						xval = data.xvalues(rX);yval = data.yvalues(rY);
+					otherwise
+						centreRatio = ratio;
+				end
+			end
+		end
+		
+		
 		if data.numvars==1
-			plot(data.xvalues,data.matrix,'k-');
+			plot(xval,data.matrix,'k-');
 			hold on
 			[ax,h1,h2]=plotyy(data.xvalues,data.bmatrix,data.xvalues,ratio);
 			hold off
@@ -2128,36 +2169,33 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 			data.ratio=ratio;
-			MR=mean(data.ratio);
-			assignin('base','ratios',ratio);
-			save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
-			s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',ratio),sprintf('%0.6g\t',MR)];
-			clipboard('Copy',s);
 		else
-			pcolor(data.xvalues,data.yvalues,ratio);
-			shading interp
-			colormap(hot(256))
-			caxis([0 1])
+			if ~isempty(centreRatio)
+				imagesc(xval,yval,centreRatio);
+				data.ratio=centreRatio;
+				%save([sv.historypath 'ratio.txt'], 'centreRatio','-ASCII');
+			else
+				pcolor(xval,yval,ratio);
+				data.ratio=ratio;
+				shading interp
+				%save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
+			end
+			caxis([0 1]);
 			sv.xlabelhandle=xlabel(data.xtitle);
 			sv.ylabelhandle=ylabel(data.ytitle);
 			sv.titlehandle=title(['Ratio Plot for:' data.matrixtitle]);
 			set(sv.titlehandle,'ButtonDownFcn','spikes(''Copy Title'');');
 			set(gca,'Tag','');
 			colorbar
-			Y=get(gh('YHoldMenu'),'value');
-			data.ratio=ratio;
-			R=data.ratio(Y,:);
-			MR=mean(R);
-			assignin('base','ratios',ratio);
-			save([sv.historypath 'ratio.txt'], 'ratio','-ASCII');
-			s=[sprintf('%s\t',data.matrixtitle),sprintf('%0.6g\t',R),sprintf('%0.6g\t',MR)];
-			clipboard('Copy',s);
 		end
 		
-		fixfig
 		RR=mean(mean(data.ratio));
-		RR=['Mean Burst Ratio:     ' sprintf('%0.6g',RR)]
-		gtext(RR)
+		MR=median(median(data.ratio));
+		name = [data.runname 'Cell:' num2str(data.cell) ' Time:' num2str(sv.mint) '-' num2str(sv.maxt)];
+		dat = {name,data.ratio(:)'};
+		assignin('base','rd',dat);
+		RR=['Mean: ' sprintf('%0.6g',RR) ' | Median: ' sprintf('%0.6g',MR) ];
+		text(xval(1),yval(1),RR,'FontSize',14)
 		
 		%-----------------------------------------------------------------------------------------
 	case 'Temporal Movie'
@@ -2664,6 +2702,14 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 			cd(sv.dataloadpath)
 			sv.matsavepath = sv.dataloadpath;
 			data.sv=sv;
+			data.sv.uihandle=[];
+			data.sv.infoboxhandle=[];
+			data.sv.psthhandle=[];
+			data.sv.densityhandle=[];
+			data.sv.isihandle=[];
+			data.sv.xlabelhandle=[];
+			data.sv.ylabelhandle=[];
+			data.sv.titlehandle=[];
 			fname = regexprep(data.runname,'\s\|\s','');
 			fname = [fname '_' data.meta.protocol ' Cell=' num2str(data.cell) ' Wrap=' num2str(data.wrapped) ' T=' num2str(sv.StartTrial) '-' num2str(sv.EndTrial)];
 			fname = regexprep(fname,'(>|\|)','}');
@@ -2683,6 +2729,14 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				fname = regexprep(fname,'(>|\|)','_');
 				[fn,pn]=uiputfile('*.mat','Save the Processed Matrix',fname);
 				data.sv=sv;
+				data.sv.uihandle=[];
+				data.sv.infoboxhandle=[];
+				data.sv.psthhandle=[];
+				data.sv.densityhandle=[];
+				data.sv.isihandle=[];
+				data.sv.xlabelhandle=[];
+				data.sv.ylabelhandle=[];
+				data.sv.titlehandle=[];
 				sv.matsavepath=pn;
 				if isequal(fn,0)||isequal(pn,0); helpdlg('Sorry, no file selected'); return; end
 				cd(pn);
@@ -4055,23 +4109,23 @@ function PlotAllPSTHs
 global data sv;
 
 data.areaplot=0;
-sv.psthhandle=figure;
-set(gcf,'Tag','psthplotfig');
+sv.psthhandle=figure;set(sv.psthhandle,'Color',[1 1 1],'Tag','psthplotfig','Name',[data.runname 'Cell: ' data.cell]);
 figpos(1,[1000 1000]);
-set(gcf,'Color',[1 1 1]);
 
-mint=get(gh('SMinEdit'),'String');   %this selects what to plot
-maxt=get(gh('SMaxEdit'),'String');
-if isempty(mint) || str2double(mint)<min(data.time{1})
+mint=sv.mint;   %this selects what to plot
+maxt=sv.maxt;
+if isempty(mint) || mint<min(data.time{1})
 	mint=min(data.time{1});
-	set(gh('SMinEdit'),'String',num2str(min(data.time{1})));
+	sv.mint = mint;
+	set(gh('SMinEdit'),'String',num2str(sv.mint));
 end
-if isempty(maxt) || str2double(maxt)>max(data.time{1})
+if isempty(maxt) || maxt>max(data.time{1})
 	maxt=max(data.time{1});
-	set(gh('SMaxEdit'),'String',num2str(max(data.time{1})));
+	sv.maxt = maxt;
+	set(gh('SMaxEdit'),'String',num2str(sv.maxt));
 end
-mini=find(data.time{1}==str2double(mint));
-maxi=find(data.time{1}==str2double(maxt));
+mini=findNearest(data.time{1},mint);
+maxi=findNearest(data.time{1},maxt);
 
 switch data.numvars
 	case 0
@@ -4192,7 +4246,7 @@ switch data.numvars
 		if isa(data.pR,'plxReader')
 			t=[ t '\newlinePLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
-		fprintf('--->>> Now repositioning all axes takes more time since 2014b+, please wait...\n')
+		%fprintf('--->>> Now repositioning all axes takes more time since 2014b+, please wait...\n')
 		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
 		p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
 		p.title(t);
@@ -4347,6 +4401,7 @@ switch data.numvars
 		a=1;
 		p.pack(yrange,xmult);
 		for i=1:length(x)
+			disp(['===>>> Plotting Position: ' num2str(i)])
 			[i1,i2] = ind2sub([yrange,xmult],xx(i));
 			time = data.time{i}(mini:maxi);
 			psth = data.psth{i}(mini:maxi);
@@ -4365,7 +4420,7 @@ switch data.numvars
 				set(gca,'TickLength',[0.01 0.01],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','on','YGrid','on');
 			end
 			axis([data.time{i}(mini) data.time{i}(maxi) 0 mm]);
-			text(data.time{i}(mini), mm-(mm/40), data.names{i},'FontSize',12,'FontWeight','bold','BackgroundColor',[0.3 0.3 0.3],'Color',[1 1 0]);
+			text(data.time{i}(mini), mm-(mm/40), data.names{i},'FontSize',8,'FontWeight','bold','BackgroundColor',[0.3 0.3 0.3],'Color',[1 1 0]);
 			if sv.plotBARS == 1
 				wh=waitbar(0.3,'Calculating BARS, please wait...');
 				trials = data.raw{i}.numtrials;
@@ -5418,6 +5473,26 @@ global data sv
 ft_defaults;
 data.ft.sd = [];
 ft = data.ft;
+
+if ~strcmp(sv.auto,'report') %don't ask for input if report generator is running?
+	choice = menuN('Options',...
+	{'¤gauss|alphawin','Window Function:';...
+		'¤rate|spikecount','Output:';...
+		'¤SEM|95% T-test','Error bars:';...
+		['t|[' num2str(sv.density.timwin) ']'],'Time Window (±secs):';...
+		['t|' num2str(sv.density.fsample)],'Sample Fequency (Hz):';...
+		't|0','Latency to measure (0 use default):';...
+	});
+
+	if choice{1}==1;sv.density.winfunc='gauss'; else sv.density.winfunc='alphawin';end
+	if choice{2}==1;sv.density.outputunit='rate'; else sv.density.outputunit='spikecount';end
+	if choice{3}==1;sv.density.errorbars='se'; else sv.density.errorbars='t';end
+	sv.density.timwin=str2num(choice{4});
+	sv.density.fsample=str2num(choice{5});
+	sv.density.latency=str2num(choice{6});
+end
+if sv.density.latency==0; sv.density.latency=[sv.mint*1e-3 sv.maxt*1e-3]; end
+
 sd = cell(length(ft.stimulus),1);
 cfg					= [];
 cfg.spikechannel	= ft.label{1};
@@ -5426,7 +5501,8 @@ cfg.vartriallen	= 'no';
 cfg.winfunc			= sv.density.winfunc;
 cfg.timwin			= sv.density.timwin;
 cfg.outputunit		= sv.density.outputunit;
-cfg.latency			= [sv.mint*1e-3 sv.maxt*1e-3];
+cfg.latency			= sv.density.latency;
+cfg.fsample			= sv.density.fsample;
 dMax					= 1;
 for j = 1:length(ft.stimulus)
 	cfg.trials			= ft.stimulus{j};
@@ -5478,9 +5554,9 @@ else
 	ylimit=[0 ceil(dMax+10)];
 end
 
-h=figure;set(h,'Color',[1 1 1],'Name',[data.runname 'Cell: ' data.cell]);
+sv.densityhandle=figure;set(sv.densityhandle,'Color',[1 1 1],'Name',[data.runname 'Cell: ' data.cell]);
 if length(sd) <4; figpos(1,[1000 1500]); else figpos(1,[1000 1000]); end
-p=panel(h);
+p=panel(sv.densityhandle);
 p.margin = [15 15 5 15];
 p.de.margin = 0;
 p.fontsize = 14;
@@ -5510,3 +5586,19 @@ p.ylabel([data.ytitle ' (' num2str(fliplr(data.yvalueso)) ')']);
 p.title(t);
 p.de.margin = 0;
 data.ft.sd = sd;
+sv.density.latency=0; %reset to auto
+
+% ==================================================================
+%> @brief find nearest value in a vector, if more than 1 index return the first
+%>
+%> @param in input vector
+%> @param value value to find
+%> @return idx index position of nearest value
+%> @return val value of nearest value
+%> @return delta the difference between val and value
+% ==================================================================
+function [idx,val,delta]=findNearest(in,value)
+%find nearest value in a vector, if more than 1 index return the first	
+[~,idx] = min(abs(in - value));
+val = in(idx);
+delta = abs(value - val);

@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 11-Feb-2016 00:10:44
+% Last Modified by GUIDE v2.5 12-Feb-2016 14:08:58
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -348,7 +348,6 @@ end
 
 % --------------------------------------------------------------------
 function varargout = SpikeMenu_Callback(h, eventdata, handles, varargin)
-
 spikes('SpikeSet')
 
 % --------------------------------------------------------------------
@@ -375,7 +374,8 @@ if get(findobj('Tag','SUseWindow'),'Value')==1
 	set(maxh,'String',num2str(maxt));
 	set(maxh,'UserData','yes');
 end
-if mint>=maxt || mint<0
+if mint>=maxt; mint = maxt-10; end
+if mint<0
 	mint=0;
 	set(h,'String',num2str(mint));
 end
@@ -393,7 +393,8 @@ minh=gh('SMinEdit');
 mint=str2num(get(minh,'String'));
 maxt=str2num(get(h,'String')); 
 
-if mint>=maxt || mint<0
+if mint>=maxt; mint = maxt-10; end
+if mint<0
 	mint=0;
 	maxt=Inf;
 	set(minh,'String',num2str(mint));
@@ -843,7 +844,6 @@ function SpikeFig_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to SpikeFig (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global data
 spikes('Data Info');
 
 
@@ -932,7 +932,6 @@ function firstisi_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of firstisi as a double
 
 
-
 function PSTHEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to PSTHEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -944,10 +943,16 @@ global sv
 s = get(hObject,'String');
 sv.PSTHScale = str2num(s);
 
-
 % --- Executes on button press in sDensityPlot.
 function sDensityPlot_Callback(hObject, eventdata, handles)
 % hObject    handle to sDensityPlot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 spikes('Plot Density');
+
+% --- Executes on button press in sBurstRatio.
+function sBurstRatio_Callback(hObject, eventdata, handles)
+% hObject    handle to sBurstRatio (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+spikes('Burst Ratio');

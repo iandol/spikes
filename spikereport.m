@@ -20,7 +20,7 @@ function varargout = spikereport(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 19-May-2011 11:18:17
+% Last Modified by GUIDE v2.5 14-Feb-2016 16:21:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -95,6 +95,7 @@ rlist.item{1}.maxtime='inf';
 rlist.item{1}.plotpsth=0;
 rlist.item{1}.plotisi=0;
 rlist.item{1}.plotmetric=0;
+rlist.item{1}.plotdensity=0;
 rlist.item{1}.tuningcurve=0;
 rlist.item{1}.xaxis='-inf inf';
 rlist.item{1}.yaxis='-inf inf';
@@ -225,6 +226,7 @@ for j=1:length(fn)
 		rlist.item{rlist.index}.plotpsth=get(gh('RepPlotPSTHCheck'),'Value');
 		rlist.item{rlist.index}.plotmetric=get(gh('RepPlotMetricCheck'),'Value');
 		rlist.item{rlist.index}.plotisi=get(gh('RepPlotISICheck'),'Value');
+		rlist.item{rlist.index}.plotdensity=get(gh('RepPlotDensityCheck'),'Value');
 		rlist.item{rlist.index}.tuningcurve=get(gh('RepPlotTCCheck'),'Value');
 		rlist.item{rlist.index}.xaxis=get(gh('RepXAxis'),'String');
 		rlist.item{rlist.index}.yaxis=get(gh('RepYAxis'),'String');
@@ -1123,6 +1125,23 @@ else
 		rlist.item{rlist.tag(i)}.plotisi=get(hObject,'Value');
 	end
 end	
+
+% --- Executes on button press in RepPlotDensityCheck.
+function RepPlotDensityCheck_Callback(hObject, eventdata, handles)
+% hObject    handle to RepPlotDensityCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RepPlotDensityCheck
+global rlist;
+
+if isempty(rlist.tag)
+	rlist.item{rlist.index}.plotdensity=get(hObject,'Value');
+else
+	for i=1:length(rlist.tag)
+		rlist.item{rlist.tag(i)}.plotdensity=get(hObject,'Value');
+	end
+end
 
 % --- Executes on selection change in RepErrorMenu.
 function RepErrorMenu_Callback(hObject, eventdata, handles)
