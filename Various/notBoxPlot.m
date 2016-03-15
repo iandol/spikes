@@ -99,7 +99,7 @@ function varargout=notBoxPlot(y,x,jitter,style)
 % also see: boxplot
 
 % Check input arguments
-error(nargchk(0,4,nargin))
+narginchk(0,4)
 if nargin==0
     help(mfilename)
     return
@@ -254,7 +254,7 @@ function ci = bootCI_calc(vect, nboot, fhandle, alpha)
 end
 
 function sem=SEM_calc(vect, CI)
-	error(nargchk(1,2,nargin))
+	narginchk(1,2)
 
 	if isvector(vect)
 	  vect=vect(:);
@@ -272,7 +272,7 @@ function sem=SEM_calc(vect, CI)
 end   
 
 function tint=tInterval_Calc(vect, CI)
-	error(nargchk(1,2,nargin))
+	narginchk(1,2)
 	if isvector(vect)
 	  vect=vect(:);
 	end

@@ -59,7 +59,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				javax.swing.UIManager.setLookAndFeel(oldlook);
 			end
 		end
-		figpos(1);	%position the figure
+		figpos(6);	%position the figure
 		set(sv.uihandle,'Name', [sv.title ' | Started at ' datestr(now)]);
 		colormap(parula(256)); %this gives us a much higher resolution colormap
 		%-------The following sv structure sets up the GUI interface structure--
@@ -2125,33 +2125,31 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		h=figure;set(h,'Color',[1 1 1],'Name',[data.runname 'Cell: ' data.cell]);
 		figpos(1,[1000 1000]);
 		
-		if data.numvars==2 %we want to use the central 9 points if possible
-			if data.xrange == data.yrange
-				switch data.xrange
-					case {5,6}
-						rY = (2:4)+offsetBurstCentre(1);
-						rX = (2:4)+offsetBurstCentre(2);
-						centreRatio = ratio(rY,rX);
-						xval = data.xvalues(rX);yval = data.yvalues(rY);
-					case {7,8}
-						rY = (3:5)+offsetBurstCentre(1);
-						rX = (3:5)+offsetBurstCentre(2);
-						data.names{rY,rX}
-						centreRatio = ratio(rY,rX);
-						xval = data.xvalues(rX);yval = data.yvalues(rY);
-					case {9,10}
-						rY = (4:6)+offsetBurstCentre(1);
-						rX = (4:6)+offsetBurstCentre(2);
-						centreRatio = ratio(rY,rX);
-						xval = data.xvalues(rX);yval = data.yvalues(rY);
-					case {11,12}
-						rY = (5:7)+offsetBurstCentre(1);
-						rX = (5:7)+offsetBurstCentre(2);
-						centreRatio = ratio(rY,rX);
-						xval = data.xvalues(rX);yval = data.yvalues(rY);
-					otherwise
-						centreRatio = ratio;
-				end
+		if data.numvars>1 %we want to use the central 9 points if possible
+			switch data.xrange
+				case {5,6}
+					rY = (2:4)+offsetBurstCentre(1);
+					rX = (2:4)+offsetBurstCentre(2);
+					centreRatio = ratio(rY,rX);
+					xval = data.xvalues(rX);yval = data.yvalues(rY);
+				case {7,8}
+					rY = (3:5)+offsetBurstCentre(1);
+					rX = (3:5)+offsetBurstCentre(2);
+					data.names{rY,rX}
+					centreRatio = ratio(rY,rX);
+					xval = data.xvalues(rX);yval = data.yvalues(rY);
+				case {9,10}
+					rY = (4:6)+offsetBurstCentre(1);
+					rX = (4:6)+offsetBurstCentre(2);
+					centreRatio = ratio(rY,rX);
+					xval = data.xvalues(rX);yval = data.yvalues(rY);
+				case {11,12}
+					rY = (5:7)+offsetBurstCentre(1);
+					rX = (5:7)+offsetBurstCentre(2);
+					centreRatio = ratio(rY,rX);
+					xval = data.xvalues(rX);yval = data.yvalues(rY);
+				otherwise
+					centreRatio = ratio;
 			end
 		end
 		
