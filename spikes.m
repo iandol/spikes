@@ -79,7 +79,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.ShadingType			= 'interp';
 		sv.Lighting				= 'phong';
 		sv.SmoothType			= 'none';
-		sv.SmoothValue			= 5;
+		sv.SmoothValue			= 10;
 		sv.CMap					= 'jet';
 		sv.LightAdd				= 'none';
 		sv.reload				= 'no';
@@ -120,7 +120,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 		sv.bars.usezero = 1;
 		%-----------------------------------------------------------------------
 		sv.density.winfunc		= 'gauss'; %fieldtrip spike density window
-		sv.density.timwin			= [-0.015 0.015]; %fieldtrip spike density window size
+		sv.density.timwin			= [-0.01 0.02]; %fieldtrip spike density window size
 		sv.density.outputunit	= 'rate';
 		sv.density.keeptrials	= 'no';
 		sv.density.errorbars		= 'se';
@@ -625,7 +625,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 				[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 				if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-					sigma=str2double(get(gh('GaussEdit'),'String'));
+					sigma=str2double(get(gh('SGaussEdit'),'String'));
 					psth=gausssmooth(time,psth,sigma);
 					bpsth=gausssmooth(time2,bpsth,sigma);
 				end
@@ -768,7 +768,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-						sigma=str2double(get(gh('GaussEdit'),'String'));
+						sigma=str2double(get(gh('SGaussEdit'),'String'));
 						psth=gausssmooth(time,psth,sigma);
 						bpsth=gausssmooth(time2,bpsth,sigma);
 					end
@@ -918,7 +918,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-						sigma=str2double(get(gh('GaussEdit'),'String'));
+						sigma=str2double(get(gh('SGaussEdit'),'String'));
 						psth=gausssmooth(time,psth,sigma);
 						bpsth=gausssmooth(time2,bpsth,sigma);
 					end
@@ -1075,7 +1075,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					[time,psth,rawspikes,sums]=binit(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					[time2,bpsth]=binitb(x,sv.BinWidth*10,sv.StartMod,sv.EndMod,sv.StartTrial,sv.EndTrial,sv.Wrapped);
 					if get(gh('GaussBox'),'Value')==1 %checks if the user wants smoothing
-						sigma=str2double(get(gh('GaussEdit'),'String'));
+						sigma=str2double(get(gh('SGaussEdit'),'String'));
 						psth=gausssmooth(time,psth,sigma);
 						bpsth=gausssmooth(time2,bpsth,sigma);
 					end
@@ -1352,10 +1352,14 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				%time=((maxi+1)-mini)*data.binwidth;  %corrects for the extra binwidth
 				for i=1:data.yrange*data.xrange*data.zrange
 					x=sum(rawpsth{i}(mini:maxi));
+					numt=data.raw{i}.numtrials;
+					numm=data.raw{i}.nummods;
 					if data.wrapped==1 %wrapped
-						x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
-					elseif data.wrapped==2
-						x=x/(data.numtrials);
+						%x=x/(data.numtrials*data.nummods); %we have to get the values for an individual trial
+						x=x/(numt*numm); %we have to get the values for an individual trial
+					else
+						%x=x/(data.numtrials);
+						x=x/(numt);
 					end
 					if data.plotburst==1 && x>0
 						e=finderror(data.raw{i},err,mint,maxt+data.binwidth,data.wrapped,1);
@@ -3139,7 +3143,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				end
 				
 				history=get(gh('spikehistory'),'String');
-				hsize=20;
+				hsize=40;
 				if size(history,1)>1
 					if size(history,1)>hsize
 						history=history(1:hsize); %prunes the history list
@@ -3502,18 +3506,18 @@ if nargin<1
 	type='other';
 end
 
-if sv.EndMod>data.raw{sv.xval*sv.yval*sv.zval}.nummods
+if sv.EndMod>data.raw{sv.yval,sv.xval,sv.zval}.nummods
 	if sv.EndMod==Inf
 		resetmod=1;
 	end
-	sv.EndMod=data.raw{sv.xval*sv.yval*sv.zval}.nummods;
+	sv.EndMod=data.raw{sv.yval,sv.xval,sv.zval}.nummods;
 end
 if isfield(sv,'EndTrial')
-	if sv.EndTrial>data.raw{sv.xval*sv.yval*sv.zval}.endtrial
+	if sv.EndTrial>data.raw{sv.yval,sv.xval,sv.zval}.endtrial
 		if sv.EndTrial==Inf
 			resettrial=1;
 		end
-		sv.EndTrial=data.raw{sv.xval*sv.yval*sv.zval}.endtrial;
+		sv.EndTrial=data.raw{sv.yval,sv.xval,sv.zval}.endtrial;
 	end
 end
 if (get(gh('SCutTransient'),'Value')>0)
@@ -3638,7 +3642,7 @@ if isa(data.pR,'plxReader')
 end
 
 data.matrixtitle=regexprep(data.matrixtitle,'_','\\_');
-data.matrixtitle = ['\fontname{Georgia}\fontsize{12}' data.matrixtitle];
+data.matrixtitle = ['\fontname{Helvetica}\fontsize{12}' data.matrixtitle];
 
 sv.EndMod=str2double(get(gh('SEndMod'),'String'));
 sv.EndTrial=str2double(get(gh('SEndTrial'),'String'));
@@ -4133,7 +4137,7 @@ switch data.numvars
 		end
 	case 1
 		p=panel(sv.psthhandle);
-		if get(gh('PSTHEdit'),'String')=='0'
+		if get(gh('SPSTHEdit'),'String')=='0'
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=1:data.xrange
 				maxm = max(data.psth{data.xindex(i)});
@@ -4144,7 +4148,7 @@ switch data.numvars
 			m=round(m+m/20);  %just to scale a bit bigger than the maximum value
 			set(gh('PSTHText'),'String',num2str(m));
 		else
-			m=str2double(get(gh('PSTHEdit'),'String'));
+			m=str2double(get(gh('SPSTHEdit'),'String'));
 			set(gh('PSTHText'),'String',num2str(m));
 		end
 		
@@ -4200,7 +4204,8 @@ switch data.numvars
 		end
 		
 		%this will find the max value out of all the PSTH's and scale by this
-		if strcmp(get(gh('PSTHEdit'),'String'),'0')
+		m = str2double(get(gh('SPSTHEdit'),'String'));
+		if isnan(m) || m == 0
 			m=1; 
 			for i=starti:endi
 				maxm=max(data.psth{i});
@@ -4211,7 +4216,7 @@ switch data.numvars
 			m=round(m+m/10);  %just to scale a bit bigger than the maximum value
 			set(gh('PSTHText'),'String',num2str(m));
 		else
-			m=str2double(get(gh('PSTHEdit'),'String'));
+			if length(m) > 1; m = m(2); end
 			set(gh('PSTHText'),'String',num2str(m));
 		end
 		
@@ -4294,7 +4299,7 @@ switch data.numvars
 		end
 	case 1
 		p=panel(sv.allhandle);
-		if get(gh('PSTHEdit'),'String')=='0'
+		if get(gh('SPSTHEdit'),'String')=='0'
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=1:data.xrange
 				maxm = max(data.psth{data.xindex(i)});
@@ -4305,7 +4310,7 @@ switch data.numvars
 			m=round(m+m/20);  %just to scale a bit bigger than the maximum value
 			set(gh('PSTHText'),'String',num2str(m));
 		else
-			m=str2double(get(gh('PSTHEdit'),'String'));
+			m=str2double(get(gh('SPSTHEdit'),'String'));
 			set(gh('PSTHText'),'String',num2str(m));
 		end
 		
@@ -4379,7 +4384,7 @@ switch data.numvars
 			xmult = xrange;
 		end
 		
-		if strcmp(get(gh('PSTHEdit'),'String'),'0')
+		if strcmp(get(gh('SPSTHEdit'),'String'),'0')
 			m=1; %this will find the max value out of all the PSTH's and scale by this
 			for i=starti:endi
 				maxm=max(data.psth{i}(mini:maxi));
@@ -4387,11 +4392,11 @@ switch data.numvars
 					m = maxm;
 				end
 			end
-			mm = converttotime(m);
+			[mm,trials] = converttotime(m);
 			xm=round(m+m/10);  %just to scale a bit bigger than the maximum value
 			set(gh('PSTHText'),'String',num2str(xm));
 		else
-			xm=str2double(get(gh('PSTHEdit'),'String'));
+			xm=str2double(get(gh('SPSTHEdit'),'String'));
 		end
 		
 		x = starti:endi;
@@ -4474,8 +4479,12 @@ set(gcf,'Renderer','painters','ResizeFcn',[]);
 
 %----------------------------------END----------------------------------------
 
-function [time,psth,bpsth,mint,maxt] = selectPSTH()
+function [time,psth,bpsth,mint,maxt,trials,mods] = selectPSTH(x,y,z)
 global data sv
+
+if ~exist('x','var')|| isempty(x); x = sv.xval; end
+if ~exist('y','var')|| isempty(y); y = sv.yval; end
+if ~exist('z','var')|| isempty(z); z = sv.zval; end
 
 mint=str2double(get(gh('SMinEdit'),'String'));   %this selects what to plot
 maxt=str2double(get(gh('SMaxEdit'),'String'));
@@ -4496,10 +4505,11 @@ else
 	maxi=find(data.time{1}==maxt);
 end
 
-psth=data.psth{sv.yval,sv.xval,sv.zval}(mini:maxi);
-time=data.time{sv.yval,sv.xval,sv.zval}(mini:maxi);
-bpsth=data.bpsth{sv.yval,sv.xval,sv.zval}(mini:maxi);
-
+psth=data.psth{y, x, z}(mini:maxi);
+time=data.time{y, x, z}(mini:maxi);
+bpsth=data.bpsth{y, x, z}(mini:maxi);
+trials=data.raw{y, x, z}.numtrials;
+mods=data.raw{y, x, z}.nummods;
 
 %-----------------------------------------------------------------------------
 %FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -4511,7 +4521,7 @@ function PlotPSTH
 
 global data sv
 
-[time,psth,bpsth,mint,maxt] = selectPSTH();
+[time,psth,bpsth,mint,maxt,trials,mods] = selectPSTH();
 
 nr=sum(psth);
 bnr=sum(bpsth);
@@ -4543,11 +4553,11 @@ h(2)=bar(time,bpsth,'BarWidth', 1 ,'FaceColor',[0.8 0 0],'EdgeColor','none', 'Sh
 hold off;
 
 mf=max(psth);
-[mf,trials]=converttotime(mf);
+[mf,ntrials]=converttotime(mf,data.binwidth,trials,mods,data.wrapped);
 
 if sv.plotBARS == 1
 	wh=waitbar(0.3,'Calculating BARS, please wait...');
-	doBARS(time,psth,trials);
+	doBARS(time,psth,ntrials);
 	close(wh);
 	if ~isempty(data.bars)
 		if isfield(data.bars,'mean')
@@ -4561,7 +4571,7 @@ if sv.plotBARS == 1
 end
 
 sv.xlabelhandle=xlabel('Time (ms)','FontSize',sv.labelsize*1.3);
-sv.ylabelhandle=ylabel(['Spikes/Bin (Hz max = ' sprintf('%.4g',mf) ')'],'FontSize',sv.labelsize*1.3);
+sv.ylabelhandle=ylabel(['Spikes/Bin (#rpts: ' num2str(ntrials) ' | Hz Peak = ' sprintf('%.4g',mf) ')'],'FontSize',sv.labelsize*1.3);
 MakeTitle('psth');
 data.matrixtitle = [data.matrixtitle '\newlineFF: ' sprintf('%2.2f',ff)];
 if exist('pr','var')
@@ -5459,14 +5469,7 @@ for j = 1:(data.xrange*data.yrange*data.zrange) %cycle through each stimulus
 end
 fprintf('<strong>:#:</strong> Converting spikes to fieldtrip format took <strong>%g ms</strong>\n',round(toc(tft)*1000));
 
-%-----------------------------------------------------------------------------
-%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-%-----------------------------------------------------------------------------
-%
-%Plot spike density function
-%
-function plotDensity()
-
+function dMax = generateDensity()
 global data sv
 ft_defaults;
 data.ft.sd = [];
@@ -5479,7 +5482,7 @@ if ~strcmp(sv.auto,'report') %don't ask for input if report generator is running
 		'¤SEM|95% T-test','Error bars:';...
 		['t|[' num2str(sv.density.timwin) ']'],'Time Window (±secs):';...
 		['t|' num2str(sv.density.fsample)],'Sample Fequency (Hz):';...
-		't|0','Latency to measure (0 use default):';...
+		't|0','Time range to measure (0 use Spikes default):';...
 	});
 
 	if choice{1}==1;sv.density.winfunc='gauss'; else sv.density.winfunc='alphawin';end
@@ -5491,6 +5494,7 @@ if ~strcmp(sv.auto,'report') %don't ask for input if report generator is running
 end
 if sv.density.latency==0; sv.density.latency=[sv.mint*1e-3 sv.maxt*1e-3]; end
 
+tft = tic;
 sd = cell(length(ft.stimulus),1);
 cfg					= [];
 cfg.spikechannel	= ft.label{1};
@@ -5506,8 +5510,8 @@ for j = 1:length(ft.stimulus)
 	cfg.trials			= ft.stimulus{j};
 	sd{j}					= ft_spikedensity(cfg, ft);
 	sd{j}.name			= ft.stimulusNames{j};
-	dMax					= max([max(sd{j}.avg) dMax]);
 	sd{j}.stderr		= sqrt(sd{j}.var ./ sd{j}.dof);
+	dMax					= max([max(sd{j}.avg)+max(sd{j}.stderr) dMax]);
 	tCrit					= tinv( 0.975, sd{j}.dof );
 	et						= tCrit.*sqrt( sd{j}.var ./ sd{j}.dof ); 
 	sd{j}.stdterr		= et;
@@ -5517,13 +5521,31 @@ for j = 1:length(ft.stimulus)
 	cfgr.spikechannel	= cfg.spikechannel;
 	cfgr.latency		= cfg.latency;
 	cfgr.keeptrials		= 'yes';
-	cfgr.outputunit		= cfg.outputunit;
+	cfgr.outputunit		= 'rate';
 	sd{j}.rate				= ft_spike_rate(cfgr, ft);
 	sd{j}.rate.SE			= sqrt(sd{j}.rate.var ./ sd{j}.rate.dof);
 	sd{j}.rate.CI			= bootci(1000, {@mean, sd{j}.rate.trial},'alpha',0.05);
 	sd{j}.rate.alpha		= 0.05;
 	
 end
+fprintf('<strong>:#:</strong> Generating density functions took <strong>%g ms</strong>\n',round(toc(tft)*1000));
+data.ft.sd = sd;
+data.ft.dMax = dMax;
+clear ft sd cfg;
+
+%-----------------------------------------------------------------------------
+%FUNCTION DEFINITION /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+%-----------------------------------------------------------------------------
+%
+%Plot spike density function
+%
+function plotDensity()
+global data sv
+
+dMax = generateDensity()
+
+ft = data.ft;
+sd = ft.sd;
 
 xrange=length(data.xvalueso); %we'll ignore the subselection
 yrange=length(data.yvalueso);
@@ -5546,10 +5568,12 @@ x = starti:endi;
 xx = x - (xrange*yrange*(sv.zval-1));
 y = reshape(x,data.yrange,data.xrange);
 yy = reshape(xx,data.yrange,data.xrange);
-if sv.PSTHScale > 0
+if length(sv.PSTHScale) == 2
+	ylimit=sv.PSTHScale;
+elseif length(sv.PSTHScale) == 1 && sv.PSTHScale > 0
 	ylimit=[0 sv.PSTHScale];
 else
-	ylimit=[0 ceil(dMax+10)];
+	ylimit=[0 round(dMax)];
 end
 
 sv.densityhandle=figure;set(sv.densityhandle,'Color',[1 1 1],'Name',[data.runname 'Cell: ' data.cell]);
@@ -5569,10 +5593,17 @@ for i=1:length(x)
 	else
 		e = sd{i}.stdterr;
 	end
-	areabar(sd{i}.time, sd{i}.avg, e, [0.5 0.5 0.5], 0.3, 'k-','Color',[0 0 0],'MarkerFaceColor',[0 0 0],'LineWidth',1.5);
+	xl = [sv.mint*1e-3 sv.maxt*1e-3];
+	if ylimit(1) < 0
+		line(xl,[0 0],'Color',[0.3 0.3 0.3],'LineStyle','--','Linewidth',1.2);
+	end
+	hold on
+	areabar(sd{i}.time, sd{i}.avg, e/1.3, [0.5 0.5 0.5], 0.5, 'k-','Color',[0 0 0],'MarkerFaceColor',[0 0 0],'LineWidth',1.);
+	hold off
+	xlim(xl);
 	ylim(ylimit)
-	xlim([sv.mint*1e-3 sv.maxt*1e-3])
 	set(gca,'TickLength',[0 0],'TickDir','in','XTickLabel',[],'YTickLabel',[],'XGrid','off','YGrid','off','box','on');
+	%if ylimit(1) < 0;	set(gca,'Visible','off'); end
 end
 tim = num2str([sv.mint*1e-3 sv.maxt*1e-3]);
 tim=regexprep(tim,'\s+',' ');

@@ -3,7 +3,7 @@ function varargout = spikes_UI(varargin)
 %    FIG = SPIKES_UI launch spikes_UI GUI.
 %    SPIKES_UI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.5 12-Feb-2016 14:08:58
+% Last Modified by GUIDE v2.5 20-Mar-2016 10:20:14
 
 if nargin == 0  % LAUNCH GUI
 	
@@ -467,12 +467,12 @@ function varargout = GaussBox_Callback(h, eventdata, handles, varargin)
 
 Value=get(h,'Value');
 if Value==0
-	set(handles.GaussEdit,'Enable','off')
+	set(handles.SGaussEdit,'Enable','off')
 else
-	set(handles.GaussEdit,'Enable','on')
+	set(handles.SGaussEdit,'Enable','on')
 end
-set(handles.GaussEdit,'Backgroundcolor',[1,1,1])
-set(handles.GaussEdit,'Foregroundcolor',[0,0,0])
+set(handles.SGaussEdit,'Backgroundcolor',[1,1,1])
+set(handles.SGaussEdit,'Foregroundcolor',[0,0,0])
 
 % --------------------------------------------------------------------
 function varargout = PropBox_Callback(h, eventdata, handles, varargin)
@@ -928,13 +928,13 @@ function firstisi_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of firstisi as a double
 
 
-function PSTHEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to PSTHEdit (see GCBO)
+function SPSTHEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to SPSTHEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of PSTHEdit as text
-%        str2double(get(hObject,'String')) returns contents of PSTHEdit as a double
+% Hints: get(hObject,'String') returns contents of SPSTHEdit as text
+%        str2double(get(hObject,'String')) returns contents of SPSTHEdit as a double
 global sv
 s = get(hObject,'String');
 sv.PSTHScale = str2num(s);

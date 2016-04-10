@@ -1,10 +1,11 @@
 function [out,trials]=converttotime(in,binwidth,trials,mods,wrapped)
 	global data
+	global sv
 	if ~exist('mods','var') || isempty(mods)
-		mods = data.nummods;
+		mods = data.raw{sv.yval,sv.xval,sv.zval}.nummods;
 	end
 	if ~exist('trials','var') || isempty(trials)
-		trials = data.numtrials;
+		trials = data.raw{sv.yval,sv.xval,sv.zval}.numtrials;
 	end
 	if ~exist('binwidth','var') || isempty(binwidth)
 		binwidth = data.binwidth;

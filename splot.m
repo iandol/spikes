@@ -132,19 +132,19 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 		y=get(gh('SPYBox'),'Value');
 		z=sv.zval;
 		
-		[time,psth,bpsth,tpsth]=selectPSTH(x,y,z);
+		[time,psth,bpsth,tpsth,trials,mods]=selectPSTH(x,y,z);
 		
 		datatype=get(gh('DataBox'),'Value');
 		plottype=get(gh('TypeBox'),'Value');
 		
 		m=max(psth);
-		m=converttotime(m);
+		[m,ntrials]=converttotime(m,data.binwidth,trials,mods,data.wrapped);
 		
 		mb=max(bpsth);
-		mb=converttotime(mb);
+		mb=converttotime(mb,data.binwidth,trials,mods,data.wrapped);
 		
 		mt=max(tpsth);
-		mt=converttotime(mt);
+		mt=converttotime(mt,data.binwidth,trials,mods,data.wrapped);
 		
 		switch(datatype)
 			
@@ -163,7 +163,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 						ww=[time',psth'];
 						%save c:\psth.txt  ww -ascii
 					case 2 % area
@@ -178,7 +178,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Spikes / Bin (Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 						ww=[time',psth'];
 						%save c:\psth.txt  ww -ascii
 					case 3 %smooth
@@ -227,7 +227,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 						ww=[time',bpsth'];
 						%save c:\burstpsth.txt  ww -ascii
 					case 2 %area
@@ -242,7 +242,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 						ww=[time',bpsth'];
 						%save c:\burstpsth.txt  ww -ascii
 					case 3 %smooth
@@ -289,7 +289,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 						ww=[time',tpsth'];
 					case 2 %area
 						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
@@ -303,7 +303,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						end
 						hold off
 						axis tight;
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 					case 3 %smooth
 						if max(tpsth)>0;tpsth=(tpsth/max(tpsth))*mt;end
 						ss=str2num(get(gh('SmoothEdit'),'String'));
@@ -345,9 +345,9 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 							plot(time,spdata.bars.confBands(:,2),'r:')
 						end
 						hold off
-						legend('All Spikes','Burst Spikes',0)
+						legend('All Spikes','Burst Spikes')
 						axis tight
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 						ww=[time',psth'];
 						www=[time',bpsth'];
 						%save c:\psth.txt  ww -ascii
@@ -368,7 +368,7 @@ switch(action)	%As we use the GUI this switch allows us to respond to the user i
 						hold off
 						legend('All Spikes','Burst Spikes',0)
 						axis tight
-						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(data.numtrials) ' Mods:' num2str(data.nummods) ')' ]);
+						ylabel(['Firing Rate (Hz, Binwidth:' num2str(data.binwidth) 'ms Trials:' num2str(trials) ' Mods:' num2str(mods) ')' ]);
 						ww=[time',psth'];
 						www=[time',bpsth'];
 						%save c:\psth.txt  ww -ascii
@@ -940,11 +940,13 @@ end  %----------------------------end of the main switch------------------------
 % Additional Helper Functions
 %##################################################################
 
-	function [time,psth,bpsth,tpsth] = selectPSTH(x,y,z)
-		time=data.time{y,x,z};
-		psth=data.psth{y,x,z};
-		bpsth=data.bpsth{y,x,z};
+	function [time,psth,bpsth,tpsth,trials,mods] = selectPSTH(x,y,z)
+		time=data.time{y, x, z};
+		psth=data.psth{y, x, z};
+		bpsth=data.bpsth{y, x, z};
 		tpsth = psth - bpsth;
+		trials=data.raw{y, x, z}.numtrials;
+		mods=data.raw{y, x, z}.nummods;
 		
 		mini = find(time == sv.mint);
 		maxi = find(time == sv.maxt);
