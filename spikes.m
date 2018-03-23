@@ -208,8 +208,9 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 				meta=data.meta;
 				info=data.info;
 				t=data.filetype;
-				sourcepath=data.sourcepath;
-				zipload = data.zipload;
+				sourcepath='';zipload='';
+				if isfield(data,'sourcepath');sourcepath=data.sourcepath;end
+				if isfield(data,'sourcepath');zipload = data.zipload;end
 				zs=data.zs;
 				if isfield(data,'pR'); pR = data.pR; end
 				data=struct;
@@ -352,7 +353,7 @@ switch(action)			%As we use the GUI this switch allows us to respond to the user
 					data.wrapped=2; %force off wrapping;
 					sv.Wrapped=2;
 					set(gh('WrappedMenu'),'Value',2);
-					if ~isa(data.pR,'plxReader')
+					if isfield(data,'pR') && ~isa(data.pR,'plxReader')
 						data.pR = plxReader('file',fn,'dir',pn,'startOffset',sv.startOffset,'cellmap',sv.cellmap);
 						data.pR.parse;
 					else
@@ -3637,7 +3638,7 @@ switch data.numvars
 		end
 end
 
-if isa(data.pR,'plxReader')
+if isfield(data,'pR') && isa(data.pR,'plxReader')
 	data.matrixtitle=[ data.matrixtitle '\newlinePLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 end
 
@@ -4246,7 +4247,7 @@ switch data.numvars
 		if data.numvars==3
 			t=[t '\newline' data.ztitle '=' num2str(data.zvalueso(sv.zval))];
 		end
-		if isa(data.pR,'plxReader')
+		if isfield(data,'pR') && isa(data.pR,'plxReader')
 			t=[ t '\newlinePLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
 		%fprintf('--->>> Now repositioning all axes takes more time since 2014b+, please wait...\n')
@@ -4353,7 +4354,7 @@ switch data.numvars
 		t=[data.runname ' Cell:' num2str(sv.firstunit) ' [BW:' num2str(data.binwidth) 'ms Trials:' num2str(sv.StartTrial) '-' num2str(sv.EndTrial) ' Mods:' num2str(sv.StartMod) '-' num2str(sv.EndMod) '] max = ' num2str(m) ' time = ' num2str(data.time{1}(mini)) '-' num2str(data.time{1}(maxi)) 'ms'];
 		%[ax,h1]=suplabel([data.xtitle ' (' num2str(data.xvalues) ')'],'x');
 		%[ax,h2]=suplabel(t ,'t');
-		if isa(data.pR,'plxReader')
+		if isfield(data,'pR') && isa(data.pR,'plxReader')
 			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
 		p.xlabel('Time (ms)');
@@ -4456,7 +4457,7 @@ switch data.numvars
 		if data.numvars==3
 			t=[t '\newline Z VALUES ' data.ztitle '=' num2str(data.zvalues)];
 		end
-		if isa(data.pR,'plxReader')
+		if isfield(data,'pR') && isa(data.pR,'plxReader')
 			t=[ t '\newline PLX Offset = ' num2str(data.pR.startOffset) ' | Cellmap = ' num2str(data.cell) '>' num2str(data.pR.cellmap(data.cell)) ' ' data.pR.tsList.names{data.pR.cellmap(data.cell)}];
 		end
 		p.xlabel([data.xtitle ' (' num2str(data.xvalueso) ')']);
